@@ -1,0 +1,40 @@
+#pragma once
+
+#include "base/containers/reverse_iterator.hpp"
+#include "base/utilities/type_aliases.hpp"
+
+namespace base {
+
+template <usize N> class NTTPString {
+public:
+	// NOLINTNEXTLINE
+	constexpr NTTPString(const char (&str)[N]) {
+		for (usize i = 0; i < N; ++i) {
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+			data_[i] = str[i];
+		}
+	}
+
+	[[nodiscard]] usize				size() const noexcept { return N - 1; }
+	[[nodiscard]] const char* data() const noexcept { return data_; }
+
+	[[nodiscard]] const char& operator[](usize index) { return data_[index]; }
+
+	[[nodiscard]] const char* begin() const noexcept { return data_; }
+	[[nodiscard]] const char* end() const noexcept { return data_ + N - 1; }
+	[[nodiscard]] const char* cbegin() const noexcept { return data_; }
+	[[nodiscard]] const char* cend() const noexcept { return data_ + N - 1; }
+
+	[[nodiscard]] ReverseIterator<const char*> rbegin() const noexcept { return data_ + N - 1; }
+	[[nodiscard]] ReverseIterator<const char*> rend() const noexcept { return data_; }
+	[[nodiscard]] ReverseIterator<const char*> crbegin() const noexcept { return data_ + N - 1; }
+	[[nodiscard]] ReverseIterator<const char*> crend() const noexcept { return data_; }
+
+public:
+	char data_[N] = {'\0'}; // NOLINT
+};
+
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays, hicpp-avoid-c-arrays, modernize-avoid-c-arrays)
+template <usize N> NTTPString(const char (&str)[N]) -> NTTPString<N>;
+
+} // namespace base

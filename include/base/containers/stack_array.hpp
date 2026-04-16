@@ -1,0 +1,55 @@
+#pragma once
+
+#include "base/containers/fwds.hpp"
+#include "base/containers/reverse_iterator.hpp"
+#include "base/containers/structured_bindings.hpp"
+#include "base/utilities/type_aliases.hpp"
+
+namespace base {
+
+template <typename T, usize N, typename SizeT> class StackArray {
+public:
+	[[nodiscard]] constexpr usize size() const noexcept { return N; }
+
+	[[nodiscard]] constexpr T*			 data() noexcept { return static_cast<T*>(data_); }
+	[[nodiscard]] constexpr const T* data() const noexcept { return static_cast<const T*>(data_); }
+
+	[[nodiscard]] constexpr T&			 operator[](SizeT index) noexcept { return data()[index]; }
+	[[nodiscard]] constexpr const T& operator[](SizeT index) const noexcept { return data()[index]; }
+
+	[[nodiscard]] constexpr T&			 front() noexcept { return data_[0]; }
+	[[nodiscard]] constexpr T&			 back() noexcept { return data_[N - 1]; }
+	[[nodiscard]] constexpr const T& front() const noexcept { return data_[0]; }
+	[[nodiscard]] constexpr const T& back() const noexcept { return data_[N - 1]; }
+
+	[[nodiscard]] constexpr T*			 begin() noexcept { return data(); }
+	[[nodiscard]] constexpr T*			 end() noexcept { return data() + N; }
+	[[nodiscard]] constexpr const T* begin() const noexcept { return data(); }
+	[[nodiscard]] constexpr const T* end() const noexcept { return data() + N; }
+	[[nodiscard]] constexpr const T* cbegin() const noexcept { return data(); }
+	[[nodiscard]] constexpr const T* cend() const noexcept { return data() + N; }
+
+	[[nodiscard]] constexpr ReverseIterator<T*>				rbegin() noexcept { data() + N; }
+	[[nodiscard]] constexpr ReverseIterator<T*>				rend() noexcept { return data(); }
+	[[nodiscard]] constexpr ReverseIterator<const T*> rbegin() const noexcept { return data() + N; }
+	[[nodiscard]] constexpr ReverseIterator<const T*> rend() const noexcept { return data(); }
+	[[nodiscard]] constexpr ReverseIterator<const T*> crbegin() const noexcept { return data() + N; }
+	[[nodiscard]] constexpr ReverseIterator<const T*> crend() const noexcept { return data(); }
+
+	template <usize I> [[nodiscard]] constexpr T&				get() noexcept { return data_[I]; }
+	template <usize I> [[nodiscard]] constexpr const T& get() const noexcept { return data_[I]; }
+
+public:
+	T data_[N]; // NOLINT
+};
+
+template <typename T, usize N, typename SizeT> struct TupleSize<StackArray<T, N, SizeT>> {
+	static constexpr usize value = N;
+};
+
+template <typename T, usize N, typename SizeT, usize I>
+struct TupleElement<StackArray<T, N, SizeT>, I> {
+	using Type = T;
+};
+
+} // namespace base

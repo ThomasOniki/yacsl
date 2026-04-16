@@ -29,20 +29,29 @@ gtest_proj = cmake.subproject('googletest', options: gtest_opts)
 gtest_dep = gtest_proj.dependency('gtest')
 gtest_main_dep = gtest_proj.dependency('gtest_main')
 
-arena = executable(
-  'test_arena',
-  sources: 'src/test_arena.cpp',
-  dependencies: [base_dep, gtest_dep, gtest_main_dep],
-  cpp_args: cpp_flags,
-  override_options: {'warning_level': 'everything', 'werror': true},
-)
-vector = executable(
-  'test_vector',
-  sources: 'src/test_vector.cpp',
-  dependencies: [base_dep, gtest_dep, gtest_main_dep],
-  cpp_args: cpp_flags,
-  override_options: {'warning_level': 'everything', 'werror': true},
-)
+things_to_test = {
+  'true': [
+    'logging',
+  ],
+  f'!@no_libcpp@': [
+    'arena',
+    'vector',
+    'tuple',
+  ],
+}
 
-test('arena', arena)
-test('vector', vector)
+foreach condition, things : things_to_test
+  if condition == 'false' or condition == '!true'
+    continue
+  endif
+  foreach thing : things
+    exe = executable(
+      f'test_@thing@',
+      sources: f'src/test_@thing@.cpp',
+      dependencies: [base_dep, gtest_dep, gtest_main_dep],
+      cpp_args: cpp_flags,
+      override_options: {'warning_level': 'everything', 'werror': true},
+    )
+    test(thing, exe)
+  endforeach
+endforeach
