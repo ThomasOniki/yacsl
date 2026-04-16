@@ -36,7 +36,6 @@ things_to_test = {
   f'!@no_libcpp@': [
     'arena',
     'vector',
-    'tuple',
   ],
 }
 
