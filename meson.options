@@ -6,21 +6,3 @@ option(
   C, unix, and windows headers and their needed libraries will all still be used.
   If you enable this option, you can't use libc++ in your own apps that use libbase.''',
 )
-
-option(
-  'lsp',
-  type: 'boolean',
-  value: false,
-  description: '''Build with the BASE_LSP_ONLY macro.
-  This should remove some lsp warnings / errors.
-  Do not use this for actually compiling your code, it won't work.
-  This will be enabled by default if the builddir is lsp-build.
-  To disable this use the no_default_compile_commands_export option.''',
-)
-
-option(
-  'not_lsp',
-  type: 'boolean',
-  value: false,
-  description: 'Do not compile with the BASE_LSP_ONLY macro even if the builddir is lsp-build.',
-)
