@@ -1,0 +1,47 @@
+Checks: |
+  *,
+  llvm-*,
+  -llvmlibc*,
+  -modernize-deprecated-headers,
+  -hicpp-deprecated-headers,
+  -portability-avoid-pragma-once,
+  -llvm-header-guard,
+  -hicpp-vararg,
+  -cppcoreguidelines-pro-type-vararg,
+  -readability-magic-numbers,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -readability-math-missing-parentheses,
+  -readability-redundant-access-specifiers,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -altera-unroll-loops,
+  -modernize-use-trailing-return-type,
+  -fuchsia-overloaded-operator,
+  -misc-non-private-member-variables-in-classes,
+  -cppcoreguidelines-non-private-member-variables-in-classes,
+  -misc-use-anonymous-namespace,
+  -altera-id-dependent-backward-branch,
+  -misc-multiple-inheritance,
+  -clang-analyzer-optin.core.EnumCastOutOfRange,
+  -cppcoreguidelines-pro-bounds-avoid-unchecked-container-access,
+
+WarningsAsErrors: "*"
+FormatStyle: none
+ExtraArgsBefore: ["-DBASE_LSP_ONLY"]
+
+CheckOptions:
+  - key: google-readability-function-size.StatementThreshold
+    value: "80"
+  - key: modernize-loop-convert.MaxCopySize
+    value: "16"
+  - key: modernize-loop-convert.MinConfidence
+    value: reasonable
+  - key: cppcoreguidelines-missing-std-forward.ForwardFunction
+    value: ::base::forward
+  - key: cppcoreguidelines-rvalue-reference-param-not-moved.MoveFunction
+    value: ::base::move
+  - key: readability-identifier-length.IgnoredVariableNames
+    value: _
+  - key: hicpp-signed-bitwise.IgnorePositiveIntegerLiterals
+    value: true
+  - key: misc-include-cleaner.IgnoreHeaders
+    value: "sys/.*;_abort.h"
