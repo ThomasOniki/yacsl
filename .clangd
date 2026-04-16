@@ -1,0 +1,7 @@
+If:
+  PathMatch: ["include/.*\\.hpp", "src/.*\\.cpp"]
+CompileFlags:
+  Add: [-DBASE_LSP_ONLY, -DBASE_NO_LIBCPP, -nostdinc++]
+
+Diagnostics:
+  UnusedIncludes: Strict
