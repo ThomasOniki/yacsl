@@ -1,111 +1,123 @@
 #pragma once
 
-#include "base/utils/KiB_MiB_GiB.hpp"
-#include "base/utils/move_forward.hpp"
-#include "base/utils/placement_new.hpp"
-#include "base/utils/trivially_x.hpp"
-#include <stdint.h>
+#include "base/memory/fwds.hpp"
+#include "base/type_traits/trivial.hpp"
+#include "base/utilities/constants.hpp"
+#include "base/utilities/move_forward.hpp"
+#include "base/utilities/placement_new.hpp"
+#include "base/utilities/type_aliases.hpp"
 
 namespace base {
 
 class Arena {
 public:
-	// capacity can be bigger than RAM, even disk size, as long as you don't touch the memory.
-	explicit consteval Arena(size_t capacity) : initial_capacity_((capacity + 4095) / 4096 * 4096) {}
+	using SizeT = uptr;
 
-	Arena(Arena&)	 = delete;
-	Arena(Arena&&) = delete;
+	explicit constexpr Arena(usize capacity) : initial_capacity_((capacity + 4095) / 4096 * 4096) {}
+	explicit constexpr Arena() = default;
+
+	Arena(const Arena&)			= delete;
+	Arena(Arena&&) noexcept = delete;
+
+	constexpr ~Arena() noexcept = default;
+
+	Arena& operator=(const Arena&)		 = delete;
+	Arena& operator=(Arena&&) noexcept = delete;
 
 	template <TriviallyDestructible T, typename... Args> [[nodiscard]] T& push(Args&&... args);
-	template <TriviallyDestructible T> [[nodiscard]] T*										push_array(uintptr_t count);
+	template <TriviallyDestructible T> [[nodiscard]] T*										push_array(SizeT count);
 
-	template <typename T> [[nodiscard]] T* push_storage();
-	template <typename T> [[nodiscard]] T* push_array_storage(uintptr_t count);
+	template <typename T> [[nodiscard]] T* allocate();
+	template <typename T> [[nodiscard]] T* allocate(SizeT count);
+
+	template <typename T> void free(T* /*ptr*/) {}
+	template <typename T> void free(T* /*ptr*/, SizeT /*count*/) {}
 
 public:
 	class Scope {
 	public:
-		Scope(Arena& arena) : arena_(arena), ptr_(arena.ptr_) {}
+		explicit Scope(Arena& arena) : arena_(arena), ptr_(arena.ptr_) {}
+		Scope(const Scope&)			= delete;
+		Scope(Scope&&) noexcept = delete;
 		~Scope() noexcept;
+		Scope& operator=(const Scope&)		 = delete;
+		Scope& operator=(Scope&&) noexcept = delete;
 
 	private:
-		Arena&		arena_;
-		uintptr_t ptr_;
+		Arena& arena_;
+		uchar* ptr_;
 	};
 
 private:
-	void reserve(size_t capacity);
+	void reserve(usize capacity);
 
 private:
-	uintptr_t begin_ = 0, end_ = 0, ptr_ = 0;
-	size_t		initial_capacity_ = 0;
+	uchar* begin_						 = nullptr;
+	uchar* end_							 = nullptr;
+	uchar* ptr_							 = nullptr;
+	usize	 initial_capacity_ = 1 * MiB;
 };
 
 template <TriviallyDestructible T, typename... Args> T& Arena::push(Args&&... args) {
-	T* value = push_storage<T>();
-	return *new (value) T(forward<Args>(args)...);
+	return *new (allocate<T>()) T(forward<Args>(args)...);
 }
 
-template <TriviallyDestructible T> T* Arena::push_array(uintptr_t count) {
-	T* ptr = push_array_storage<T>(count);
+template <TriviallyDestructible T> T* Arena::push_array(SizeT count) {
+	T* ptr = allocate<T>(count);
 
-	for (uintptr_t i = 0; i < count; ++i)
+	for (SizeT i = 0; i < count; ++i) {
 		new (ptr + i) T();
+	}
 	return ptr;
 }
 
-template <typename T> T* Arena::push_storage() {
-	ptr_ = (ptr_ + alignof(T) - 1) & ~(alignof(T) - 1);
+template <typename T> T* Arena::allocate() {
+	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+	uptr top = reinterpret_cast<uptr>(ptr_);
+	top			 = (top + alignof(T) - 1) & ~(alignof(T) - 1);
+	uptr ret = top;
+	top += sizeof(T);
 
-	T* ret = reinterpret_cast<T*>(ptr_);
-	ptr_ += sizeof(T);
+	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+	if (top > reinterpret_cast<uptr>(end_)) [[unlikely]] {
+		reserve(static_cast<usize>(end_ - begin_) * 2 + sizeof(T));
 
-	if (ptr_ > end_) [[unlikely]] {
-		reserve(end_ - begin_ + sizeof(T) * 2);
-		return push_storage<T>();
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+		top = reinterpret_cast<uptr>(ptr_);
+		top = (top + alignof(T) - 1) & ~(alignof(T) - 1);
+		ret = top;
+		top += sizeof(T);
 	}
 
-	return ret;
+	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast, performance-no-int-to-ptr)
+	ptr_ = reinterpret_cast<uchar*>(top);
+	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast, performance-no-int-to-ptr)
+	return reinterpret_cast<T*>(ret);
 }
 
-template <typename T> T* Arena::push_array_storage(uintptr_t count) {
-	ptr_ = (ptr_ + alignof(T) - 1) & ~(alignof(T) - 1);
+template <typename T> T* Arena::allocate(SizeT count) {
+	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+	uptr top = reinterpret_cast<uptr>(ptr_);
+	top			 = (top + alignof(T) - 1) & ~(alignof(T) - 1);
+	uptr ret = top;
+	top += sizeof(T) * count;
 
-	T* ret = reinterpret_cast<T*>(ptr_);
-	ptr_ += sizeof(T) * count;
+	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+	if (top > reinterpret_cast<uptr>(end_)) [[unlikely]] {
+		reserve(static_cast<usize>(end_ - begin_) * 2 + sizeof(T) * count);
 
-	if (ptr_ > end_) [[unlikely]] {
-		reserve(end_ - begin_ + sizeof(T) * count * 2);
-		return push_array_storage<T>(count);
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+		top = reinterpret_cast<uptr>(ptr_);
+		top = (top + alignof(T) - 1) & ~(alignof(T) - 1);
+		ret = top;
+		top += sizeof(T) * count;
 	}
 
-	return ret;
+	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast, performance-no-int-to-ptr)
+	ptr_ = reinterpret_cast<uchar*>(top);
+	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast, performance-no-int-to-ptr)
+	return reinterpret_cast<T*>(ret);
 }
-
-inline constinit thread_local Arena main_arena(4 * KiB);
-inline constinit thread_local Arena scratch_arena(4 * KiB);
-
-class MainArenaAllocator {
-public:
-	using SizeT = uintptr_t;
-
-	template <typename T> static T* alloc(SizeT count) { return main_arena.push_array_storage<T>(count); }
-	template <typename T> static T* alloc() { return main_arena.push_storage<T>(); }
-
-	template <typename T> static void free(T*, SizeT) noexcept {}
-	template <typename T> static void free(T*) noexcept {}
-};
-
-class ScratchArenaAllocator {
-public:
-	using SizeT = uintptr_t;
-
-	template <typename T> static T* alloc(SizeT count) { return scratch_arena.push_array_storage<T>(count); }
-	template <typename T> static T* alloc() { return scratch_arena.push_storage<T>(); }
-
-	template <typename T> static void free(T*, SizeT) noexcept {}
-	template <typename T> static void free(T*) noexcept {}
-};
 
 #ifdef BASE_LSP_ONLY
 template int& Arena::push<int>(); // Instantiates to avoid 'placement_new.hpp is unsed'.

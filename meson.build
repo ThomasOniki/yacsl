@@ -3,11 +3,20 @@ project(
   ['c', 'cpp'],
   default_options: ['c_std=c17', 'cpp_std=c++20', 'warning_level=3'],
   meson_version: '>=1.10',
+  subproject_dir: 'third_party',
 )
 
-sources = ['src/utils/assertions.cpp', 'src/memory/arena.cpp']
+sources = [
+  'src/utilities/assertions.cpp',
+  'src/memory/arena.cpp',
+  'src/logging/formatter.cpp',
+  'src/containers/char_buffer.cpp',
+  'src/logging/logger.cpp',
+  'src/utilities/terminate.cpp',
+  'src/files/file.cpp',
+]
 
-flags = []
+cpp_flags = []
 link_flags = []
 macros = []
 
@@ -16,32 +25,42 @@ cxx = meson.get_compiler('cpp')
 cc_id = cc.get_id()
 cxx_id = cxx.get_id()
 
-host_system = host_machine.system()
-unix = host_system == 'linux' or host_system == 'darwin' or host_system == 'freebsd'
-
-cc_clang_or_gcc = cc_id == 'clang' or cc_id == 'gcc'
-cxx_clang_or_gcc = cxx_id == 'clang' or cxx_id == 'gcc'
-clang_or_gcc = cc_clang_or_gcc or cxx_clang_or_gcc
-
 build_dir = meson.project_build_root()
 src_dir = meson.project_source_root()
 
-export_compile_commands = get_option('lsp') or (not get_option('not_lsp') and build_dir == src_dir / 'lsp-build')
+no_libcpp = get_option('no_libcpp')
 
-no_libcpp = get_option('no_libcpp') or export_compile_commands
-
-if clang_or_gcc
-  flags += [
-    '-Weverything',
+compiler_cpp_flags = {
+  'clang, emscripten, gcc': [
     '-Wno-c++98-compat',
+    '-Wno-c++98-compat-pedantic',
     '-Wno-unsafe-buffer-usage',
-  ]
-  if no_libcpp
-    flags += '-nostdinc++'
-    link_flags += '-nostdlib++'
-  endif
+    '-Wno-switch-default',
+    '-Wno-padded',
+  ],
 
-endif
+  f'if @no_libcpp@: clang, emscripten, gcc': [
+    '-nostdinc++',
+    '-nostdlib++',
+  ],
+}
+
+foreach compilers, flags : compiler_cpp_flags
+  if (compilers.startswith('if false: '))
+    continue
+  endif
+  if (
+    compilers.startswith(f'@cxx_id@, ')
+    or compilers.startswith(f'if true: @cxx_id@')
+    or compilers.endswith(f', @cxx_id@')
+    or compilers.contains(f', @cxx_id@, ')
+  )
+    cpp_flags += flags
+  endif
+endforeach
+
+host_system = host_machine.system()
+unix = host_system == 'linux' or host_system == 'darwin' or host_system == 'freebsd'
 
 if unix
   macros += 'BASE_PLATFORM_UNIX'
@@ -51,12 +70,10 @@ if no_libcpp
   macros += 'BASE_NO_LIBCPP'
 endif
 
-if export_compile_commands
-  macros += 'BASE_LSP_ONLY'
-endif
+macros += 'BASE_COMPILER_' + cxx_id.to_upper()
 
 foreach macro : macros
-  flags += '-D' + macro
+  cpp_flags += '-D' + macro
 endforeach
 
 threads_dep = dependency('threads')
@@ -65,11 +82,11 @@ lib = library(
   'base',
   sources: sources,
   include_directories: 'include',
-  c_args: flags,
-  cpp_args: flags,
+  cpp_args: cpp_flags,
   link_args: link_flags,
   dependencies: threads_dep,
   install: true,
+  override_options: {'werror': true, 'warning_level': 'everything'},
 )
 
 base_dep = declare_dependency(
@@ -82,6 +99,4 @@ install_subdir('include/base', install_dir: 'include')
 pkg = import('pkgconfig')
 pkg.generate(lib)
 
-if not no_libcpp or export_compile_commands
-  subdir('tests')
-endif
+subdir('tests')
