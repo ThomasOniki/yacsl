@@ -20,8 +20,8 @@ public:
 	[[nodiscard]] constexpr const T& front() const noexcept { return data_[0]; }
 	[[nodiscard]] constexpr const T& back() const noexcept { return data_[size_ - 1]; }
 
-	[[nodiscard]] constexpr T& operator[](SizeT index) noexcept { return data_[index]; }
-	[[nodiscard]] constexpr T& operator[](SizeT index) const noexcept { return data_[index]; }
+	[[nodiscard]] constexpr T&			 operator[](SizeT index) noexcept { return data_[index]; }
+	[[nodiscard]] constexpr const T& operator[](SizeT index) const noexcept { return data_[index]; }
 
 	[[nodiscard]] constexpr const T* begin() const noexcept { return data_; }
 	[[nodiscard]] constexpr const T* end() const noexcept { return data_ + size_; }
