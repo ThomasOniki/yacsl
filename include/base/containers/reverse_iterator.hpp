@@ -4,7 +4,7 @@ namespace base {
 
 template <typename It> class ReverseIterator {
 public:
-	// NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
+	// NOLINTNEXTLINE(google-explicit-constructor)
 	ReverseIterator(const It& iter) noexcept : it_(iter) { --it_; }
 	[[nodiscard]] auto operator*() const noexcept { return *it_; }
 	ReverseIterator&	 operator++() noexcept;
