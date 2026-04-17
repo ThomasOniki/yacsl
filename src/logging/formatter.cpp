@@ -23,20 +23,20 @@ static char* write_char1(char* buf, char8_t chr) {
 	return buf + 1;
 }
 static char* write_char2(char* buf, char32_t chr) {
-	static constexpr char32_t mask = 0b111111;
+	static constexpr char32_t mask = 0b11'1111;
 	buf[0]												 = static_cast<char>(0b1100'0000 | (chr >> 6));
 	buf[1]												 = static_cast<char>(0b1000'0000 | (chr & mask));
 	return buf + 2;
 }
 static char* write_char3(char* buf, char32_t chr) {
-	static constexpr char32_t mask = 0b111111;
+	static constexpr char32_t mask = 0b11'1111;
 	buf[0]												 = static_cast<char>(0b1110'0000 | (chr >> 12));
 	buf[1]												 = static_cast<char>(0b1000'0000 | ((chr >> 6) & mask));
 	buf[2]												 = static_cast<char>(0b1000'0000 | (chr & mask));
 	return buf + 3;
 }
 static char* write_char4(char* buf, char32_t chr) {
-	static constexpr char32_t mask = 0b111111;
+	static constexpr char32_t mask = 0b11'1111;
 	buf[0]												 = static_cast<char>(0b1111'0000 | (chr >> 18));
 	buf[1]												 = static_cast<char>(0b1000'0000 | ((chr >> 12) & mask));
 	buf[2]												 = static_cast<char>(0b1000'0000 | ((chr >> 6) & mask));
@@ -44,12 +44,59 @@ static char* write_char4(char* buf, char32_t chr) {
 	return buf + 4;
 }
 
+// [U+0000, U+D800) and [U+E000, U+10000)
+// Unicode == UTF-16
+//
+// [U+010000, U+110000)
+// Unicode - 0x10000 = yyyyyyyyyyxxxxxxxxxx
+// W1 = 0xD800 + yyyyyyyyyy = 110110yyyyyyyyyy
+// W2 = 0xDC00 + xxxxxxxxxx = 110111xxxxxxxxxx
+static char* write_low_surrogate(char* buf, char32_t high, char32_t low) {
+	static constexpr char32_t mask = 0b11'1111'1111;
+	high &= mask;
+	low &= mask;
+	char32_t unicode = 0x10000 + ((high << 10) | low);
+	return write_char4(buf, unicode);
+}
+
+[[maybe_unused]] constexpr static void test() {
+	[[maybe_unused]] constexpr char16_t arr[3]			 = u"🤓";
+	[[maybe_unused]] constexpr char32_t mask				 = 0b11'1111'1111;
+	[[maybe_unused]] constexpr char32_t high				 = arr[0];
+	[[maybe_unused]] constexpr char32_t low					 = arr[1];
+	[[maybe_unused]] constexpr char32_t high_masked	 = high & mask;
+	[[maybe_unused]] constexpr char32_t low_masked	 = low & mask;
+	[[maybe_unused]] constexpr char32_t high_shifted = high_masked << 10;
+}
+
+// unicode             UTF-8
+// [0x00000, 0x000080) 0yyyzzzz
+// [0x00080, 0x000800) 110xxxyy 10yyzzzz
+// [0x00800, 0x010000) 1110wwww 10xxxxyy 10yyzzzz
+// [0x10000, 0x110000) 11110uvv 10vvwwww 10xxxxyy 10yyzzzz
+//
+// UTF-16:
+// [U+0000, U+D800) and [U+E000, U+10000)
+// Unicode == UTF-16
+//
+// [010000, U+110000)
+// Unicode - 0x10000 = yyyyyyyyyyxxxxxxxxxx
+// W1 = 0xD800 + yyyyyyyyyy = 110110yyyyyyyyyy
+// W2 = 0xDC00 + xxxxxxxxxx = 110111xxxxxxxxxx
 template <typename C> static char* write_char(char* buf, C chr) {
 	if (sizeof(C) == 1 || chr < 0x80) {
 		return write_char1(buf, static_cast<char8_t>(chr));
 	}
 	if (chr < 0x800) {
 		return write_char2(buf, static_cast<char32_t>(chr));
+	}
+	if (sizeof(C) == 2 && chr >= 0xD800 && chr < 0xE000) {
+		static thread_local char32_t high;
+		if (chr < 0xDC00) {
+			high = static_cast<char32_t>(chr);
+			return buf;
+		}
+		return write_low_surrogate(buf, high, static_cast<char32_t>(chr));
 	}
 	if (chr < 0x10000) {
 		return write_char3(buf, static_cast<char32_t>(chr));
@@ -62,6 +109,13 @@ template <typename C> static void write_char(CharBuffer& buf, C chr) {
 		write_char1(buf.grow(1), static_cast<char8_t>(chr));
 	} else if (chr < 0x800) {
 		write_char2(buf.grow(2), static_cast<char32_t>(chr));
+	} else if (sizeof(C) == 2 && chr >= 0xD800 && chr < 0xE000) {
+		static thread_local char32_t high;
+		if (chr < 0xDC00) {
+			high = static_cast<char32_t>(chr);
+		} else {
+			write_low_surrogate(buf.grow(4), high, static_cast<char32_t>(chr));
+		}
 	} else if (chr < 0x10000) {
 		write_char3(buf.grow(3), static_cast<char32_t>(chr));
 	} else {
@@ -72,6 +126,20 @@ template <typename C> static void write_char(CharBuffer& buf, C chr) {
 template <typename T> static u32 char_len(T chr) {
 	if constexpr (sizeof(T) == 1) {
 		return 1;
+	}
+	if constexpr (sizeof(T) == 2) {
+		if (chr < 0x80) {
+			return 1;
+		}
+		if (chr < 0xD800) {
+			return chr < 0x800 ? 2 : 3;
+		}
+		if (chr >= 0xE000) {
+			return 3;
+		}
+		// If its a surrogate, returns 2 here. All surrogate pairs in UTF-8 are 4 chars, and when the
+		// 2 2s from the 2 surrogates are added it makes 4.
+		return 2;
 	}
 	if (chr < 0x80) {
 		return 1;
@@ -256,21 +324,37 @@ template <typename C> static void format_char(CharBuffer& buf, C chr, const Form
 template <typename C>
 static void format_debug_char(CharBuffer& buf, C chr, const FormatOptions& opts) {
 	const u32 len = debug_char_len(chr);
-	if (len >= opts.width) {
-		write_debug_char(buf.grow(len), chr);
+	// +2 for the quotes
+	if (len + 2 >= opts.width) {
+		char* str = buf.grow(len + 2);
+		str[0]		= '\'';
+		++str;
+		str[len] = '\'';
+		write_debug_char(str, chr);
 		return;
 	}
-	char*			begin			 = buf.grow(opts.width);
-	const u32 pad_amount = opts.width - len;
+	char* str = buf.grow(opts.width);
 	if (opts.align == '>') {
-		write_debug_char(begin + pad_amount, chr);
-		memset(begin, opts.fill, pad_amount);
+		const u32 pad_amount = opts.width - len;
+		str[pad_amount]			 = '\'';
+		++str;
+		str[pad_amount + len] = '\'';
+		write_debug_char(str + pad_amount, chr);
+		memset(str, opts.fill, pad_amount);
 	} else if (opts.align == '<') {
-		write_debug_char(begin, chr);
-		memset(begin + len, opts.fill, pad_amount);
+		const u32 pad_amount = opts.width - len;
+		str[0]							 = '\'';
+		++str;
+		str[len] = '\'';
+		write_debug_char(str, chr);
+		memset(str + len, opts.fill, pad_amount);
 	} else {
-		memset(begin, opts.fill, opts.width);
-		write_debug_char(begin + pad_amount / 2, chr);
+		const u32 pad_amount = (opts.width - len) / 2;
+		str[pad_amount]			 = '\'';
+		++str;
+		str[pad_amount + len] = '\'';
+		memset(str, opts.fill, opts.width);
+		write_debug_char(str + pad_amount, chr);
 	}
 }
 
@@ -350,7 +434,7 @@ static void format_string(CharBuffer& buf, const BasicStringView<C, usize>& usiz
 		return;
 	}
 	char*			begin = buf.grow(opts.width);
-	const u32 pad		= opts.width - static_cast<u32>(str.size());
+	const u32 pad		= opts.width - real_len;
 	if (opts.align == '>') {
 		memset(begin, opts.fill, pad);
 		write_string<Debug>(begin + pad, str);
@@ -411,11 +495,11 @@ template <typename T, u32 Base> static u32 count_digits_base_x(T value) {
 	return 0;
 }
 
-template <Integral T, u32 Base> static constexpr StackArray<T, 128> gen_powers() {
-	StackArray<T, 128> ret = {};
+template <Integral T, u32 Base> static constexpr StackArray<T, 130> gen_powers() {
+	StackArray<T, 130> ret = {};
 	T									 pow = Base;
 
-	for (u32 i = 1; i < 128; ++i) {
+	for (u32 i = 2; i < 130; ++i) {
 		if (pow <= Limits<T>::max / Base) {
 			pow *= Base;
 		} else {
@@ -428,16 +512,18 @@ template <Integral T, u32 Base> static constexpr StackArray<T, 128> gen_powers()
 
 template <u32 Base, typename T>
 static void format_integral(CharBuffer& buf, T value, const FormatOptions& opts, char sign) {
-	// 0, Base, Base^2, Base^3...
-	static constexpr StackArray<T, 128> powers = gen_powers<T, Base>();
+	// 0, 0, Base, Base^2, Base^3...
+	static constexpr StackArray<T, 130> powers = gen_powers<T, Base>();
 
 	const bool has_sign = sign != '\0';
 
 	// If value < powers[width], value has width or less digits. If it does, you can skip counting
 	// digits and format from buf + width if the alignment is right (which is the default).
-	// The + has_sign is there because if there is a sign to print, the length is one more so you
-	// need to compare with the next power.
-	if (value >= powers[opts.width + has_sign]) {
+	// The - has_sign is here because if there is a sign to print, the value  can be Base times
+	// smaller since one of the digits will replaced by the sign.
+	// The + 1 is here because the whole powers array is offset. This is so that if width is 0 and
+	// has_sign is 1, you don't get -1 as the index.
+	if (value >= powers[1 + opts.width - has_sign]) {
 		const u32 len = count_digits_base_x<T, Base>(value) + has_sign;
 		buf.grow(len);
 		char* before_num = itoa_from_end_base_x<T, Base>(buf.end(), value);
