@@ -7,7 +7,7 @@ namespace base {
 
 template <usize N> class NTTPString {
 public:
-	// NOLINTNEXTLINE
+	// NOLINTNEXTLINE(modernize-avoid-c-arrays, google-explicit-constructor)
 	constexpr NTTPString(const char (&str)[N]) {
 		for (usize i = 0; i < N; ++i) {
 			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
@@ -31,10 +31,11 @@ public:
 	[[nodiscard]] ReverseIterator<const char*> crend() const noexcept { return data_; }
 
 public:
-	char data_[N] = {'\0'}; // NOLINT
+	// NOLINTNEXTLINE(modernize-avoid-c-arrays)
+	char data_[N] = {'\0'};
 };
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays, hicpp-avoid-c-arrays, modernize-avoid-c-arrays)
+// NOLINTNEXTLINE(modernize-avoid-c-arrays)
 template <usize N> NTTPString(const char (&str)[N]) -> NTTPString<N>;
 
 } // namespace base
