@@ -2,6 +2,7 @@
 
 #include "base/containers/fwds.hpp"
 #include "base/containers/reverse_iterator.hpp"
+#include "base/utilities/type_aliases.hpp"
 
 namespace base {
 
@@ -41,6 +42,12 @@ private:
 	const T* data_ = nullptr;
 	SizeT		 size_ = 0;
 };
+
+template <typename Char, typename SizeT>
+BasicStringView(const Char*, SizeT) -> BasicStringView<Char, SizeT>;
+template <typename Char> BasicStringView(const Char*, const Char*) -> BasicStringView<Char, usize>;
+template <typename Char, usize N> // NOLINTNEXTLINE(modernize-avoid-c-arrays)
+BasicStringView(const Char (&)[N]) -> BasicStringView<Char, usize>;
 
 using StringView = BasicStringView<char>;
 
