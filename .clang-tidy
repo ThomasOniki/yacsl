@@ -1,4 +1,4 @@
-Checks: |
+Checks: >
   *,
   llvm-*,
   -llvmlibc*,
@@ -24,6 +24,13 @@ Checks: |
   -clang-analyzer-optin.core.EnumCastOutOfRange,
   -cppcoreguidelines-pro-bounds-avoid-unchecked-container-access,
 
+  -hicpp-explicit-conversions,
+
+# hicpp-explicit-conversions is an alias for google-explicit-constructor, so I removed
+# it so that if you want to ignore it you don't have to write // NOLINT for both 
+# google-explicit-constructor and hicpp-explicit-conversions.
+
+ 
 WarningsAsErrors: "*"
 FormatStyle: none
 ExtraArgsBefore: ["-DBASE_LSP_ONLY"]
