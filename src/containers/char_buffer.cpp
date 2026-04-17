@@ -9,10 +9,10 @@ namespace base {
 
 void CharBuffer::definitely_reserve(usize capacity) {
 	char* data = ScratchArenaAllocator::get().allocate<char>(capacity);
-	memcpy(data, data_, size());
+	memcpy(data, begin_, size());
 	end_					 = data + size();
-	data_					 = data;
-	allocated_end_ = data_ + capacity;
+	begin_				 = data;
+	allocated_end_ = data + capacity;
 }
 
 void CharBuffer::reserve(usize capacity) {
@@ -22,14 +22,15 @@ void CharBuffer::reserve(usize capacity) {
 }
 
 char* CharBuffer::grow(usize count) {
-	char* end = end_;
+	char* ret = end_;
 	end_ += count;
 	if (end_ > allocated_end_) {
 		end_ -= count;
 		definitely_reserve(capacity() * 2 + count);
+		ret = end_;
 		end_ += count;
 	}
-	return end;
+	return ret;
 }
 
 void CharBuffer::append(const StringView& str) {
