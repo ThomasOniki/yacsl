@@ -3,8 +3,11 @@
 #include "base/containers/char_buffer.hpp"
 #include "base/containers/string_view.hpp"
 #include "base/logging/common.hpp"
+#include "base/metaprogramming/declval.hpp"
 #include "base/strings/str_to_int.hpp"
 #include "base/type_traits/categories.hpp"
+#include "base/type_traits/qualifiers.hpp"
+#include "base/type_traits/range.hpp"
 #include "base/utilities/extended_types.hpp"
 #include "base/utilities/type_aliases.hpp"
 
@@ -119,7 +122,7 @@ private:
 	char type_	= 's';
 };
 
-template <typename T> class Formatter<T*> {
+template <> class Formatter<void*> {
 public:
 	constexpr const char* parse(const char* fmt) {
 		FormatStringParser parser(fmt);
@@ -129,7 +132,7 @@ public:
 		return parser.end_parse();
 	}
 
-	void format(CharBuffer& buf, const T* ptr) const;
+	void format(CharBuffer& buf, const void* ptr) const;
 
 private:
 	u32	 width_ = 0;
@@ -137,7 +140,13 @@ private:
 	char align_ = '<';
 };
 
-template <> class Formatter<StringView> {
+template <typename T> class Formatter<T*> : Formatter<void*> {
+public:
+	constexpr const char* parse(const char* fmt) { return Formatter<void*>::parse(fmt); }
+	void format(CharBuffer& buf, const T* ptr) const { Formatter<void*>::format(buf, ptr); }
+};
+
+template <Character Char> class Formatter<BasicStringView<Char, usize>> {
 public:
 	constexpr const char* parse(const char* fmt) {
 		FormatStringParser parser(fmt);
@@ -148,7 +157,9 @@ public:
 		return parser.end_parse();
 	}
 
-	void format(CharBuffer& buf, const StringView& str) const;
+	using Reference = const BasicStringView<Char, usize>&;
+
+	void format(CharBuffer& buf, Reference str) const;
 
 private:
 	u32	 width_ = 0;
@@ -157,30 +168,73 @@ private:
 	char type_	= 's';
 };
 
-template <usize N> class Formatter<char[N]> : Formatter<StringView> { // NOLINT
-public:
-	constexpr const char* parse(const char* fmt) { return Formatter<StringView>::parse(fmt); }
+extern template void Formatter<BasicStringView<char>>::format(CharBuffer&, Reference) const;
+extern template void Formatter<BasicStringView<unsigned char>>::format(CharBuffer&,
+																																			 Reference) const;
+extern template void Formatter<BasicStringView<signed char>>::format(CharBuffer&, Reference) const;
+extern template void Formatter<BasicStringView<wchar_t>>::format(CharBuffer&, Reference) const;
+extern template void Formatter<BasicStringView<char8_t>>::format(CharBuffer&, Reference) const;
+extern template void Formatter<BasicStringView<char16_t>>::format(CharBuffer&, Reference) const;
+extern template void Formatter<BasicStringView<char32_t>>::format(CharBuffer&, Reference) const;
 
-	void format(CharBuffer& buf, const StringView& str) { Formatter<StringView>::format(buf, str); }
+template <Character Char, typename SizeT>
+class Formatter<BasicStringView<Char, SizeT>> : Formatter<BasicStringView<Char, usize>> {
+public:
+	constexpr const char* parse(const char* fmt) {
+		return Formatter<BasicStringView<Char>>::parse(fmt);
+	}
+	void format(CharBuffer& buf, const BasicStringView<Char, SizeT>& str) const {
+		return Formatter<BasicStringView<Char>>::format(
+				buf, BasicStringView<Char>(str.data(), static_cast<usize>(str.size())));
+	}
 };
 
-template <usize N> class Formatter<const char[N]> : Formatter<StringView> { // NOLINT
+// NOLINTNEXTLINE(modernize-avoid-c-arrays)
+template <Character Char, usize N> class Formatter<Char[N]> : Formatter<BasicStringView<Char>> {
 public:
-	constexpr const char* parse(const char* fmt) { return Formatter<StringView>::parse(fmt); }
-
-	void format(CharBuffer& buf, const StringView& str) { Formatter<StringView>::format(buf, str); }
+	constexpr const char* parse(const char* fmt) {
+		return Formatter<BasicStringView<Char>>::parse(fmt);
+	}
+	// NOLINTNEXTLINE(modernize-avoid-c-arrays)
+	void format(CharBuffer& buf, const Char (&str)[N]) const {
+		return Formatter<BasicStringView<Char>>::format(buf, BasicStringView(str, N - 1));
+	}
+};
+template <Character Char, usize N>
+// NOLINTNEXTLINE(modernize-avoid-c-arrays)
+class Formatter<const Char[N]> : Formatter<BasicStringView<Char>> {
+public:
+	constexpr const char* parse(const char* fmt) {
+		return Formatter<BasicStringView<Char>>::parse(fmt);
+	}
+	// NOLINTNEXTLINE(modernize-avoid-c-arrays)
+	void format(CharBuffer& buf, const Char (&str)[N]) const {
+		return Formatter<BasicStringView<Char>>::format(buf, BasicStringView(str, N - 1));
+	}
 };
 
-template <> class Formatter<const char*> : Formatter<StringView> {
+template <Range T> class Formatter<T> : Formatter<RemoveCVRef<decltype(*declval<T>().begin())>> {
 public:
-	constexpr const char* parse(const char* fmt) { return Formatter<StringView>::parse(fmt); }
-	void									format(CharBuffer& buf, const char* str);
-};
+	constexpr const char* parse(const char* fmt) { return Base::parse(fmt); }
 
-template <> class Formatter<char*> : Formatter<StringView> {
-public:
-	constexpr const char* parse(const char* fmt) { return Formatter<StringView>::parse(fmt); }
-	void									format(CharBuffer& buf, const char* str);
+	void format(CharBuffer& buf, const T& range) {
+		buf.append('[');
+		auto iter = range.begin();
+		auto end	= range.end();
+		if (iter != end) {
+			Base::format(buf, *iter);
+			++iter;
+			for (; iter != end; ++iter) {
+				buf.append(", ");
+				Base::format(buf, *iter);
+			}
+		}
+		buf.append(']');
+	}
+
+private:
+	using Element = RemoveCVRef<decltype(*declval<T>().begin())>;
+	using Base		= Formatter<Element>;
 };
 
 constexpr FormatStringParser::FormatStringParser(const char* fmt) : fmt_(fmt) {
