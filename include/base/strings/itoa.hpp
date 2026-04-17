@@ -84,7 +84,7 @@ template <UnsignedIntegral T> constexpr u32 itoa_bit_count(T value) {
 	_BitScanReverse(&log2, value);
 	return static_cast<u32>(log2 + 1);
 #else
-	return value ? sizeof(T) * 8 - static_cast<u32>(__builtin_clzg(value)) + 1 : 1;
+	return value ? sizeof(T) * 8 - static_cast<u32>(__builtin_clzg(value)) : 1;
 #endif
 }
 template <UnsignedIntegral T> constexpr u32 itoa_octal_digit_count(T value) {
@@ -93,7 +93,7 @@ template <UnsignedIntegral T> constexpr u32 itoa_octal_digit_count(T value) {
 	_BitScanReverse(&log2, value);
 	return log2 / 3 + 1;
 #else
-	return value ? (sizeof(T) * 8 - static_cast<u32>(__builtin_clzg(value))) / 3 + 1 : 1;
+	return value ? (sizeof(T) * 8 - static_cast<u32>(__builtin_clzg(value))) / 3 : 1;
 #endif
 }
 template <UnsignedIntegral T> constexpr u32 itoa_hex_digit_count(T value) {
@@ -215,20 +215,20 @@ template <UnsignedIntegral T> constexpr char* itoa_from_end_bin(char* buf_end, T
 				memcpy(buf_end, table + value * 6, 6);
 			} else {
 				buf_end -= 5;
-				memcpy(buf_end, table + value * 6, 5);
+				memcpy(buf_end, table + 1 + value * 6, 5);
 			}
 		} else {
 			buf_end -= 4;
-			memcpy(buf_end, table + value * 6, 4);
+			memcpy(buf_end, table + 2 + value * 6, 4);
 		}
 	} else {
 		if (value >= 2) {
 			if (value >= 4) {
 				buf_end -= 3;
-				memcpy(buf_end, table + value * 6, 3);
+				memcpy(buf_end, table + 3 + value * 6, 3);
 			} else {
 				buf_end -= 2;
-				memcpy(buf_end, table + value * 6, 2);
+				memcpy(buf_end, table + 4 + value * 6, 2);
 			}
 		} else {
 			--buf_end;
