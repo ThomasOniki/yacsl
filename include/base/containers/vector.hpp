@@ -30,11 +30,11 @@ public:
 	constexpr ~Vector() noexcept;
 
 	template <usize OtherN, typename OtherAllocator, typename OtherSizeT>
-	// NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
+	// NOLINTNEXTLINE(google-explicit-constructor)
 	constexpr Vector(const Vector<T, OtherN, OtherAllocator, OtherSizeT>& other);
 	constexpr Vector(const Vector& other);
 	template <usize OtherN, typename OtherAllocator, typename OtherSizeT>
-	// NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
+	// NOLINTNEXTLINE(google-explicit-constructor)
 	constexpr Vector(Vector<T, OtherN, OtherAllocator, OtherSizeT>&& other) noexcept;
 	constexpr Vector(Vector&& other) noexcept;
 
@@ -48,7 +48,7 @@ public:
 	constexpr Vector& operator=(const InitializerList<T>& init);
 
 	constexpr void push_back(const T& value) { emplace_back(value); }
-	constexpr void push_back(T&& value) { emplace_back(::base::move(value)); }
+	constexpr void push_back(T&& value) { emplace_back(base::move(value)); }
 
 	template <typename... Args> constexpr void emplace_back(Args&&... args);
 
@@ -132,8 +132,7 @@ namespace internal {
 template <typename T, usize N, typename Allocator, typename SizeT> struct VectorMembers {
 protected:
 	constexpr VectorMembers() = default;
-	// NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-	constexpr VectorMembers(SizeT size) : size_(size) {}
+	explicit constexpr VectorMembers(SizeT size) : size_(size) {}
 
 protected:
 	static constexpr bool trivial = TriviallyCopyable<T> && TriviallyDestructible<T>;
@@ -353,7 +352,7 @@ constexpr void Vector<T, N, Allocator, SizeT>::emplace_back(Args&&... args) {
 	if (size_ == capacity_) [[unlikely]] {
 		definitely_reserve(capacity_ * 2 + 1);
 	}
-	new (data_ + size_) T(forward<Args>(args)...);
+	new (data_ + size_) T(base::forward<Args>(args)...);
 	++size_;
 }
 

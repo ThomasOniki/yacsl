@@ -27,7 +27,7 @@ public:
 		}
 		CharBuffer buf;
 		buf.append(LOG_LEVEL_STRINGS[static_cast<u8>(lvl)]);
-		format_to(buf, fmt, forward<Args>(args)...);
+		format_to(buf, fmt, base::forward<Args>(args)...);
 		buf.append('\n');
 		file_.write(StringView(buf.begin(), buf.end()));
 	}
@@ -56,31 +56,31 @@ public:
 	void critical(const StringView& msg) { log(LogLevel::Critical, msg); }
 
 	template <typename... Args> void trace3(const FormatString<Args...>& fmt, Args&&... args) {
-		log(LogLevel::Trace3, fmt, forward<Args>(args)...);
+		log(LogLevel::Trace3, fmt, base::forward<Args>(args)...);
 	}
 	template <typename... Args> void trace2(const FormatString<Args...>& fmt, Args&&... args) {
-		log(LogLevel::Trace2, fmt, forward<Args>(args)...);
+		log(LogLevel::Trace2, fmt, base::forward<Args>(args)...);
 	}
 	template <typename... Args> void trace1(const FormatString<Args...>& fmt, Args&&... args) {
-		log(LogLevel::Trace1, fmt, forward<Args>(args)...);
+		log(LogLevel::Trace1, fmt, base::forward<Args>(args)...);
 	}
 	template <typename... Args> void debug(const FormatString<Args...>& fmt, Args&&... args) {
-		log(LogLevel::Debug, fmt, forward<Args>(args)...);
+		log(LogLevel::Debug, fmt, base::forward<Args>(args)...);
 	}
 	template <typename... Args> void info(const FormatString<Args...>& fmt, Args&&... args) {
-		log(LogLevel::Info, fmt, forward<Args>(args)...);
+		log(LogLevel::Info, fmt, base::forward<Args>(args)...);
 	}
 	template <typename... Args> void notice(const FormatString<Args...>& fmt, Args&&... args) {
-		log(LogLevel::Notice, fmt, forward<Args>(args)...);
+		log(LogLevel::Notice, fmt, base::forward<Args>(args)...);
 	}
 	template <typename... Args> void warn(const FormatString<Args...>& fmt, Args&&... args) {
-		log(LogLevel::Warning, fmt, forward<Args>(args)...);
+		log(LogLevel::Warning, fmt, base::forward<Args>(args)...);
 	}
 	template <typename... Args> void error(const FormatString<Args...>& fmt, Args&&... args) {
-		log(LogLevel::Error, fmt, forward<Args>(args)...);
+		log(LogLevel::Error, fmt, base::forward<Args>(args)...);
 	}
 	template <typename... Args> void critical(const FormatString<Args...>& fmt, Args&&... args) {
-		log(LogLevel::Critical, fmt, forward<Args>(args)...);
+		log(LogLevel::Critical, fmt, base::forward<Args>(args)...);
 	}
 
 private:

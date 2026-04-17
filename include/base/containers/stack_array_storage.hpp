@@ -14,7 +14,7 @@ namespace base {
 template <typename T, usize N, typename SizeT> class StackArrayStorage {
 public:
 	template <typename... Args> constexpr void construct_at(SizeT index, Args&&... args) {
-		new (data() + index) T(forward<Args>(args)...);
+		new (data() + index) T(base::forward<Args>(args)...);
 	}
 
 	constexpr void destruct_at(SizeT index) { data()[index].~T(); }

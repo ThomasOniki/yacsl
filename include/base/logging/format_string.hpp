@@ -21,7 +21,7 @@ template <typename FString> class FormatToImpl;
 template <usize... Indices, typename... Args>
 class FormatStringImpl<IndexSequence<Indices...>, Args...> {
 public:
-	// NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
+	// NOLINTNEXTLINE(google-explicit-constructor)
 	consteval FormatStringImpl(const char* fmt) {
 		(..., [&]() {
 			const char* segment_begin = fmt;
@@ -76,7 +76,7 @@ public:
 														 Args&&... args) {
 		(..., [&]() {
 			buf.append(fmt.segments_[Indices]);
-			fmt.formatters_.template get<Indices>().format(buf, forward<Args>(args));
+			fmt.formatters_.template get<Indices>().format(buf, base::forward<Args>(args));
 		}());
 		buf.append(fmt.segments_[sizeof...(Args)]);
 	}
@@ -86,7 +86,8 @@ public:
 
 template <typename... Args>
 void format_to(CharBuffer& buf, const FormatString<Args...>& fmt, Args&&... args) {
-	internal::FormatToImpl<FormatString<Args...>>::format_to_impl(buf, fmt, forward<Args>(args)...);
+	internal::FormatToImpl<FormatString<Args...>>::format_to_impl(buf, fmt,
+																																base::forward<Args>(args)...);
 }
 
 } // namespace base

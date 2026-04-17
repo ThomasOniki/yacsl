@@ -9,7 +9,7 @@ namespace base {
 template <typename T> class StackStorage {
 public:
 	template <typename... Args> constexpr void construct(Args&&... args) {
-		new (get()) T(forward<Args>(args)...);
+		new (get()) T(base::forward<Args>(args)...);
 	}
 	constexpr void destruct() { get()->~T(); }
 
