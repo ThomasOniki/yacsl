@@ -1,53 +1,81 @@
+#include "base/containers/initializer_list.hpp"
 #include "base/logging/file_logger.hpp"
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 
+// NOLINTBEGIN
+
 int main() {
 	constexpr size_t buf_size = 4096;
-	// NOLINTNEXTLINE(modernize-avoid-c-arrays)
-	char expected[buf_size] = {};
 	{
-		base::FileLogger logger("test_logs.txt", base::LogLevel::Trace3);
 
-		int		space = buf_size;
-		char* end		= static_cast<char*>(expected) + buf_size;
+#define PRINT(func)                                                                                \
+	do {                                                                                             \
+		base::FileLogger logger("test_logs.txt", base::LogLevel::Trace3);                              \
+		logger.func;                                                                                   \
+	} while (false)
 
-#define PRINT(...) space -= snprintf(end - space, static_cast<size_t>(space), __VA_ARGS__)
+		char buf[buf_size];
+		int	 buf_space = buf_size;
 
-		logger.info("hello, {}", "world!");
-		logger.trace1("int: {}, hex: {x}.", 5, 31);
-		logger.notice("aligned: {010}, centered: {*^7}, left, hex: {<4x}.", 96, 737, 0xf3a);
-		logger.warn("+ sign: {0+10}.", 386);
-		logger.trace2("centered wstring: |{^10}|", L"hello");
-		logger.debug("debug char: {?}, debug string: {?}", '\n', "\x17\0abcde\n\t");
-		logger.info("unicode char: {}, debug wstring with unicode: {*>3?}", U'😁', L"nerd emoji: 🤓");
+#define CHECK(...)                                                                                 \
+	do {                                                                                             \
+		buf_space -=                                                                                   \
+				snprintf(buf + buf_size - buf_space, static_cast<size_t>(buf_space), __VA_ARGS__);         \
+		char	logs[buf_size] = {};                                                                     \
+		FILE* fp						 = fopen("test_logs.txt", "rb");                                           \
+		(void)fread(logs, sizeof(logs), 1, fp);                                                        \
+		(void)fclose(fp);                                                                              \
+                                                                                                   \
+		if (memcmp(static_cast<void*>(logs), static_cast<void*>(buf), buf_size) != 0) {                \
+			printf("Logging test failed. Expected\n%s,got\n%s.\n", buf, logs);                           \
+			(void)remove("test_logs.txt");                                                               \
+			return 1;                                                                                    \
+		}                                                                                              \
+	} while (0)
 
-		PRINT("[INFO] hello, world!\n");
-		PRINT("[TRACE 1] int: %d, hex: %x.\n", 5, 31U);
-		PRINT("[NOTICE] aligned: %010d, centered: **737**, left, hex: f3a .\n", 96);
-		PRINT("[WARNING] + sign: 000000+386.\n");
-		PRINT("[TRACE 2] centered wstring: |  hello   |\n");
-		PRINT("[DEBUG] debug char: '\\n', debug string: %s\n", R"("\x17\0abcde\n\t")");
+		PRINT(info("Hello, {}", "world!"));
+		CHECK("[INFO] Hello, world!\n");
 
-		const char* unicode = "[INFO] unicode char: 😁, debug wstring with unicode: \"nerd emoji: 🤓\"";
-		strcat(end - space, unicode);
-		space -= static_cast<int>(strlen(unicode));
-	}
+		PRINT(trace1("int: {}, hex: {x}.", 5, 31));
+		CHECK("[TRACE 1] int: %d, hex: %x.\n", 5, 31U);
 
-	// NOLINTNEXTLINE(modernize-avoid-c-arrays)
-	char logs[sizeof(expected)] = {};
-	{
-		FILE* fp = fopen("test_logs.txt", "rb");
-		(void)fread(logs, sizeof(logs), 1, fp);
-		(void)fclose(fp);
+		PRINT(notice("aligned: {010}, centered: {*^7}, left, hex: {<4x}.", 96, 737, 0xf3a));
+		CHECK("[NOTICE] aligned: %010d, centered: **737**, left, hex: f3a .\n", 96);
+
+		PRINT(warn("+ sign: {0+10}.", 386));
+		CHECK("[WARNING] + sign: 000000+386.\n");
+
+		PRINT(debug("int list: {}, hex int list: {08x}", base::InitializerList<int>{0, -1, 20, -35},
+								base::InitializerList<int>{0xF, -0x1a, 0x1, 0x0}));
+		CHECK("[DEBUG] int list: [0, -1, 20, -35], hex int list: [%08x, 00000-1a, %08x, %08x]\n", 0xFU,
+					0x1U, 0x0U);
+
+		PRINT(trace2("centered wstring: |{^10}|", L"hello"));
+		CHECK("[TRACE 2] centered wstring: |  hello   |\n");
+
+		PRINT(debug("debug char: {?}, debug string: {?}", '\n', "\x17\0abcde\n\t"));
+		CHECK("[DEBUG] debug char: '\\n', debug string: %s\n", R"("\x17\0abcde\n\t")");
+
+		PRINT(notice("unicode char: {}, debug wstring with unicode: {*>3?}", U'😁', L"nerd emoji: 🤓"));
+		CHECK("[NOTICE] unicode char: 😁, debug wstring with unicode: \"nerd emoji: 🤓\"\n");
+
+		PRINT(critical("char16_t string range: {*^10}",
+									 base::InitializerList<base::BasicStringView<char16_t>>{
+											 u"foo", u"bar", u"🤓", u"⭐",
+											 u"The emoji aren't padded correctly because they use 4 UTF-8 chars."}));
+		CHECK("[CRITICAL] char16_t string range: [***foo****, ***bar****, ***🤓***, ***⭐****, "
+					"The emoji aren't padded correctly because they use 4 UTF-8 chars.]\n");
+
+		PRINT(notice("debug char16_t string: {?}", u"nerd emoji (again): 🤓, newline: \n"));
+		CHECK("[NOTICE] debug char16_t string: \"nerd emoji (again): 🤓, newline: \\n\"\n");
+
+		PRINT(info("Goodbye, world!"));
+		CHECK("[INFO] Goodbye, world!\n");
 	}
 
 	(void)remove("test_logs.txt");
-
-	if (memcmp(static_cast<void*>(logs), static_cast<void*>(expected), sizeof(expected)) != 0) {
-		printf("Logging test failed. Expected\n%s\n,got\n%s\n.\n", static_cast<const char*>(expected),
-					 static_cast<const char*>(logs));
-		return 1;
-	}
 }
+
+// NOLINTEND
