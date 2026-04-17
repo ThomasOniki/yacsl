@@ -59,7 +59,7 @@ private:
 };
 
 template <TriviallyDestructible T, typename... Args> T& Arena::push(Args&&... args) {
-	return *new (allocate<T>()) T(forward<Args>(args)...);
+	return *new (allocate<T>()) T(base::forward<Args>(args)...);
 }
 
 template <TriviallyDestructible T> T* Arena::push_array(SizeT count) {

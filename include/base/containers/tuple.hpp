@@ -16,7 +16,7 @@ public:
 
 	template <typename Arg>
 	// NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
-	explicit constexpr TupleLeaf(Arg&& other) noexcept : value_(forward<Arg>(other)) {}
+	explicit constexpr TupleLeaf(Arg&& other) noexcept : value_(base::forward<Arg>(other)) {}
 
 	[[nodiscard]] constexpr T&			 get() noexcept { return value_; }
 	[[nodiscard]] constexpr const T& get() const noexcept { return value_; }
@@ -34,10 +34,10 @@ public:
 	constexpr TupleImpl() = default;
 
 	template <typename... Args>
-	// NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
+	// NOLINTNEXTLINE(google-explicit-constructor)
 	constexpr TupleImpl(Args&&... args)
 		requires(sizeof...(Args) == sizeof...(Ts))
-			: TupleLeaf<Indices, Ts>(forward<Args>(args))... {}
+			: TupleLeaf<Indices, Ts>(base::forward<Args>(args))... {}
 
 	static constexpr usize size() noexcept { return sizeof...(Ts); }
 
