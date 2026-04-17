@@ -17,29 +17,29 @@ public:
 	// want to memcpy into. It returns new_end - count.
 	char* grow(usize count);
 
-	[[nodiscard]] usize size() const noexcept { return static_cast<usize>(end_ - data_); }
+	[[nodiscard]] usize size() const noexcept { return static_cast<usize>(end_ - begin_); }
 	[[nodiscard]] usize capacity() const noexcept {
-		return static_cast<usize>(allocated_end_ - data_);
+		return static_cast<usize>(allocated_end_ - begin_);
 	}
 
-	[[nodiscard]] char*				data() noexcept { return data_; }
-	[[nodiscard]] const char* data() const noexcept { return data_; }
+	[[nodiscard]] char*				data() noexcept { return begin_; }
+	[[nodiscard]] const char* data() const noexcept { return begin_; }
 
-	[[nodiscard]] char*				begin() noexcept { return data_; }
+	[[nodiscard]] char*				begin() noexcept { return begin_; }
 	[[nodiscard]] char*				end() noexcept { return end_; }
-	[[nodiscard]] const char* begin() const noexcept { return data_; }
+	[[nodiscard]] const char* begin() const noexcept { return begin_; }
 	[[nodiscard]] const char* end() const noexcept { return end_; }
-	[[nodiscard]] const char* cbegin() const noexcept { return data_; }
+	[[nodiscard]] const char* cbegin() const noexcept { return begin_; }
 	[[nodiscard]] const char* cend() const noexcept { return end_; }
 
 private:
 	void definitely_reserve(usize capacity);
 
 private:
-	StackArray<char, 64> fixed_					= {'\0'};
-	char*								 data_					= fixed_.data();
-	char*								 end_						= fixed_.data();
-	char*								 allocated_end_ = fixed_.end();
+	StackArray<char, 1> fixed_				 = {'\0'};
+	char*								begin_				 = fixed_.data();
+	char*								end_					 = fixed_.data();
+	char*								allocated_end_ = fixed_.end();
 };
 
 } // namespace base
