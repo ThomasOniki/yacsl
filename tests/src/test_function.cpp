@@ -63,7 +63,7 @@ public:
 
 #define CHECK_COUNTS(...)                                                                          \
 	do {                                                                                             \
-		Counts expected = Counts{__VA_ARGS__};                                                         \
+		const Counts expected = Counts{__VA_ARGS__};                                                   \
 		EXPECT_EQ(TestStruct::counts, expected);                                                       \
 		TestStruct::reset_counts();                                                                    \
 	} while (false)

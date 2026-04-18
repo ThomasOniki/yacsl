@@ -3,8 +3,6 @@
 
 #include <stdio.h>
 
-#include <array>
-
 constexpr uint32_t iteration_count = 10000;
 
 namespace {
@@ -24,7 +22,8 @@ static int test_ctors() {
 	int ret											 = 0;
 	CtorCounter::ctor_call_count = 0;
 
-	std::array<CtorCounter*, iteration_count> ptrs = {};
+	// NOLINTNEXTLINE(modernize-avoid-c-arrays)
+	CtorCounter* ptrs[iteration_count] = {};
 	for (uint32_t i = 0; i < iteration_count; ++i) {
 		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
 		ptrs[i] = &base::MainArenaAllocator::get().push<CtorCounter>(i);
@@ -39,23 +38,24 @@ static int test_ctors() {
 
 	CtorCounter::ctor_call_count = 0;
 
-	for (uint32_t i = 0; i < iteration_count; ++i) {
+	for (auto& ptr : ptrs) {
 		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-		ptrs[i] = base::MainArenaAllocator::get().push_array<CtorCounter>(10);
+		ptr = base::MainArenaAllocator::get().push_array<CtorCounter>(10);
 	}
 
 	EXPECT_EQ(CtorCounter::ctor_call_count, iteration_count * 10);
 
-	for (uint32_t iter = 0; iter < iteration_count; ++iter) {
+	for (const auto& ptr : ptrs) {
 		for (uint32_t i = 0; i < 10; ++i) {
 			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-			EXPECT_EQ(ptrs[iter]->i_, 0U);
+			EXPECT_EQ(ptr->i_, 0U);
 		}
 	}
 	return ret;
 }
 
 static bool is_aligned(Aligned* ptr) {
+	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
 	auto uptr = reinterpret_cast<uintptr_t>(ptr);
 	return uptr % alignof(Aligned) == 0;
 }
