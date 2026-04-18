@@ -32,6 +32,7 @@ gtest_main_dep = gtest_proj.dependency('gtest_main')
 things_to_test = {
   'true': [
     'logging',
+    'function',
   ],
   f'!@no_libcpp@': [
     'arena',
