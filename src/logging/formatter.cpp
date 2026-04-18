@@ -485,13 +485,13 @@ template <typename T, u32 Base> static u32 count_digits_base_x(T value) {
 	return 0;
 }
 
-template <Integral T, u32 Base> static constexpr StackArray<T, 130> gen_powers() {
+template <typename T, T Base> static constexpr StackArray<T, 130> gen_powers() {
 	StackArray<T, 130> ret = {};
 	T									 pow = Base;
 
 	for (u32 i = 2; i < 130; ++i) {
 		if (pow <= Limits<T>::max / Base) {
-			pow *= Base;
+			pow = static_cast<T>(pow * Base);
 		} else {
 			pow = Limits<T>::max;
 		}

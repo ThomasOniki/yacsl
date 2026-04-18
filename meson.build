@@ -31,12 +31,20 @@ src_dir = meson.project_source_root()
 no_libcpp = get_option('no_libcpp')
 
 compiler_cpp_flags = {
-  'clang, emscripten, gcc': [
+  'clang, emscripten': [
     '-Wno-c++98-compat',
     '-Wno-c++98-compat-pedantic',
     '-Wno-unsafe-buffer-usage',
     '-Wno-switch-default',
     '-Wno-padded',
+  ],
+
+  'gcc': [
+    '-Wno-cast-align',
+    '-Wno-padded',
+    '-Wno-multiple-inheritance',
+    '-Wno-unused-const-variable',
+    '-Wno-effc++',
   ],
 
   f'if @no_libcpp@: clang, emscripten, gcc': [
@@ -50,8 +58,10 @@ foreach compilers, flags : compiler_cpp_flags
     continue
   endif
   if (
-    compilers.startswith(f'@cxx_id@, ')
-    or compilers.startswith(f'if true: @cxx_id@')
+    compilers == cxx_id
+    or compilers == f'if true: @cxx_id@'
+    or compilers.startswith(f'@cxx_id@, ')
+    or compilers.startswith(f'if true: @cxx_id@, ')
     or compilers.endswith(f', @cxx_id@')
     or compilers.contains(f', @cxx_id@, ')
   )

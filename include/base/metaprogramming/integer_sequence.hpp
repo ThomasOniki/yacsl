@@ -11,8 +11,8 @@ template <typename T, T... Ints> class IntegerSequence {
 template <usize... Indices> using IndexSequence = IntegerSequence<usize, Indices...>;
 
 #ifdef BASE_COMPILER_GCC
-template <typename T, T N> using IntegerSequenceToN = IntegerSequence<T, __integer_pack(N)>;
-template <usize N> using IndexSequenceToN						= IntegerSequence<usize, __integer_pack(N)>;
+template <typename T, T N> using IntegerSequenceToN = IntegerSequence<T, __integer_pack(N)...>;
+template <usize N> using IndexSequenceToN						= IntegerSequence<usize, __integer_pack(N)...>;
 #else
 template <typename T, T N> using IntegerSequenceToN = __make_integer_seq<IntegerSequence, T, N>;
 template <usize N> using IndexSequenceToN						= __make_integer_seq<IntegerSequence, usize, N>;

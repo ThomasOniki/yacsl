@@ -17,6 +17,7 @@ namespace base {
 namespace internal {
 
 template <usize Target, typename First, typename... Others> struct FirstWithMachingSize;
+
 template <usize Target, typename First, typename... Others>
 	requires(sizeof(First) != Target)
 struct FirstWithMachingSize<Target, First, Others...> {
