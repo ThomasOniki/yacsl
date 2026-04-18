@@ -1,52 +1,58 @@
 #include "base/memory/arena.hpp"
+#include "test_utils.hpp"
 
-#include <gtest/gtest.h>
 #include <stdio.h>
 
 #include <array>
 
-static uint32_t		 ctor_call_count = 0;
 constexpr uint32_t iteration_count = 10000;
 
 namespace {
 struct CtorCounter {
+	inline static uint32_t ctor_call_count = 0;
 	explicit CtorCounter(uint32_t num) : i_(num) { ++ctor_call_count; }
 	[[maybe_unused]] CtorCounter() { ++ctor_call_count; }
 	uint32_t i_ = 0;
 };
 
-struct Aligned {
+struct Aligned { // NOLINT(altera-struct-pack-align)
 	alignas(64) char data;
 };
 } // namespace
 
-static void test_ctors() {
-	ctor_call_count = 0;
+static int test_ctors() {
+	int ret											 = 0;
+	CtorCounter::ctor_call_count = 0;
 
 	std::array<CtorCounter*, iteration_count> ptrs = {};
 	for (uint32_t i = 0; i < iteration_count; ++i) {
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
 		ptrs[i] = &base::MainArenaAllocator::get().push<CtorCounter>(i);
 	}
 
-	EXPECT_EQ(ctor_call_count, iteration_count);
+	EXPECT_EQ(CtorCounter::ctor_call_count, iteration_count);
 
 	for (uint32_t i = 0; i < iteration_count; ++i) {
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
 		EXPECT_EQ(ptrs[i]->i_, i);
 	}
 
-	ctor_call_count = 0;
+	CtorCounter::ctor_call_count = 0;
 
 	for (uint32_t i = 0; i < iteration_count; ++i) {
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
 		ptrs[i] = base::MainArenaAllocator::get().push_array<CtorCounter>(10);
 	}
 
-	EXPECT_EQ(ctor_call_count, iteration_count * 10);
+	EXPECT_EQ(CtorCounter::ctor_call_count, iteration_count * 10);
 
 	for (uint32_t iter = 0; iter < iteration_count; ++iter) {
 		for (uint32_t i = 0; i < 10; ++i) {
-			EXPECT_EQ(ptrs[iter]->i_, 0);
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+			EXPECT_EQ(ptrs[iter]->i_, 0U);
 		}
 	}
+	return ret;
 }
 
 static bool is_aligned(Aligned* ptr) {
@@ -54,24 +60,25 @@ static bool is_aligned(Aligned* ptr) {
 	return uptr % alignof(Aligned) == 0;
 }
 
-static void test_align() {
+static int test_align() {
+	int ret = 0;
 	(void)base::MainArenaAllocator::get().push_array<char>(15);
 
 	Aligned* aligned = &base::MainArenaAllocator::get().push<Aligned>();
 
-	EXPECT_TRUE(is_aligned(aligned));
+	EXPECT(is_aligned(aligned));
 
 	(void)base::MainArenaAllocator::get().push_array<char>(15);
 
 	aligned = base::MainArenaAllocator::get().push_array<Aligned>(10);
 
-	EXPECT_TRUE(is_aligned(aligned));
+	EXPECT(is_aligned(aligned));
+
+	return ret;
 }
 
-TEST(arena, align) { test_align(); }
-TEST(arena, constructors) { test_ctors(); }
-
-TEST(arena, rewind) {
+static int test_rewind() {
+	int ret = 0;
 	{
 		base::Arena::Scope scope(base::MainArenaAllocator::get()); // test scope with ptr_ = 0
 	}
@@ -87,5 +94,14 @@ TEST(arena, rewind) {
 		test_ctors();
 	}
 
-	EXPECT_TRUE(base::MainArenaAllocator::get().push_array<char>(1) == ptr && "Arena didn't rewind");
+	EXPECT(base::MainArenaAllocator::get().push_array<char>(1) == ptr && "Arena didn't rewind");
+	return ret;
+}
+
+int main() {
+	int ret = 0;
+	EXPECT_EQ(test_align(), 0);
+	EXPECT_EQ(test_ctors(), 0);
+	EXPECT_EQ(test_rewind(), 0);
+	return ret;
 }

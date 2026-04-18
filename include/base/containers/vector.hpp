@@ -159,7 +159,7 @@ protected:
 	struct DummySmallBuffer {
 		[[nodiscard]] const T* data() const noexcept { return nullptr; }
 	};
-	static constexpr DummySmallBuffer small_buffer_;
+	static constexpr DummySmallBuffer small_buffer_ = DummySmallBuffer();
 };
 
 template <typename T, usize N, SingletonAllocatorLike Allocator, typename SizeT>
@@ -191,7 +191,7 @@ protected:
 	struct DummySmallBuffer {
 		[[nodiscard]] const T* data() const noexcept { return nullptr; }
 	};
-	static constexpr DummySmallBuffer small_buffer_;
+	static constexpr DummySmallBuffer small_buffer_ = DummySmallBuffer();
 };
 
 } // namespace internal

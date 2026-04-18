@@ -1,4 +1,5 @@
 #include "base/containers/function.hpp"
+#include "test_utils.hpp"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,6 +10,8 @@ struct Counts {
 	uint32_t copy_constructor_call_count				= 0;
 	uint32_t move_constructor_call_count				= 0;
 	uint32_t destructor_call_count							= 0;
+
+	constexpr bool operator==(const Counts&) const noexcept = default;
 };
 struct TestStruct {
 	inline static Counts counts;
@@ -27,45 +30,19 @@ struct TestStruct {
 };
 } // namespace
 
-static bool check_counts(const Counts& expected) {
-	bool ret = true;
-	if (expected.constructor_call_count != TestStruct::counts.constructor_call_count) {
-		(void)fprintf(stderr, "Incorrect contructor_call_count. Expected %u, got %u.\n",
-									expected.constructor_call_count, TestStruct::counts.constructor_call_count);
-		ret = false;
-	} else {
-		printf("Got contructor_call_count = %u as expected.\n",
-					 TestStruct::counts.constructor_call_count);
+template <> class base::Formatter<Counts> {
+public:
+	constexpr const char* parse(const char* fmt) {
+		base::FormatStringParser parser(fmt);
+		return parser.end_parse();
 	}
-	if (expected.copy_constructor_call_count != TestStruct::counts.copy_constructor_call_count) {
-		(void)fprintf(stderr, "Incorrect copy_contructor_call_count. Expected %u, got %u.\n",
-									expected.copy_constructor_call_count,
-									TestStruct::counts.copy_constructor_call_count);
-		ret = false;
-	} else {
-		printf("Got copy_constructor_call_count = %u, as expected.\n",
-					 TestStruct::counts.copy_constructor_call_count);
+	void format(base::CharBuffer& buf, const Counts& counts) const {
+		base::format_to(
+				buf, "constructors: {}, copy_constructors: {}, move_contructors: {}, destructors: {}",
+				counts.constructor_call_count, counts.copy_constructor_call_count,
+				counts.move_constructor_call_count, counts.destructor_call_count);
 	}
-	if (expected.move_constructor_call_count != TestStruct::counts.move_constructor_call_count) {
-		(void)fprintf(stderr, "Incorrect move_contructor_call_count. Expected %u, got %u.\n",
-									expected.move_constructor_call_count,
-									TestStruct::counts.move_constructor_call_count);
-		ret = false;
-	} else {
-		printf("Got move_constructor_call_count = %u as expected.\n",
-					 TestStruct::counts.move_constructor_call_count);
-	}
-	if (expected.destructor_call_count != TestStruct::counts.destructor_call_count) {
-		(void)fprintf(stderr, "Incorrect destructor_call_count. Expected %u, got %u\n.",
-									expected.destructor_call_count, TestStruct::counts.destructor_call_count);
-		ret = false;
-	} else {
-		printf("Got destructor_call_count = %u as expected.\n",
-					 TestStruct::counts.destructor_call_count);
-	}
-	TestStruct::reset_counts();
-	return ret;
-}
+};
 
 namespace {
 class TestAllocator {
@@ -84,58 +61,56 @@ public:
 };
 } // namespace
 
-int main() {
-	{
-		bool									 ran = false;
-		base::Function<void()> func([&ran]() { ran = true; });
+#define CHECK_COUNTS(...)                                                                          \
+	do {                                                                                             \
+		Counts expected = Counts{__VA_ARGS__};                                                         \
+		EXPECT_EQ(TestStruct::counts, expected);                                                       \
+		TestStruct::reset_counts();                                                                    \
+	} while (false)
 
-		if (ran) {
-			(void)fprintf(stderr, "Function ran before it was supposed to.");
-			return 1;
-		}
-		func();
-		if (!ran) {
-			(void)fprintf(stderr, "Function didn't run.");
-			return 1;
-		}
-	}
+static int test_function_running() {
+	int										 ret = 0;
+	bool									 ran = false;
+	base::Function<void()> func([&ran]() { ran = true; });
 
+	EXPECT(!ran);
+	func();
+	EXPECT(ran);
+	return ret;
+}
+
+static int test_moved_lambda() {
+	int ret = 0;
 	{
-		if (!check_counts(Counts{})) {
-			return 1;
-		}
+		CHECK_COUNTS(0);
+
 		TestStruct test;
-		if (!check_counts(Counts{.constructor_call_count = 1})) {
-			return 1;
-		}
+
+		CHECK_COUNTS(.constructor_call_count = 1);
+
 		base::Function<int(int)> func([test](int value) { return value * 2; });
-		if (!check_counts(Counts{
-						.copy_constructor_call_count = 1,
-						.move_constructor_call_count = 1,
-						.destructor_call_count			 = 1,
-				})) {
-			return 1;
-		}
+
+		CHECK_COUNTS(.copy_constructor_call_count = 1, .move_constructor_call_count = 1,
+								 .destructor_call_count = 1);
+
 		int result = func(10);
 		if (result != 20) {
 			(void)fprintf(stderr, "function returned %d, not 20", result);
 		}
 	}
-	if (!check_counts(Counts{.destructor_call_count = 2})) {
-		return 1;
-	}
+	CHECK_COUNTS(.destructor_call_count = 2);
+	return ret;
+}
 
+static int test_copied_lambda() {
+	int ret = 0;
 	{
 		TestStruct test;
-		if (!check_counts(Counts{.constructor_call_count = 1})) {
-			return 1;
-		}
+		CHECK_COUNTS(.constructor_call_count = 1);
 
 		base::Function<void(), 0, TestAllocator> func3([&test]() { (void)test; });
 
-		if (!check_counts(Counts{})) {
-			return 1;
-		}
+		CHECK_COUNTS(0);
 
 		if (TestAllocator::allocate_call_count != 1) {
 			(void)fprintf(stderr, "Expected 1 allocation, got %u", TestAllocator::allocate_call_count);
@@ -144,25 +119,32 @@ int main() {
 			(void)fprintf(stderr, "Expected 0 frees, got %u", TestAllocator::free_call_count);
 		}
 	}
-	if (!check_counts(Counts{.destructor_call_count = 1})) {
-		return 1;
-	}
+	CHECK_COUNTS(.destructor_call_count = 1);
+	return ret;
+}
 
+static int test_ref_capture_lamdba() {
+	int ret = 0;
 	{
 		TestStruct test;
-		if (!check_counts(Counts{.constructor_call_count = 1})) {
-			return 1;
-		}
+		CHECK_COUNTS(.constructor_call_count = 1);
+
 		auto lambda = [test]() {};
-		if (!check_counts(Counts{.copy_constructor_call_count = 1})) {
-			return 1;
-		}
+		CHECK_COUNTS(.copy_constructor_call_count = 1);
+
 		base::Function<void()> func(lambda);
-		if (!check_counts(Counts{.copy_constructor_call_count = 1})) {
-			return 1;
-		}
+		CHECK_COUNTS(.copy_constructor_call_count = 1);
 	}
-	if (!check_counts(Counts{.destructor_call_count = 3})) {
-		return 1;
-	}
+	CHECK_COUNTS(.destructor_call_count = 3);
+
+	return ret;
+}
+
+int main() {
+	int ret = 0;
+	EXPECT_EQ(test_function_running(), 0);
+	EXPECT_EQ(test_moved_lambda(), 0);
+	EXPECT_EQ(test_copied_lambda(), 0);
+	EXPECT_EQ(test_ref_capture_lamdba(), 0);
+	return ret;
 }

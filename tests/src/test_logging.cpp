@@ -7,6 +7,8 @@
 // NOLINTBEGIN
 
 int main() {
+	int ret = 0;
+
 	constexpr size_t buf_size = 4096;
 	{
 
@@ -16,8 +18,8 @@ int main() {
 		logger.func;                                                                                   \
 	} while (false)
 
-		char buf[buf_size];
-		int	 buf_space = buf_size;
+		char buf[buf_size] = {};
+		int	 buf_space		 = buf_size;
 
 #define CHECK(...)                                                                                 \
 	do {                                                                                             \
@@ -30,8 +32,7 @@ int main() {
                                                                                                    \
 		if (memcmp(static_cast<void*>(logs), static_cast<void*>(buf), buf_size) != 0) {                \
 			printf("Logging test failed. Expected\n%s,got\n%s.\n", buf, logs);                           \
-			(void)remove("test_logs.txt");                                                               \
-			return 1;                                                                                    \
+			ret = 1;                                                                                     \
 		}                                                                                              \
 	} while (0)
 
@@ -76,6 +77,8 @@ int main() {
 	}
 
 	(void)remove("test_logs.txt");
+
+	return ret;
 }
 
 // NOLINTEND

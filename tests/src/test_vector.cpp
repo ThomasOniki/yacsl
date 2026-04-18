@@ -1,12 +1,25 @@
 #include "base/containers/vector.hpp"
 
+#include "test_utils.hpp"
+
 #include <format>
 #include <string>
+#include <string_view>
 #include <unordered_set>
+#include <vector>
 
-#include <gtest/gtest.h>
 #include <stdio.h>
 #include <string.h>
+
+template <> class base::Formatter<std::string> : base::Formatter<base::StringView> {
+public:
+	constexpr const char* parse(const char* fmt) {
+		return base::Formatter<base::StringView>::parse(fmt);
+	}
+	void format(base::CharBuffer& buf, const std::string_view& str) {
+		base::Formatter<base::StringView>::format(buf, base::StringView(str.data(), str.size()));
+	}
+};
 
 namespace {
 class TestAllocator {
@@ -30,10 +43,12 @@ public:
 	template <typename T> void free(T* ptr, SizeT count) {
 		if (ptr) {
 			if (freed.contains(ptr)) {
-				ASSERT_FALSE(static_cast<bool>("double free"));
+				base::log_error("double free");
+				return;
 			}
 			if (!allocated.contains(ptr)) {
-				ASSERT_FALSE(static_cast<bool>("unallocated free"));
+				base::log_error("unallocated free");
+				return;
 			}
 
 			freed.emplace(ptr);
@@ -92,20 +107,26 @@ class EventTester {
 public:
 	template <typename Vector0, typename Vector1 = Vector0, typename Vector2 = Vector1,
 						typename Vector3 = Vector2, typename Vector4 = Vector3>
-	void test() {
-		test_events<Vector0, Vector1, Vector2, Vector3, Vector4>([this](bool strict_ordering) {
-			const auto& expected = expected_snapshots_[snapshot_index_];
-			++snapshot_index_;
-			if (strict_ordering) {
-				EXPECT_EQ(TestClass::events, expected);
-			} else {
-				std::unordered_multiset<std::string> expected_events(expected.begin(), expected.end());
-				std::unordered_multiset<std::string> events(TestClass::events.begin(),
-																										TestClass::events.end());
-				EXPECT_EQ(events, expected_events);
-			}
-			TestClass::events.clear();
-		});
+	int test() {
+		int	 ret	= 0;
+		auto test = [this, &ret]() {
+			return test_events<Vector0, Vector1, Vector2, Vector3, Vector4>([this,
+																																			 &ret](bool strict_ordering) {
+				const auto& expected = expected_snapshots_[snapshot_index_];
+				++snapshot_index_;
+				if (strict_ordering) {
+					EXPECT_EQ(TestClass::events, expected);
+				} else {
+					std::unordered_multiset<std::string> expected_events(expected.begin(), expected.end());
+					std::unordered_multiset<std::string> events(TestClass::events.begin(),
+																											TestClass::events.end());
+					EXPECT_EQ(events, expected_events);
+				}
+				TestClass::events.clear();
+			});
+		};
+		EXPECT_EQ(test(), 0);
+		return ret;
 	}
 
 	static EventTester& get() {
@@ -123,7 +144,8 @@ private:
 
 	template <typename Vector0, typename Vector1 = Vector0, typename Vector2 = Vector1,
 						typename Vector3 = Vector2, typename Vector4 = Vector3, typename F>
-	void test_events(F&& func) {
+	int test_events(F&& func) {
+		int ret = 0;
 		TestClass::events.clear();
 		snapshot_index_ = 0;
 		{
@@ -162,7 +184,9 @@ private:
 			EXPECT_EQ(moved_to[2].name_, "c (moved)");
 			EXPECT_EQ(moved_to[3].name_, "d (copied)");
 		}
-		func(true);
+		// Destruction order is also implementation defined.
+		func(false);
+		return ret;
 	}
 
 private:
@@ -171,7 +195,8 @@ private:
 };
 } // namespace
 
-TEST(vector, allocator) {
+static int test_allocator() {
+	int ret = 0;
 	TestAllocator::events.clear();
 	TestAllocator allocator;
 	auto*					ptr = allocator.allocate<uint64_t>(10);
@@ -179,13 +204,15 @@ TEST(vector, allocator) {
 
 	std::vector<std::string> expected = {"allocated 10", "freed 10"};
 	EXPECT_EQ(TestAllocator::events, expected);
+	return ret;
 }
 
-TEST(vector, PushAfterCopy) {
+static int test_push_after_copy() {
+	int ret = 0;
 	TestAllocator::events.clear();
 	{
 		base::Vector<char, 0, TestAllocator, int32_t> foo = {'f', 'o', 'o', '\0'}; // 1 alloc
-		EXPECT_STREQ(foo.data(), "foo");
+		EXPECT_STREQ(foo.data(), static_cast<const char*>("foo"));
 
 		base::Vector<char, 2, TestAllocator> foo_bar(foo); // 2 allocs
 
@@ -195,7 +222,7 @@ TEST(vector, PushAfterCopy) {
 			foo_bar.push_back(chr);
 		}
 
-		EXPECT_STREQ(foo_bar.data(), "foo bar");
+		EXPECT_STREQ(foo_bar.data(), static_cast<const char*>("foo bar"));
 	}
 
 	std::vector<std::string> expected = {
@@ -207,28 +234,31 @@ TEST(vector, PushAfterCopy) {
 			"freed 4",		 // destruct foo
 	};
 	EXPECT_EQ(TestAllocator::events, expected);
+	return ret;
 }
 
-TEST(vector, EventsDefaultTemplateArgs) { EventTester::get().test<base::Vector<TestClass>>(); }
-TEST(vector, EventsCustomAllocator) {
-	EventTester::get().test<base::Vector<TestClass, 0, TestAllocator>>();
+static int test_default_template_args() {
+	return EventTester::get().test<base::Vector<TestClass>>();
+}
+static int test_custom_allocator() {
+	return EventTester::get().test<base::Vector<TestClass, 0, TestAllocator>>();
 }
 
-TEST(vector, EventsDifferentVectors) {
-	EventTester::get()
+static int test_different_vectors() {
+	return EventTester::get()
 			.test<base::Vector<TestClass, 0, base::ScratchArenaAllocator, uint32_t>,
 						base::Vector<TestClass, 1, base::ScratchArenaAllocator, int16_t>>();
 }
 
-TEST(vector, EventsDifferentAllocators) {
-	auto expect = [](const std::vector<std::string>& expected) {
+static int test_different_allocators() {
+	int	 ret		= 0;
+	auto expect = [&ret](const std::vector<std::string>& expected) {
 		EXPECT_EQ(TestClass::events, expected);
 		TestClass::events.clear();
 	};
 
 	TestClass::events.clear();
 	{
-		using namespace std::string_literals;
 		base::Vector<TestClass, 1, base::ScratchArenaAllocator> arena_alloc_vector;
 		arena_alloc_vector.reserve(2);
 		arena_alloc_vector.emplace_back("a");
@@ -293,4 +323,16 @@ TEST(vector, EventsDifferentAllocators) {
 	};
 	EXPECT_EQ(TestClass::events, expected);
 	TestClass::events.clear();
+	return ret;
+}
+
+int main() {
+	int ret = 0;
+	EXPECT_EQ(test_allocator(), 0);
+	EXPECT_EQ(test_push_after_copy(), 0);
+	EXPECT_EQ(test_default_template_args(), 0);
+	EXPECT_EQ(test_custom_allocator(), 0);
+	EXPECT_EQ(test_different_vectors(), 0);
+	EXPECT_EQ(test_different_allocators(), 0);
+	return ret;
 }

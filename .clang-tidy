@@ -56,3 +56,5 @@ CheckOptions:
     value: true
   - key: misc-include-cleaner.IgnoreHeaders
     value: "sys/.*;_abort.h"
+  - key: cppcoreguidelines-avoid-do-while.IgnoreMacros
+    value: true
