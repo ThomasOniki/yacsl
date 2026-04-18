@@ -4,8 +4,6 @@
 #include <stdio.h>
 #include <string.h>
 
-// NOLINTBEGIN
-
 int main() {
 	int ret = 0;
 

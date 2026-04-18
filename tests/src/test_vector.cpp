@@ -8,6 +8,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -143,8 +144,8 @@ private:
 	}
 
 	template <typename Vector0, typename Vector1 = Vector0, typename Vector2 = Vector1,
-						typename Vector3 = Vector2, typename Vector4 = Vector3, typename F>
-	int test_events(F&& func) {
+						typename Vector3 = Vector2, typename Vector4 = Vector3>
+	int test_events(auto&& func) {
 		int ret = 0;
 		TestClass::events.clear();
 		snapshot_index_ = 0;
