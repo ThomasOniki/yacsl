@@ -62,7 +62,7 @@ public:
 	Function(const Function&)			= delete;
 	Function(Function&&) noexcept = delete;
 
-	~Function() noexcept { cleanup_(data_, &allocator()); }
+	~Function() noexcept { cleanup_(data_, allocator()); }
 
 	Function& operator=(const Function&)		 = delete;
 	Function& operator=(Function&&) noexcept = delete;
