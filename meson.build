@@ -3,7 +3,6 @@ project(
   ['c', 'cpp'],
   default_options: ['c_std=c17', 'cpp_std=c++20', 'warning_level=3'],
   meson_version: '>=1.10',
-  subproject_dir: 'third_party',
 )
 
 sources = [
