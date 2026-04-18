@@ -55,18 +55,8 @@ static char* write_low_surrogate(char* buf, char32_t high, char32_t low) {
 	static constexpr char32_t mask = 0b11'1111'1111;
 	high &= mask;
 	low &= mask;
-	char32_t unicode = 0x10000 + ((high << 10) | low);
+	const char32_t unicode = 0x10000 + ((high << 10) | low);
 	return write_char4(buf, unicode);
-}
-
-[[maybe_unused]] constexpr static void test() {
-	[[maybe_unused]] constexpr char16_t arr[3]			 = u"🤓";
-	[[maybe_unused]] constexpr char32_t mask				 = 0b11'1111'1111;
-	[[maybe_unused]] constexpr char32_t high				 = arr[0];
-	[[maybe_unused]] constexpr char32_t low					 = arr[1];
-	[[maybe_unused]] constexpr char32_t high_masked	 = high & mask;
-	[[maybe_unused]] constexpr char32_t low_masked	 = low & mask;
-	[[maybe_unused]] constexpr char32_t high_shifted = high_masked << 10;
 }
 
 // unicode             UTF-8
