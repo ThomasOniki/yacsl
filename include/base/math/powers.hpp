@@ -13,7 +13,7 @@ namespace base {
 template <Integral T> constexpr T pow10(u32 exp) noexcept {
 	T ret = 1;
 	for (u32 i = 0; i < exp; ++i) {
-		ret *= 10;
+		ret = static_cast<T>(ret * 10);
 	}
 	return ret;
 }

@@ -7,4 +7,4 @@ concept SameAs = __is_same(T1, T2);
 template <typename T, typename... Candidates>
 concept OneOf = (... || __is_same(T, Candidates));
 
-}; // namespace base
+} // namespace base

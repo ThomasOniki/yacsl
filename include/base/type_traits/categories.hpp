@@ -26,7 +26,7 @@ template <typename T>
 concept FloatingPoint = __is_floating_point(T);
 #else
 template <typename T>
-concept FloatingPoint = OneOf<RemoveRemoveCV<T>, float, double, long double>;
+concept FloatingPoint = OneOf<RemoveCV<T>, float, double, long double>;
 #endif
 
 #if __has_builtin(__is_arithmetic)

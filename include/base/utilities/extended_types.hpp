@@ -7,8 +7,8 @@ namespace base {
 #endif
 
 #ifdef BASE_INT128_FOUND
-using i128 = __int128;
-using u128 = unsigned __int128;
+using i128 = __int128_t;
+using u128 = __uint128_t;
 #endif
 
 } // namespace base

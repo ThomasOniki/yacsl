@@ -85,7 +85,7 @@ template <UnsignedIntegral T> constexpr u32 itoa_bit_count(T value) noexcept {
 	_BitScanReverse(&log2, value);
 	return static_cast<u32>(log2 + 1);
 #else
-	return value ? sizeof(T) * 8 - static_cast<u32>(__builtin_clzg(value)) : 1;
+	return value ? u32{sizeof(T) * 8} - static_cast<u32>(__builtin_clzg(value)) : 1;
 #endif
 }
 template <UnsignedIntegral T> constexpr u32 itoa_octal_digit_count(T value) noexcept {
@@ -94,7 +94,7 @@ template <UnsignedIntegral T> constexpr u32 itoa_octal_digit_count(T value) noex
 	_BitScanReverse(&log2, value);
 	return log2 / 3 + 1;
 #else
-	return value ? (sizeof(T) * 8 - static_cast<u32>(__builtin_clzg(value))) / 3 : 1;
+	return value ? (u32{sizeof(T) * 8} - static_cast<u32>(__builtin_clzg(value))) / 3 : 1;
 #endif
 }
 template <UnsignedIntegral T> constexpr u32 itoa_hex_digit_count(T value) noexcept {
@@ -103,7 +103,7 @@ template <UnsignedIntegral T> constexpr u32 itoa_hex_digit_count(T value) noexce
 	_BitScanReverse(&log2, value);
 	return log2 / 4 + 1;
 #else
-	return value ? sizeof(T) * 8 / 4 - static_cast<u32>(__builtin_clzg(value)) / 4 : 1;
+	return value ? u32{sizeof(T) * 8} / 4 - static_cast<u32>(__builtin_clzg(value)) / 4 : 1;
 #endif
 }
 
@@ -315,7 +315,7 @@ template <UnsignedIntegral T> constexpr char* itoa_from_end_hex(char* buf_end, T
 	while (value >= 256) {
 		buf_end -= 2;
 		memcpy(buf_end, table + (value % 256) * 2, 2);
-		value /= 256;
+		value = static_cast<T>(value / 256);
 	}
 	if (value >= 16) {
 		buf_end -= 2;

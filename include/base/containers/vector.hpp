@@ -350,7 +350,7 @@ template <typename T, usize N, typename Allocator, typename SizeT>
 template <typename... Args>
 constexpr void Vector<T, N, Allocator, SizeT>::emplace_back(Args&&... args) {
 	if (size_ == capacity_) [[unlikely]] {
-		definitely_reserve(capacity_ * 2 + 1);
+		definitely_reserve(static_cast<SizeT>(capacity_ * 2 + 1));
 	}
 	new (data_ + size_) T(base::forward<Args>(args)...);
 	++size_;
