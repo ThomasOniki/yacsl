@@ -2,7 +2,9 @@
 
 #include "base/containers/fwds.hpp"
 #include "base/containers/reverse_iterator.hpp"
+#include "base/utilities/is_constant_evaluated.hpp"
 #include "base/utilities/type_aliases.hpp"
+#include <string.h>
 
 namespace base {
 
@@ -37,6 +39,21 @@ public:
 		return data_ + size_;
 	}
 	[[nodiscard]] constexpr ReverseIterator<const T*> crend() const noexcept { return data_; }
+
+	[[nodiscard]] constexpr bool operator==(const BasicStringView& other) const noexcept {
+		if (size_ != other.size_) {
+			return false;
+		}
+		if (is_constant_evaluated()) {
+			for (size_t i = 0; i < size_; ++i) {
+				if (other[i] != data_[i]) {
+					return false;
+				}
+			}
+			return true;
+		}
+		return memcmp(data_, other.data_, size_) == 0;
+	}
 
 private:
 	const T* data_ = nullptr;
