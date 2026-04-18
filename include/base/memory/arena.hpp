@@ -4,7 +4,7 @@
 #include "base/type_traits/trivial.hpp"
 #include "base/utilities/constants.hpp"
 #include "base/utilities/move_forward.hpp"
-#include "base/utilities/placement_new.hpp"
+#include "base/utilities/placement_new.hpp" // NOLINT(misc-include-cleaner)
 #include "base/utilities/type_aliases.hpp"
 
 namespace base {

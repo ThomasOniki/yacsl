@@ -1,11 +1,12 @@
 #pragma once
 
 #include "base/containers/stack_array.hpp"
-#include "base/memory/arena.hpp"
+#include "base/memory/arena.hpp" // NOLINT(misc-include-cleaner)
 #include "base/memory/fwds.hpp"
 #include "base/type_traits/allocator.hpp"
+#include "base/type_traits/qualifiers.hpp"
 #include "base/utilities/move_forward.hpp"
-#include "base/utilities/placement_new.hpp"
+#include "base/utilities/placement_new.hpp" // NOLINT(misc-include-cleaner)
 #include "base/utilities/type_aliases.hpp"
 
 namespace base {
@@ -14,43 +15,37 @@ namespace internal {
 
 template <typename Allocator, usize BufSz, typename Ret, typename... Args> class FunctionMembers {
 protected:
-	StackArray<uchar, BufSz> small_buffer_				= {};
-	void*										 data_								= small_buffer_.data();
-	void (*cleanup_)(void* func, void* allocator) = nullptr;
-	Ret (*call_)(void* func, Args... args)				= nullptr;
-	Allocator allocator_													= Allocator();
+	StackArray<uchar, BufSz> small_buffer_																	= {};
+	void*										 data_																					= small_buffer_.data();
+	void (*cleanup_)(void* func, UnderlyingAllocator<Allocator>& allocator) = nullptr;
+	Ret (*call_)(void* func, Args... args)																	= nullptr;
+	Allocator allocator_																										= Allocator();
 };
 
 template <typename Allocator, typename Ret, typename... Args>
 class FunctionMembers<Allocator, 0, Ret, Args...> {
 protected:
-	void* data_																		= nullptr;
-	void (*cleanup_)(void* func, void* allocator) = nullptr;
-	Ret (*call_)(void* func, Args... args)				= nullptr;
-	Allocator allocator_													= Allocator();
-
-	static constexpr uchar* storage_					 = nullptr;
-	static constexpr void* (*move)(void* from) = nullptr;
+	void* data_																															= nullptr;
+	void (*cleanup_)(void* func, UnderlyingAllocator<Allocator>& allocator) = nullptr;
+	Ret (*call_)(void* func, Args... args)																	= nullptr;
+	Allocator allocator_																										= Allocator();
 };
 
 template <SingletonAllocatorLike Allocator, usize BufSz, typename Ret, typename... Args>
 class FunctionMembers<Allocator, BufSz, Ret, Args...> {
 protected:
-	StackArray<uchar, BufSz> small_buffer_				= {};
-	void*										 data_								= small_buffer_.data();
-	void (*cleanup_)(void* func, void* allocator) = nullptr;
-	Ret (*call_)(void* func, Args... args)				= nullptr;
+	StackArray<uchar, BufSz> small_buffer_																	= {};
+	void*										 data_																					= small_buffer_.data();
+	void (*cleanup_)(void* func, UnderlyingAllocator<Allocator>& allocator) = nullptr;
+	Ret (*call_)(void* func, Args... args)																	= nullptr;
 };
 
 template <SingletonAllocatorLike Allocator, typename Ret, typename... Args>
 class FunctionMembers<Allocator, 0, Ret, Args...> {
 protected:
-	void* data_																		= nullptr;
-	void (*cleanup_)(void* func, void* allocator) = nullptr;
-	Ret (*call_)(void* func, Args... args)				= nullptr;
-
-	static constexpr uchar* storage_					 = nullptr;
-	static constexpr void* (*move)(void* from) = nullptr;
+	void* data_																															= nullptr;
+	void (*cleanup_)(void* func, UnderlyingAllocator<Allocator>& allocator) = nullptr;
+	Ret (*call_)(void* func, Args... args)																	= nullptr;
 };
 
 } // namespace internal
@@ -74,7 +69,7 @@ public:
 
 	Ret operator()(Args... args) { return call_(data_, base::forward<Args>(args)...); }
 
-	[[nodiscard]] const Allocator& get_allocator() const noexcept { return allocator(); }
+	[[nodiscard]] const auto& get_allocator() const noexcept { return allocator(); }
 
 private:
 	[[nodiscard]] auto& allocator();
@@ -90,17 +85,17 @@ template <typename Ret, typename... Args, usize BufSz, typename Allocator>
 Function<Ret(Args...), BufSz, Allocator>::Function(auto&& func) {
 	using Func = RemoveReference<decltype(func)>;
 
-	if constexpr (sizeof(Func) > BufSz || alignof(Func) > 8) {
+	if constexpr (sizeof(Func) > sizeof(uchar) * BufSz || alignof(Func) > 8) {
 		data_ = allocator().template allocate<Func>();
 
-		using RealAllocator = RemoveReference<decltype(allocator())>;
-
-		cleanup_ = [](void* data, void* allocator) {
+		cleanup_ = [](void* data, UnderlyingAllocator<Allocator>& allocator) {
 			static_cast<Func*>(data)->~Func();
-			static_cast<RealAllocator*>(allocator)->template free<Func>(static_cast<Func*>(data));
+			allocator.template free<Func>(static_cast<Func*>(data));
 		};
 	} else {
-		cleanup_ = [](void* data, void* /*allocator*/) { static_cast<Func*>(data)->~Func(); };
+		cleanup_ = [](void* data, UnderlyingAllocator<Allocator>& /*allocator*/) {
+			static_cast<Func*>(data)->~Func();
+		};
 	}
 
 	new (data_) Func(base::forward<decltype(func)>(func));
@@ -120,7 +115,7 @@ auto& Function<Ret(Args...), BufSz, Allocator>::allocator() {
 }
 
 #ifdef BASE_LSP_ONLY
-template Function<void()>::Function(decltype([]() {})& func);
+template Function<void(), 0>::Function(decltype([]() {})& func);
 template Function<void()>::Function(decltype([]() {})&& func);
 #endif
 
