@@ -113,7 +113,7 @@ private:
 	template <usize OtherN, typename OtherAllocator, typename OtherSizeT>
 	void steal_ptr(Vector<T, OtherN, OtherAllocator, OtherSizeT>&& other);
 
-	auto& allocator();
+	UnderlyingAllocator<Allocator>& allocator();
 
 private:
 	using Members = internal::VectorMembers<T, N, Allocator, SizeT>;
@@ -481,7 +481,7 @@ void Vector<T, N, Allocator, SizeT>::steal_ptr(
 }
 
 template <typename T, usize N, typename Allocator, typename SizeT>
-auto& Vector<T, N, Allocator, SizeT>::allocator() {
+UnderlyingAllocator<Allocator>& Vector<T, N, Allocator, SizeT>::allocator() {
 	if constexpr (SingletonAllocatorLike<Allocator>) {
 		return Allocator::get();
 	} else {

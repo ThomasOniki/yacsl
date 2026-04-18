@@ -6,7 +6,6 @@
 namespace base {
 
 namespace internal {
-
 template <typename T>
 concept TypeWithAllocatorMethods =
 		requires(T allocator, RemoveCVRef<T>::SizeT count, int* to_free) {
@@ -15,7 +14,6 @@ concept TypeWithAllocatorMethods =
 			{ allocator.template free<int>(to_free) };
 			{ allocator.template free<int>(to_free, count) };
 		};
-
 } // namespace internal
 
 template <typename T>
@@ -28,5 +26,16 @@ concept InstanceAllocatorLike = internal::TypeWithAllocatorMethods<T> && !Single
 
 template <typename T>
 concept AllocatorLike = internal::TypeWithAllocatorMethods<T> || SingletonAllocatorLike<T>;
+
+namespace internal {
+template <typename T> struct UnderlyingAllocatorImpl {
+	using Type = T;
+};
+template <SingletonAllocatorLike T> struct UnderlyingAllocatorImpl<T> {
+	using Type = decltype(T::get());
+};
+} // namespace internal
+
+template <typename T> using UnderlyingAllocator = internal::UnderlyingAllocatorImpl<T>::Type;
 
 } // namespace base
