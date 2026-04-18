@@ -8,77 +8,78 @@
 
 namespace base {
 
-template <Integral T> constexpr char* itoa_bin(char* buf, T value);
-template <Integral T> constexpr char* itoa_oct(char* buf, T value);
-template <Integral T> constexpr char* itoa(char* buf, T value);
-template <Integral T> constexpr char* itoa_hex(char* buf, T value);
+template <Integral T> constexpr char* itoa_bin(char* buf, T value) noexcept;
+template <Integral T> constexpr char* itoa_oct(char* buf, T value) noexcept;
+template <Integral T> constexpr char* itoa(char* buf, T value) noexcept;
+template <Integral T> constexpr char* itoa_hex(char* buf, T value) noexcept;
 
-template <UnsignedIntegral T> constexpr char* itoa_from_end_bin(char* buf_end, T value);
-template <UnsignedIntegral T> constexpr char* itoa_from_end_oct(char* buf_end, T value);
-template <UnsignedIntegral T> constexpr char* itoa_from_end(char* buf_end, T value);
-template <UnsignedIntegral T> constexpr char* itoa_from_end_hex(char* buf_end, T value);
+template <UnsignedIntegral T> constexpr char* itoa_from_end_bin(char* buf_end, T value) noexcept;
+template <UnsignedIntegral T> constexpr char* itoa_from_end_oct(char* buf_end, T value) noexcept;
+template <UnsignedIntegral T> constexpr char* itoa_from_end(char* buf_end, T value) noexcept;
+template <UnsignedIntegral T> constexpr char* itoa_from_end_hex(char* buf_end, T value) noexcept;
 
-template <SignedIntegral T> constexpr char* itoa_from_end_bin(char* buf_end, T value);
-template <SignedIntegral T> constexpr char* itoa_from_end_oct(char* buf_end, T value);
-template <SignedIntegral T> constexpr char* itoa_from_end(char* buf_end, T value);
-template <SignedIntegral T> constexpr char* itoa_from_end_hex(char* buf_end, T value);
+template <SignedIntegral T> constexpr char* itoa_from_end_bin(char* buf_end, T value) noexcept;
+template <SignedIntegral T> constexpr char* itoa_from_end_oct(char* buf_end, T value) noexcept;
+template <SignedIntegral T> constexpr char* itoa_from_end(char* buf_end, T value) noexcept;
+template <SignedIntegral T> constexpr char* itoa_from_end_hex(char* buf_end, T value) noexcept;
 
-template <UnsignedIntegral T> constexpr u32 itoa_bit_count(T value);
-template <SignedIntegral T> constexpr u32		itoa_bit_count(T value);
-template <UnsignedIntegral T> constexpr u32 itoa_octal_digit_count(T value);
-template <SignedIntegral T> constexpr u32		itoa_octal_digit_count(T value);
-template <UnsignedIntegral T> constexpr u32 itoa_digit_count(T value);
-template <SignedIntegral T> constexpr u32		itoa_digit_count(T value);
-template <UnsignedIntegral T> constexpr u32 itoa_hex_digit_count(T value);
-template <SignedIntegral T> constexpr u32		itoa_hex_digit_count(T value);
+template <UnsignedIntegral T> constexpr u32 itoa_bit_count(T value) noexcept;
+template <UnsignedIntegral T> constexpr u32 itoa_octal_digit_count(T value) noexcept;
+template <UnsignedIntegral T> constexpr u32 itoa_digit_count(T value) noexcept;
+template <UnsignedIntegral T> constexpr u32 itoa_hex_digit_count(T value) noexcept;
 
-template <Integral T> constexpr char* itoa_bin(char* buf, T value) {
+template <SignedIntegral T> constexpr u32 itoa_bit_count(T value) noexcept;
+template <SignedIntegral T> constexpr u32 itoa_octal_digit_count(T value) noexcept;
+template <SignedIntegral T> constexpr u32 itoa_digit_count(T value) noexcept;
+template <SignedIntegral T> constexpr u32 itoa_hex_digit_count(T value) noexcept;
+
+template <Integral T> constexpr char* itoa_bin(char* buf, T value) noexcept {
 	u32 len = itoa_bit_count(value);
 	itoa_from_end_bin(buf + len, value);
 	return buf + len;
 }
-template <Integral T> constexpr char* itoa_oct(char* buf, T value) {
+template <Integral T> constexpr char* itoa_oct(char* buf, T value) noexcept {
 	u32 len = itoa_octal_digit_count(value);
 	itoa_from_end_oct(buf + len, value);
 	return buf + len;
 }
-template <Integral T> constexpr char* itoa(char* buf, T value) {
+template <Integral T> constexpr char* itoa(char* buf, T value) noexcept {
 	u32 len = itoa_digit_count(value);
 	itoa_from_end(buf + len, value);
 	return buf + len;
 }
-template <Integral T> constexpr char* itoa_hex(char* buf, T value) {
+template <Integral T> constexpr char* itoa_hex(char* buf, T value) noexcept {
 	u32 len = itoa_hex_digit_count(value);
 	itoa_from_end_hex(buf + len, value);
 	return buf + len;
 }
 
-template <SignedIntegral T> constexpr u32 itoa_bit_count(T value) {
+template <SignedIntegral T> constexpr u32 itoa_bit_count(T value) noexcept {
 	if (value < 0) {
 		return 1 + itoa_bit_count(static_cast<MakeUnsigned<T>>(-value));
 	}
 	return itoa_bit_count(static_cast<MakeUnsigned<T>>(value));
 }
-template <SignedIntegral T> constexpr u32 itoa_octal_digit_count(T value) {
+template <SignedIntegral T> constexpr u32 itoa_octal_digit_count(T value) noexcept {
 	if (value < 0) {
 		return 1 + itoa_octal_digit_count(static_cast<MakeUnsigned<T>>(value));
 	}
 	return itoa_octal_digit_count(static_cast<MakeUnsigned<T>>(value));
 }
-template <SignedIntegral T> constexpr u32 itoa_digit_count(T value) {
+template <SignedIntegral T> constexpr u32 itoa_digit_count(T value) noexcept {
 	if (value < 0) {
 		return 1 + itoa_digit_count(static_cast<MakeUnsigned<T>>(-value));
 	}
 	return itoa_digit_count(static_cast<MakeUnsigned<T>>(value));
 }
-template <SignedIntegral T> constexpr u32 itoa_hex_digit_count(T value) {
+template <SignedIntegral T> constexpr u32 itoa_hex_digit_count(T value) noexcept {
 	if (value < 0) {
 		return 1 + itoa_hex_digit_count(static_cast<MakeUnsigned<T>>(-value));
 	}
 	return itoa_hex_digit_count(static_cast<MakeUnsigned<T>>(value));
 }
 
-template <UnsignedIntegral T> constexpr u32 itoa_bit_count(T value) {
+template <UnsignedIntegral T> constexpr u32 itoa_bit_count(T value) noexcept {
 #ifdef BASE_COMPILER_MSVC
 	unsigned long log2;
 	_BitScanReverse(&log2, value);
@@ -87,7 +88,7 @@ template <UnsignedIntegral T> constexpr u32 itoa_bit_count(T value) {
 	return value ? sizeof(T) * 8 - static_cast<u32>(__builtin_clzg(value)) : 1;
 #endif
 }
-template <UnsignedIntegral T> constexpr u32 itoa_octal_digit_count(T value) {
+template <UnsignedIntegral T> constexpr u32 itoa_octal_digit_count(T value) noexcept {
 #ifdef BASE_COMPILER_MSVC
 	unsigned long log2;
 	_BitScanReverse(&log2, value);
@@ -96,7 +97,7 @@ template <UnsignedIntegral T> constexpr u32 itoa_octal_digit_count(T value) {
 	return value ? (sizeof(T) * 8 - static_cast<u32>(__builtin_clzg(value))) / 3 : 1;
 #endif
 }
-template <UnsignedIntegral T> constexpr u32 itoa_hex_digit_count(T value) {
+template <UnsignedIntegral T> constexpr u32 itoa_hex_digit_count(T value) noexcept {
 #ifdef BASE_COMPILER_MSVC
 	unsigned long log2;
 	_BitScanReverse(&log2, value);
@@ -107,7 +108,7 @@ template <UnsignedIntegral T> constexpr u32 itoa_hex_digit_count(T value) {
 }
 
 // NOLINTNEXTLINE(readability-function-cognitive-complexity, google-readability-function-size)
-template <UnsignedIntegral T> constexpr u32 itoa_digit_count(T value) {
+template <UnsignedIntegral T> constexpr u32 itoa_digit_count(T value) noexcept {
 	// clang-format off
 	if (value < pow10<T>(1)) { return 1; }
 	if (value < pow10<T>(2)) { return 2; }
@@ -155,7 +156,7 @@ template <UnsignedIntegral T> constexpr u32 itoa_digit_count(T value) {
 	// clang-format on
 }
 
-template <SignedIntegral T> constexpr char* itoa_from_end_bin(char* buf_end, T value) {
+template <SignedIntegral T> constexpr char* itoa_from_end_bin(char* buf_end, T value) noexcept {
 	if (value < 0) {
 		buf_end = itoa_from_end_bin(buf_end, static_cast<MakeUnsigned<T>>(-value));
 		--buf_end;
@@ -164,7 +165,7 @@ template <SignedIntegral T> constexpr char* itoa_from_end_bin(char* buf_end, T v
 	}
 	return itoa_from_end_bin(buf_end, static_cast<MakeUnsigned<T>>(value));
 }
-template <SignedIntegral T> constexpr char* itoa_from_end_oct(char* buf_end, T value) {
+template <SignedIntegral T> constexpr char* itoa_from_end_oct(char* buf_end, T value) noexcept {
 	if (value < 0) {
 		buf_end = itoa_from_end_oct(buf_end, static_cast<MakeUnsigned<T>>(-value));
 		--buf_end;
@@ -173,7 +174,7 @@ template <SignedIntegral T> constexpr char* itoa_from_end_oct(char* buf_end, T v
 	}
 	return itoa_from_end_oct(buf_end, static_cast<MakeUnsigned<T>>(value));
 }
-template <SignedIntegral T> constexpr char* itoa_from_end(char* buf_end, T value) {
+template <SignedIntegral T> constexpr char* itoa_from_end(char* buf_end, T value) noexcept {
 	if (value < 0) {
 		buf_end = itoa_from_end(buf_end, static_cast<MakeUnsigned<T>>(-value));
 		--buf_end;
@@ -192,7 +193,7 @@ template <SignedIntegral T> constexpr char* to_chars_hex(char* buf_end, T value)
 	return itoa_from_end_hex(buf_end, static_cast<MakeUnsigned<T>>(value));
 }
 
-template <UnsignedIntegral T> constexpr char* itoa_from_end_bin(char* buf_end, T value) {
+template <UnsignedIntegral T> constexpr char* itoa_from_end_bin(char* buf_end, T value) noexcept {
 	constexpr const char* table = "000000000001000010000011000100000101000110000111"
 																"001000001001001010001011001100001101001110001111"
 																"010000010001010010010011010100010101010110010111"
@@ -238,7 +239,7 @@ template <UnsignedIntegral T> constexpr char* itoa_from_end_bin(char* buf_end, T
 	return buf_end;
 }
 
-template <UnsignedIntegral T> constexpr char* itoa_from_end_oct(char* buf_end, T value) {
+template <UnsignedIntegral T> constexpr char* itoa_from_end_oct(char* buf_end, T value) noexcept {
 	constexpr const char* table = "0001020304050607"
 																"1011121314151617"
 																"2021222324252627"
@@ -263,7 +264,7 @@ template <UnsignedIntegral T> constexpr char* itoa_from_end_oct(char* buf_end, T
 	return buf_end;
 }
 
-template <UnsignedIntegral T> constexpr char* itoa_from_end(char* buf_end, T value) {
+template <UnsignedIntegral T> constexpr char* itoa_from_end(char* buf_end, T value) noexcept {
 	constexpr const char* table = "00010203040506070809"
 																"10111213141516171819"
 																"20212223242526272829"
@@ -291,7 +292,7 @@ template <UnsignedIntegral T> constexpr char* itoa_from_end(char* buf_end, T val
 	return buf_end;
 }
 
-template <UnsignedIntegral T> constexpr char* itoa_from_end_hex(char* buf_end, T value) {
+template <UnsignedIntegral T> constexpr char* itoa_from_end_hex(char* buf_end, T value) noexcept {
 	constexpr const char* table = "000102030405060708090a0b0c0d0e0f"
 																"101112131415161718191a1b1c1d1e1f"
 																"202122232425262728292a2b2c2d2e2f"
