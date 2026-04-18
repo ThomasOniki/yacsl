@@ -13,9 +13,10 @@ things_to_test = {
   'true': [
     'logging',
     'function',
+    'arena',
+    'threads',
   ],
   f'!@no_libcpp@': [
-    'arena',
     'vector',
   ],
 }
