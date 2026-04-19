@@ -12,7 +12,7 @@ struct Metadata {
 };
 } // namespace
 
-void Arena::reserve(usize capacity) {
+bool Arena::reserve(usize capacity) noexcept {
 	if (begin_ == nullptr && capacity < initial_capacity_) {
 		capacity = initial_capacity_;
 	}
@@ -28,9 +28,11 @@ void Arena::reserve(usize capacity) {
 
 	if (begin_ == nullptr) {
 		perror("::malloc() failed");
+		return false;
 	}
 
 	new (begin_) Metadata{metadata};
+	return true;
 }
 
 Arena::Scope::~Scope() noexcept {
