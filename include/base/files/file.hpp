@@ -28,6 +28,12 @@ public:
 	void read(char* buf, usize size);
 	void read(uchar* buf, usize size);
 
+	[[nodiscard]] isize get_cursor();
+
+	isize seek_begin(isize offset);
+	isize seek_end(isize offset);
+	isize seek_cursor(isize offset);
+
 private:
 	explicit constexpr File(FileHandle handle) noexcept : handle_(handle) {}
 
