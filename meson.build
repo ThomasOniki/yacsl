@@ -12,7 +12,8 @@ sources = [
   'src/containers/char_buffer.cpp',
   'src/logging/logger.cpp',
   'src/utilities/terminate.cpp',
-  'src/files/file.cpp',
+  'src/sys/file.cpp',
+  'src/sys/process.cpp',
 ]
 
 cpp_flags = []
