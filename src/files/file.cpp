@@ -56,7 +56,7 @@ void File::open(const StringView& path, FileOpenFlags flags) {
 		return;
 	}
 	if (seek_end) {
-		if (lseek(handle_, 0, SEEK_END) == -1) {
+		if (lseek(handle_, 0, SEEK_END) == -1) [[unlikely]] {
 			perror("::lseek failed");
 		}
 	}
@@ -64,7 +64,7 @@ void File::open(const StringView& path, FileOpenFlags flags) {
 
 void File::close() {
 	if (is_open()) {
-		if (::close(handle_) == -1) {
+		if (::close(handle_) == -1) [[unlikely]] {
 			perror("::close failed");
 		}
 		handle_ = NIL_FILE_HANDLE;
@@ -73,27 +73,59 @@ void File::close() {
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void File::write(const StringView& data) {
-	if (::write(handle_, data.data(), data.size()) == -1) {
+	if (::write(handle_, data.data(), data.size()) == -1) [[unlikely]] {
 		perror("::write() failed");
 	}
 }
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void File::write(const BasicStringView<uchar>& data) {
-	if (::write(handle_, data.data(), data.size()) == -1) {
+	if (::write(handle_, data.data(), data.size()) == -1) [[unlikely]] {
 		perror("::write() failed");
 	}
 }
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void File::read(char* buf, usize size) {
-	if (::read(handle_, buf, size) == -1) {
+	if (::read(handle_, buf, size) == -1) [[unlikely]] {
 		perror("::read() failed");
 	}
 }
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void File::read(uchar* buf, usize size) {
-	if (::read(handle_, buf, size) == -1) {
+	if (::read(handle_, buf, size) == -1) [[unlikely]] {
 		perror("::read() failed");
 	}
+}
+// NOLINTNEXTLINE(readability-make-member-function-const)
+isize File::get_cursor() {
+	isize result = ::lseek(handle_, 0, SEEK_CUR);
+	if (result == -1) [[unlikely]] {
+		perror("::lseek failed");
+	}
+	return result;
+}
+// NOLINTNEXTLINE(readability-make-member-function-const)
+isize File::seek_begin(isize offset) {
+	isize result = ::lseek(handle_, offset, SEEK_SET);
+	if (result == -1) [[unlikely]] {
+		perror("::lseek() failed");
+	}
+	return result;
+}
+// NOLINTNEXTLINE(readability-make-member-function-const)
+isize File::seek_end(isize offset) {
+	isize result = ::lseek(handle_, offset, SEEK_END);
+	if (result == -1) [[unlikely]] {
+		perror("::lseek() failed");
+	}
+	return result;
+}
+// NOLINTNEXTLINE(readability-make-member-function-const)
+isize File::seek_cursor(isize offset) {
+	isize result = ::lseek(handle_, offset, SEEK_CUR);
+	if (result == -1) [[unlikely]] {
+		perror("::lseek() failed");
+	}
+	return result;
 }
 
 } // namespace base
