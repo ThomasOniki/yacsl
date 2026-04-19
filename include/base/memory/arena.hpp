@@ -27,8 +27,10 @@ public:
 	template <TriviallyDestructible T, typename... Args> [[nodiscard]] T& push(Args&&... args);
 	template <TriviallyDestructible T> [[nodiscard]] T*										push_array(SizeT count);
 
-	template <typename T> [[nodiscard]] T* allocate();
-	template <typename T> [[nodiscard]] T* allocate(SizeT count);
+	// Returns nullptr if malloc fails.
+	template <typename T> [[nodiscard]] T* allocate() noexcept;
+	// Returns nullptr if malloc fails.
+	template <typename T> [[nodiscard]] T* allocate(SizeT count) noexcept;
 
 	template <typename T> void free(T* /*ptr*/) {}
 	template <typename T> void free(T* /*ptr*/, SizeT /*count*/) {}
@@ -49,7 +51,7 @@ public:
 	};
 
 private:
-	void reserve(usize capacity);
+	bool reserve(usize capacity) noexcept;
 
 private:
 	uchar* begin_						 = nullptr;
@@ -71,7 +73,7 @@ template <TriviallyDestructible T> T* Arena::push_array(SizeT count) {
 	return ptr;
 }
 
-template <typename T> T* Arena::allocate() {
+template <typename T> T* Arena::allocate() noexcept {
 	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
 	uptr top = reinterpret_cast<uptr>(ptr_);
 	top			 = (top + alignof(T) - 1) & ~(alignof(T) - 1);
@@ -80,7 +82,9 @@ template <typename T> T* Arena::allocate() {
 
 	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
 	if (top > reinterpret_cast<uptr>(end_)) [[unlikely]] {
-		reserve(static_cast<usize>(end_ - begin_) * 2 + sizeof(T));
+		if (!reserve(static_cast<usize>(end_ - begin_) * 2 + sizeof(T))) [[unlikely]] {
+			return nullptr;
+		}
 
 		// NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
 		top = reinterpret_cast<uptr>(ptr_);
@@ -95,7 +99,7 @@ template <typename T> T* Arena::allocate() {
 	return reinterpret_cast<T*>(ret);
 }
 
-template <typename T> T* Arena::allocate(SizeT count) {
+template <typename T> T* Arena::allocate(SizeT count) noexcept {
 	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
 	uptr top = reinterpret_cast<uptr>(ptr_);
 	top			 = (top + alignof(T) - 1) & ~(alignof(T) - 1);
@@ -104,7 +108,9 @@ template <typename T> T* Arena::allocate(SizeT count) {
 
 	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
 	if (top > reinterpret_cast<uptr>(end_)) [[unlikely]] {
-		reserve(static_cast<usize>(end_ - begin_) * 2 + sizeof(T) * count);
+		if (!reserve(static_cast<usize>(end_ - begin_) * 2 + sizeof(T) * count)) [[unlikely]] {
+			return nullptr;
+		}
 
 		// NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
 		top = reinterpret_cast<uptr>(ptr_);
