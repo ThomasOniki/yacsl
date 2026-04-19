@@ -6,7 +6,7 @@
 #include "base/metaprogramming/declval.hpp"
 #include "base/type_traits/categories.hpp"
 #include "base/type_traits/qualifiers.hpp"
-#include "base/type_traits/range.hpp"
+#include "base/type_traits/range_like.hpp"
 #include "base/utilities/extended_types.hpp"
 #include "base/utilities/type_aliases.hpp"
 
@@ -194,7 +194,8 @@ public:
 	}
 };
 
-template <Range T> class Formatter<T> : Formatter<RemoveCVRef<decltype(*declval<T>().begin())>> {
+template <RangeLike T>
+class Formatter<T> : Formatter<RemoveCVRef<decltype(*declval<T>().begin())>> {
 public:
 	constexpr const char* parse(const char* fmt) { return Base::parse(fmt); }
 

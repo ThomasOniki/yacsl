@@ -6,7 +6,7 @@
 namespace base {
 
 template <typename T>
-concept Range = requires(T range) {
+concept RangeLike = requires(T range) {
 	{ range.begin() } -> SameAs<decltype(range.end())>;
 	{ *range.begin() };
 	{ ++declval<decltype(range.begin())>() };
