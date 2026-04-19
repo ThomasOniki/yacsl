@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stddef.h>
+#include "base/type_traits/sign.hpp"
 #include <stdint.h>
 
 namespace base {
@@ -20,9 +20,12 @@ using f64 = double;
 
 using uchar = unsigned char;
 
-using usize		= size_t;
-using ptrdiff = ptrdiff_t;
-using uptr		= uintptr_t;
-using iptr		= intptr_t;
+using usize = decltype(sizeof(int));
+using isize = MakeSigned<usize>;
+using uptr	= uintptr_t;
+using iptr	= intptr_t;
+
+// String litterals are pointers, you can get ptrdiff by substracting them.
+using ptrdiff = decltype("" - "");
 
 } // namespace base
