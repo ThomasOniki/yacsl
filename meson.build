@@ -13,6 +13,7 @@ sources = [
   'src/logging/logger.cpp',
   'src/utilities/terminate.cpp',
   'src/sys/file.cpp',
+  'src/sys/process.cpp',
 ]
 
 cpp_flags = []
@@ -96,6 +97,7 @@ lib = library(
   dependencies: threads_dep,
   install: true,
   override_options: {'werror': true, 'warning_level': 'everything'},
+  cpp_pch: 'src/pch.hpp',
 )
 
 base_dep = declare_dependency(

@@ -8,7 +8,10 @@
 #include "base/memory/arena.hpp" // NOLINT(misc-include-cleaner)
 #include "base/metaprogramming/type_manip.hpp"
 #include "base/type_traits/allocator.hpp"
+#include "base/type_traits/categories.hpp"
 #include "base/type_traits/comparaison.hpp"
+#include "base/type_traits/convertible_to.hpp"
+#include "base/type_traits/range_like.hpp"
 #include "base/type_traits/trivial.hpp"
 #include "base/utilities/move_forward.hpp"
 #include "base/utilities/type_aliases.hpp"
@@ -25,6 +28,8 @@ class Vector : private internal::VectorMembers<T, N, Allocator, SizeT> {
 public:
 	constexpr Vector() noexcept = default;
 	constexpr Vector(const InitializerList<T>& init);
+	// NOLINTNEXTLINE(google-explicit-constructor)
+	template <RangeOf<T> Range> constexpr Vector(const Range& range);
 	constexpr explicit Vector(SizeT count);
 
 	constexpr ~Vector() noexcept;
@@ -47,10 +52,10 @@ public:
 
 	constexpr Vector& operator=(const InitializerList<T>& init);
 
-	constexpr void push_back(const T& value) { emplace_back(value); }
-	constexpr void push_back(T&& value) { emplace_back(base::move(value)); }
+	constexpr T& push_back(const T& value) { return emplace_back(value); }
+	constexpr T& push_back(T&& value) { return emplace_back(base::move(value)); }
 
-	template <typename... Args> constexpr void emplace_back(Args&&... args);
+	template <typename... Args> constexpr T& emplace_back(Args&&... args);
 
 	constexpr void pop_back() noexcept;
 	constexpr void clear() noexcept;
@@ -105,8 +110,8 @@ private:
 	void alloc(SizeT capacity);
 	void free();
 
-	void copy(const T* data);
-	void move(T* data);
+	template <typename Copied> void copy(const Copied* data);
+	void														move(T* data);
 
 	void definitely_reserve(SizeT capacity);
 
@@ -129,6 +134,7 @@ private:
 
 namespace internal {
 
+// NOLINTNEXTLINE(altera-struct-pack-align, clang-analyzer-optin.performance.Padding)
 template <typename T, usize N, typename Allocator, typename SizeT> struct VectorMembers {
 protected:
 	constexpr VectorMembers() = default;
@@ -139,20 +145,21 @@ protected:
 
 	using SmallBuffer = ConditionalT<trivial, StackArray<T, N>, StackArrayStorage<T, N>>;
 
-	SmallBuffer small_buffer_;
-	T*					data_ = small_buffer_.data();
-	SizeT				size_ = 0, capacity_ = N;
-	Allocator		allocator_;
+	alignas(32) SmallBuffer small_buffer_{};
+	T*				data_ = small_buffer_.data();
+	SizeT			size_ = 0, capacity_ = N;
+	Allocator allocator_;
 };
 
 template <typename T, typename Allocator, typename SizeT>
+// NOLINTNEXTLINE(altera-struct-pack-align, clang-analyzer-optin.performance.Padding)
 struct VectorMembers<T, 0, Allocator, SizeT> {
 protected:
 	constexpr VectorMembers() = default;
 	explicit constexpr VectorMembers(SizeT size) : size_(size) {}
 
 protected:
-	T*				data_ = nullptr;
+	alignas(32) T* data_ = nullptr;
 	SizeT			size_ = 0, capacity_ = 0;
 	Allocator allocator_;
 
@@ -163,6 +170,7 @@ protected:
 };
 
 template <typename T, usize N, SingletonAllocatorLike Allocator, typename SizeT>
+// NOLINTNEXTLINE(altera-struct-pack-align, clang-analyzer-optin.performance.Padding)
 struct VectorMembers<T, N, Allocator, SizeT> {
 protected:
 	constexpr VectorMembers() = default;
@@ -173,12 +181,13 @@ protected:
 
 	using SmallBuffer = ConditionalT<trivial, StackArray<T, N>, StackArrayStorage<T, N>>;
 
-	SmallBuffer small_buffer_;
-	T*					data_ = small_buffer_.data();
-	SizeT				size_ = 0, capacity_ = N;
+	alignas(32) SmallBuffer small_buffer_{};
+	T*		data_ = small_buffer_.data();
+	SizeT size_ = 0, capacity_ = N;
 };
 
 template <typename T, SingletonAllocatorLike Allocator, typename SizeT>
+// NOLINTNEXTLINE(altera-struct-pack-align, clang-analyzer-optin.performance.Padding)
 struct VectorMembers<T, 0, Allocator, SizeT> {
 protected:
 	constexpr VectorMembers() = default;
@@ -202,12 +211,46 @@ constexpr Vector<T, N, Allocator, SizeT>::Vector(const InitializerList<T>& init)
 	maybe_alloc_size();
 	copy(init.begin());
 }
+template <typename T, usize N, typename Allocator, typename SizeT>
+template <RangeOf<T> Range>
+constexpr Vector<T, N, Allocator, SizeT>::Vector(const Range& range) {
+	if constexpr (requires(Range with_size) {
+									{ with_size.size() } -> Integral;
+								}) {
+		size_ = range.size();
+		maybe_alloc_size();
+		if constexpr (requires(Range with_ptr) {
+										{ with_ptr.data() } -> OneOf<T*, const T*>;
+									}) {
+			copy(range.data());
+		} else if constexpr (requires(Range with_ptr) {
+													 { with_ptr.begin() } -> OneOf<T*, const T*>;
+												 }) {
+			copy(range.begin());
+		} else if constexpr (requires(Range indexable) {
+													 { indexable[0] } -> ConvertibleTo<T>;
+												 }) {
+			for (SizeT i = 0; i < size_; ++i) {
+				new (static_cast<void*>(data_ + i)) T(range[i]);
+			}
+		} else {
+			auto iter = range.begin();
+			for (SizeT i = 0; i < size_; ++iter, ++i) {
+				new (static_cast<void*>(data_ + i)) T(*iter);
+			}
+		}
+	} else {
+		for (auto&& element : range) {
+			emplace_back(base::forward<decltype(element)>(element));
+		}
+	}
+}
 
 template <typename T, usize N, typename Allocator, typename SizeT>
 constexpr Vector<T, N, Allocator, SizeT>::Vector(SizeT count) : Members(count) {
 	maybe_alloc_size();
 	for (SizeT i = 0; i < count; ++i) {
-		new (data_ + i) T();
+		new (static_cast<void*>(data_ + i)) T();
 	}
 }
 
@@ -348,12 +391,11 @@ Vector<T, N, Allocator, SizeT>::operator=(const InitializerList<T>& init) {
 
 template <typename T, usize N, typename Allocator, typename SizeT>
 template <typename... Args>
-constexpr void Vector<T, N, Allocator, SizeT>::emplace_back(Args&&... args) {
+constexpr T& Vector<T, N, Allocator, SizeT>::emplace_back(Args&&... args) {
 	if (size_ == capacity_) [[unlikely]] {
 		definitely_reserve(static_cast<SizeT>(capacity_ * 2 + 1));
 	}
-	new (data_ + size_) T(base::forward<Args>(args)...);
-	++size_;
+	return *new (static_cast<void*>(data_ + size_++)) T(base::forward<Args>(args)...);
 }
 
 template <typename T, usize N, typename Allocator, typename SizeT>
@@ -447,12 +489,14 @@ void Vector<T, N, Allocator, SizeT>::definitely_reserve(SizeT capacity) {
 }
 
 template <typename T, usize N, typename Allocator, typename SizeT>
-void Vector<T, N, Allocator, SizeT>::copy(const T* data) {
-	if constexpr (TriviallyCopyable<T>) {
-		memcpy(data_, data, static_cast<usize>(size_) * sizeof(T));
+template <typename Copied>
+void Vector<T, N, Allocator, SizeT>::copy(const Copied* data) {
+	if constexpr (TriviallyCopyable<T> && SameAs<T, Copied>) {
+		memcpy(static_cast<void*>(data_), static_cast<const void*>(data),
+					 static_cast<usize>(size_) * sizeof(T));
 	} else {
 		for (SizeT i = 0; i < size_; ++i) {
-			new (data_ + i) T(data[i]);
+			new (static_cast<void*>(data_ + i)) T(data[i]);
 		}
 	}
 }
@@ -460,10 +504,11 @@ void Vector<T, N, Allocator, SizeT>::copy(const T* data) {
 template <typename T, usize N, typename Allocator, typename SizeT>
 void Vector<T, N, Allocator, SizeT>::move(T* data) {
 	if constexpr (TriviallyCopyable<T>) {
-		memcpy(data_, data, static_cast<usize>(size_) * sizeof(T));
+		memcpy(static_cast<void*>(data_), static_cast<const void*>(data),
+					 static_cast<usize>(size_) * sizeof(T));
 	} else {
 		for (SizeT i = 0; i < size_; ++i) {
-			new (data_ + i) T(base::move(data[i]));
+			new (static_cast<void*>(data_ + i)) T(base::move(data[i]));
 		}
 	}
 }
