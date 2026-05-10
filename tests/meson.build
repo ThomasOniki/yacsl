@@ -15,6 +15,7 @@ things_to_test = {
     'function',
     'arena',
     'threads',
+    'process',
   ],
   f'!@no_libcpp@': [
     'vector',
