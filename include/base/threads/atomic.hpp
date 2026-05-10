@@ -25,7 +25,7 @@ public:
 	Atomic& operator=(const Atomic&)		 = delete;
 	Atomic& operator=(Atomic&&) noexcept = delete;
 
-	T load(MemoryOrder order) const noexcept {
+	[[nodiscard]] T load(MemoryOrder order) const noexcept {
 		return __atomic_load_n(&value_, static_cast<int>(order));
 	}
 

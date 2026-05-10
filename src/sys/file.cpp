@@ -1,16 +1,19 @@
 #ifdef BASE_PLATFORM_UNIX
 
 #include "base/sys/file.hpp"
-#include "base/containers/char_buffer.hpp"
+#include "base/containers/cstring.hpp"
+#include "base/containers/fwds.hpp"
 #include "base/containers/string_view.hpp"
 #include "base/sys/common.hpp"
 #include "base/utilities/type_aliases.hpp"
 #include <fcntl.h>
 #include <stdio.h>
-#include <string.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 namespace base {
+
+namespace internal {
 
 static bool strip_flag(FileOpenFlags* flags, FileOpenFlags flag) {
 	const FileOpenFlags stripped = *flags & ~flag;
@@ -33,6 +36,9 @@ static int unix_flags(FileOpenFlags flags) {
 	if (strip_flag(&flags, FileOpenFlags::Append)) {
 		ret |= O_APPEND;
 	}
+	if (!strip_flag(&flags, FileOpenFlags::DontCloseOnExec)) {
+		ret |= O_CLOEXEC;
+	}
 	if (flags == FileOpenFlags::Read) {
 		ret |= O_RDONLY;
 	} else if (flags == FileOpenFlags::Write) {
@@ -43,23 +49,35 @@ static int unix_flags(FileOpenFlags flags) {
 	return static_cast<int>(ret);
 }
 
-void File::open(const StringView& path, FileOpenFlags flags) {
-	CharBuffer buf;
-	char*			 cstr_path = buf.grow(path.size() + 1);
-	memcpy(cstr_path, path.data(), path.size());
-	cstr_path[path.size()] = '\0';
-	const bool seek_end		 = strip_flag(&flags, FileOpenFlags::SeekEnd) &&
-													 (flags & FileOpenFlags::Trunc) == FileOpenFlags::None;
-	handle_ = ::open(cstr_path, unix_flags(flags), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-	if (handle_ == -1) {
+static int open_file(const char* cstr_path, FileOpenFlags flags) {
+	const bool seek_end = strip_flag(&flags, FileOpenFlags::SeekEnd) &&
+												(flags & FileOpenFlags::Trunc) == FileOpenFlags::None;
+	const int	 fildes		= ::open(cstr_path, unix_flags(flags), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+	if (fildes == -1) [[unlikely]] {
 		perror("::open failed");
-		return;
+		return NIL_FILE_HANDLE;
 	}
 	if (seek_end) {
-		if (lseek(handle_, 0, SEEK_END) == -1) [[unlikely]] {
+		if (lseek(fildes, 0, SEEK_END) == -1) [[unlikely]] {
 			perror("::lseek failed");
+			return NIL_FILE_HANDLE;
 		}
 	}
+	return fildes;
+}
+
+static int open_file(const StringView& path, FileOpenFlags flags) {
+	CString cstr(path);
+	return open_file(cstr.data(), flags);
+}
+
+} // namespace internal
+
+void File::open(const StringView& path, FileOpenFlags flags) {
+	handle_ = internal::open_file(path, flags);
+}
+void File::open(const char* path, FileOpenFlags flags) {
+	handle_ = internal::open_file(path, flags);
 }
 
 void File::close() {
@@ -97,7 +115,7 @@ void File::read(uchar* buf, usize size) {
 }
 // NOLINTNEXTLINE(readability-make-member-function-const)
 isize File::get_cursor() {
-	isize result = ::lseek(handle_, 0, SEEK_CUR);
+	const isize result = ::lseek(handle_, 0, SEEK_CUR);
 	if (result == -1) [[unlikely]] {
 		perror("::lseek failed");
 	}
@@ -105,7 +123,7 @@ isize File::get_cursor() {
 }
 // NOLINTNEXTLINE(readability-make-member-function-const)
 isize File::seek_begin(isize offset) {
-	isize result = ::lseek(handle_, offset, SEEK_SET);
+	const isize result = ::lseek(handle_, offset, SEEK_SET);
 	if (result == -1) [[unlikely]] {
 		perror("::lseek() failed");
 	}
@@ -113,7 +131,7 @@ isize File::seek_begin(isize offset) {
 }
 // NOLINTNEXTLINE(readability-make-member-function-const)
 isize File::seek_end(isize offset) {
-	isize result = ::lseek(handle_, offset, SEEK_END);
+	const isize result = ::lseek(handle_, offset, SEEK_END);
 	if (result == -1) [[unlikely]] {
 		perror("::lseek() failed");
 	}
@@ -121,7 +139,7 @@ isize File::seek_end(isize offset) {
 }
 // NOLINTNEXTLINE(readability-make-member-function-const)
 isize File::seek_cursor(isize offset) {
-	isize result = ::lseek(handle_, offset, SEEK_CUR);
+	const isize result = ::lseek(handle_, offset, SEEK_CUR);
 	if (result == -1) [[unlikely]] {
 		perror("::lseek() failed");
 	}
@@ -134,4 +152,9 @@ isize File::seek_cursor(isize offset) {
 
 OutFile::OutFile(const StringView& path) {}
 
+#endif
+
+#ifdef BASE_LSP_ONLY
+template class base::BasicCString<char, 8>;
+template base::BasicCString<char, 8>::BasicCString(const BasicStringView<char>& str);
 #endif

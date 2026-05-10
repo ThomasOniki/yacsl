@@ -39,6 +39,8 @@ public:
 	template <usize I> [[nodiscard]] constexpr T&				get() noexcept { return data_[I]; }
 	template <usize I> [[nodiscard]] constexpr const T& get() const noexcept { return data_[I]; }
 
+	constexpr bool operator==(const StackArray& other) const noexcept = default;
+
 public:
 	T data_[N]; // NOLINT
 };

@@ -10,6 +10,7 @@ class File {
 public:
 	constexpr File() noexcept = default;
 	explicit File(const StringView& path, FileOpenFlags flags) { open(path, flags); }
+	explicit File(const char* path, FileOpenFlags flags) { open(path, flags); }
 	File(const File&) = delete;
 	File(File&& other) noexcept;
 
@@ -21,6 +22,7 @@ public:
 	[[nodiscard]] bool is_open() const noexcept { return handle_ != NIL_FILE_HANDLE; }
 
 	void open(const StringView& path, FileOpenFlags flags);
+	void open(const char* path, FileOpenFlags flags);
 	void close();
 
 	void write(const StringView& data);
@@ -38,6 +40,8 @@ private:
 	explicit constexpr File(FileHandle handle) noexcept : handle_(handle) {}
 
 	FileHandle handle_ = NIL_FILE_HANDLE;
+
+	friend class Process;
 };
 
 } // namespace base
