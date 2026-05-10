@@ -1,16 +1,28 @@
+#include "base/containers/char_buffer.hpp"
+#include "base/containers/fwds.hpp"
+#include "base/containers/string_view.hpp"
 #include "base/containers/vector.hpp"
+#include "base/logging/common.hpp"
+#include "base/logging/formatter.hpp"
+#include "base/memory/fwds.hpp"
+#include "base/memory/singleton_allocator.hpp"
 
 #include "test_utils.hpp"
 
 #include <format>
+#include <new>
 #include <string>
 #include <string_view>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+
+// NOLINTBEGIN(bugprone-exception-escape)
 
 template <> class base::Formatter<std::string> : base::Formatter<base::StringView> {
 public:
@@ -27,10 +39,12 @@ class TestAllocator {
 public:
 	using SizeT = size_t;
 
+	// NOLINTNEXTLINE(fuchsia-statically-constructed-objects)
 	inline static std::vector<std::string> events;
+	// NOLINTNEXTLINE(fuchsia-statically-constructed-objects)
 	inline static std::vector<std::string> events_with_ptrs;
 
-	template <typename T> T* allocate(SizeT count) {
+	template <typename T> T* allocate(SizeT count) noexcept {
 		void* ret = ::operator new(count * sizeof(T), std::align_val_t{alignof(T)});
 		if (freed.contains(ret)) {
 			freed.erase(ret);
@@ -41,7 +55,8 @@ public:
 		return static_cast<T*>(ret);
 	}
 
-	template <typename T> void free(T* ptr, SizeT count) {
+	template <typename T> void free(T* ptr, SizeT count) noexcept {
+
 		if (ptr) {
 			if (freed.contains(ptr)) {
 				base::log_error("double free");
@@ -53,7 +68,6 @@ public:
 			}
 
 			freed.emplace(ptr);
-
 			events.push_back(std::format("freed {}", count));
 			events_with_ptrs.push_back(std::format("freed {} at {}", count, static_cast<void*>(ptr)));
 			::operator delete(ptr, count * sizeof(T));
@@ -64,7 +78,9 @@ public:
 	}
 
 private:
+	// NOLINTNEXTLINE(fuchsia-statically-constructed-objects)
 	inline static std::unordered_set<void*> freed;
+	// NOLINTNEXTLINE(fuchsia-statically-constructed-objects)
 	inline static std::unordered_set<void*> allocated;
 };
 
@@ -73,12 +89,15 @@ using TestAllocatorSingleton = base::SingletonAllocator<TestAllocator, "main", t
 class TestClass {
 public:
 	explicit TestClass(const std::string_view& name) : name_(name) {
+
 		events.push_back("default constructed " + name_);
 	}
 	TestClass(const TestClass& other) : name_(other.name_ + " (copied)") {
+
 		events.push_back("copy constructed " + name_);
 	}
 	TestClass(TestClass&& other) noexcept : name_(other.name_ + " (moved)") {
+
 		events.push_back("move constructed " + name_);
 	}
 	~TestClass() noexcept { events.push_back("destructed " + name_); }
@@ -87,6 +106,7 @@ public:
 			return *this;
 		}
 		name_ = other.name_ + " (copy assigned)";
+
 		events.push_back("copy assigned " + name_);
 		return *this;
 	}
@@ -97,6 +117,7 @@ public:
 	}
 
 public:
+	// NOLINTNEXTLINE(fuchsia-statically-constructed-objects)
 	inline static std::vector<std::string> events = {};
 
 	std::string name_;
@@ -174,7 +195,7 @@ private:
 			// Move order on realloc is implementation defined, so the exact order can't be checked.
 			func(false);
 
-			TestClass copied("d");
+			const TestClass copied("d");
 			func(true);
 			moved_to.push_back(copied);
 			func(true);
@@ -219,7 +240,7 @@ static int test_push_after_copy() {
 
 		foo_bar.pop_back(); // pop '\0'
 
-		for (char chr : " bar") { // 3 allocs
+		for (const char chr : " bar") { // 3 allocs
 			foo_bar.push_back(chr);
 		}
 
@@ -337,3 +358,5 @@ int main() {
 	EXPECT_EQ(test_different_allocators(), 0);
 	return ret;
 }
+
+// NOLINTEND(bugprone-exception-escape)

@@ -22,6 +22,7 @@ public:
 	[[nodiscard]] constexpr const T& get() const noexcept { return value_; }
 
 private:
+	// NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
 	T value_;
 };
 

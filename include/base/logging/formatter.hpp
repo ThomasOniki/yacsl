@@ -178,7 +178,8 @@ public:
 	}
 	// NOLINTNEXTLINE(modernize-avoid-c-arrays)
 	void format(CharBuffer& buf, const Char (&str)[N]) const {
-		return Formatter<BasicStringView<Char>>::format(buf, BasicStringView(str, N - 1));
+		return Formatter<BasicStringView<Char>>::format(
+				buf, BasicStringView(static_cast<const Char*>(str), N - 1));
 	}
 };
 template <Character Char, usize N>

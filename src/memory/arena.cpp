@@ -26,7 +26,7 @@ bool Arena::reserve(usize capacity) noexcept {
 	end_	 = begin_ + capacity;
 	ptr_	 = begin_ + sizeof(Metadata);
 
-	if (begin_ == nullptr) {
+	if (begin_ == nullptr) [[unlikely]] {
 		perror("::malloc() failed");
 		return false;
 	}

@@ -1,6 +1,8 @@
 #include "base/memory/arena.hpp"
+#include "base/memory/fwds.hpp"
 #include "test_utils.hpp"
-
+#include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 
 constexpr uint32_t iteration_count = 10000;
@@ -80,13 +82,13 @@ static int test_align() {
 static int test_rewind() {
 	int ret = 0;
 	{
-		base::Arena::Scope scope(base::MainArenaAllocator::get()); // test scope with ptr_ = 0
+		const base::Arena::Scope scope(base::MainArenaAllocator::get()); // test scope with ptr_ = 0
 	}
 	// Calls malloc so that the rewind test uses the same memory in and outside of the scope.
 	(void)base::MainArenaAllocator::get().push<int>();
-	char* ptr = nullptr;
+	const char* ptr = nullptr;
 	{
-		base::Arena::Scope scope(base::MainArenaAllocator::get());
+		const base::Arena::Scope scope(base::MainArenaAllocator::get());
 
 		ptr = base::MainArenaAllocator::get().push_array<char>(10);
 

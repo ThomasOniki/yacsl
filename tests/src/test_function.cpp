@@ -1,4 +1,9 @@
+#include "base/containers/char_buffer.hpp"
 #include "base/containers/function.hpp"
+#include "base/logging/common.hpp"
+#include "base/logging/format_string.hpp"
+#include "base/logging/format_string_parser.hpp"
+#include "base/logging/formatter.hpp"
 #include "test_utils.hpp"
 #include <stdint.h>
 #include <stdio.h>
@@ -21,7 +26,9 @@ struct TestStruct {
 	TestStruct() { ++counts.constructor_call_count; }
 
 	TestStruct(const TestStruct& /*other*/) { ++counts.copy_constructor_call_count; }
-	TestStruct(TestStruct&& /*other*/) noexcept { ++counts.move_constructor_call_count; }
+	[[maybe_unused]] TestStruct(TestStruct&& /*other*/) noexcept {
+		++counts.move_constructor_call_count;
+	}
 
 	~TestStruct() noexcept { ++counts.destructor_call_count; }
 
@@ -32,11 +39,11 @@ struct TestStruct {
 
 template <> class base::Formatter<Counts> {
 public:
-	constexpr const char* parse(const char* fmt) {
+	static constexpr const char* parse(const char* fmt) {
 		base::FormatStringParser parser(fmt);
 		return parser.end_parse();
 	}
-	void format(base::CharBuffer& buf, const Counts& counts) const {
+	[[maybe_unused]] static void format(base::CharBuffer& buf, const Counts& counts) {
 		base::format_to(
 				buf, "constructors: {}, copy_constructors: {}, move_contructors: {}, destructors: {}",
 				counts.constructor_call_count, counts.copy_constructor_call_count,
@@ -50,17 +57,20 @@ public:
 	inline static uint32_t allocate_call_count = 0;
 	inline static uint32_t free_call_count		 = 0;
 
-	template <typename T> T* allocate() {
+	template <typename T> [[maybe_unused]] T* allocate() {
 		++allocate_call_count;
+		// NOLINTNEXTLINE(cppcoreguidelines-no-malloc, hicpp-no-malloc, cppcoreguidelines-owning-memory)
 		return static_cast<T*>(malloc(sizeof(T)));
 	}
-	template <typename T> void free(T* ptr) {
+	template <typename T> [[maybe_unused]] void free(T* ptr) {
 		++free_call_count;
+		// NOLINTNEXTLINE(cppcoreguidelines-no-malloc, hicpp-no-malloc, cppcoreguidelines-owning-memory)
 		::free(ptr);
 	}
 };
 } // namespace
 
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define CHECK_COUNTS(...)                                                                          \
 	do {                                                                                             \
 		const Counts expected = Counts{__VA_ARGS__};                                                   \
@@ -84,6 +94,8 @@ static int test_moved_lambda() {
 	{
 		CHECK_COUNTS(0);
 
+		// test must be non-const to be moved.
+		// NOLINTNEXTLINE(misc-const-correctness)
 		TestStruct test;
 
 		CHECK_COUNTS(.constructor_call_count = 1);
@@ -93,7 +105,7 @@ static int test_moved_lambda() {
 		CHECK_COUNTS(.copy_constructor_call_count = 1, .move_constructor_call_count = 1,
 								 .destructor_call_count = 1);
 
-		int result = func(10);
+		const int result = func(10);
 		if (result != 20) {
 			(void)fprintf(stderr, "function returned %d, not 20", result);
 		}
@@ -105,10 +117,10 @@ static int test_moved_lambda() {
 static int test_copied_lambda() {
 	int ret = 0;
 	{
-		TestStruct test;
+		const TestStruct test;
 		CHECK_COUNTS(.constructor_call_count = 1);
 
-		base::Function<void(), 0, TestAllocator> func3([&test]() { (void)test; });
+		const base::Function<void(), 0, TestAllocator> func([&test]() { (void)test; });
 
 		CHECK_COUNTS(0);
 
@@ -126,13 +138,13 @@ static int test_copied_lambda() {
 static int test_ref_capture_lamdba() {
 	int ret = 0;
 	{
-		TestStruct test;
+		const TestStruct test;
 		CHECK_COUNTS(.constructor_call_count = 1);
 
 		auto lambda = [test]() {};
 		CHECK_COUNTS(.copy_constructor_call_count = 1);
 
-		base::Function<void()> func(lambda);
+		const base::Function<void()> func(lambda);
 		CHECK_COUNTS(.copy_constructor_call_count = 1);
 	}
 	CHECK_COUNTS(.destructor_call_count = 3);
@@ -142,9 +154,9 @@ static int test_ref_capture_lamdba() {
 
 int main() {
 	int ret = 0;
-	EXPECT_EQ(test_function_running(), 0);
-	EXPECT_EQ(test_moved_lambda(), 0);
-	EXPECT_EQ(test_copied_lambda(), 0);
-	EXPECT_EQ(test_ref_capture_lamdba(), 0);
+	EXPECT(test_function_running() == 0);
+	EXPECT(test_moved_lambda() == 0);
+	EXPECT(test_copied_lambda() == 0);
+	EXPECT(test_ref_capture_lamdba() == 0);
 	return ret;
 }

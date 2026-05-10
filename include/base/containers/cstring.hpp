@@ -4,6 +4,7 @@
 #include "base/containers/maybe_allocator_member.hpp"
 #include "base/containers/stack_array.hpp"
 #include "base/containers/string_view.hpp"
+#include "base/memory/arena.hpp" // NOLINT(misc-include-cleaner)
 #include "base/utilities/type_aliases.hpp"
 #include <string.h>
 
@@ -47,3 +48,8 @@ private:
 };
 
 } // namespace base
+
+#ifdef BASE_LSP_ONLY
+template class base::BasicCString<char>;
+template base::BasicCString<char>::BasicCString(const BasicStringView<char>& str);
+#endif
