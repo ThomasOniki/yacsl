@@ -70,7 +70,7 @@ public:
 			freed.emplace(ptr);
 			events.push_back(std::format("freed {}", count));
 			events_with_ptrs.push_back(std::format("freed {} at {}", count, static_cast<void*>(ptr)));
-			::operator delete(ptr, count * sizeof(T));
+			::operator delete(ptr, count * sizeof(T), std::align_val_t{alignof(T)});
 		} else {
 			events.push_back(std::format("freed {} (nullptr)", count));
 		}
