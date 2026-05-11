@@ -35,7 +35,7 @@ static void check(const char* expected) {
 	// NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
 	[[maybe_unused]] FILE* truncated = fopen("test_logs.txt", "w+e");
 	// NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
-	(void)fclose(file);
+	(void)fclose(truncated);
 
 	if (memcmp(static_cast<void*>(logs.data()), static_cast<const void*>(buf.data()), buf_size) !=
 			0) {
