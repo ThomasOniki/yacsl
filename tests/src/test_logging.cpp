@@ -17,7 +17,7 @@ static int& status() {
 
 static void check(const char* expected) {
 	static constexpr size_t buf_size		 = 4096;
-	size_t									expected_len = strlen(expected);
+	const size_t						expected_len = strlen(expected);
 
 	assert(expected_len - 2 < buf_size);
 	base::StackArray<char, buf_size, size_t> buf = {};

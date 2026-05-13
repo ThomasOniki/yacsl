@@ -56,9 +56,9 @@ static int test_mutex(uint32_t thread_count) {
 
 int main() {
 	int ret = 0;
-	EXPECT_EQ(test_atomic(1), 0);
-	EXPECT_EQ(test_atomic(100), 0);
-	EXPECT_EQ(test_mutex(1), 0);
-	EXPECT_EQ(test_mutex(100), 0);
+	EXPECT(test_atomic(1) == 0);
+	EXPECT(test_atomic(100) == 0);
+	EXPECT(test_mutex(1) == 0);
+	EXPECT(test_mutex(100) == 0);
 	return ret;
 }
