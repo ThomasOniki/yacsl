@@ -147,7 +147,7 @@ public:
 				TestClass::events.clear();
 			});
 		};
-		EXPECT_EQ(test(), 0);
+		EXPECT(test() == 0);
 		return ret;
 	}
 
@@ -350,12 +350,12 @@ static int test_different_allocators() {
 
 int main() {
 	int ret = 0;
-	EXPECT_EQ(test_allocator(), 0);
-	EXPECT_EQ(test_push_after_copy(), 0);
-	EXPECT_EQ(test_default_template_args(), 0);
-	EXPECT_EQ(test_custom_allocator(), 0);
-	EXPECT_EQ(test_different_vectors(), 0);
-	EXPECT_EQ(test_different_allocators(), 0);
+	EXPECT(test_allocator() == 0);
+	EXPECT(test_push_after_copy() == 0);
+	EXPECT(test_default_template_args() == 0);
+	EXPECT(test_custom_allocator() == 0);
+	EXPECT(test_different_vectors() == 0);
+	EXPECT(test_different_allocators() == 0);
 	return ret;
 }
 

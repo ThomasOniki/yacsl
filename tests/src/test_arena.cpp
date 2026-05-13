@@ -102,8 +102,8 @@ static int test_rewind() {
 
 int main() {
 	int ret = 0;
-	EXPECT_EQ(test_align(), 0);
-	EXPECT_EQ(test_ctors(), 0);
-	EXPECT_EQ(test_rewind(), 0);
+	EXPECT(test_align() == 0);
+	EXPECT(test_ctors() == 0);
+	EXPECT(test_rewind() == 0);
 	return ret;
 }
