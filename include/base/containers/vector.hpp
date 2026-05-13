@@ -68,40 +68,50 @@ public:
 	[[nodiscard]] constexpr SizeT size() const noexcept { return size_; }
 	[[nodiscard]] constexpr SizeT capacity() const noexcept { return capacity_; }
 
-	[[nodiscard]] constexpr T*			 data() noexcept { return data_; }
-	[[nodiscard]] constexpr const T* data() const noexcept { return data_; }
+	[[nodiscard]] constexpr T*			 data() noexcept BASE_LIFETIMEBOUND { return data_; }
+	[[nodiscard]] constexpr const T* data() const noexcept BASE_LIFETIMEBOUND { return data_; }
 
-	[[nodiscard]] constexpr T*			 begin() noexcept { return data_; }
-	[[nodiscard]] constexpr const T* begin() const noexcept { return data_; }
-	[[nodiscard]] constexpr T*			 end() noexcept { return data_ + size_; }
-	[[nodiscard]] constexpr const T* end() const noexcept { return data_ + size_; }
+	[[nodiscard]] constexpr T*			 begin() noexcept BASE_LIFETIMEBOUND { return data_; }
+	[[nodiscard]] constexpr const T* begin() const noexcept BASE_LIFETIMEBOUND { return data_; }
+	[[nodiscard]] constexpr T*			 end() noexcept BASE_LIFETIMEBOUND { return data_ + size_; }
+	[[nodiscard]] constexpr const T* end() const noexcept BASE_LIFETIMEBOUND { return data_ + size_; }
 
-	[[nodiscard]] constexpr ReverseIterator<T*>				rbegin() noexcept { return data_ + size_; }
-	[[nodiscard]] constexpr ReverseIterator<const T*> rbegin() const noexcept {
+	[[nodiscard]] constexpr ReverseIterator<T*> rbegin() noexcept BASE_LIFETIMEBOUND {
 		return data_ + size_;
 	}
-	[[nodiscard]] constexpr ReverseIterator<T*>				rend() noexcept { return data_; }
-	[[nodiscard]] constexpr ReverseIterator<const T*> rend() const noexcept { return data_; }
-
-	[[nodiscard]] constexpr const T* cbegin() const noexcept { return data_; }
-	[[nodiscard]] constexpr const T* cend() const noexcept { return data_ + size_; }
-
-	[[nodiscard]] constexpr ReverseIterator<const T*> crbegin() const noexcept {
+	[[nodiscard]] constexpr ReverseIterator<const T*> rbegin() const noexcept BASE_LIFETIMEBOUND {
 		return data_ + size_;
 	}
-	[[nodiscard]] constexpr ReverseIterator<const T*> crend() const noexcept { return data_; }
-
-	[[nodiscard]] constexpr T& operator[](SizeT index) noexcept {
-		return data_[static_cast<usize>(index)];
-	}
-	[[nodiscard]] constexpr T& operator[](SizeT index) const noexcept {
-		return data_[static_cast<usize>(index)];
+	[[nodiscard]] constexpr ReverseIterator<T*> rend() noexcept BASE_LIFETIMEBOUND { return data_; }
+	[[nodiscard]] constexpr ReverseIterator<const T*> rend() const noexcept BASE_LIFETIMEBOUND {
+		return data_;
 	}
 
-	[[nodiscard]] constexpr T&			 front() noexcept { return data_[0]; }
-	[[nodiscard]] constexpr const T& front() const noexcept { return data_[0]; }
-	[[nodiscard]] constexpr T&			 back() noexcept { return data_[size_ - 1]; }
-	[[nodiscard]] constexpr const T& back() const noexcept { return data_[size_ - 1]; }
+	[[nodiscard]] constexpr const T* cbegin() const noexcept BASE_LIFETIMEBOUND { return data_; }
+	[[nodiscard]] constexpr const T* cend() const noexcept BASE_LIFETIMEBOUND {
+		return data_ + size_;
+	}
+
+	[[nodiscard]] constexpr ReverseIterator<const T*> crbegin() const noexcept BASE_LIFETIMEBOUND {
+		return data_ + size_;
+	}
+	[[nodiscard]] constexpr ReverseIterator<const T*> crend() const noexcept BASE_LIFETIMEBOUND {
+		return data_;
+	}
+
+	[[nodiscard]] constexpr T& operator[](SizeT index) noexcept BASE_LIFETIMEBOUND {
+		return data_[static_cast<usize>(index)];
+	}
+	[[nodiscard]] constexpr T& operator[](SizeT index) const noexcept BASE_LIFETIMEBOUND {
+		return data_[static_cast<usize>(index)];
+	}
+
+	[[nodiscard]] constexpr T&			 front() noexcept BASE_LIFETIMEBOUND { return data_[0]; }
+	[[nodiscard]] constexpr const T& front() const noexcept BASE_LIFETIMEBOUND { return data_[0]; }
+	[[nodiscard]] constexpr T&			 back() noexcept BASE_LIFETIMEBOUND { return data_[size_ - 1]; }
+	[[nodiscard]] constexpr const T& back() const noexcept BASE_LIFETIMEBOUND {
+		return data_[size_ - 1];
+	}
 
 private:
 	void maybe_alloc_size();					// if size_ > N
@@ -118,7 +128,7 @@ private:
 	template <usize OtherN, typename OtherAllocator, typename OtherSizeT>
 	void steal_ptr(Vector<T, OtherN, OtherAllocator, OtherSizeT>&& other);
 
-	UnderlyingAllocator<Allocator>& allocator();
+	UnderlyingAllocator<Allocator>& allocator() BASE_LIFETIMEBOUND;
 
 private:
 	using Members = internal::VectorMembers<T, N, Allocator, SizeT>;

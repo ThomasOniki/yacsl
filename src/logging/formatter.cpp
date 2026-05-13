@@ -18,24 +18,24 @@ namespace base {
 // [0x00080, 0x000800) 110xxxyy 10yyzzzz
 // [0x00800, 0x010000) 1110wwww 10xxxxyy 10yyzzzz
 // [0x10000, 0x110000) 11110uvv 10vvwwww 10xxxxyy 10yyzzzz
-static char* write_char1(char* buf, char8_t chr) {
+static char* write_char1(BASE_LIFETIMEBOUND char* buf, char8_t chr) {
 	*buf = static_cast<char>(chr);
 	return buf + 1;
 }
-static char* write_char2(char* buf, char32_t chr) {
+static char* write_char2(BASE_LIFETIMEBOUND char* buf, char32_t chr) {
 	static constexpr char32_t mask = 0b11'1111;
 	buf[0]												 = static_cast<char>(0b1100'0000 | (chr >> 6));
 	buf[1]												 = static_cast<char>(0b1000'0000 | (chr & mask));
 	return buf + 2;
 }
-static char* write_char3(char* buf, char32_t chr) {
+static char* write_char3(BASE_LIFETIMEBOUND char* buf, char32_t chr) {
 	static constexpr char32_t mask = 0b11'1111;
 	buf[0]												 = static_cast<char>(0b1110'0000 | (chr >> 12));
 	buf[1]												 = static_cast<char>(0b1000'0000 | ((chr >> 6) & mask));
 	buf[2]												 = static_cast<char>(0b1000'0000 | (chr & mask));
 	return buf + 3;
 }
-static char* write_char4(char* buf, char32_t chr) {
+static char* write_char4(BASE_LIFETIMEBOUND char* buf, char32_t chr) {
 	static constexpr char32_t mask = 0b11'1111;
 	buf[0]												 = static_cast<char>(0b1111'0000 | (chr >> 18));
 	buf[1]												 = static_cast<char>(0b1000'0000 | ((chr >> 12) & mask));
@@ -51,7 +51,7 @@ static char* write_char4(char* buf, char32_t chr) {
 // Unicode - 0x10000 = yyyyyyyyyyxxxxxxxxxx
 // W1 = 0xD800 + yyyyyyyyyy = 110110yyyyyyyyyy
 // W2 = 0xDC00 + xxxxxxxxxx = 110111xxxxxxxxxx
-static char* write_low_surrogate(char* buf, char32_t high, char32_t low) {
+static char* write_low_surrogate(BASE_LIFETIMEBOUND char* buf, char32_t high, char32_t low) {
 	static constexpr char32_t mask = 0b11'1111'1111;
 	high &= mask;
 	low &= mask;
@@ -73,7 +73,7 @@ static char* write_low_surrogate(char* buf, char32_t high, char32_t low) {
 // Unicode - 0x10000 = yyyyyyyyyyxxxxxxxxxx
 // W1 = 0xD800 + yyyyyyyyyy = 110110yyyyyyyyyy
 // W2 = 0xDC00 + xxxxxxxxxx = 110111xxxxxxxxxx
-template <typename C> static char* write_char(char* buf, C chr) {
+template <typename C> static char* write_char(BASE_LIFETIMEBOUND char* buf, C chr) {
 	if (sizeof(C) == 1 || chr < 0x80) {
 		return write_char1(buf, static_cast<char8_t>(chr));
 	}
@@ -171,7 +171,7 @@ template <bool Debug, typename C> static u32 real_string_len(const BasicStringVi
 	return ret;
 }
 
-static char* write_debug_char_below_0x20(char* buf, char chr) {
+static char* write_debug_char_below_0x20(BASE_LIFETIMEBOUND char* buf, char chr) {
 	buf[0] = '\\';
 	switch (chr) {
 	case '\n':
@@ -202,7 +202,7 @@ static char* write_debug_char_below_0x20(char* buf, char chr) {
 	}
 }
 
-template <typename C> static char* write_debug_char(char* buf, C chr) {
+template <typename C> static char* write_debug_char(BASE_LIFETIMEBOUND char* buf, C chr) {
 	// For some reason clang-tidy's warning about casting [signed] char to unsigned types other than
 	// uchar also applies to wchar_t, but you can't cast a wchar to uchar like it suggests if you
 	// don't want to lose precision.
@@ -453,7 +453,8 @@ template void Formatter<BasicStringView<char8_t>>::format(CharBuffer&, Reference
 template void Formatter<BasicStringView<char16_t>>::format(CharBuffer&, Reference) const;
 template void Formatter<BasicStringView<char32_t>>::format(CharBuffer&, Reference) const;
 
-template <typename T, u32 Base> static char* itoa_from_end_base_x(char* buf_end, T value) {
+template <typename T, u32 Base>
+static char* itoa_from_end_base_x(BASE_LIFETIMEBOUND char* buf_end, T value) {
 	if constexpr (Base == 2) {
 		return itoa_from_end_bin(buf_end, value);
 	}

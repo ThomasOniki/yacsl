@@ -3,6 +3,7 @@
 #include "base/containers/structured_bindings.hpp"
 #include "base/metaprogramming/integer_sequence.hpp"
 #include "base/metaprogramming/type_manip.hpp"
+#include "base/type_traits/comparaison.hpp"
 #include "base/utilities/move_forward.hpp"
 #include "base/utilities/type_aliases.hpp"
 
@@ -16,10 +17,18 @@ public:
 
 	template <typename Arg>
 	// NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
-	explicit constexpr TupleLeaf(Arg&& other) noexcept : value_(base::forward<Arg>(other)) {}
+	explicit constexpr TupleLeaf(Arg&& other) noexcept
+		requires(!SameAs<T, T &&>)
+			: value_(base::forward<Arg>(other)) {}
 
-	[[nodiscard]] constexpr T&			 get() noexcept { return value_; }
-	[[nodiscard]] constexpr const T& get() const noexcept { return value_; }
+	template <typename Arg>
+	// NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
+	explicit constexpr TupleLeaf(BASE_LIFETIMEBOUND Arg&& other) noexcept
+		requires SameAs<T, T&&>
+			: value_(base::forward<Arg>(other)) {}
+
+	[[nodiscard]] constexpr T&			 get() noexcept BASE_LIFETIMEBOUND { return value_; }
+	[[nodiscard]] constexpr const T& get() const noexcept BASE_LIFETIMEBOUND { return value_; }
 
 private:
 	// NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
@@ -42,10 +51,11 @@ public:
 
 	static constexpr usize size() noexcept { return sizeof...(Ts); }
 
-	template <usize I> [[nodiscard]] constexpr NthType<I, Ts...>& get() noexcept {
+	template <usize I> [[nodiscard]] constexpr NthType<I, Ts...>& get() noexcept BASE_LIFETIMEBOUND {
 		return Leaf<I>::get();
 	}
-	template <usize I> [[nodiscard]] constexpr const NthType<I, Ts...>& get() const noexcept {
+	template <usize I>
+	[[nodiscard]] constexpr const NthType<I, Ts...>& get() const noexcept BASE_LIFETIMEBOUND {
 		return Leaf<I>::get();
 	}
 };

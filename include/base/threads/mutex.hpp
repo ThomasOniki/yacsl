@@ -23,7 +23,7 @@ private:
 
 class MutexLock {
 public:
-	explicit MutexLock(Mutex& mutex) : mutex_(&mutex) { mutex_->lock(); }
+	explicit MutexLock(BASE_LIFETIMEBOUND Mutex& mutex) : mutex_(&mutex) { mutex_->lock(); }
 	MutexLock(const MutexLock&)			= delete;
 	MutexLock(MutexLock&&) noexcept = delete;
 

@@ -1,5 +1,3 @@
-#ifdef BASE_PLATFORM_UNIX
-
 #include "base/sys/file.hpp"
 #include "base/containers/cstring.hpp"
 #include "base/containers/fwds.hpp"
@@ -115,7 +113,7 @@ void File::read(uchar* buf, usize size) {
 }
 // NOLINTNEXTLINE(readability-make-member-function-const)
 isize File::get_cursor() {
-	const isize result = ::lseek(handle_, 0, SEEK_CUR);
+	const auto result = static_cast<isize>(::lseek(handle_, 0, SEEK_CUR));
 	if (result == -1) [[unlikely]] {
 		perror("::lseek failed");
 	}
@@ -123,7 +121,7 @@ isize File::get_cursor() {
 }
 // NOLINTNEXTLINE(readability-make-member-function-const)
 isize File::seek_begin(isize offset) {
-	const isize result = ::lseek(handle_, offset, SEEK_SET);
+	const auto result = static_cast<isize>(::lseek(handle_, offset, SEEK_SET));
 	if (result == -1) [[unlikely]] {
 		perror("::lseek() failed");
 	}
@@ -131,7 +129,7 @@ isize File::seek_begin(isize offset) {
 }
 // NOLINTNEXTLINE(readability-make-member-function-const)
 isize File::seek_end(isize offset) {
-	const isize result = ::lseek(handle_, offset, SEEK_END);
+	const auto result = static_cast<isize>(::lseek(handle_, offset, SEEK_END));
 	if (result == -1) [[unlikely]] {
 		perror("::lseek() failed");
 	}
@@ -139,7 +137,7 @@ isize File::seek_end(isize offset) {
 }
 // NOLINTNEXTLINE(readability-make-member-function-const)
 isize File::seek_cursor(isize offset) {
-	const isize result = ::lseek(handle_, offset, SEEK_CUR);
+	const auto result = static_cast<isize>(::lseek(handle_, offset, SEEK_CUR));
 	if (result == -1) [[unlikely]] {
 		perror("::lseek() failed");
 	}
@@ -147,12 +145,6 @@ isize File::seek_cursor(isize offset) {
 }
 
 } // namespace base
-
-#else
-
-OutFile::OutFile(const StringView& path) {}
-
-#endif
 
 #ifdef BASE_LSP_ONLY
 template class base::BasicCString<char, 8>;

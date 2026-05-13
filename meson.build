@@ -39,6 +39,11 @@ compiler_cpp_flags = {
     '-Wno-padded',
   ],
 
+  'emscripten': [
+    '-Wno-disabled-macro-expansion',
+    '-pthread',
+  ],
+
   'gcc': [
     '-Wno-cast-align',
     '-Wno-padded',
@@ -81,6 +86,12 @@ if no_libcpp
 endif
 
 macros += 'BASE_COMPILER_' + cxx_id.to_upper()
+
+if (cxx_id == 'clang' or cxx_id == 'emscripten')
+  macros += 'BASE_LIFETIMEBOUND=[[clang::lifetimebound]]'
+else
+  macros += 'BASE_LIFETIMEBOUND'
+endif
 
 foreach macro : macros
   cpp_flags += '-D' + macro

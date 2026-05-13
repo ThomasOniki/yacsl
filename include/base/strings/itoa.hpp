@@ -8,20 +8,28 @@
 
 namespace base {
 
-template <Integral T> constexpr char* itoa_bin(char* buf, T value) noexcept;
-template <Integral T> constexpr char* itoa_oct(char* buf, T value) noexcept;
-template <Integral T> constexpr char* itoa(char* buf, T value) noexcept;
-template <Integral T> constexpr char* itoa_hex(char* buf, T value) noexcept;
+template <Integral T> constexpr char* itoa_bin(BASE_LIFETIMEBOUND char* buf, T value) noexcept;
+template <Integral T> constexpr char* itoa_oct(BASE_LIFETIMEBOUND char* buf, T value) noexcept;
+template <Integral T> constexpr char* itoa(BASE_LIFETIMEBOUND char* buf, T value) noexcept;
+template <Integral T> constexpr char* itoa_hex(BASE_LIFETIMEBOUND char* buf, T value) noexcept;
 
-template <UnsignedIntegral T> constexpr char* itoa_from_end_bin(char* buf_end, T value) noexcept;
-template <UnsignedIntegral T> constexpr char* itoa_from_end_oct(char* buf_end, T value) noexcept;
-template <UnsignedIntegral T> constexpr char* itoa_from_end(char* buf_end, T value) noexcept;
-template <UnsignedIntegral T> constexpr char* itoa_from_end_hex(char* buf_end, T value) noexcept;
+template <UnsignedIntegral T>
+constexpr char* itoa_from_end_bin(BASE_LIFETIMEBOUND char* buf_end, T value) noexcept;
+template <UnsignedIntegral T>
+constexpr char* itoa_from_end_oct(BASE_LIFETIMEBOUND char* buf_end, T value) noexcept;
+template <UnsignedIntegral T>
+constexpr char* itoa_from_end(BASE_LIFETIMEBOUND char* buf_end, T value) noexcept;
+template <UnsignedIntegral T>
+constexpr char* itoa_from_end_hex(BASE_LIFETIMEBOUND char* buf_end, T value) noexcept;
 
-template <SignedIntegral T> constexpr char* itoa_from_end_bin(char* buf_end, T value) noexcept;
-template <SignedIntegral T> constexpr char* itoa_from_end_oct(char* buf_end, T value) noexcept;
-template <SignedIntegral T> constexpr char* itoa_from_end(char* buf_end, T value) noexcept;
-template <SignedIntegral T> constexpr char* itoa_from_end_hex(char* buf_end, T value) noexcept;
+template <SignedIntegral T>
+constexpr char* itoa_from_end_bin(BASE_LIFETIMEBOUND char* buf_end, T value) noexcept;
+template <SignedIntegral T>
+constexpr char* itoa_from_end_oct(BASE_LIFETIMEBOUND char* buf_end, T value) noexcept;
+template <SignedIntegral T>
+constexpr char* itoa_from_end(BASE_LIFETIMEBOUND char* buf_end, T value) noexcept;
+template <SignedIntegral T>
+constexpr char* itoa_from_end_hex(BASE_LIFETIMEBOUND char* buf_end, T value) noexcept;
 
 template <UnsignedIntegral T> constexpr u32 itoa_bit_count(T value) noexcept;
 template <UnsignedIntegral T> constexpr u32 itoa_octal_digit_count(T value) noexcept;
