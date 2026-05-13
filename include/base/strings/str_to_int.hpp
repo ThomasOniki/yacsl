@@ -6,7 +6,7 @@
 
 namespace base {
 
-constexpr const char* num_end(const char* begin) {
+constexpr const char* num_end(BASE_LIFETIMEBOUND const char* begin) {
 	while (*begin >= '0' && *begin <= '9') {
 		++begin;
 	}

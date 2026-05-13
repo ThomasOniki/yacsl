@@ -42,7 +42,7 @@ public:
 		// NOLINTNEXTLINE(google-explicit-constructor)
 		Stdio(Type type) noexcept : type_(type) { assert(type != Pipe && type != File); }
 
-		Stdio(Stdio& pipe) noexcept : pipe_(&pipe), type_(Pipe) {
+		Stdio(BASE_LIFETIMEBOUND Stdio& pipe) noexcept : pipe_(&pipe), type_(Pipe) {
 			assert(pipe.type_ == Buffer);
 			// NOLINTNEXTLINE(cppcoreguidelines-pro-type-union-access)
 			assert(pipe.process_ != nullptr);
@@ -133,8 +133,8 @@ public:
 
 	void send_signal(Signal signal) noexcept;
 
-	Stdio& get_stdout() noexcept { return stdout_; }
-	Stdio& get_stderr() noexcept { return stderr_; }
+	Stdio& get_stdout() noexcept BASE_LIFETIMEBOUND { return stdout_; }
+	Stdio& get_stderr() noexcept BASE_LIFETIMEBOUND { return stderr_; }
 
 private:
 	void handle_piped_stdio(void* voidp_file_actions) noexcept;

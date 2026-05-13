@@ -11,7 +11,7 @@ namespace base
 
 class FormatStringParser {
 public:
-	explicit constexpr FormatStringParser(const char* fmt);
+	explicit constexpr FormatStringParser(BASE_LIFETIMEBOUND const char* fmt);
 	[[nodiscard]] constexpr char check_fill();
 	[[nodiscard]] constexpr char check_align(char default_align);
 	/// returns '\0', ' ' or '+'.

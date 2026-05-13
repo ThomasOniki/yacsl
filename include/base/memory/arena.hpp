@@ -38,7 +38,7 @@ public:
 public:
 	class Scope {
 	public:
-		explicit Scope(Arena& arena) : arena_(arena), ptr_(arena.ptr_) {}
+		explicit Scope(BASE_LIFETIMEBOUND Arena& arena) : arena_(arena), ptr_(arena.ptr_) {}
 		Scope(const Scope&)			= delete;
 		Scope(Scope&&) noexcept = delete;
 		~Scope() noexcept;
@@ -57,7 +57,7 @@ private:
 	uchar* begin_						 = nullptr;
 	uchar* end_							 = nullptr;
 	uchar* ptr_							 = nullptr;
-	usize	 initial_capacity_ = 1 * MiB;
+	usize	 initial_capacity_ = 64 * KiB;
 };
 
 template <TriviallyDestructible T, typename... Args> T& Arena::push(Args&&... args) {

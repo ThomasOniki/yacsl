@@ -5,15 +5,10 @@
 
 namespace base {
 
-#ifdef BASE_PLATFORM_UNIX
 using FileHandle													 = int;
 constexpr FileHandle NIL_FILE_HANDLE			 = -1;
 using ProcessHandle												 = intmax_t;
 constexpr ProcessHandle NIL_PROCESS_HANDLE = -1;
-#else
-using FileFileHandle								 = void*;
-constexpr FileHandle NIL_FILE_HANDLE = nullptr;
-#endif
 
 enum class FileOpenFlags : u8 {
 	None						= 0,

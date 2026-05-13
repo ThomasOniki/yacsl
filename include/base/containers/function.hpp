@@ -72,7 +72,7 @@ public:
 	[[nodiscard]] const auto& get_allocator() const noexcept { return allocator(); }
 
 private:
-	[[nodiscard]] auto& allocator();
+	[[nodiscard]] auto& allocator() BASE_LIFETIMEBOUND;
 
 private:
 	using Members = internal::FunctionMembers<Allocator, BufSz, Ret, Args...>;

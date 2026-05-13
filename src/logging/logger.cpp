@@ -11,6 +11,10 @@ static Mutex& get_stdout_mutex() {
 	return instance;
 }
 
+Logger& Logger::get_default_instance() {
+	static Logger instance;
+	return instance;
+}
 void Logger::write_to_stdout(const StringView& str) {
 	const MutexLock lock(get_stdout_mutex());
 	(void)fwrite(str.data(), str.size(), 1, stdout);

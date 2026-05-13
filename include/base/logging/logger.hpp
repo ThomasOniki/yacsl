@@ -20,10 +20,7 @@ public:
 	Logger& operator=(const Logger&) = delete;
 	Logger& operator=(Logger&&)			 = delete;
 
-	static Logger& get_default_instance() {
-		static Logger instance;
-		return instance;
-	}
+	static Logger& get_default_instance();
 
 	static void flush();
 
