@@ -16,7 +16,8 @@ public:
 	constexpr BasicStringView(BASE_LIFETIMEBOUND const T* begin, BASE_LIFETIMEBOUND const T* end)
 			: data_(begin), size_(static_cast<SizeT>(end - begin)) {}
 	template <SizeT N> // NOLINTNEXTLINE(google-explicit-constructor, modernize-avoid-c-arrays)
-	constexpr BasicStringView(BASE_LIFETIMEBOUND const T (&arr)[N]) : data_(arr), size_(N - 1) {}
+	constexpr BasicStringView(BASE_LIFETIMEBOUND const T (&arr)[N])
+			: data_(static_cast<const T*>(arr)), size_(N - 1) {}
 
 	[[nodiscard]] const T* data() const noexcept BASE_LIFETIMEBOUND { return data_; }
 	[[nodiscard]] SizeT		 size() const noexcept BASE_LIFETIMEBOUND { return size_; }
