@@ -1,12 +1,10 @@
 #pragma once
 
+#include "base/containers/base_clases.hpp"
 #include "base/containers/fwds.hpp"
 #include "base/containers/initializer_list.hpp"
 #include "base/containers/reverse_iterator.hpp"
-#include "base/containers/stack_array.hpp"
-#include "base/containers/stack_array_storage.hpp"
-#include "base/memory/arena.hpp" // NOLINT(misc-include-cleaner)
-#include "base/metaprogramming/type_manip.hpp"
+#include "base/memory/arena.hpp"
 #include "base/type_traits/allocator.hpp"
 #include "base/type_traits/categories.hpp"
 #include "base/type_traits/comparaison.hpp"
@@ -19,12 +17,8 @@
 
 namespace base {
 
-namespace internal {
-template <typename T, usize N, typename Allocator, typename SizeT> struct VectorMembers;
-} // namespace internal
-
 template <typename T, usize N, typename Allocator, typename SizeT>
-class Vector : private internal::VectorMembers<T, N, Allocator, SizeT> {
+class Vector : private FixedBufferMember<T, N, SizeT>, AllocatorMember<Allocator> {
 public:
 	constexpr Vector() noexcept = default;
 	constexpr Vector(const InitializerList<T>& init);
@@ -128,96 +122,21 @@ private:
 	template <usize OtherN, typename OtherAllocator, typename OtherSizeT>
 	void steal_ptr(Vector<T, OtherN, OtherAllocator, OtherSizeT>&& other);
 
-	UnderlyingAllocator<Allocator>& allocator() BASE_LIFETIMEBOUND;
-
-private:
-	using Members = internal::VectorMembers<T, N, Allocator, SizeT>;
-	using Members::capacity_;
-	using Members::data_;
-	using Members::size_;
-	using Members::small_buffer_;
-
 private:
 	template <typename OtherT, usize OtherN, typename OtherAllocator, typename OtherSizeT>
 	friend class Vector;
+
+	using FixedBufferMember<T, N, SizeT>::fixed_buffer_;
+	using AllocatorMember<Allocator>::allocator;
+
+	T*		data_			= fixed_buffer_.data();
+	SizeT size_			= 0;
+	SizeT capacity_ = fixed_buffer_.size();
 };
-
-namespace internal {
-
-// NOLINTNEXTLINE(altera-struct-pack-align, clang-analyzer-optin.performance.Padding)
-template <typename T, usize N, typename Allocator, typename SizeT> struct VectorMembers {
-protected:
-	constexpr VectorMembers() = default;
-	explicit constexpr VectorMembers(SizeT size) : size_(size) {}
-
-protected:
-	static constexpr bool trivial = TriviallyCopyable<T> && TriviallyDestructible<T>;
-
-	using SmallBuffer = ConditionalT<trivial, StackArray<T, N>, StackArrayStorage<T, N>>;
-
-	alignas(32) SmallBuffer small_buffer_{};
-	T*				data_ = small_buffer_.data();
-	SizeT			size_ = 0, capacity_ = N;
-	Allocator allocator_;
-};
-
-template <typename T, typename Allocator, typename SizeT>
-// NOLINTNEXTLINE(altera-struct-pack-align, clang-analyzer-optin.performance.Padding)
-struct VectorMembers<T, 0, Allocator, SizeT> {
-protected:
-	constexpr VectorMembers() = default;
-	explicit constexpr VectorMembers(SizeT size) : size_(size) {}
-
-protected:
-	alignas(32) T* data_ = nullptr;
-	SizeT			size_ = 0, capacity_ = 0;
-	Allocator allocator_;
-
-	struct DummySmallBuffer {
-		[[nodiscard]] const T* data() const noexcept { return nullptr; }
-	};
-	static constexpr DummySmallBuffer small_buffer_ = DummySmallBuffer();
-};
-
-template <typename T, usize N, SingletonAllocatorLike Allocator, typename SizeT>
-// NOLINTNEXTLINE(altera-struct-pack-align, clang-analyzer-optin.performance.Padding)
-struct VectorMembers<T, N, Allocator, SizeT> {
-protected:
-	constexpr VectorMembers() = default;
-	explicit constexpr VectorMembers(SizeT size) : size_(size) {}
-
-protected:
-	static constexpr bool trivial = TriviallyCopyable<T> && TriviallyDestructible<T>;
-
-	using SmallBuffer = ConditionalT<trivial, StackArray<T, N>, StackArrayStorage<T, N>>;
-
-	alignas(32) SmallBuffer small_buffer_{};
-	T*		data_ = small_buffer_.data();
-	SizeT size_ = 0, capacity_ = N;
-};
-
-template <typename T, SingletonAllocatorLike Allocator, typename SizeT>
-// NOLINTNEXTLINE(altera-struct-pack-align, clang-analyzer-optin.performance.Padding)
-struct VectorMembers<T, 0, Allocator, SizeT> {
-protected:
-	constexpr VectorMembers() = default;
-	explicit constexpr VectorMembers(SizeT size) : size_(size) {}
-
-protected:
-	alignas(32) T* data_ = nullptr;
-	SizeT size_ = 0, capacity_ = 0;
-
-	struct DummySmallBuffer {
-		[[nodiscard]] const T* data() const noexcept { return nullptr; }
-	};
-	static constexpr DummySmallBuffer small_buffer_ = DummySmallBuffer();
-};
-
-} // namespace internal
 
 template <typename T, usize N, typename Allocator, typename SizeT>
 constexpr Vector<T, N, Allocator, SizeT>::Vector(const InitializerList<T>& init)
-		: Members(static_cast<SizeT>(init.size())) {
+		: size_(static_cast<SizeT>(init.size())) {
 	maybe_alloc_size();
 	copy(init.begin());
 }
@@ -257,7 +176,7 @@ constexpr Vector<T, N, Allocator, SizeT>::Vector(const Range& range) {
 }
 
 template <typename T, usize N, typename Allocator, typename SizeT>
-constexpr Vector<T, N, Allocator, SizeT>::Vector(SizeT count) : Members(count) {
+constexpr Vector<T, N, Allocator, SizeT>::Vector(SizeT count) : size_(count) {
 	maybe_alloc_size();
 	for (SizeT i = 0; i < count; ++i) {
 		new (static_cast<void*>(data_ + i)) T();
@@ -274,14 +193,14 @@ template <typename T, usize N, typename Allocator, typename SizeT>
 template <usize OtherN, typename OtherAllocator, typename OtherSizeT>
 constexpr Vector<T, N, Allocator, SizeT>::Vector(
 		const Vector<T, OtherN, OtherAllocator, OtherSizeT>& other)
-		: Members(static_cast<SizeT>(other.size_)) {
+		: size_(static_cast<SizeT>(other.size_)) {
 	maybe_alloc_size();
 	copy(other.data_);
 }
 
 template <typename T, usize N, typename Allocator, typename SizeT>
 constexpr Vector<T, N, Allocator, SizeT>::Vector(const Vector& other)
-		: Members(static_cast<SizeT>(other.size_)) {
+		: size_(static_cast<SizeT>(other.size_)) {
 	maybe_alloc_size();
 	copy(other.data_);
 }
@@ -290,7 +209,7 @@ template <typename T, usize N, typename Allocator, typename SizeT>
 template <usize OtherN, typename OtherAllocator, typename OtherSizeT>
 constexpr Vector<T, N, Allocator, SizeT>::Vector(
 		Vector<T, OtherN, OtherAllocator, OtherSizeT>&& other) noexcept
-		: Members(static_cast<SizeT>(other.size_)) {
+		: size_(static_cast<SizeT>(other.size_)) {
 	if constexpr (!SingletonAllocatorLike<Allocator> || !SameAs<Allocator, OtherAllocator>) {
 		maybe_alloc_size();
 		move(other.data_);
@@ -298,7 +217,7 @@ constexpr Vector<T, N, Allocator, SizeT>::Vector(
 	}
 
 	if constexpr (OtherN > 0) {
-		if (other.data_ == other.small_buffer_.data()) {
+		if (other.data_ == other.fixed_buffer_.data()) {
 			if constexpr (OtherN > N) {
 				maybe_alloc_size();
 			}
@@ -311,9 +230,9 @@ constexpr Vector<T, N, Allocator, SizeT>::Vector(
 
 template <typename T, usize N, typename Allocator, typename SizeT>
 constexpr Vector<T, N, Allocator, SizeT>::Vector(Vector&& other) noexcept
-		: Members(static_cast<SizeT>(other.size_)) {
+		: size_(static_cast<SizeT>(other.size_)) {
 	if constexpr (N > 0) {
-		if (other.data_ == other.small_buffer_.data()) {
+		if (other.data_ == other.fixed_buffer_.data()) {
 			move(other.data_);
 			return;
 		}
@@ -359,7 +278,7 @@ constexpr Vector<T, N, Allocator, SizeT>& Vector<T, N, Allocator, SizeT>::operat
 	}
 
 	if constexpr (OtherN > 0) {
-		if (other.data_ == other.small_buffer_.data()) {
+		if (other.data_ == other.fixed_buffer_.data()) {
 			if constexpr (OtherN > N) {
 				reserve(size_);
 			}
@@ -379,7 +298,7 @@ Vector<T, N, Allocator, SizeT>::operator=(Vector&& other) noexcept {
 	size_ = static_cast<SizeT>(other.size_);
 
 	if constexpr (N > 0) {
-		if (other.data_ == other.small_buffer_.data()) {
+		if (other.data_ == other.fixed_buffer_.data()) {
 			move(other.data_);
 			return *this;
 		}
@@ -470,7 +389,7 @@ void Vector<T, N, Allocator, SizeT>::alloc(SizeT capacity) {
 template <typename T, usize N, typename Allocator, typename SizeT>
 void Vector<T, N, Allocator, SizeT>::free() {
 	if constexpr (N > 0) {
-		if (data_ != small_buffer_.data()) {
+		if (data_ != fixed_buffer_.data()) {
 			allocator().template free<T>(data_, static_cast<Allocator::SizeT>(capacity_));
 		}
 	} else {
@@ -489,7 +408,7 @@ void Vector<T, N, Allocator, SizeT>::definitely_reserve(SizeT capacity) {
 	}
 
 	if constexpr (N > 0) {
-		if (old_data != small_buffer_.data()) {
+		if (old_data != fixed_buffer_.data()) {
 			allocator().template free<T>(old_data, static_cast<Allocator::SizeT>(capacity_));
 		}
 	} else {
@@ -535,15 +454,6 @@ void Vector<T, N, Allocator, SizeT>::steal_ptr(
 	other.data_ = nullptr;
 
 	(void)base::move(other);
-}
-
-template <typename T, usize N, typename Allocator, typename SizeT>
-UnderlyingAllocator<Allocator>& Vector<T, N, Allocator, SizeT>::allocator() {
-	if constexpr (SingletonAllocatorLike<Allocator>) {
-		return Allocator::get();
-	} else {
-		return Members::allocator_;
-	}
 }
 
 } // namespace base

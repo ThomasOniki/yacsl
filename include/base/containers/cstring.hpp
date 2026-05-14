@@ -1,8 +1,7 @@
 #pragma once
 
+#include "base/containers/base_clases.hpp"
 #include "base/containers/fwds.hpp"
-#include "base/containers/maybe_allocator_member.hpp"
-#include "base/containers/stack_array.hpp"
 #include "base/containers/string_view.hpp"
 #include "base/memory/arena.hpp" // NOLINT(misc-include-cleaner)
 #include "base/utilities/type_aliases.hpp"
@@ -11,7 +10,7 @@
 namespace base {
 
 template <typename Char, usize N, typename Allocator, typename SizeT>
-class BasicCString : MaybeAllocatorMember<Allocator> {
+class BasicCString : AllocatorMember<Allocator>, FixedBufferMember<Char, N, SizeT> {
 public:
 	constexpr BasicCString() noexcept = default;
 
@@ -28,7 +27,7 @@ public:
 	BasicCString(BasicCString&& other)			= delete;
 
 	~BasicCString() noexcept {
-		if (cstr_ != fixed_.data()) {
+		if (cstr_ != fixed_buffer_.data()) {
 			allocator().free(cstr_);
 		}
 	}
@@ -40,11 +39,10 @@ public:
 	[[nodiscard]] Char*				data() noexcept { return cstr_; }
 
 private:
-	StackArray<Char, N, SizeT> fixed_ = {};
-	Char*											 cstr_	= fixed_.data();
+	using FixedBufferMember<Char, N, SizeT>::fixed_buffer_;
+	using AllocatorMember<Allocator>::allocator;
 
-private:
-	using MaybeAllocatorMember<Allocator>::allocator;
+	Char* cstr_ = fixed_buffer_.data();
 };
 
 } // namespace base
