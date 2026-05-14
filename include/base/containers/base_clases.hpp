@@ -10,7 +10,7 @@ namespace base {
 
 template <typename Allocator> class AllocatorMember {
 protected:
-	Allocator& allocator() noexcept { return allocator_; }
+	Allocator& allocator() noexcept BASE_LIFETIMEBOUND { return allocator_; }
 
 private:
 	Allocator allocator_;
