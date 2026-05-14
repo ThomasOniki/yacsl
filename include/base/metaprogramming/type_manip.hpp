@@ -6,16 +6,16 @@ namespace base {
 
 namespace internal {
 template <bool Cond, typename If, typename Else> struct ConditionalTypeImpl {
-	using Type = If;
+  using Type = If;
 };
 template <typename If, typename Else> struct ConditionalTypeImpl<false, If, Else> {
-	using Type = Else;
+  using Type = Else;
 };
 template <usize N, typename First, typename... Others> struct NthTypeImpl {
-	using Type = NthTypeImpl<N - 1, Others...>::Type;
+  using Type = NthTypeImpl<N - 1, Others...>::Type;
 };
 template <typename First, typename... Others> struct NthTypeImpl<0, First, Others...> {
-	using Type = First;
+  using Type = First;
 };
 } // namespace internal
 

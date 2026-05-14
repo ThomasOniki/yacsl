@@ -9,14 +9,14 @@ namespace internal {
 template <usize Size, typename First, typename... Others> struct FirstOfSizeImpl;
 
 template <usize Size, typename First, typename... Others>
-	requires(sizeof(First) != Size)
+  requires(sizeof(First) != Size)
 struct FirstOfSizeImpl<Size, First, Others...> {
-	using Type = FirstOfSizeImpl<Size, Others...>::Type;
+  using Type = FirstOfSizeImpl<Size, Others...>::Type;
 };
 template <usize Size, typename First, typename... Others>
-	requires(sizeof(First) == Size)
+  requires(sizeof(First) == Size)
 struct FirstOfSizeImpl<Size, First, Others...> {
-	using Type = First;
+  using Type = First;
 };
 
 } // namespace internal

@@ -4,7 +4,7 @@ namespace base {
 
 namespace internal {
 template <typename T> struct TypeIdentityImpl {
-	using Type = T;
+  using Type = T;
 };
 } // namespace internal
 

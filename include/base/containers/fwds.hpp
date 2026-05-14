@@ -21,12 +21,12 @@ template <typename T, typename SizeT = usize> class BasicStringView;
 using StringView = BasicStringView<char>;
 
 template <typename Char, usize N = 16, typename Allocator = MainArenaAllocator,
-					typename SizeT = usize>
+          typename SizeT = usize>
 class BasicCString;
 using CString = BasicCString<char>;
 
 template <usize N = 0, typename Allocator = MainArenaAllocator, UnsignedIntegral T = u32,
-					typename SizeT = usize>
+          typename SizeT = usize>
 class Bitfield;
 template <usize N = 0, UnsignedIntegral T = u32> class StackBitfield;
 

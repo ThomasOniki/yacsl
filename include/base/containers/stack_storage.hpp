@@ -8,22 +8,22 @@ namespace base {
 
 template <typename T> class StackStorage {
 public:
-	template <typename... Args> constexpr void construct(Args&&... args) {
-		new (get()) T(base::forward<Args>(args)...);
-	}
-	constexpr void destruct() { get()->~T(); }
+  template <typename... Args> constexpr void construct(Args&&... args) {
+    new (get()) T(base::forward<Args>(args)...);
+  }
+  constexpr void destruct() { get()->~T(); }
 
-	[[nodiscard]] constexpr T*			 operator->() noexcept { return get(); }
-	[[nodiscard]] constexpr const T* operator->() const noexcept { return get(); }
-	[[nodiscard]] constexpr T&			 operator*() noexcept { return *get(); }
-	[[nodiscard]] constexpr const T& operator*() const noexcept { return *get(); }
-
-private:
-	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-	T* get() noexcept { return reinterpret_cast<T*>(data_.data()); }
+  [[nodiscard]] constexpr T*       operator->() noexcept { return get(); }
+  [[nodiscard]] constexpr const T* operator->() const noexcept { return get(); }
+  [[nodiscard]] constexpr T&       operator*() noexcept { return *get(); }
+  [[nodiscard]] constexpr const T& operator*() const noexcept { return *get(); }
 
 private:
-	StackArray<uchar, sizeof(T)> data_;
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  T* get() noexcept { return reinterpret_cast<T*>(data_.data()); }
+
+private:
+  StackArray<uchar, sizeof(T)> data_;
 };
 
 } // namespace base
