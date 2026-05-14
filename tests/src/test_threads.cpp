@@ -6,59 +6,59 @@
 #include <stdint.h>
 
 static int test_atomic(uint32_t thread_count) {
-	int												 ret = 0;
-	base::Vector<base::Thread> threads;
-	base::Atomic<uint32_t>		 count = 0;
+  int                        ret = 0;
+  base::Vector<base::Thread> threads;
+  base::Atomic<uint32_t>     count = 0;
 
-	{
-		EXPECT_EQ(count.load(base::MemoryOrder::Relaxed), 0);
+  {
+    EXPECT_EQ(count.load(base::MemoryOrder::Relaxed), 0);
 
-		for (uint32_t i = 0; i < thread_count; ++i) {
-			threads.emplace_back([](base::Atomic<uint32_t>& lambda_count) { ++lambda_count; }, count);
-		}
-	}
+    for (uint32_t i = 0; i < thread_count; ++i) {
+      threads.emplace_back([](base::Atomic<uint32_t>& lambda_count) { ++lambda_count; }, count);
+    }
+  }
 
-	for (uint32_t i = 0; i < thread_count; ++i) {
-		threads[i].join();
-	}
+  for (uint32_t i = 0; i < thread_count; ++i) {
+    threads[i].join();
+  }
 
-	EXPECT_EQ(count.load(base::MemoryOrder::Relaxed), thread_count);
-	return ret;
+  EXPECT_EQ(count.load(base::MemoryOrder::Relaxed), thread_count);
+  return ret;
 }
 
 static int test_mutex(uint32_t thread_count) {
-	int												 ret = 0;
-	base::Vector<base::Thread> threads;
-	uint32_t									 count = 0;
+  int                        ret = 0;
+  base::Vector<base::Thread> threads;
+  uint32_t                   count = 0;
 
-	base::Mutex mutex;
+  base::Mutex mutex;
 
-	{
-		EXPECT_EQ(count, 0);
+  {
+    EXPECT_EQ(count, 0);
 
-		for (uint32_t i = 0; i < thread_count; ++i) {
-			threads.emplace_back(
-					[&mutex](uint32_t& lambda_count) {
-						const base::MutexLock lock(mutex);
-						++lambda_count;
-					},
-					count);
-		}
-	}
+    for (uint32_t i = 0; i < thread_count; ++i) {
+      threads.emplace_back(
+          [&mutex](uint32_t& lambda_count) {
+            const base::MutexLock lock(mutex);
+            ++lambda_count;
+          },
+          count);
+    }
+  }
 
-	for (uint32_t i = 0; i < thread_count; ++i) {
-		threads[i].join();
-	}
+  for (uint32_t i = 0; i < thread_count; ++i) {
+    threads[i].join();
+  }
 
-	EXPECT_EQ(count, thread_count);
-	return ret;
+  EXPECT_EQ(count, thread_count);
+  return ret;
 }
 
 int main() {
-	int ret = 0;
-	EXPECT(test_atomic(1) == 0);
-	EXPECT(test_atomic(100) == 0);
-	EXPECT(test_mutex(1) == 0);
-	EXPECT(test_mutex(100) == 0);
-	return ret;
+  int ret = 0;
+  EXPECT(test_atomic(1) == 0);
+  EXPECT(test_atomic(100) == 0);
+  EXPECT(test_mutex(1) == 0);
+  EXPECT(test_mutex(100) == 0);
+  return ret;
 }

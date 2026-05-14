@@ -7,26 +7,26 @@
 namespace base {
 
 static Mutex& get_stdout_mutex() {
-	static Mutex instance;
-	return instance;
+  static Mutex instance;
+  return instance;
 }
 
 Logger& Logger::get_default_instance() {
-	static Logger instance;
-	return instance;
+  static Logger instance;
+  return instance;
 }
 void Logger::write_to_stdout(const StringView& str) {
-	const MutexLock lock(get_stdout_mutex());
-	(void)fwrite(str.data(), str.size(), 1, stdout);
+  const MutexLock lock(get_stdout_mutex());
+  (void)fwrite(str.data(), str.size(), 1, stdout);
 }
 void Logger::write_to_stderr(const StringView& str) {
-	static Mutex		mtx;
-	const MutexLock lock(mtx);
-	(void)fwrite(str.data(), str.size(), 1, stderr);
+  static Mutex    mtx;
+  const MutexLock lock(mtx);
+  (void)fwrite(str.data(), str.size(), 1, stderr);
 }
 void Logger::flush() {
-	const MutexLock lock(get_stdout_mutex());
-	(void)fflush(stdout);
+  const MutexLock lock(get_stdout_mutex());
+  (void)fflush(stdout);
 }
 
 void log_trace3(const StringView& msg) { Logger::get_default_instance().trace3(msg); }

@@ -16,24 +16,24 @@ template <typename T> class Formatter;
 
 template <Integral T> class Formatter<T> {
 public:
-	constexpr const char* parse(const char* fmt) {
-		FormatStringParser parser(fmt);
-		fill_	 = parser.check_fill();
-		align_ = parser.check_align('>');
-		sign_	 = parser.check_sign();
-		width_ = parser.check_width();
-		type_	 = parser.check_option(Character<T> ? 'c' : 'd', "bodxc?");
-		return parser.end_parse();
-	}
+  constexpr const char* parse(const char* fmt) {
+    FormatStringParser parser(fmt);
+    fill_  = parser.check_fill();
+    align_ = parser.check_align('>');
+    sign_  = parser.check_sign();
+    width_ = parser.check_width();
+    type_  = parser.check_option(Character<T> ? 'c' : 'd', "bodxc?");
+    return parser.end_parse();
+  }
 
-	void format(CharBuffer& buf, T value) const;
+  void format(CharBuffer& buf, T value) const;
 
 private:
-	u32	 width_ = 0;
-	char fill_	= ' ';
-	char align_ = '>';
-	char sign_	= '\0';
-	char type_	= 'd';
+  u32  width_ = 0;
+  char fill_  = ' ';
+  char align_ = '>';
+  char sign_  = '\0';
+  char type_  = 'd';
 };
 
 extern template void Formatter<signed char>::format(CharBuffer& buf, signed char value) const;
@@ -46,8 +46,8 @@ extern template void Formatter<unsigned char>::format(CharBuffer& buf, unsigned 
 extern template void Formatter<unsigned short>::format(CharBuffer& buf, unsigned short value) const;
 extern template void Formatter<unsigned int>::format(CharBuffer& buf, unsigned int value) const;
 extern template void Formatter<unsigned long>::format(CharBuffer& buf, unsigned long value) const;
-extern template void Formatter<unsigned long long>::format(CharBuffer&				buf,
-																													 unsigned long long value) const;
+extern template void Formatter<unsigned long long>::format(CharBuffer&        buf,
+                                                           unsigned long long value) const;
 
 extern template void Formatter<char>::format(CharBuffer& buf, char value) const;
 extern template void Formatter<short>::format(CharBuffer& buf, short value) const;
@@ -62,96 +62,96 @@ extern template void Formatter<u128>::format(CharBuffer& buf, u128 value) const;
 
 template <FloatingPoint T> class Formatter<T> {
 public:
-	constexpr const char* parse(const char* fmt) {
-		FormatStringParser parser(fmt);
-		fill_	 = parser.check_fill();
-		align_ = parser.check_align('>');
-		sign_	 = parser.check_sign();
-		width_ = parser.check_width();
-		type_	 = parser.check_option('g', "gfea");
-		return parser.end_parse();
-	}
+  constexpr const char* parse(const char* fmt) {
+    FormatStringParser parser(fmt);
+    fill_  = parser.check_fill();
+    align_ = parser.check_align('>');
+    sign_  = parser.check_sign();
+    width_ = parser.check_width();
+    type_  = parser.check_option('g', "gfea");
+    return parser.end_parse();
+  }
 
-	void format(CharBuffer& buf, T value) const;
+  void format(CharBuffer& buf, T value) const;
 
 private:
-	u32	 precision_ = 0;
-	u32	 width_			= 0;
-	char fill_			= ' ';
-	char align_			= '>';
-	char sign_			= '\0';
-	char type_			= 'g';
+  u32  precision_ = 0;
+  u32  width_     = 0;
+  char fill_      = ' ';
+  char align_     = '>';
+  char sign_      = '\0';
+  char type_      = 'g';
 };
 
 template <> class Formatter<bool> {
 public:
-	constexpr const char* parse(const char* fmt) {
-		FormatStringParser parser(fmt);
-		fill_	 = parser.check_fill();
-		align_ = parser.check_align('<');
-		width_ = parser.check_width();
-		type_	 = parser.check_option('s', "sdxob");
-		return parser.end_parse();
-	}
+  constexpr const char* parse(const char* fmt) {
+    FormatStringParser parser(fmt);
+    fill_  = parser.check_fill();
+    align_ = parser.check_align('<');
+    width_ = parser.check_width();
+    type_  = parser.check_option('s', "sdxob");
+    return parser.end_parse();
+  }
 
-	void format(CharBuffer& buf, bool value) const;
+  void format(CharBuffer& buf, bool value) const;
 
 private:
-	u32	 width_ = 0;
-	char fill_	= ' ';
-	char align_ = '<';
-	char type_	= 's';
+  u32  width_ = 0;
+  char fill_  = ' ';
+  char align_ = '<';
+  char type_  = 's';
 };
 
 template <> class Formatter<void*> {
 public:
-	constexpr const char* parse(const char* fmt) {
-		FormatStringParser parser(fmt);
-		fill_	 = parser.check_fill();
-		align_ = parser.check_align('>');
-		width_ = parser.check_width();
-		return parser.end_parse();
-	}
+  constexpr const char* parse(const char* fmt) {
+    FormatStringParser parser(fmt);
+    fill_  = parser.check_fill();
+    align_ = parser.check_align('>');
+    width_ = parser.check_width();
+    return parser.end_parse();
+  }
 
-	void format(CharBuffer& buf, const void* ptr) const;
+  void format(CharBuffer& buf, const void* ptr) const;
 
 private:
-	u32	 width_ = 0;
-	char fill_	= ' ';
-	char align_ = '<';
+  u32  width_ = 0;
+  char fill_  = ' ';
+  char align_ = '<';
 };
 
 template <typename T> class Formatter<T*> : Formatter<void*> {
 public:
-	constexpr const char* parse(const char* fmt) { return Formatter<void*>::parse(fmt); }
-	void format(CharBuffer& buf, const T* ptr) const { Formatter<void*>::format(buf, ptr); }
+  constexpr const char* parse(const char* fmt) { return Formatter<void*>::parse(fmt); }
+  void format(CharBuffer& buf, const T* ptr) const { Formatter<void*>::format(buf, ptr); }
 };
 
 template <Character Char> class Formatter<BasicStringView<Char, usize>> {
 public:
-	constexpr const char* parse(const char* fmt) {
-		FormatStringParser parser(fmt);
-		fill_	 = parser.check_fill();
-		align_ = parser.check_align('<');
-		width_ = parser.check_width();
-		type_	 = parser.check_option('s', "s?");
-		return parser.end_parse();
-	}
+  constexpr const char* parse(const char* fmt) {
+    FormatStringParser parser(fmt);
+    fill_  = parser.check_fill();
+    align_ = parser.check_align('<');
+    width_ = parser.check_width();
+    type_  = parser.check_option('s', "s?");
+    return parser.end_parse();
+  }
 
-	using Reference = const BasicStringView<Char, usize>&;
+  using Reference = const BasicStringView<Char, usize>&;
 
-	void format(CharBuffer& buf, Reference str) const;
+  void format(CharBuffer& buf, Reference str) const;
 
 private:
-	u32	 width_ = 0;
-	char fill_	= ' ';
-	char align_ = '<';
-	char type_	= 's';
+  u32  width_ = 0;
+  char fill_  = ' ';
+  char align_ = '<';
+  char type_  = 's';
 };
 
 extern template void Formatter<BasicStringView<char>>::format(CharBuffer&, Reference) const;
 extern template void Formatter<BasicStringView<unsigned char>>::format(CharBuffer&,
-																																			 Reference) const;
+                                                                       Reference) const;
 extern template void Formatter<BasicStringView<signed char>>::format(CharBuffer&, Reference) const;
 extern template void Formatter<BasicStringView<wchar_t>>::format(CharBuffer&, Reference) const;
 extern template void Formatter<BasicStringView<char8_t>>::format(CharBuffer&, Reference) const;
@@ -161,63 +161,63 @@ extern template void Formatter<BasicStringView<char32_t>>::format(CharBuffer&, R
 template <Character Char, typename SizeT>
 class Formatter<BasicStringView<Char, SizeT>> : Formatter<BasicStringView<Char, usize>> {
 public:
-	constexpr const char* parse(const char* fmt) {
-		return Formatter<BasicStringView<Char>>::parse(fmt);
-	}
-	void format(CharBuffer& buf, const BasicStringView<Char, SizeT>& str) const {
-		return Formatter<BasicStringView<Char>>::format(
-				buf, BasicStringView<Char>(str.data(), static_cast<usize>(str.size())));
-	}
+  constexpr const char* parse(const char* fmt) {
+    return Formatter<BasicStringView<Char>>::parse(fmt);
+  }
+  void format(CharBuffer& buf, const BasicStringView<Char, SizeT>& str) const {
+    return Formatter<BasicStringView<Char>>::format(
+        buf, BasicStringView<Char>(str.data(), static_cast<usize>(str.size())));
+  }
 };
 
 // NOLINTNEXTLINE(modernize-avoid-c-arrays)
 template <Character Char, usize N> class Formatter<Char[N]> : Formatter<BasicStringView<Char>> {
 public:
-	constexpr const char* parse(const char* fmt) {
-		return Formatter<BasicStringView<Char>>::parse(fmt);
-	}
-	// NOLINTNEXTLINE(modernize-avoid-c-arrays)
-	void format(CharBuffer& buf, const Char (&str)[N]) const {
-		return Formatter<BasicStringView<Char>>::format(
-				buf, BasicStringView(static_cast<const Char*>(str), N - 1));
-	}
+  constexpr const char* parse(const char* fmt) {
+    return Formatter<BasicStringView<Char>>::parse(fmt);
+  }
+  // NOLINTNEXTLINE(modernize-avoid-c-arrays)
+  void format(CharBuffer& buf, const Char (&str)[N]) const {
+    return Formatter<BasicStringView<Char>>::format(
+        buf, BasicStringView(static_cast<const Char*>(str), N - 1));
+  }
 };
 template <Character Char, usize N>
 // NOLINTNEXTLINE(modernize-avoid-c-arrays)
 class Formatter<const Char[N]> : Formatter<BasicStringView<Char>> {
 public:
-	constexpr const char* parse(const char* fmt) {
-		return Formatter<BasicStringView<Char>>::parse(fmt);
-	}
-	// NOLINTNEXTLINE(modernize-avoid-c-arrays)
-	void format(CharBuffer& buf, const Char (&str)[N]) const {
-		return Formatter<BasicStringView<Char>>::format(buf, BasicStringView(str, N - 1));
-	}
+  constexpr const char* parse(const char* fmt) {
+    return Formatter<BasicStringView<Char>>::parse(fmt);
+  }
+  // NOLINTNEXTLINE(modernize-avoid-c-arrays)
+  void format(CharBuffer& buf, const Char (&str)[N]) const {
+    return Formatter<BasicStringView<Char>>::format(buf, BasicStringView(str, N - 1));
+  }
 };
 
 template <RangeLike T>
 class Formatter<T> : Formatter<RemoveCVRef<decltype(*declval<T>().begin())>> {
 public:
-	constexpr const char* parse(const char* fmt) { return Base::parse(fmt); }
+  constexpr const char* parse(const char* fmt) { return Base::parse(fmt); }
 
-	void format(CharBuffer& buf, const T& range) {
-		buf.append('[');
-		auto iter = range.begin();
-		auto end	= range.end();
-		if (iter != end) {
-			Base::format(buf, *iter);
-			++iter;
-			for (; iter != end; ++iter) {
-				buf.append(", ");
-				Base::format(buf, *iter);
-			}
-		}
-		buf.append(']');
-	}
+  void format(CharBuffer& buf, const T& range) {
+    buf.append('[');
+    auto iter = range.begin();
+    auto end  = range.end();
+    if (iter != end) {
+      Base::format(buf, *iter);
+      ++iter;
+      for (; iter != end; ++iter) {
+        buf.append(", ");
+        Base::format(buf, *iter);
+      }
+    }
+    buf.append(']');
+  }
 
 private:
-	using Element = RemoveCVRef<decltype(*declval<T>().begin())>;
-	using Base		= Formatter<Element>;
+  using Element = RemoveCVRef<decltype(*declval<T>().begin())>;
+  using Base    = Formatter<Element>;
 };
 
 } // namespace base

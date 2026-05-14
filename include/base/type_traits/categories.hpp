@@ -12,12 +12,12 @@ concept Integral = __is_integral(T);
 template <typename T>
 #if defined(__SIZEOF_INT128__)
 concept Integral = OneOf<RemoveCV<T>, bool, char, signed char, unsigned char, wchar_t, char8_t,
-												 char16_t, char32_t, short, unsigned short, int, unsigned int, long,
-												 unsigned long, long long, unsigned long long, __int128_t, __uint128_t>;
+                         char16_t, char32_t, short, unsigned short, int, unsigned int, long,
+                         unsigned long, long long, unsigned long long, __int128_t, __uint128_t>;
 #else
 concept Integral = OneOf<RemoveCV<T>, bool, char, signed char, unsigned char, wchar_t, char8_t,
-												 char16_t, char32_t, short, unsigned short, int, unsigned int, long,
-												 unsigned long, long long, unsigned long long>;
+                         char16_t, char32_t, short, unsigned short, int, unsigned int, long,
+                         unsigned long, long long, unsigned long long>;
 #endif
 #endif
 
@@ -39,7 +39,7 @@ concept Arithmetic = FloatingPoint<T> || Integral<T>;
 
 template <typename T>
 concept Character =
-		OneOf<RemoveCV<T>, char, signed char, unsigned char, wchar_t, char8_t, char16_t, char32_t>;
+    OneOf<RemoveCV<T>, char, signed char, unsigned char, wchar_t, char8_t, char16_t, char32_t>;
 
 template <typename T>
 concept SignedIntegral = Integral<T> && T(-1) < T(0);

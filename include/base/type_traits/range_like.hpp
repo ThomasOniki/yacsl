@@ -8,14 +8,14 @@ namespace base {
 
 template <typename T>
 concept RangeLike = requires(T range) {
-	{ range.begin() } -> SameAs<decltype(range.end())>;
-	{ *range.begin() };
-	{ ++declval<decltype(range.begin())>() };
+  { range.begin() } -> SameAs<decltype(range.end())>;
+  { *range.begin() };
+  { ++declval<decltype(range.begin())>() };
 };
 
 template <typename Range, typename T>
 concept RangeOf = RangeLike<Range> && requires(Range range) {
-	{ *range.begin() } -> ConvertibleTo<T>;
+  { *range.begin() } -> ConvertibleTo<T>;
 };
 
 } // namespace base

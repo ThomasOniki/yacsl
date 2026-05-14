@@ -5,7 +5,7 @@ namespace base {
 #ifdef BASE_COMPILER_GCC
 namespace internal {
 template <typename T> struct RemoveReferenceImpl {
-	using Type = __remove_reference(T);
+  using Type = __remove_reference(T);
 };
 } // namespace internal
 template <typename T> using RemoveReference = internal::RemoveReferenceImpl<T>::Type;
@@ -18,10 +18,10 @@ template <typename T> using RemoveConst = __remove_const(T);
 #else
 namespace internal {
 template <typename T> struct RemoveConstImpl {
-	using Type = T;
+  using Type = T;
 };
 template <typename T> struct RemoveConstImpl<const T> {
-	using Type = T;
+  using Type = T;
 };
 } // namespace internal
 template <typename T> using RemoveConst = internal::RemoveConstImpl<T>;
@@ -32,10 +32,10 @@ template <typename T> using RemoveVolatile = __remove_volatile(T);
 #else
 namespace internal {
 template <typename T> struct RemoveVolatileImpl {
-	using Type = T;
+  using Type = T;
 };
 template <typename T> struct RemoveVolatileImpl<volatile T> {
-	using Type = T;
+  using Type = T;
 };
 } // namespace internal
 template <typename T> using RemoveVolatile = internal::RemoveVolatileImpl<T>;
