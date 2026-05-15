@@ -1,13 +1,15 @@
 #pragma once
 
-#include "base/containers/fwds.hpp"
 #include "base/containers/reverse_iterator.hpp"
 #include "base/containers/structured_bindings.hpp"
+#include "base/metaprogramming/type_manip.hpp"
+#include "base/type_traits/limits.hpp"
 #include "base/utilities/type_aliases.hpp"
 
 namespace base {
 
-template <typename T, usize N, typename SizeT> class StackArray {
+template <typename T, usize N, typename SizeT = ConditionalT<(N > Limits<u32>::max), usize, u32>>
+class StackArray {
 public:
   [[nodiscard]] constexpr usize size() const noexcept { return N; }
 

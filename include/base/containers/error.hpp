@@ -1,7 +1,7 @@
 #pragma once
 
-#include "base/containers/fwds.hpp"
 #include "base/containers/string_view.hpp"
+#include "base/logging/common.hpp"
 #include "base/logging/errors.hpp"
 #include "base/type_traits/categories.hpp"
 #include "base/utilities/nil.hpp"
@@ -15,10 +15,10 @@ public:
   // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr Error(Err error) noexcept : value_(error) {}
 
-  constexpr bool operator==(Err error) const noexcept { return value_ == error; }
-  constexpr bool operator==(Nil /*nil*/) const noexcept { return value_ == Err{0}; }
+  [[nodiscard]] constexpr bool operator==(Err error) const noexcept { return value_ == error; }
+  [[nodiscard]] constexpr bool operator==(Nil /*nil*/) const noexcept { return value_ == Err{0}; }
 
-  constexpr Err error() const noexcept { return value_; }
+  [[nodiscard]] constexpr Err error() const noexcept { return value_; }
 
   constexpr void expect_nil(StringView error_msg) const noexcept {
     if (value_ != Err{0}) [[unlikely]] {

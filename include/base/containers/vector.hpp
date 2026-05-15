@@ -1,7 +1,6 @@
 #pragma once
 
 #include "base/containers/base_clases.hpp"
-#include "base/containers/fwds.hpp"
 #include "base/containers/initializer_list.hpp"
 #include "base/containers/reverse_iterator.hpp"
 #include "base/memory/arena.hpp"
@@ -17,10 +16,10 @@
 
 namespace base {
 
-template <typename T, usize N, typename Allocator, typename SizeT>
+template <typename T, usize N = 0, typename Allocator = MainArenaAllocator, typename SizeT = usize>
 class Vector : private FixedBufferMember<T, N, SizeT>, AllocatorMember<Allocator> {
 public:
-  constexpr Vector() noexcept = default;
+  constexpr Vector() noexcept : FixedBufferMember<T, N, SizeT>(), AllocatorMember<Allocator>() {}
   constexpr Vector(const InitializerList<T>& init);
   // NOLINTNEXTLINE(google-explicit-constructor)
   template <RangeOf<T> Range> constexpr Vector(const Range& range);

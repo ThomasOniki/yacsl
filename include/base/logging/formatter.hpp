@@ -1,13 +1,16 @@
 #pragma once
 
 #include "base/containers/char_buffer.hpp"
+#include "base/containers/stack_array.hpp"
 #include "base/containers/string_view.hpp"
 #include "base/logging/format_string_parser.hpp"
 #include "base/metaprogramming/declval.hpp"
+#include "base/metaprogramming/integer_sequence.hpp"
 #include "base/strings/itoa.hpp"
 #include "base/type_traits/categories.hpp"
 #include "base/type_traits/qualifiers.hpp"
 #include "base/type_traits/range_like.hpp"
+#include "base/type_traits/sign.hpp"
 #include "base/utilities/extended_types.hpp"
 #include "base/utilities/type_aliases.hpp"
 #include "base/utilities/type_string.hpp"

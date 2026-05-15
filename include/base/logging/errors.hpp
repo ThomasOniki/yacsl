@@ -1,5 +1,6 @@
 #pragma once
 
+#include "base/containers/string_view.hpp"
 #include "base/logging/common.hpp"
 #include "base/logging/logger.hpp"
 #include "base/utilities/move_forward.hpp"

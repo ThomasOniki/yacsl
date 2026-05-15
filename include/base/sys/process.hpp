@@ -1,10 +1,12 @@
 #pragma once
 
 #include "base/containers/cstring.hpp"
-#include "base/containers/fwds.hpp"
+#include "base/containers/error.hpp"
 #include "base/containers/initializer_list.hpp"
 #include "base/containers/stack_array.hpp"
+#include "base/containers/string_view.hpp"
 #include "base/containers/vector.hpp"
+#include "base/logging/errors.hpp"
 #include "base/sys/common.hpp"
 #include "base/sys/file.hpp"
 #include "base/type_traits/range_like.hpp"
@@ -103,7 +105,7 @@ public:
   Error<SpawnError> start(const Range& argv, Stdio&& stdin_opts, Stdio&& stdout_opts,
                           Stdio&& stderr_opts) noexcept {
     Vector<const char*, 6> cstrs;
-    for (auto arg : argv) {
+    for (const char* arg : argv) {
       cstrs.push_back(arg);
     }
     cstrs.push_back(nullptr);
@@ -123,7 +125,7 @@ public:
     const Vector<CString, 6> cstrs(argv);
     Vector<const char*, 6>   cstr_ptrs;
     cstr_ptrs.reserve(cstrs.size() + 1);
-    for (const auto& cstr : cstrs) {
+    for (const CString& cstr : cstrs) {
       cstr_ptrs.push_back(cstr.data());
     }
     cstr_ptrs.push_back(nullptr);

@@ -1,5 +1,4 @@
 #include "base/memory/arena.hpp"
-#include "base/memory/fwds.hpp"
 #include "test_utils.hpp"
 #include <stddef.h>
 #include <stdint.h>

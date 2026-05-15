@@ -1,8 +1,7 @@
 #pragma once
 
 #include "base/containers/base_clases.hpp"
-#include "base/memory/arena.hpp" // NOLINT(misc-include-cleaner)
-#include "base/memory/fwds.hpp"
+#include "base/memory/arena.hpp"
 #include "base/type_traits/allocator.hpp"
 #include "base/type_traits/qualifiers.hpp"
 #include "base/utilities/move_forward.hpp"

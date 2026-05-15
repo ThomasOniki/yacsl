@@ -1,6 +1,7 @@
 #pragma once
 
 #include "base/containers/string_view.hpp"
+#include "base/utilities/type_aliases.hpp"
 #include <stdio.h>
 
 namespace base {
