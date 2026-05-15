@@ -41,7 +41,7 @@ class TupleImpl<IndexSequence<Indices...>, Ts...> : TupleLeaf<Indices, Ts>... {
   template <usize I> using Leaf = TupleLeaf<I, NthType<I, Ts...>>;
 
 public:
-  constexpr TupleImpl() = default;
+  constexpr TupleImpl() noexcept : Leaf<Indices>()... {}
 
   template <typename... Args>
   // NOLINTNEXTLINE(google-explicit-constructor)

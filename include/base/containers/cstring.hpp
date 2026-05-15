@@ -1,15 +1,23 @@
 #pragma once
 
 #include "base/containers/base_clases.hpp"
-#include "base/containers/fwds.hpp"
 #include "base/containers/string_view.hpp"
-#include "base/memory/arena.hpp" // NOLINT(misc-include-cleaner)
+#include "base/memory/arena.hpp"
 #include "base/utilities/type_aliases.hpp"
 #include <string.h>
 
 namespace base {
 
-template <typename Char, usize N, typename Allocator, typename SizeT>
+template <typename... T>
+constexpr bool BBB = (... && requires() {
+  { T() };
+});
+static_assert(BBB<int, int>);
+static_assert(BBB<>);
+static_assert(!BBB<int&, int>);
+
+template <typename Char, usize N = 16, typename Allocator = MainArenaAllocator,
+          typename SizeT = usize>
 class BasicCString : AllocatorMember<Allocator>, FixedBufferMember<Char, N, SizeT> {
 public:
   constexpr BasicCString() noexcept = default;
@@ -44,6 +52,8 @@ private:
 
   Char* cstr_ = fixed_buffer_.data();
 };
+
+using CString = BasicCString<char>;
 
 } // namespace base
 

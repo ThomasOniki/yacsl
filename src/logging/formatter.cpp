@@ -1,6 +1,5 @@
 #include "base/logging/formatter.hpp"
 #include "base/containers/char_buffer.hpp"
-#include "base/containers/fwds.hpp"
 #include "base/containers/stack_array.hpp"
 #include "base/containers/string_view.hpp"
 #include "base/strings/itoa.hpp"

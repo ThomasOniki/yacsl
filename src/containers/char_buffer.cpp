@@ -1,7 +1,6 @@
 #include "base/containers/char_buffer.hpp"
 #include "base/containers/string_view.hpp"
 #include "base/memory/arena.hpp"
-#include "base/memory/fwds.hpp"
 #include "base/utilities/type_aliases.hpp"
 #include <string.h>
 
