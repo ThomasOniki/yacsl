@@ -40,6 +40,13 @@ constexpr FormatStringParser::FormatStringParser(const char* fmt) : fmt_(fmt) {
 }
 
 constexpr char FormatStringParser::check_fill() {
+  if (fmt_[0] == '}') {
+    if (fmt_[1] == '}') {
+      fmt_ += 2;
+      return '}';
+    }
+    return ' ';
+  }
   if (*fmt_ == '0' || fmt_[1] == '>' || fmt_[1] == '<' || fmt_[1] == '^') {
     return *fmt_++;
   }

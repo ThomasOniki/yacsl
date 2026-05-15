@@ -76,7 +76,7 @@ public:
     return ok_;
   }
   [[nodiscard]] constexpr const Ok& expect_ok() const noexcept {
-    return expect_ok("Result is not ok.");
+    return expect_ok("Result<{}, {}> is error {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>, error());
   }
 
   [[nodiscard]] constexpr const Ok& assert_ok(StringView error) const noexcept {
@@ -90,7 +90,7 @@ public:
     return ok_;
   }
   [[nodiscard]] constexpr const Ok& assert_ok() const noexcept {
-    return assert_ok("Result is not ok.");
+    return assert_ok("Result<{}, {}> is error {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>, error());
   }
 
 private:
