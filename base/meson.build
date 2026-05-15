@@ -14,7 +14,7 @@ lib = library(
   'base',
   sources: sources,
   include_directories: 'include',
-  cpp_args: cpp_flags,
+  cpp_args: public_cpp_flags + private_cpp_flags,
   link_args: link_flags,
   dependencies: threads_dep,
   install: true,
@@ -24,7 +24,8 @@ lib = library(
 base_dep = declare_dependency(
   include_directories: 'include',
   link_with: lib,
+  compile_args: public_cpp_flags,
 )
 install_subdir('include/base', install_dir: 'include')
 pkg = import('pkgconfig')
-pkg.generate(lib)
+pkg.generate(lib, extra_cflags: public_cpp_flags)
