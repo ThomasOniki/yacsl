@@ -38,7 +38,8 @@ public:
     return static_cast<Ok>(value_);
   }
   [[nodiscard]] constexpr Ok expect_ok() const noexcept {
-    return expect_ok("UnsignedResult is not ok.");
+    return expect_ok("UnsignedResult<{}, {}> is error {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>,
+                     error());
   }
 
   [[nodiscard]] constexpr Ok assert_ok(StringView error) const noexcept {
@@ -51,7 +52,8 @@ public:
     return static_cast<Ok>(value_);
   }
   [[nodiscard]] constexpr Ok assert_ok() const noexcept {
-    return assert_ok("UnsignedResult is not ok.");
+    return assert_ok("UnsignedResult<{}, {}> is error {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>,
+                     error());
   }
 
 private:
