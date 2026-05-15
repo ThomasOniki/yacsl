@@ -46,4 +46,7 @@ concept SignedIntegral = Integral<T> && T(-1) < T(0);
 template <typename T>
 concept UnsignedIntegral = Integral<T> && T(-1) > T(0);
 
+template <typename T>
+concept Enum = __is_enum(T);
+
 } // namespace base

@@ -10,7 +10,6 @@
 #include "base/type_traits/range_like.hpp"
 #include "base/utilities/move_forward.hpp"
 #include "base/utilities/type_aliases.hpp"
-#include <assert.h>
 
 namespace base {
 
@@ -40,12 +39,17 @@ public:
     }
 
     // NOLINTNEXTLINE(google-explicit-constructor)
-    Stdio(Type type) noexcept : type_(type) { assert(type != Pipe && type != File); }
+    Stdio(Type type) noexcept : type_(type) {
+      debug_panic_if(type == Pipe || type == File,
+                     "Process::Stdio instances of types File and Pipe must be constructed with "
+                     "Stdio(path, flags) and Stdio(pipe) respectively.");
+    }
 
     Stdio(BASE_LIFETIMEBOUND Stdio& pipe) noexcept : pipe_(&pipe), type_(Pipe) {
-      assert(pipe.type_ == Buffer);
+      debug_panic_if(pipe.type_ != Buffer, "In Process::Stdio(pipe), pipe must be a buffer.");
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-union-access)
-      assert(pipe.process_ != nullptr);
+      debug_panic_if(pipe.process_ == nullptr, "In Process::Stdio(pipe), pipe must be acquired "
+                                               "with other_process.get_{stdout, stderr}().");
     }
 
     ~Stdio() noexcept = default;
@@ -83,35 +87,39 @@ public:
   Process& operator=(const Process&) = delete;
   Process& operator=(Process&&)      = delete;
 
-  void start(const char* const* argv, Stdio&& stdin_opts, Stdio&& stdout_opts,
-             Stdio&& stderr_opts) noexcept;
+  enum class SpawnError : u8 {
+    FileNotFound = 1,
+  };
+  Error<SpawnError> start(const char* const* argv, Stdio&& stdin_opts, Stdio&& stdout_opts,
+                          Stdio&& stderr_opts) noexcept;
 
-  void start(InitializerList<const char*> argv, Stdio&& stdin_opts, Stdio&& stdout_opts,
-             Stdio&& stderr_opts) noexcept {
-    start<InitializerList<const char*>>(argv, base::move(stdin_opts), base::move(stdout_opts),
-                                        base::move(stderr_opts));
+  Error<SpawnError> start(InitializerList<const char*> argv, Stdio&& stdin_opts,
+                          Stdio&& stdout_opts, Stdio&& stderr_opts) noexcept {
+    return start<InitializerList<const char*>>(argv, base::move(stdin_opts),
+                                               base::move(stdout_opts), base::move(stderr_opts));
   }
 
   template <RangeOf<const char*> Range>
-  void start(const Range& argv, Stdio&& stdin_opts, Stdio&& stdout_opts,
-             Stdio&& stderr_opts) noexcept {
+  Error<SpawnError> start(const Range& argv, Stdio&& stdin_opts, Stdio&& stdout_opts,
+                          Stdio&& stderr_opts) noexcept {
     Vector<const char*, 6> cstrs;
     for (auto arg : argv) {
       cstrs.push_back(arg);
     }
     cstrs.push_back(nullptr);
-    start(cstrs.data(), base::move(stdin_opts), base::move(stdout_opts), base::move(stderr_opts));
+    return start(cstrs.data(), base::move(stdin_opts), base::move(stdout_opts),
+                 base::move(stderr_opts));
   }
 
-  void start(InitializerList<StringView> argv, Stdio&& stdin_opts, Stdio&& stdout_opts,
-             Stdio&& stderr_opts) noexcept {
-    start<InitializerList<StringView>>(argv, base::move(stdin_opts), base::move(stdout_opts),
-                                       base::move(stderr_opts));
+  Error<SpawnError> start(InitializerList<StringView> argv, Stdio&& stdin_opts, Stdio&& stdout_opts,
+                          Stdio&& stderr_opts) noexcept {
+    return start<InitializerList<StringView>>(argv, base::move(stdin_opts), base::move(stdout_opts),
+                                              base::move(stderr_opts));
   }
 
   template <RangeOf<StringView> Range>
-  void start(const Range& argv, Stdio&& stdin_opts, Stdio&& stdout_opts,
-             Stdio&& stderr_opts) noexcept {
+  Error<SpawnError> start(const Range& argv, Stdio&& stdin_opts, Stdio&& stdout_opts,
+                          Stdio&& stderr_opts) noexcept {
     const Vector<CString, 6> cstrs(argv);
     Vector<const char*, 6>   cstr_ptrs;
     cstr_ptrs.reserve(cstrs.size() + 1);
@@ -119,8 +127,8 @@ public:
       cstr_ptrs.push_back(cstr.data());
     }
     cstr_ptrs.push_back(nullptr);
-    start(cstr_ptrs.data(), base::move(stdin_opts), base::move(stdout_opts),
-          base::move(stderr_opts));
+    return start(cstr_ptrs.data(), base::move(stdin_opts), base::move(stdout_opts),
+                 base::move(stderr_opts));
   }
 
   struct ExitStatus {

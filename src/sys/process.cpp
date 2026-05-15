@@ -1,7 +1,7 @@
 #include "base/sys/process.hpp"
 #include "base/containers/stack_array.hpp"
+#include "base/sys/errno.hpp"
 #include "base/utilities/move_forward.hpp"
-#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -54,15 +54,23 @@ static int unix_flags(FileOpenFlags flags) {
 using Type = Process::Stdio::Type;
 using enum Type;
 
+#define CHECK_ERRNO(func) panic_if((func) == -1, #func " failed: {}", errno_str())
+
+#define CHECK_RETURN(func)                                                                         \
+  do {                                                                                             \
+    const int _result = func;                                                                      \
+    panic_if(_result != 0, #func " failed: {}", errno_str(_result));                               \
+  } while (false)
+
 static void pipe_child_stdin(posix_spawn_file_actions_t* actions, Type type,
                              StackArray<int, 2>& pipe) {
   if (type != Buffer && type != ParentStdout && type != ParentStderr) {
     return;
   }
-  assert(::pipe(pipe.data()) != -1);
-  assert(posix_spawn_file_actions_adddup2(actions, pipe[0], STDIN_FILENO) == 0);
-  assert(posix_spawn_file_actions_addclose(actions, pipe[0]) == 0);
-  assert(posix_spawn_file_actions_addclose(actions, pipe[1]) == 0);
+  CHECK_ERRNO(::pipe(pipe.data()));
+  CHECK_RETURN(posix_spawn_file_actions_adddup2(actions, pipe[0], STDIN_FILENO));
+  CHECK_RETURN(posix_spawn_file_actions_addclose(actions, pipe[0]));
+  CHECK_RETURN(posix_spawn_file_actions_addclose(actions, pipe[1]));
 }
 
 static void pipe_child_stdout(posix_spawn_file_actions_t* actions, Type type, int stream,
@@ -71,10 +79,10 @@ static void pipe_child_stdout(posix_spawn_file_actions_t* actions, Type type, in
     return;
   }
 
-  assert(::pipe(pipe.data()) != -1);
-  assert(posix_spawn_file_actions_adddup2(actions, pipe[1], stream) == 0);
-  assert(posix_spawn_file_actions_addclose(actions, pipe[0]) == 0);
-  assert(posix_spawn_file_actions_addclose(actions, pipe[1]) == 0);
+  CHECK_ERRNO(::pipe(pipe.data()));
+  CHECK_RETURN(posix_spawn_file_actions_adddup2(actions, pipe[1], stream));
+  CHECK_RETURN(posix_spawn_file_actions_addclose(actions, pipe[0]));
+  CHECK_RETURN(posix_spawn_file_actions_addclose(actions, pipe[1]));
 }
 
 static void redirect_child_stdio_to_file(posix_spawn_file_actions_t* actions, FileOpenFlags& flags,
@@ -83,21 +91,21 @@ static void redirect_child_stdio_to_file(posix_spawn_file_actions_t* actions, Fi
       unix_flags(flags | FileOpenFlags::DontCloseOnExec |
                  (stream == STDIN_FILENO ? FileOpenFlags::Read : FileOpenFlags::Write));
 
-  assert(posix_spawn_file_actions_addopen(actions, stream, path, oflag,
-                                          S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) == 0);
+  CHECK_RETURN(posix_spawn_file_actions_addopen(actions, stream, path, oflag,
+                                                S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH));
 }
 
 static void maybe_swap_child_stdout_and_err(posix_spawn_file_actions_t* actions, Type stdout_type,
                                             Type stderr_type) {
   if (stdout_type == ParentStderr && stderr_type == ParentStdout) {
-    assert(posix_spawn_file_actions_adddup2(actions, STDOUT_FILENO, 3) == 0);
-    assert(posix_spawn_file_actions_adddup2(actions, STDERR_FILENO, STDOUT_FILENO) == 0);
-    assert(posix_spawn_file_actions_adddup2(actions, 3, STDERR_FILENO) == 0);
-    assert(posix_spawn_file_actions_addclose(actions, 3) == 0);
+    CHECK_RETURN(posix_spawn_file_actions_adddup2(actions, STDOUT_FILENO, 3));
+    CHECK_RETURN(posix_spawn_file_actions_adddup2(actions, STDERR_FILENO, STDOUT_FILENO));
+    CHECK_RETURN(posix_spawn_file_actions_adddup2(actions, 3, STDERR_FILENO));
+    CHECK_RETURN(posix_spawn_file_actions_addclose(actions, 3));
   } else if (stdout_type == ParentStderr) {
-    assert(posix_spawn_file_actions_adddup2(actions, STDERR_FILENO, STDOUT_FILENO) == 0);
+    CHECK_RETURN(posix_spawn_file_actions_adddup2(actions, STDERR_FILENO, STDOUT_FILENO));
   } else if (stderr_type == ParentStdout) {
-    assert(posix_spawn_file_actions_adddup2(actions, STDOUT_FILENO, STDERR_FILENO) == 0);
+    CHECK_RETURN(posix_spawn_file_actions_adddup2(actions, STDOUT_FILENO, STDERR_FILENO));
   }
 }
 
@@ -110,7 +118,7 @@ void Process::handle_piped_stdio(void* voidp_file_actions) noexcept {
   pipe_child_stdout(actions, stdout_.type_, STDOUT_FILENO, stdout_pipe_);
 
   if (stdout_.type_ == ParentStdin && stderr_.type_ == ParentStdin) {
-    assert(posix_spawn_file_actions_adddup2(actions, STDOUT_FILENO, STDERR_FILENO) == 0);
+    CHECK_RETURN(posix_spawn_file_actions_adddup2(actions, STDOUT_FILENO, STDERR_FILENO));
   } else {
     pipe_child_stdout(actions, stderr_.type_, STDERR_FILENO, stderr_pipe_);
   }
@@ -126,14 +134,13 @@ void Process::handle_piped_stdio(void* voidp_file_actions) noexcept {
     const Stdio*   pipe          = stdin_.pipe_;
     const Process* piped_process = pipe->process_;
     if (pipe == &piped_process->stdout_) {
-      assert(posix_spawn_file_actions_adddup2(actions, piped_process->stdout_pipe_[0],
-                                              STDIN_FILENO) == 0);
-      assert(posix_spawn_file_actions_addclose(actions, piped_process->stdout_pipe_[0]) == 0);
+      CHECK_RETURN(
+          posix_spawn_file_actions_adddup2(actions, piped_process->stdout_pipe_[0], STDIN_FILENO));
+      CHECK_RETURN(posix_spawn_file_actions_addclose(actions, piped_process->stdout_pipe_[0]));
     } else {
-      assert(pipe == &piped_process->stderr_);
-      assert(posix_spawn_file_actions_adddup2(actions, piped_process->stderr_pipe_[0],
-                                              STDIN_FILENO) == 0);
-      assert(posix_spawn_file_actions_addclose(actions, piped_process->stderr_pipe_[0]) == 0);
+      CHECK_RETURN(posix_spawn_file_actions_adddup2(actions, piped_process->stderr_pipe_[0],
+                                                    STDIN_FILENO) == 0);
+      CHECK_RETURN(posix_spawn_file_actions_addclose(actions, piped_process->stderr_pipe_[0]));
     }
   }
 }
@@ -156,7 +163,7 @@ void Process::handle_file_stdio(void* voidp_file_actions) noexcept {
     const bool same_paths = strcmp(stdout_.file_info_.path, stderr_.file_info_.path) == 0;
 
     if (same_flags && same_paths) {
-      assert(posix_spawn_file_actions_adddup2(actions, STDOUT_FILENO, STDERR_FILENO) == 0);
+      CHECK_RETURN(posix_spawn_file_actions_adddup2(actions, STDOUT_FILENO, STDERR_FILENO));
     } else {
       redirect_child_stdio_to_file(actions, stderr_.file_info_.flags, stderr_.file_info_.path,
                                    STDERR_FILENO);
@@ -169,19 +176,21 @@ void Process::handle_file_stdio(void* voidp_file_actions) noexcept {
 
 extern "C" char** environ;
 
-void Process::start(const char* const* argv, Stdio&& stdin_opts, Stdio&& stdout_opts,
-                    Stdio&& stderr_opts) noexcept {
-  assert(stdout_opts.type_ != Pipe && "You should pipe stdout to stdin, not the reverse");
-  assert(stderr_opts.type_ != Pipe && "You should pipe stderr to stdin, not the reverse");
+Error<Process::SpawnError> Process::start(const char* const* argv, Stdio&& stdin_opts,
+                                          Stdio&& stdout_opts, Stdio&& stderr_opts) noexcept {
+  debug_panic_if(stdout_opts.type_ == Pipe, "You should pipe stdout to stdin, not the reverse");
+  debug_panic_if(stderr_opts.type_ == Pipe, "You should pipe stderr to stdin, not the reverse");
 
-  assert(handle_ == -1);
+  if (handle_ != -1) [[unlikely]] {
+    wait();
+  }
 
   stdin_  = base::move(stdin_opts);
   stdout_ = base::move(stdout_opts);
   stderr_ = base::move(stderr_opts);
 
   posix_spawn_file_actions_t actions{};
-  assert(posix_spawn_file_actions_init(&actions) == 0);
+  CHECK_RETURN(posix_spawn_file_actions_init(&actions));
 
   handle_piped_stdio(static_cast<void*>(&actions));
   handle_file_stdio(static_cast<void*>(&actions));
@@ -191,53 +200,52 @@ void Process::start(const char* const* argv, Stdio&& stdin_opts, Stdio&& stdout_
   const int result =
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
       posix_spawnp(&pid, argv[0], &actions, nullptr, const_cast<char* const*>(argv), environ);
-  if (result != 0) {
-    errno = result;
-    (void)fputs("spawn ", stderr);
-    perror(argv[0]);
-    abort();
+  if (result != 0 && result != ENOENT) {
+    panic("posix_spawnp failed: {}", errno_str(result));
   }
   handle_ = pid;
 
-  assert(posix_spawn_file_actions_destroy(&actions) == 0);
+  CHECK_RETURN(posix_spawn_file_actions_destroy(&actions));
 
   if (stdin_.type_ == ParentStdout) {
     const int original = dup(STDOUT_FILENO);
-    assert(original != -1);
-    assert(dup2(stdin_pipe_[1], STDOUT_FILENO) != -1);
-    assert(close(stdin_pipe_[1]) != -1);
+    CHECK_ERRNO(original);
+    CHECK_ERRNO(dup2(stdin_pipe_[1], STDOUT_FILENO));
+    CHECK_ERRNO(close(stdin_pipe_[1]));
     stdin_pipe_[1] = original;
   } else if (stdin_.type_ == ParentStderr) {
     const int original = dup(STDERR_FILENO);
-    assert(original != -1);
-    assert(dup2(stdin_pipe_[1], STDERR_FILENO) != -1);
-    assert(close(stdin_pipe_[1]) != -1);
+    CHECK_ERRNO(original);
+    CHECK_ERRNO(dup2(stdin_pipe_[1], STDERR_FILENO));
+    CHECK_ERRNO(close(stdin_pipe_[1]));
     stdin_pipe_[1] = original;
   }
   if (stdout_.type_ == ParentStdin) {
     const int original = dup(STDIN_FILENO);
-    assert(original != -1);
-    assert(dup2(stdout_pipe_[0], STDIN_FILENO) != -1);
-    assert(close(stdout_pipe_[0]) != -1);
+    CHECK_ERRNO(original);
+    CHECK_ERRNO(dup2(stdout_pipe_[0], STDIN_FILENO));
+    CHECK_ERRNO(close(stdout_pipe_[0]));
     stdout_pipe_[0] = original;
   }
   if (stderr_.type_ == ParentStdin && stdout_.type_ != ParentStdin) {
     const int original = dup(STDIN_FILENO);
-    assert(original != -1);
-    assert(dup2(stderr_pipe_[0], STDIN_FILENO) != -1);
-    assert(close(stderr_pipe_[0]) != -1);
+    CHECK_ERRNO(original);
+    CHECK_ERRNO(dup2(stderr_pipe_[0], STDIN_FILENO));
+    CHECK_ERRNO(close(stderr_pipe_[0]));
     stderr_pipe_[0] = original;
   }
 
   if (stdin_.type_ == Buffer || stdin_.type_ == ParentStdout || stdin_.type_ == ParentStderr) {
-    assert(close(stdin_pipe_[0]) != -1);
+    CHECK_ERRNO(close(stdin_pipe_[0]));
   }
   if (stdout_.type_ == Buffer || stdout_.type_ == ParentStdin) {
-    assert(close(stdout_pipe_[1]) != -1);
+    CHECK_ERRNO(close(stdout_pipe_[1]));
   }
   if (stderr_.type_ == Buffer || (stderr_.type_ == ParentStdin && stdout_.type_ != ParentStdin)) {
-    assert(close(stderr_pipe_[1]) != -1);
+    CHECK_ERRNO(close(stderr_pipe_[1]));
   }
+
+  return result == ENOENT ? Error(SpawnError::FileNotFound) : NIL;
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const, misc-no-recursion)
@@ -276,24 +284,24 @@ Process::ExitStatus Process::wait() noexcept {
 
   if (stdin_.type_ == Buffer || stdin_.type_ == ParentStdout || stdin_.type_ == ParentStderr) {
     if (stdin_.type_ == ParentStdout) {
-      assert(dup2(stdin_pipe_[1], STDOUT_FILENO) == 0);
+      CHECK_ERRNO(dup2(stdin_pipe_[1], STDOUT_FILENO));
     } else if (stdin_.type_ == ParentStderr) {
-      assert(dup2(stdin_pipe_[1], STDERR_FILENO) == 0);
+      CHECK_ERRNO(dup2(stdin_pipe_[1], STDERR_FILENO));
     }
-    assert(close(stdin_pipe_[1]) != -1);
+    CHECK_ERRNO(close(stdin_pipe_[1]));
   }
 
   if (stdout_.type_ == Buffer || stdout_.type_ == ParentStdin) {
     if (stdout_.type_ == ParentStdin) {
-      assert(dup2(stdout_pipe_[0], STDIN_FILENO) == 0);
+      CHECK_ERRNO(dup2(stdout_pipe_[0], STDIN_FILENO));
     }
-    assert(close(stdout_pipe_[0]) != -1);
+    CHECK_ERRNO(close(stdout_pipe_[0]));
   }
   if (stderr_.type_ == Buffer || (stderr_.type_ == ParentStdin && stdout_.type_ != ParentStdin)) {
     if (stderr_.type_ == ParentStdin) {
-      assert(dup2(stderr_pipe_[0], STDIN_FILENO) == 0);
+      CHECK_ERRNO(dup2(stderr_pipe_[0], STDIN_FILENO));
     }
-    assert(close(stderr_pipe_[0]) != -1);
+    CHECK_ERRNO(close(stderr_pipe_[0]));
   }
 
   return status;
@@ -301,7 +309,7 @@ Process::ExitStatus Process::wait() noexcept {
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void Process::send_signal(Signal signal) noexcept {
-  assert(handle_ != -1);
+  CHECK_ERRNO(handle_);
   kill(static_cast<pid_t>(handle_), static_cast<int>(signal));
   handle_ = -1;
 }
