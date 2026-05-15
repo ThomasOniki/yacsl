@@ -44,44 +44,67 @@ static void check(const char* expected) {
   }
 }
 
+namespace {
+enum Enum1 : base::u16 {
+  Zero        = 0,
+  FiveHundred = 500,
+};
+enum class EnumClass : base::u16 {
+  Zero        = 0,
+  FiveHundred = 500,
+};
+} // namespace
+
 int main() {
   base::FileLogger logger("test_logs.txt", base::LogLevel::Trace3);
 
-  logger.info("Hello, {}", "world!");
-  check("[INFO] Hello, world!");
+  logger.trace3("Hello, {}", "world!");
+  check("[TRACE 3] Hello, world!");
 
-  logger.trace1("int: {}, hex: {x}.", 5, 0x3a);
-  check("[TRACE 1] int: 5, hex: 3a.");
+  logger.trace2("int: {}, hex: {x}.", 5, 0x3a);
+  check("[TRACE 2] int: 5, hex: 3a.");
 
-  logger.notice("aligned: {010}, centered: {*^7}, left, hex: {<4x}.", 96, 737, 0xf3a);
-  check("[NOTICE] aligned: 0000000096, centered: **737**, left, hex: f3a .");
+  logger.trace1("aligned: {010}, centered: {*^7}, left, hex: {<4x}.", 96, 737, 0xf3a);
+  check("[TRACE 1] aligned: 0000000096, centered: **737**, left, hex: f3a .");
 
-  logger.warn("+ sign: {0+10}.", 386);
-  check("[WARNING] + sign: 000000+386.");
+  logger.debug("+ sign: {0+10}.", 386);
+  check("[DEBUG] + sign: 000000+386.");
 
-  logger.debug("int list: {}, hex int list: {08x}", base::InitializerList<int>{0, -1, 20, -35},
-               base::InitializerList<int>{0xF, -0x1a, 0x1, 0x0});
-  check("[DEBUG] int list: [0, -1, 20, -35], hex int list: [0000000f, 00000-1a, 00000001, "
+  logger.info("int list: {}, hex int list: {08x}", base::InitializerList<int>{0, -1, 20, -35},
+              base::InitializerList<int>{0xF, -0x1a, 0x1, 0x0});
+  check("[INFO] int list: [0, -1, 20, -35], hex int list: [0000000f, 00000-1a, 00000001, "
         "00000000]");
 
-  logger.trace2("centered wstring: |{^10}|", L"hello");
-  check("[TRACE 2] centered wstring: |  hello   |");
+  logger.warn("centered wstring: |{^10}|", L"hello");
+  check("[WARNING] centered wstring: |  hello   |");
 
-  logger.debug("debug char: {?}, debug string: {?}", '\n', "\x17\0abcde\n\t");
-  check(R"([DEBUG] debug char: '\n', debug string: "\x17\0abcde\n\t")");
+  logger.error("debug char: {?}, debug string: {?}", '\n', "\x17\0abcde\n\t");
+  check(R"([ERROR] debug char: '\n', debug string: "\x17\0abcde\n\t")");
 
-  logger.notice("unicode char: {}, debug wstring with unicode: {*>3?}", U'😁', L"nerd emoji: 🤓");
-  check("[NOTICE] unicode char: 😁, debug wstring with unicode: \"nerd emoji: 🤓\"");
+  logger.panic("unicode char: {}, debug wstring with unicode: {*>3?}", U'😁', L"nerd emoji: 🤓");
+  check("[PANIC] unicode char: 😁, debug wstring with unicode: \"nerd emoji: 🤓\"");
 
-  logger.panic("char16_t string range: {*^10}",
-               base::InitializerList<base::BasicStringView<char16_t>>{
-                   u"foo", u"bar", u"🤓", u"⭐",
-                   u"The emoji aren't padded correctly because they use 4 UTF-8 chars."});
-  check("[PANIC] char16_t string range: [***foo****, ***bar****, ***🤓***, ***⭐****, "
+  logger.info("char16_t string range: {*^10}",
+              base::InitializerList<base::BasicStringView<char16_t>>{
+                  u"foo", u"bar", u"🤓", u"⭐",
+                  u"The emoji aren't padded correctly because they use 4 UTF-8 chars."});
+  check("[INFO] char16_t string range: [***foo****, ***bar****, ***🤓***, ***⭐****, "
         "The emoji aren't padded correctly because they use 4 UTF-8 chars.]");
 
-  logger.notice("debug char16_t string: {?}", u"nerd emoji (again): 🤓, newline: \n");
-  check("[NOTICE] debug char16_t string: \"nerd emoji (again): 🤓, newline: \\n\"");
+  logger.info("debug char16_t string: {?}", u"nerd emoji (again): 🤓, newline: \n");
+  check("[INFO] debug char16_t string: \"nerd emoji (again): 🤓, newline: \\n\"");
+
+  logger.info("enum formatting: {}", Enum1::Zero);
+  check("[INFO] enum formatting: (anonymous namespace)::Zero");
+  logger.info("values >= 256 are formatted as casted ints: {}", Enum1::FiveHundred);
+  check("[INFO] values >= 256 are formatted as casted ints: ((anonymous namespace)::Enum1)500");
+  logger.info("Same for unamed values: {}", Enum1{1});
+  check("[INFO] Same for unamed values: ((anonymous namespace)::Enum1)1");
+
+  logger.info("With enum classes: {}, {}, {}", EnumClass::Zero, EnumClass::FiveHundred,
+              EnumClass{1});
+  check("[INFO] With enum classes: (anonymous namespace)::EnumClass::Zero, ((anonymous "
+        "namespace)::EnumClass)500, ((anonymous namespace)::EnumClass)1");
 
   logger.info("Goodbye, world!");
   check("[INFO] Goodbye, world!");

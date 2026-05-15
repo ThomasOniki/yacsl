@@ -4,11 +4,13 @@
 #include "base/containers/string_view.hpp"
 #include "base/logging/format_string_parser.hpp"
 #include "base/metaprogramming/declval.hpp"
+#include "base/strings/itoa.hpp"
 #include "base/type_traits/categories.hpp"
 #include "base/type_traits/qualifiers.hpp"
 #include "base/type_traits/range_like.hpp"
 #include "base/utilities/extended_types.hpp"
 #include "base/utilities/type_aliases.hpp"
+#include "base/utilities/type_string.hpp"
 
 namespace base {
 
@@ -218,6 +220,50 @@ public:
 private:
   using Element = RemoveCVRef<decltype(*declval<T>().begin())>;
   using Base    = Formatter<Element>;
+};
+
+template <Enum T> class Formatter<T> {
+public:
+  constexpr const char* parse(const char* fmt) {
+    FormatStringParser parser(fmt);
+    return parser.end_parse();
+  }
+
+  void format(CharBuffer& buf, T value) {
+    auto scalar = static_cast<UnderlyingType>(value);
+    auto u_val  = static_cast<MakeUnsigned<UnderlyingType>>(value);
+    if (u_val < 256) {
+      buf.append(TABLE[u_val]);
+    } else {
+      const usize len = itoa_digit_count(scalar);
+      char*       str = buf.grow(len + TYPE_STRING<T>.size() + 2);
+      str[0]          = '(';
+      ++str;
+      memcpy(str, TYPE_STRING<T>.data(), TYPE_STRING<T>.size());
+      str[TYPE_STRING<T>.size()] = ')';
+      itoa_from_end(buf.end(), scalar);
+    }
+  }
+
+private:
+  using UnderlyingType = UnderlyingEnumType<T>;
+  template <u32... Values>
+  static constexpr StackArray<StringView, sizeof...(Values)>
+  table(IntegerSequence<u32, Values...> /*sequence*/) {
+    StackArray<StringView, sizeof...(Values)> ret;
+    (..., [&]() { ret[Values] = table_entry<T{static_cast<UnderlyingType>(Values)}>(); }());
+    return ret;
+  }
+
+  template <T Value> static constexpr StringView table_entry() {
+    constexpr StringView pretty_function = __PRETTY_FUNCTION__;
+    constexpr usize      offset =
+        StringView("static StringView base::Formatter<>::table_entry() [T = , Value = ").size() +
+        2 * TYPE_STRING<T>.size();
+    return {pretty_function.begin() + offset, pretty_function.end() - 1};
+  }
+
+  static constexpr StackArray<StringView, 256> TABLE = table(IntegerSequenceToN<u32, 256>{});
 };
 
 } // namespace base
