@@ -1,12 +1,12 @@
 if cxx_id == 'clang' or cxx_id == 'emscripten'
-  cpp_flags += [
+  private_cpp_flags += [
     '-Wno-global-constructors',
     '-Wno-exit-time-destructors',
   ]
 endif
 
 if cxx_id == 'gcc'
-  cpp_flags += ['-Wno-padded', '-Wno-abi-tag', '-Wno-cast-align']
+  private_cpp_flags += ['-Wno-padded', '-Wno-abi-tag', '-Wno-cast-align']
 endif
 
 things_to_test = [
@@ -28,7 +28,7 @@ foreach thing : things_to_test
     f'test_@thing@',
     sources: f'src/test_@thing@.cpp',
     dependencies: [base_dep],
-    cpp_args: cpp_flags,
+    cpp_args: private_cpp_flags,
     override_options: {'warning_level': 'everything', 'werror': true},
   )
   test(thing, exe)
