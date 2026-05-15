@@ -19,8 +19,8 @@ public:
   constexpr BasicStringView(BASE_LIFETIMEBOUND const T (&arr)[N])
       : data_(static_cast<const T*>(arr)), size_(N - 1) {}
 
-  [[nodiscard]] const T* data() const noexcept BASE_LIFETIMEBOUND { return data_; }
-  [[nodiscard]] SizeT    size() const noexcept BASE_LIFETIMEBOUND { return size_; }
+  [[nodiscard]] constexpr const T* data() const noexcept BASE_LIFETIMEBOUND { return data_; }
+  [[nodiscard]] constexpr SizeT    size() const noexcept { return size_; }
 
   [[nodiscard]] constexpr const T& front() const noexcept { return data_[0]; }
   [[nodiscard]] constexpr const T& back() const noexcept { return data_[size_ - 1]; }

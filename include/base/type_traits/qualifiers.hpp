@@ -53,4 +53,6 @@ template <typename T> using RemoveCVRef = __remove_cvref(T);
 template <typename T> using RemoveCVRef = RemoveCV<RemoveReference<T>>;
 #endif
 
+template <typename T> using UnderlyingEnumType = __underlying_type(T);
+
 } // namespace base
