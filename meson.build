@@ -90,4 +90,7 @@ foreach flag : potential_cpp_flags
 endforeach
 
 subdir('base')
-subdir('tests')
+
+if not meson.is_subproject()
+  subdir('tests')
+endif
