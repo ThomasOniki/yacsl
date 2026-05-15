@@ -8,7 +8,6 @@
 #include "base/type_traits/trivial.hpp"
 #include "base/utilities/move_forward.hpp"
 #include "base/utilities/nil.hpp"
-#include "base/utilities/type_aliases.hpp"
 
 namespace base {
 
@@ -97,8 +96,8 @@ public:
 
 private:
   union {
-    Ok ok_;
-    u8 dummy_ = 0;
+    Ok  ok_;
+    Nil dummy_{};
   };
   Error<Err> status_ = NIL;
 };
