@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/memory/fwds.hpp"
+#include "base/memory/singleton_allocator.hpp"
 #include "base/type_traits/trivial.hpp"
 #include "base/utilities/constants.hpp"
 #include "base/utilities/move_forward.hpp"
@@ -8,6 +8,10 @@
 #include "base/utilities/type_aliases.hpp"
 
 namespace base {
+
+class Arena;
+using MainArenaAllocator    = SingletonAllocator<Arena, "main", true>;
+using ScratchArenaAllocator = SingletonAllocator<Arena, "scratch", true>;
 
 class Arena {
 public:

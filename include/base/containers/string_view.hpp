@@ -1,6 +1,5 @@
 #pragma once
 
-#include "base/containers/fwds.hpp"
 #include "base/containers/reverse_iterator.hpp"
 #include "base/utilities/is_constant_evaluated.hpp"
 #include "base/utilities/type_aliases.hpp"
@@ -8,7 +7,7 @@
 
 namespace base {
 
-template <typename T, typename SizeT> class BasicStringView {
+template <typename T, typename SizeT = usize> class BasicStringView {
 public:
   constexpr BasicStringView() = default;
   constexpr BasicStringView(BASE_LIFETIMEBOUND const T* data, SizeT size)

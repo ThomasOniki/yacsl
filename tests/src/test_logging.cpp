@@ -1,9 +1,9 @@
-#include "base/containers/fwds.hpp"
 #include "base/containers/initializer_list.hpp"
 #include "base/containers/stack_array.hpp"
 #include "base/containers/string_view.hpp"
 #include "base/logging/common.hpp"
 #include "base/logging/file_logger.hpp"
+#include "base/utilities/type_aliases.hpp"
 #include <assert.h>
 #include <stdarg.h>
 #include <stddef.h>
@@ -34,6 +34,7 @@ static void check(const char* expected) {
 
   // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
   [[maybe_unused]] FILE* truncated = fopen("test_logs.txt", "w+e");
+  assert(truncated);
   // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
   (void)fclose(truncated);
 
@@ -45,6 +46,7 @@ static void check(const char* expected) {
 }
 
 namespace {
+// NOLINTNEXTLINE(cppcoreguidelines-use-enum-class)
 enum Enum1 : base::u16 {
   Zero        = 0,
   FiveHundred = 500,

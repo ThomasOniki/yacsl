@@ -2,6 +2,7 @@
 
 #include "base/containers/stack_array.hpp"
 #include "base/containers/stack_array_storage.hpp"
+#include "base/metaprogramming/type_manip.hpp"
 #include "base/type_traits/allocator.hpp"
 #include "base/type_traits/trivial.hpp"
 #include "base/utilities/type_aliases.hpp"

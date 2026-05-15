@@ -1,13 +1,16 @@
 #include "base/sys/file.hpp"
 #include "base/containers/cstring.hpp"
-#include "base/containers/fwds.hpp"
+#include "base/containers/error.hpp"
 #include "base/containers/string_view.hpp"
 #include "base/containers/unsigned_result.hpp"
+#include "base/logging/errors.hpp"
 #include "base/sys/common.hpp"
 #include "base/sys/errno.hpp"
+#include "base/utilities/nil.hpp"
 #include "base/utilities/type_aliases.hpp"
 #include <errno.h>
 #include <fcntl.h>
+#include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -77,7 +80,7 @@ static UnsignedResult<unsigned int, File::OpenError> open_file(const StringView&
 } // namespace internal
 
 Error<File::OpenError> File::open(const StringView& path, FileOpenFlags flags) noexcept {
-  UnsignedResult<unsigned int, File::OpenError> result = internal::open_file(path, flags);
+  const UnsignedResult<unsigned int, File::OpenError> result = internal::open_file(path, flags);
   if (result.is_error()) [[unlikely]] {
     handle_ = -1;
     return result.error();
@@ -87,7 +90,7 @@ Error<File::OpenError> File::open(const StringView& path, FileOpenFlags flags) n
   }
 }
 Error<File::OpenError> File::open(const char* path, FileOpenFlags flags) noexcept {
-  UnsignedResult<unsigned int, File::OpenError> result = internal::open_file(path, flags);
+  const UnsignedResult<unsigned int, File::OpenError> result = internal::open_file(path, flags);
   if (result.is_error()) [[unlikely]] {
     handle_ = -1;
     return result.error();

@@ -26,9 +26,8 @@ template <typename T>
   requires requires() {
     { base::TupleSize<T>::value };
   }
-// NOLINTNEXTLINE(bugprone-std-namespace-modification, cert-dcl58-cpp, misc-include-cleaner)
+// NOLINTNEXTLINE(bugprone-std-namespace-modification, cert-dcl58-cpp)
 struct tuple_size<T> {
-  // NOLINTNEXTLINE(misc-include-cleaner)
   static constexpr base::usize value = base::TupleSize<T>::value;
 };
 template <base::usize I, typename T>
@@ -36,7 +35,7 @@ template <base::usize I, typename T>
   requires requires() {
     { base::TupleSize<T>::value };
   }
-// NOLINTNEXTLINE(bugprone-std-namespace-modification, cert-dcl58-cpp, misc-include-cleaner)
+// NOLINTNEXTLINE(bugprone-std-namespace-modification, cert-dcl58-cpp)
 struct tuple_element<I, T> {
   using type = base::TupleElement<T, I>::Type;
 };

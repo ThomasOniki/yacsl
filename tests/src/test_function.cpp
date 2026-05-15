@@ -16,7 +16,7 @@ struct Counts {
   uint32_t move_constructor_call_count        = 0;
   uint32_t destructor_call_count              = 0;
 
-  constexpr bool operator==(const Counts&) const noexcept = default;
+  [[nodiscard]] constexpr bool operator==(const Counts&) const noexcept = default;
 };
 struct TestStruct {
   inline static Counts counts;

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "base/containers/fwds.hpp"
 #include "base/containers/reverse_iterator.hpp"
 #include "base/containers/stack_array.hpp"
 #include "base/utilities/move_forward.hpp"
@@ -11,7 +10,7 @@ namespace base {
 // THIS DOES NOT KEEP TRACK OF WHICH ELEMENTS WHERE CREATED AND DESTROYED, YOU ARE RESPONSIBLE FOR
 // THAT.
 
-template <typename T, usize N, typename SizeT> class StackArrayStorage {
+template <typename T, usize N, typename SizeT = usize> class StackArrayStorage {
 public:
   template <typename... Args> constexpr void construct_at(SizeT index, Args&&... args) {
     new (data() + index) T(base::forward<Args>(args)...);

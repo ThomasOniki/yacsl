@@ -1,13 +1,15 @@
 #include "base/containers/char_buffer.hpp"
-#include "base/containers/fwds.hpp"
 #include "base/containers/string_view.hpp"
 #include "base/containers/vector.hpp"
 #include "base/logging/common.hpp"
 #include "base/logging/formatter.hpp"
-#include "base/memory/fwds.hpp"
+#include "base/memory/arena.hpp"
 #include "base/memory/singleton_allocator.hpp"
-
 #include "test_utils.hpp"
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include <format>
 #include <new>
@@ -16,11 +18,6 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 // NOLINTBEGIN(bugprone-exception-escape)
 
