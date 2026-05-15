@@ -6,7 +6,6 @@
 #include "base/type_traits/trivial.hpp"
 #include "base/utilities/move_forward.hpp"
 #include "base/utilities/nil.hpp"
-#include "base/utilities/type_aliases.hpp"
 
 namespace base {
 
@@ -101,8 +100,8 @@ public:
 
 private:
   union {
-    T  value_;
-    u8 dummy_ = 0;
+    T   value_;
+    Nil dummy_{};
   };
   bool is_value_;
 };
