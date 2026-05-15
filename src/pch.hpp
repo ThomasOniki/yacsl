@@ -1,7 +1,6 @@
 #pragma once
 
 #ifndef BASE_LSP_ONLY
-#include <assert.h>
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
