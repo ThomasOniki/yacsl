@@ -73,11 +73,11 @@ int main() {
   logger.notice("unicode char: {}, debug wstring with unicode: {*>3?}", U'😁', L"nerd emoji: 🤓");
   check("[NOTICE] unicode char: 😁, debug wstring with unicode: \"nerd emoji: 🤓\"");
 
-  logger.critical("char16_t string range: {*^10}",
-                  base::InitializerList<base::BasicStringView<char16_t>>{
-                      u"foo", u"bar", u"🤓", u"⭐",
-                      u"The emoji aren't padded correctly because they use 4 UTF-8 chars."});
-  check("[CRITICAL] char16_t string range: [***foo****, ***bar****, ***🤓***, ***⭐****, "
+  logger.panic("char16_t string range: {*^10}",
+               base::InitializerList<base::BasicStringView<char16_t>>{
+                   u"foo", u"bar", u"🤓", u"⭐",
+                   u"The emoji aren't padded correctly because they use 4 UTF-8 chars."});
+  check("[PANIC] char16_t string range: [***foo****, ***bar****, ***🤓***, ***⭐****, "
         "The emoji aren't padded correctly because they use 4 UTF-8 chars.]");
 
   logger.notice("debug char16_t string: {?}", u"nerd emoji (again): 🤓, newline: \n");

@@ -19,7 +19,7 @@ things_to_test = [
 if cxx_id != 'emscripten'
   things_to_test += 'process'
 endif
-if no_libcpp
+if not no_libcpp
   things_to_test += 'vector'
 endif
 

@@ -32,7 +32,7 @@ public:
   void notice(const StringView& msg) { log(LogLevel::Notice, msg); }
   void warn(const StringView& msg) { log(LogLevel::Warning, msg); }
   void error(const StringView& msg) { log(LogLevel::Error, msg); }
-  void critical(const StringView& msg) { log(LogLevel::Critical, msg); }
+  void panic(const StringView& msg) { log(LogLevel::Panic, msg); }
 
   template <typename... Args> void trace3(const FormatString<Args...>& fmt, Args&&... args) {
     log(LogLevel::Trace3, fmt, base::forward<Args>(args)...);
@@ -58,8 +58,8 @@ public:
   template <typename... Args> void error(const FormatString<Args...>& fmt, Args&&... args) {
     log(LogLevel::Error, fmt, base::forward<Args>(args)...);
   }
-  template <typename... Args> void critical(const FormatString<Args...>& fmt, Args&&... args) {
-    log(LogLevel::Critical, fmt, base::forward<Args>(args)...);
+  template <typename... Args> void panic(const FormatString<Args...>& fmt, Args&&... args) {
+    log(LogLevel::Panic, fmt, base::forward<Args>(args)...);
   }
 
   template <typename... Args>
@@ -124,9 +124,6 @@ template <typename... Args> void log_warning(const FormatString<Args...>& fmt, A
 }
 template <typename... Args> void log_error(const FormatString<Args...>& fmt, Args&&... args) {
   Logger::get_default_instance().error(fmt, base::forward<Args>(args)...);
-}
-template <typename... Args> void log_critical(const FormatString<Args...>& fmt, Args&&... args) {
-  Logger::get_default_instance().critical(fmt, base::forward<Args>(args)...);
 }
 
 } // namespace base

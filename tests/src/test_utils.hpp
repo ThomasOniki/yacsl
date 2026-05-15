@@ -37,7 +37,7 @@
   do {                                                                                             \
     const bool result = cond;                                                                      \
     if (!result) {                                                                                 \
-      base::log_critical("ASSERT failed. " #cond " is false.");                                    \
+      base::log_error("ASSERT failed. " #cond " is false.");                                       \
       return -1;                                                                                   \
     }                                                                                              \
   } while (false)

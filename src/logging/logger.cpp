@@ -37,6 +37,5 @@ void log_info(const StringView& msg) { Logger::get_default_instance().info(msg);
 void log_notice(const StringView& msg) { Logger::get_default_instance().notice(msg); }
 void log_warning(const StringView& msg) { Logger::get_default_instance().warn(msg); }
 void log_error(const StringView& msg) { Logger::get_default_instance().error(msg); }
-void log_critical(const StringView& msg) { Logger::get_default_instance().critical(msg); }
 
 } // namespace base
