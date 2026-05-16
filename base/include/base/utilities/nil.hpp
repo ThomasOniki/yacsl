@@ -7,10 +7,8 @@ struct Nil {
     return false;
   }
 
-  template <> constexpr bool operator==(const Nil& /*nil*/) const noexcept { return true; }
-  template <> constexpr bool operator==(const decltype(nullptr)& /*null*/) const noexcept {
-    return true;
-  }
+  constexpr bool operator==(Nil /*nil*/) const noexcept { return true; }
+  constexpr bool operator==(decltype(nullptr) /*null*/) const noexcept { return true; }
 
   // NOLINTNEXTLINE(google-explicit-constructor)
   template <typename T> constexpr operator T*() const noexcept { return nullptr; }

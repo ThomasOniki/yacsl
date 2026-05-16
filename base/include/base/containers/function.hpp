@@ -37,8 +37,8 @@ private:
 
   void* data_ = fixed_buffer_.data();
 
-  void (*cleanup_)(void* func, UnderlyingAllocator<Allocator>& allocator) = nullptr;
-  Ret (*call_)(void* func, Args... args)                                  = nullptr;
+  void (*cleanup_)(void* func, UnderlyingAllocator<Allocator>& alloc) = nullptr;
+  Ret (*call_)(void* func, Args... args)                              = nullptr;
 };
 
 template <typename Ret, typename... Args, usize BufSz, typename Allocator>
@@ -48,9 +48,9 @@ Function<Ret(Args...), BufSz, Allocator>::Function(auto&& func) {
   if constexpr (sizeof(Func) > sizeof(uchar) * BufSz || alignof(Func) > 8) {
     data_ = allocator().template allocate<Func>();
 
-    cleanup_ = [](void* data, UnderlyingAllocator<Allocator>& allocator) {
+    cleanup_ = [](void* data, UnderlyingAllocator<Allocator>& alloc) {
       static_cast<Func*>(data)->~Func();
-      allocator.template free<Func>(static_cast<Func*>(data));
+      alloc.template free<Func>(static_cast<Func*>(data));
     };
   } else {
     cleanup_ = [](void* data, UnderlyingAllocator<Allocator>& /*allocator*/) {

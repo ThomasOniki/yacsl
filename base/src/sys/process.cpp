@@ -253,7 +253,11 @@ Error<Process::SpawnError> Process::start(const char* const* argv, Stdio&& stdin
 
 // NOLINTNEXTLINE(readability-make-member-function-const, misc-no-recursion)
 Process::ExitStatus Process::wait() noexcept {
-  ExitStatus status = {.exit_code = 0, .signal{0}, .stopped{0}};
+  ExitStatus status = {
+      .exit_code = 0,
+      .signal    = Signal{0},
+      .stopped   = Signal{0},
+  };
   if (handle_ == -1) {
     return status;
   }
@@ -276,7 +280,7 @@ Process::ExitStatus Process::wait() noexcept {
   handle_ = -1;
 
   if (WIFEXITED(info)) {
-    status.exit_code = WEXITSTATUS(info);
+    status.exit_code = static_cast<u8>(WEXITSTATUS(info));
   }
   if (WIFSIGNALED(info)) {
     status.signal = Signal(WTERMSIG(info));

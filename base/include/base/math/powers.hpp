@@ -23,14 +23,4 @@ template <Integral T> constexpr T pow4(u32 exp) noexcept { return 1 << 2 * exp; 
 template <Integral T> constexpr T pow8(u32 exp) noexcept { return 1 << 3 * exp; }
 template <Integral T> constexpr T pow16(u32 exp) noexcept { return 1 << 4 * exp; }
 
-template <UnsignedIntegral T> constexpr u32 log2(T value) noexcept {
-#ifdef BASE_COMPILER_MSVC
-  unsigned long ret;
-  _BitScanReverse(&ret, value);
-  return static_cast<u32>(value);
-#else
-  return sizeof(T) * 8 - 1 - static_cast<u32>(__builtin_clz(value));
-#endif
-}
-
 } // namespace base

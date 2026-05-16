@@ -2,7 +2,9 @@
 
 #include "base/math/powers.hpp"
 #include "base/type_traits/categories.hpp"
+#include "base/type_traits/limits.hpp"
 #include "base/type_traits/sign.hpp"
+#include "base/utilities/extended_types.hpp"
 #include "base/utilities/type_aliases.hpp"
 #include <string.h>
 
@@ -70,7 +72,7 @@ template <SignedIntegral T> constexpr u32 itoa_bit_count(T value) noexcept {
 }
 template <SignedIntegral T> constexpr u32 itoa_octal_digit_count(T value) noexcept {
   if (value < 0) {
-    return 1 + itoa_octal_digit_count(static_cast<MakeUnsigned<T>>(value));
+    return 1 + itoa_octal_digit_count(static_cast<MakeUnsigned<T>>(-value));
   }
   return itoa_octal_digit_count(static_cast<MakeUnsigned<T>>(value));
 }
@@ -87,33 +89,84 @@ template <SignedIntegral T> constexpr u32 itoa_hex_digit_count(T value) noexcept
   return itoa_hex_digit_count(static_cast<MakeUnsigned<T>>(value));
 }
 
+// NOLINTBEGIN(google-runtime-int)
 template <UnsignedIntegral T> constexpr u32 itoa_bit_count(T value) noexcept {
-#ifdef BASE_COMPILER_MSVC
-  unsigned long log2;
-  _BitScanReverse(&log2, value);
-  return static_cast<u32>(log2 + 1);
-#else
-  return value ? u32{sizeof(T) * 8} - static_cast<u32>(__builtin_clzg(value)) : 1;
+  if (value == 0) {
+    return 1;
+  }
+#ifdef BASE_INT128_FOUND
+  if constexpr (SameAs<T, u128>) {
+    static_assert(sizeof(unsigned long long) == sizeof(u64));
+    if (value < Limits<u64>::max) [[likely]] {
+      return Limits<u64>::max_bits -
+             static_cast<u32>(__builtin_clzll(static_cast<unsigned long long>(value)));
+    }
+    return Limits<u128>::max_bits -
+           static_cast<u32>(__builtin_clzll(static_cast<unsigned long long>(value >> 64)));
+  } else
 #endif
+      if constexpr (SameAs<T, unsigned long long>) {
+    return Limits<T>::max_bits - static_cast<u32>(__builtin_clzll(value));
+  } else if constexpr (SameAs<T, unsigned long>) {
+    return Limits<T>::max_bits - static_cast<u32>(__builtin_clzl(value));
+  } else {
+    return Limits<int>::max_bits - static_cast<u32>(__builtin_clz(value));
+  }
 }
-template <UnsignedIntegral T> constexpr u32 itoa_octal_digit_count(T value) noexcept {
-#ifdef BASE_COMPILER_MSVC
-  unsigned long log2;
-  _BitScanReverse(&log2, value);
-  return log2 / 3 + 1;
-#else
-  return value ? (u32{sizeof(T) * 8} - static_cast<u32>(__builtin_clzg(value))) / 3 : 1;
-#endif
-}
+
+// This divides by 4 because 4 bits is one hex digit (2^4 == 16).
 template <UnsignedIntegral T> constexpr u32 itoa_hex_digit_count(T value) noexcept {
-#ifdef BASE_COMPILER_MSVC
-  unsigned long log2;
-  _BitScanReverse(&log2, value);
-  return log2 / 4 + 1;
-#else
-  return value ? u32{sizeof(T) * 8} / 4 - static_cast<u32>(__builtin_clzg(value)) / 4 : 1;
+  if (value == 0) {
+    return 1;
+  }
+#ifdef BASE_INT128_FOUND
+  if constexpr (SameAs<T, u128>) {
+    static_assert(sizeof(unsigned long long) == sizeof(u64));
+    if (value < Limits<u64>::max) [[likely]] {
+      return Limits<u64>::max_bits / 4 -
+             static_cast<u32>(__builtin_clzll(static_cast<unsigned long long>(value))) / 4;
+    }
+    return Limits<u128>::max_bits / 4 -
+           static_cast<u32>(__builtin_clzll(static_cast<unsigned long long>(value >> 64))) / 4;
+  } else
 #endif
+      if constexpr (SameAs<T, unsigned long long>) {
+    return Limits<T>::max_bits / 4 - static_cast<u32>(__builtin_clzll(value)) / 4;
+  } else if constexpr (SameAs<T, unsigned long>) {
+    return Limits<T>::max_bits / 4 - static_cast<u32>(__builtin_clzl(value)) / 4;
+  } else {
+    return Limits<int>::max_bits / 4 - static_cast<u32>(__builtin_clz(value)) / 4;
+  }
 }
+
+template <UnsignedIntegral T> constexpr u32 itoa_octal_digit_count(T value) noexcept {
+  if (value == 0) {
+    return 1;
+  }
+  u32 bits = 0;
+#ifdef BASE_INT128_FOUND
+  if constexpr (SameAs<T, u128>) {
+    static_assert(sizeof(unsigned long long) == sizeof(u64));
+    if (value < Limits<u64>::max) [[likely]] {
+      const auto ull = static_cast<unsigned long long>(value);
+      bits           = Limits<u64>::max_bits - static_cast<u32>(__builtin_clzll(ull));
+    } else {
+      const auto ull = static_cast<unsigned long long>(value >> 64);
+      bits           = Limits<u128>::max_bits - static_cast<u32>(__builtin_clzll(ull));
+    }
+  } else
+#endif
+      if constexpr (SameAs<T, unsigned long long>) {
+    bits = Limits<T>::max_bits - static_cast<u32>(__builtin_clzll(value));
+  } else if constexpr (SameAs<T, unsigned long>) {
+    bits = Limits<T>::max_bits - static_cast<u32>(__builtin_clzl(value));
+  } else {
+    bits = Limits<int>::max_bits - static_cast<u32>(__builtin_clz(value));
+  }
+  // This divides by 3 for the same reason. The +2s are to round up.
+  return (bits + 2) / 3;
+}
+// NOLINTEND(google-runtime-int)
 
 // NOLINTNEXTLINE(readability-function-cognitive-complexity, google-readability-function-size)
 template <UnsignedIntegral T> constexpr u32 itoa_digit_count(T value) noexcept {

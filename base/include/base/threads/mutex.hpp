@@ -18,7 +18,14 @@ public:
   void unlock() { pthread_mutex_unlock(&handle_); }
 
 private:
+#ifdef BASE_COMPILER_GCC
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
   pthread_mutex_t handle_ = PTHREAD_MUTEX_INITIALIZER;
+#pragma GCC diagnostic pop
+#else
+  pthread_mutex_t handle_ = PTHREAD_MUTEX_INITIALIZER;
+#endif
 };
 
 class MutexLock {

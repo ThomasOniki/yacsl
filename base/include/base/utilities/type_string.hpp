@@ -9,7 +9,11 @@ namespace base {
 namespace internal {
 template <typename T> constexpr StringView type_string_impl() {
   constexpr StringView pretty_function = __PRETTY_FUNCTION__;
-  constexpr usize offset = StringView("StringView base::internal::type_string_impl() [T = ").size();
+  constexpr usize      offset =
+#ifdef BASE_COMPILER_GCC
+      StringView("with ").size() +
+#endif
+      StringView("StringView base::internal::type_string_impl() [T = ").size();
   return {pretty_function.begin() + offset, pretty_function.end() - 1};
 }
 } // namespace internal

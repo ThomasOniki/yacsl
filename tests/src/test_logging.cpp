@@ -13,7 +13,7 @@
 static int& status() {
   static int status;
   return status;
-};
+}
 
 static void check(const char* expected) {
   static constexpr size_t buf_size     = 4096;
@@ -63,8 +63,8 @@ int main() {
   logger.trace3("Hello, {}", "world!");
   check("[TRACE 3] Hello, world!");
 
-  logger.trace2("int: {}, hex: {x}.", 5, 0x3a);
-  check("[TRACE 2] int: 5, hex: 3a.");
+  logger.trace2("decimal: {}, hex: {x}, binary: {b}, octal: {o}.", 5, 0x3a, 0b101, 075);
+  check("[TRACE 2] decimal: 5, hex: 3a, binary: 101, octal: 75.");
 
   logger.trace1("aligned: {010}, centered: {*^7}, left, hex: {<4x}.", 96, 737, 0xf3a);
   check("[TRACE 1] aligned: 0000000096, centered: **737**, left, hex: f3a .");
