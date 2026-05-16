@@ -19,74 +19,75 @@ no_libcpp = get_option('no_libcpp')
 
 potential_cpp_flags = []
 
-potential_cpp_flags += [
-  'true clang, emscripten',
-  '-Wno-c++98-compat',
-  '-Wno-c++98-compat-pedantic',
-  '-Wno-unsafe-buffer-usage',
-  '-Wno-switch-default',
-  '-Wno-padded',
-]
-potential_cpp_flags += [
-  'true emscripten',
-  '-Wno-disabled-macro-expansion',
-  '-pthread', 'true gcc',
-  '-Wno-cast-align',
-  '-Wno-padded',
-  '-Wno-multiple-inheritance',
-  '-Wno-unused-const-variable',
-  '-Wno-effc++',
-]
-potential_cpp_flags += [
-  f'pub @no_libcpp@',
-  '-DBASE_NO_LIBCPP', f'pub @no_libcpp@ clang, emscripten, gcc',
-  '-nostdinc++',
-  '-nostdlib++',
-]
-
 host_system = host_machine.system()
 is_unix = host_system == 'linux' or host_system == 'darwin' or host_system == 'freebsd'
-potential_cpp_flags += [
-  f'pub @is_unix@',
-  '-DBASE_PLATFORM_UNIX',
-]
 
 if cxx_id == 'clang' or cxx_id == 'emscripten'
   lifetimebound_attribute = '[[clang::lifetimebound]]'
 else
   lifetimebound_attribute = ''
 endif
+
 potential_cpp_flags += [
+  'true clang, emscripten',
+  [
+    '-Wno-c++98-compat',
+    '-Wno-c++98-compat-pedantic',
+    '-Wno-unsafe-buffer-usage',
+    '-Wno-switch-default',
+    '-Wno-padded',
+  ],
+  'true emscripten',
+  ['-Wno-disabled-macro-expansion', '-pthread'],
+  'true gcc',
+  [
+    '-Wno-cast-align',
+    '-Wno-padded',
+    '-Wno-multiple-inheritance',
+    '-Wno-unused-const-variable',
+    '-Wno-effc++',
+  ],
+  f'pub @no_libcpp@',
+  ['-DBASE_NO_LIBCPP'],
+  f'pub @no_libcpp@ clang, emscripten, gcc',
+  [
+    '-nostdinc++',
+    '-nostdlib++',
+  ],
+  f'pub @is_unix@',
+  ['-DBASE_PLATFORM_UNIX'],
   'pub true',
-  '-DBASE_COMPILER_' + cxx_id.to_upper(), f'-DBASE_LIFETIMEBOUND=@lifetimebound_attribute@',
+  [
+    '-DBASE_COMPILER_' + cxx_id.to_upper(), f'-DBASE_LIFETIMEBOUND=@lifetimebound_attribute@',
+  ],
 ]
 
 add_private = false
 add_public = false
-foreach flag : potential_cpp_flags
-  if (
-    flag.startswith('true')
-    or flag.startswith('false')
-    or flag.startswith('pub')
-  )
-    add_private = flag.startswith('true') and (
-      flag == 'true'
-      or flag.contains(f' @cxx_id@, ')
-      or flag.endswith(f' @cxx_id@')
+index = 0
+foreach elem : potential_cpp_flags
+  if (index % 2 == 0)
+    add_private = elem.startswith('true') and (
+      elem == 'true'
+      or elem.contains(f' @cxx_id@, ')
+      or elem.endswith(f' @cxx_id@')
     )
-    add_public = flag.startswith('pub true') and (
-      flag == 'pub true'
-      or flag.contains(f' @cxx_id@, ')
-      or flag.endswith(f' @cxx_id@')
+    add_public = elem.startswith('pub true') and (
+      elem == 'pub true'
+      or elem.contains(f' @cxx_id@, ')
+      or elem.endswith(f' @cxx_id@')
     )
   else
-    if add_private
-      private_cpp_flags += flag
-    endif
-    if add_public
-      public_cpp_flags += flag
-    endif
+    foreach flag : elem
+      if add_private
+        private_cpp_flags += elem
+      endif
+      if add_public
+        public_cpp_flags += elem
+      endif
+    endforeach
   endif
+  index += 1
 endforeach
 
 subdir('base')
