@@ -261,6 +261,9 @@ private:
   template <T Value> static constexpr StringView table_entry() {
     constexpr StringView pretty_function = __PRETTY_FUNCTION__;
     constexpr usize      offset =
+#ifdef BASE_COMPILER_GCC
+        StringView("with ").size() +
+#endif
         StringView("static StringView base::Formatter<>::table_entry() [T = , Value = ").size() +
         2 * TYPE_STRING<T>.size();
     return {pretty_function.begin() + offset, pretty_function.end() - 1};
