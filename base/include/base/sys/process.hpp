@@ -6,7 +6,7 @@
 #include "base/containers/stack_array.hpp"
 #include "base/containers/string_view.hpp"
 #include "base/containers/vector.hpp"
-#include "base/logging/errors.hpp"
+#include "base/logging/panic.hpp"
 #include "base/sys/common.hpp"
 #include "base/sys/file.hpp"
 #include "base/type_traits/range_like.hpp"

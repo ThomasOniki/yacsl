@@ -1,7 +1,7 @@
 #include "base/sys/process.hpp"
 #include "base/containers/error.hpp"
 #include "base/containers/stack_array.hpp"
-#include "base/logging/errors.hpp"
+#include "base/logging/panic.hpp"
 #include "base/sys/errno.hpp"
 #include "base/utilities/move_forward.hpp"
 #include "base/utilities/nil.hpp"
