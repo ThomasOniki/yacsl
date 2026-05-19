@@ -17,6 +17,7 @@ namespace base {
 
 class Process {
 public:
+  // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access)
   class Stdio {
   public:
     enum class Type : u8 {
@@ -36,7 +37,6 @@ public:
     Stdio(const StringView& path, FileOpenFlags flags) noexcept
         : file_info_{.path = nullptr, .flags = flags}, type_(File) {
       CString cstr(path);
-      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-union-access)
       file_info_.path = cstr.data();
     }
 
@@ -48,18 +48,40 @@ public:
     }
 
     Stdio(BASE_LIFETIMEBOUND Stdio& pipe) noexcept : pipe_(&pipe), type_(Pipe) {
-      debug_panic_if(pipe.type_ != Buffer, "In Process::Stdio(pipe), pipe must be a buffer.");
-      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-union-access)
-      debug_panic_if(pipe.process_ == nullptr, "In Process::Stdio(pipe), pipe must be acquired "
-                                               "with other_process.get_{stdout, stderr}().");
+      debug_panic_if(pipe.type_ != Buffer, "In Process::Stdio(Stdio& pipe), pipe must be a buffer");
+      debug_panic_if(pipe.buffer_info_.process == nullptr,
+                     "In Process::Stdio(Stdio& pipe) pipe must be a Stdio& acquired with "
+                     "process.get_{stdout, stderr}.");
     }
 
     ~Stdio() noexcept = default;
 
     Stdio& operator=(const Stdio&) = delete;
 
+    void  write(const StringView& data) noexcept;
+    void  write(const BasicStringView<uchar>& data) noexcept;
+    usize read(char* buf, usize size) noexcept;
+    usize read(uchar* buf, usize size) noexcept;
+
+    void seek_begin(isize offset) noexcept;
+    void seek_end(isize offset) noexcept;
+    void seek_cursor(isize offset) noexcept;
+
+    [[nodiscard]] usize get_cursor() const noexcept {
+      assert_buffer("get_cursor");
+      return buffer_info_.cursor_pos;
+    }
+
   private:
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-union-access)
+    void assert_buffer(StringView method) const noexcept {
+      debug_panic_if(type_ != Buffer,
+                     "Process::Stdio::{} must be called on an instance that is a buffer.", method);
+      debug_panic_if(buffer_info_.process == nullptr,
+                     "Process::Stdio::{} must be called on an Stdio& acquired from process.get_{}.",
+                     method, "{stdout, stderr}");
+    }
+
+  private:
     Stdio& operator=(Stdio&&) = default;
     Stdio(Stdio&&) noexcept   = default;
     Stdio() noexcept          = default;
@@ -69,17 +91,23 @@ public:
       alignas(16) const char* path;
       FileOpenFlags flags;
     };
+    struct BufferInfo {
+      alignas(32) Process* process = nullptr;
+      FileHandle handle;
+      usize      cursor_pos;
+    };
 
     union {
-      FileInfo file_info_;
-      Process* process_ = nullptr;
-      Stdio*   pipe_;
+      FileInfo   file_info_;
+      BufferInfo buffer_info_{};
+      Stdio*     pipe_;
     };
 
     Type type_{0};
 
     friend class Process;
   };
+  // NOLINTEND(cppcoreguidelines-pro-type-union-access)
 
   Process() noexcept = default;
   ~Process() noexcept;
@@ -143,6 +171,7 @@ public:
 
   void send_signal(Signal signal) noexcept;
 
+  Stdio& get_stdin() noexcept BASE_LIFETIMEBOUND { return stdin_; }
   Stdio& get_stdout() noexcept BASE_LIFETIMEBOUND { return stdout_; }
   Stdio& get_stderr() noexcept BASE_LIFETIMEBOUND { return stderr_; }
 
