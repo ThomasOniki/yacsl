@@ -11,7 +11,7 @@ namespace base {
 template <typename T, usize N, typename SizeT = ConditionalT<(N > Limits<u32>::max), usize, u32>>
 class StackArray {
 public:
-  [[nodiscard]] constexpr usize size() const noexcept { return N; }
+  [[nodiscard]] constexpr SizeT size() const noexcept { return static_cast<SizeT>(N); }
 
   [[nodiscard]] constexpr T* data() noexcept BASE_LIFETIMEBOUND { return static_cast<T*>(data_); }
   [[nodiscard]] constexpr const T* data() const noexcept BASE_LIFETIMEBOUND {
