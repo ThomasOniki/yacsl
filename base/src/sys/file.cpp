@@ -64,9 +64,7 @@ static UnsignedResult<unsigned int, File::OpenError> open_file(const char*   cst
     panic("::open() failed: {}", errno_str());
   }
   if (seek_end) {
-    if (lseek(fildes, 0, SEEK_END) == -1) [[unlikely]] {
-      panic("::lseek() failed: {}", errno_str());
-    }
+    panic_if(lseek(fildes, 0, SEEK_END) == -1, "::lseek() failed: {}", errno_str());
   }
   return static_cast<unsigned int>(fildes);
 }
@@ -102,57 +100,44 @@ Error<File::OpenError> File::open(const char* path, FileOpenFlags flags) noexcep
 
 void File::close() noexcept {
   if (is_open()) {
-    if (::close(handle_) == -1) [[unlikely]] {
-      panic("::close() failed: {}", errno_str());
-    }
+    panic_if(::close(handle_) == -1, "::close() failed: {}", errno_str());
     handle_ = NIL_FILE_HANDLE;
   }
 }
 
-// NOLINTNEXTLINE(readability-make-member-function-const)
+// NOLINTBEGIN(readability-make-member-function-const)
 void File::write(const StringView& data) noexcept {
-  if (::write(handle_, data.data(), data.size()) == -1) [[unlikely]] {
-    panic("::write() failed: {}", errno_str());
-  }
+  panic_if(::write(handle_, data.data(), data.size()) == -1, "::write() failed: {}", errno_str());
 }
-// NOLINTNEXTLINE(readability-make-member-function-const)
 void File::write(const BasicStringView<uchar>& data) noexcept {
-  if (::write(handle_, data.data(), data.size()) == -1) [[unlikely]] {
-    panic("::write() failed: {}", errno_str());
-  }
+  panic_if(::write(handle_, data.data(), data.size()) == -1, "::write() failed: {}", errno_str());
 }
-// NOLINTNEXTLINE(readability-make-member-function-const)
-void File::read(char* buf, usize size) noexcept {
-  if (::read(handle_, buf, size) == -1) [[unlikely]] {
-    panic("::read() failed: {}", errno_str());
-  }
+usize File::read(char* buf, usize size) noexcept {
+  ssize_t result = ::read(handle_, buf, size);
+  panic_if(result == -1, "::read() failed: {}", errno_str());
+  return static_cast<usize>(result);
 }
-// NOLINTNEXTLINE(readability-make-member-function-const)
-void File::read(uchar* buf, usize size) noexcept {
-  if (::read(handle_, buf, size) == -1) [[unlikely]] {
-    panic("::read() failed: {}", errno_str());
-  }
+usize File::read(uchar* buf, usize size) noexcept {
+  ssize_t result = ::read(handle_, buf, size);
+  panic_if(result == -1, "::read() failed: {}", errno_str());
+  return static_cast<usize>(result);
 }
-usize File::get_cursor() const noexcept { return cursor_pos_; }
-
-// NOLINTNEXTLINE(readability-make-member-function-const)
 void File::seek_begin(isize offset) noexcept {
-  if (::lseek(handle_, static_cast<off_t>(offset), SEEK_SET) == -1) [[unlikely]] {
-    panic("::lseek() failed: {}", errno_str());
-  }
+  off_t result = ::lseek(handle_, static_cast<off_t>(offset), SEEK_SET);
+  panic_if(result == -1, "::lseek() failed: {}", errno_str());
+  cursor_pos_ = static_cast<usize>(result);
 }
-// NOLINTNEXTLINE(readability-make-member-function-const)
 void File::seek_end(isize offset) noexcept {
-  if (::lseek(handle_, static_cast<off_t>(offset), SEEK_END) == -1) [[unlikely]] {
-    panic("::lseek() failed: {}", errno_str());
-  }
+  off_t result = ::lseek(handle_, static_cast<off_t>(offset), SEEK_END);
+  panic_if(result == -1, "::lseek() failed: {}", errno_str());
+  cursor_pos_ = static_cast<usize>(result);
 }
-// NOLINTNEXTLINE(readability-make-member-function-const)
 void File::seek_cursor(isize offset) noexcept {
-  if (::lseek(handle_, static_cast<off_t>(offset), SEEK_CUR) == -1) [[unlikely]] {
-    panic("::lseek() failed: {}", errno_str());
-  }
+  off_t result = ::lseek(handle_, static_cast<off_t>(offset), SEEK_CUR);
+  panic_if(result == -1, "::lseek() failed: {}", errno_str());
+  cursor_pos_ = static_cast<usize>(result);
 }
+// NOLINTEND(readability-make-member-function-const)
 
 } // namespace base
 
