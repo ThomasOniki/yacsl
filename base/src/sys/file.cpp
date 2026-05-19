@@ -3,7 +3,7 @@
 #include "base/containers/error.hpp"
 #include "base/containers/string_view.hpp"
 #include "base/containers/unsigned_result.hpp"
-#include "base/logging/errors.hpp"
+#include "base/logging/panic.hpp"
 #include "base/sys/common.hpp"
 #include "base/sys/errno.hpp"
 #include "base/utilities/nil.hpp"

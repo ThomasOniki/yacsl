@@ -2,7 +2,7 @@
 
 #include "base/containers/string_view.hpp"
 #include "base/logging/common.hpp"
-#include "base/logging/errors.hpp"
+#include "base/logging/panic.hpp"
 #include "base/type_traits/trivial.hpp"
 #include "base/utilities/move_forward.hpp"
 #include "base/utilities/nil.hpp"
