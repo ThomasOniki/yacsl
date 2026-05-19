@@ -267,6 +267,19 @@ static int test_process_pipe() {
   return ret;
 }
 
+static int test_buffer() {
+  int                        ret = 0;
+  base::StackArray<char, 64> buf{};
+
+  Process cat1;
+  cat1.start({"cat"}, Buffer, Buffer, ParentStderr);
+  cat1.get_stdin().write("buffer test");
+  EXPECT_EQ(cat1.get_stdout().read(buf.data(), buf.size()), 11);
+  EXPECT_STREQ(buf.data(), "buffer test");
+  cat1.wait();
+  return ret;
+}
+
 int main() {
   int ret = 0;
 
@@ -276,6 +289,7 @@ int main() {
     EXPECT(test_compile_c() == 0);
     EXPECT(test_all_run_c() == 0);
     EXPECT(test_process_pipe() == 0);
+    EXPECT(test_buffer() == 0);
   }
 
   return ret;
