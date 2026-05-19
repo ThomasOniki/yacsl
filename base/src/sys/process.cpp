@@ -18,6 +18,49 @@
 
 namespace base {
 
+// NOLINTBEGIN(readability-make-member-function-const, cppcoreguidelines-pro-type-union-access)
+void Process::Stdio::write(const StringView& data) noexcept {
+  assert_buffer("write");
+  panic_if(::write(buffer_info_.handle, data.data(), data.size()) == -1, "::write() failed: {}",
+           errno_str());
+}
+void Process::Stdio::write(const BasicStringView<uchar>& data) noexcept {
+  assert_buffer("write");
+  panic_if(::write(buffer_info_.handle, data.data(), data.size()) == -1, "::write() failed: {}",
+           errno_str());
+}
+usize Process::Stdio::read(char* buf, usize size) noexcept {
+  assert_buffer("read");
+  ssize_t result = ::read(buffer_info_.handle, buf, size);
+  panic_if(result == -1, "::read() failed: {}", errno_str());
+  return static_cast<usize>(result);
+}
+usize Process::Stdio::read(uchar* buf, usize size) noexcept {
+  assert_buffer("read");
+  ssize_t result = ::read(buffer_info_.handle, buf, size);
+  panic_if(result == -1, "::read() failed: {}", errno_str());
+  return static_cast<usize>(result);
+}
+void Process::Stdio::seek_begin(isize offset) noexcept {
+  assert_buffer("seek_begin");
+  off_t result = ::lseek(buffer_info_.handle, static_cast<off_t>(offset), SEEK_SET);
+  panic_if(result == -1, "::lseek() failed: {}", errno_str());
+  buffer_info_.cursor_pos = static_cast<usize>(result);
+}
+void Process::Stdio::seek_end(isize offset) noexcept {
+  assert_buffer("seek_end");
+  off_t result = ::lseek(buffer_info_.handle, static_cast<off_t>(offset), SEEK_END);
+  panic_if(result == -1, "::lseek() failed: {}", errno_str());
+  buffer_info_.cursor_pos = static_cast<usize>(result);
+}
+void Process::Stdio::seek_cursor(isize offset) noexcept {
+  assert_buffer("seek_cursor");
+  off_t result = ::lseek(buffer_info_.handle, static_cast<off_t>(offset), SEEK_CUR);
+  panic_if(result == -1, "::lseek() failed: {}", errno_str());
+  buffer_info_.cursor_pos = static_cast<usize>(result);
+}
+// NOLINTEND(readability-make-member-function-const, cppcoreguidelines-pro-type-union-access)
+
 static bool strip_flag(FileOpenFlags* flags, FileOpenFlags flag) {
   const FileOpenFlags stripped = *flags & ~flag;
   if (stripped != *flags) {
@@ -126,16 +169,22 @@ void Process::handle_piped_stdio(void* voidp_file_actions) noexcept {
     pipe_child_stdout(actions, stderr_.type_, STDERR_FILENO, stderr_pipe_);
   }
 
+  if (stdin_.type_ == Buffer) {
+    stdin_.buffer_info_.process = this;
+    stdin_.buffer_info_.handle  = stdin_pipe_[1];
+  }
   if (stdout_.type_ == Buffer) {
-    stdout_.process_ = this;
+    stdout_.buffer_info_.process = this;
+    stdout_.buffer_info_.handle  = stdout_pipe_[0];
   }
   if (stderr_.type_ == Buffer) {
-    stderr_.process_ = this;
+    stderr_.buffer_info_.process = this;
+    stderr_.buffer_info_.handle  = stderr_pipe_[0];
   }
 
   if (stdin_.type_ == Pipe) {
     const Stdio*   pipe          = stdin_.pipe_;
-    const Process* piped_process = pipe->process_;
+    const Process* piped_process = pipe->buffer_info_.process;
     if (pipe == &piped_process->stdout_) {
       CHECK_RETURN(
           posix_spawn_file_actions_adddup2(actions, piped_process->stdout_pipe_[0], STDIN_FILENO));
@@ -262,7 +311,28 @@ Process::ExitStatus Process::wait() noexcept {
     return status;
   }
   if (stdin_.type_ == Pipe) {
-    stdin_.pipe_->process_->wait();
+    stdin_.pipe_->buffer_info_.process->wait();
+  }
+
+  if (stdin_.type_ == Buffer || stdin_.type_ == ParentStdout || stdin_.type_ == ParentStderr) {
+    if (stdin_.type_ == ParentStdout) {
+      CHECK_ERRNO(dup2(stdin_pipe_[1], STDOUT_FILENO));
+    } else if (stdin_.type_ == ParentStderr) {
+      CHECK_ERRNO(dup2(stdin_pipe_[1], STDERR_FILENO));
+    }
+    CHECK_ERRNO(close(stdin_pipe_[1]));
+  }
+  if (stdout_.type_ == Buffer || stdout_.type_ == ParentStdin) {
+    if (stdout_.type_ == ParentStdin) {
+      CHECK_ERRNO(dup2(stdout_pipe_[0], STDIN_FILENO));
+    }
+    CHECK_ERRNO(close(stdout_pipe_[0]));
+  }
+  if (stderr_.type_ == Buffer || (stderr_.type_ == ParentStdin && stdout_.type_ != ParentStdin)) {
+    if (stderr_.type_ == ParentStdin) {
+      CHECK_ERRNO(dup2(stderr_pipe_[0], STDIN_FILENO));
+    }
+    CHECK_ERRNO(close(stderr_pipe_[0]));
   }
 
   int info = 0;
@@ -287,28 +357,6 @@ Process::ExitStatus Process::wait() noexcept {
   }
   if (WIFSTOPPED(info)) {
     status.stopped = Signal(WSTOPSIG(info));
-  }
-
-  if (stdin_.type_ == Buffer || stdin_.type_ == ParentStdout || stdin_.type_ == ParentStderr) {
-    if (stdin_.type_ == ParentStdout) {
-      CHECK_ERRNO(dup2(stdin_pipe_[1], STDOUT_FILENO));
-    } else if (stdin_.type_ == ParentStderr) {
-      CHECK_ERRNO(dup2(stdin_pipe_[1], STDERR_FILENO));
-    }
-    CHECK_ERRNO(close(stdin_pipe_[1]));
-  }
-
-  if (stdout_.type_ == Buffer || stdout_.type_ == ParentStdin) {
-    if (stdout_.type_ == ParentStdin) {
-      CHECK_ERRNO(dup2(stdout_pipe_[0], STDIN_FILENO));
-    }
-    CHECK_ERRNO(close(stdout_pipe_[0]));
-  }
-  if (stderr_.type_ == Buffer || (stderr_.type_ == ParentStdin && stdout_.type_ != ParentStdin)) {
-    if (stderr_.type_ == ParentStdin) {
-      CHECK_ERRNO(dup2(stderr_pipe_[0], STDIN_FILENO));
-    }
-    CHECK_ERRNO(close(stderr_pipe_[0]));
   }
 
   return status;
