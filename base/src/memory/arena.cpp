@@ -1,5 +1,5 @@
 #include "base/memory/arena.hpp"
-#include "base/logging/errors.hpp"
+#include "base/logging/panic.hpp"
 #include "base/utilities/type_aliases.hpp"
 #include <stdio.h>
 #include <stdlib.h>
