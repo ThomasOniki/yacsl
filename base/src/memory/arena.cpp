@@ -1,4 +1,5 @@
 #include "base/memory/arena.hpp"
+#include "base/logging/errors.hpp"
 #include "base/utilities/type_aliases.hpp"
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,11 +27,7 @@ bool Arena::reserve(usize capacity) noexcept {
   end_   = begin_ + capacity;
   ptr_   = begin_ + sizeof(Metadata);
 
-  if (begin_ == nullptr) [[unlikely]] {
-    perror("::malloc() failed");
-    return false;
-  }
-
+  panic_if(begin_ == nullptr, "[Arena] malloc failed.");
   new (begin_) Metadata{metadata};
   return true;
 }
