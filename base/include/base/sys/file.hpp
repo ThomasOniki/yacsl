@@ -29,12 +29,12 @@ public:
   [[nodiscard]] Error<OpenError> open(const char* path, FileOpenFlags flags) noexcept;
   void                           close() noexcept;
 
-  void write(const StringView& data) noexcept;
-  void write(const BasicStringView<uchar>& data) noexcept;
-  void read(char* buf, usize size) noexcept;
-  void read(uchar* buf, usize size) noexcept;
+  void  write(const StringView& data) noexcept;
+  void  write(const BasicStringView<uchar>& data) noexcept;
+  usize read(char* buf, usize size) noexcept;
+  usize read(uchar* buf, usize size) noexcept;
 
-  [[nodiscard]] usize get_cursor() const noexcept;
+  [[nodiscard]] usize get_cursor() const noexcept { return cursor_pos_; }
 
   void seek_begin(isize offset) noexcept;
   void seek_end(isize offset) noexcept;
