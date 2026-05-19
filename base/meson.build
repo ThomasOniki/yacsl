@@ -4,7 +4,7 @@ sources = [
   'src/logging/formatter.cpp',
   'src/containers/char_buffer.cpp',
   'src/logging/logger.cpp',
-  'src/utilities/terminate.cpp',
+  'src/logging/panic.cpp',
   'src/sys/file.cpp',
   'src/sys/process.cpp',
   'src/sys/errno.cpp',

@@ -4,9 +4,10 @@
 #include "base/logging/common.hpp"
 #include "base/logging/logger.hpp"
 #include "base/utilities/move_forward.hpp"
-#include "base/utilities/terminate.hpp"
 
 namespace base {
+
+[[noreturn]] void terminate() noexcept;
 
 template <typename... Args>
 [[noreturn]]
