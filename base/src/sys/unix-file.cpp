@@ -1,0 +1,79 @@
+#ifndef BASE_PLATFORM_WINDOWS
+
+#include "base/containers/cstring.hpp"
+#include "base/containers/error.hpp"
+#include "base/containers/string_view.hpp"
+#include "base/logging/panic.hpp"
+#include "base/sys/common.hpp"
+#include "base/sys/file.hpp"
+#include "base/utilities/nil.hpp"
+#include "base/utilities/type_aliases.hpp"
+#include "unix-utils.hpp"
+#include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+namespace base {
+
+Error<File::OpenError> File::open(const char* path, FileOpenFlags flags) noexcept {
+  const bool seek_end = strip_flag(&flags, FileOpenFlags::SeekEnd) &&
+                        (flags & FileOpenFlags::Trunc) == FileOpenFlags::None;
+  handle_             = ::open(path, unix_flags(flags), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+  if (handle_ == -1) [[unlikely]] {
+    if (errno == ENOENT) {
+      return File::OpenError::FileNotFound;
+    }
+    panic("::open() failed: {}", errno_str());
+  }
+  if (seek_end) {
+    this->seek_end(0);
+  }
+  return NIL;
+}
+
+void File::close() noexcept {
+  if (is_open()) {
+    panic_if(::close(handle_) == -1, "::close() failed: {}", errno_str());
+    handle_ = NIL_FILE_HANDLE;
+  }
+}
+
+// NOLINTBEGIN(readability-make-member-function-const)
+usize File::write(const BasicStringView<uchar>& data) noexcept {
+  isize result = ::write(handle_, data.data(), data.size());
+  panic_if(result == -1, "::write() failed: {}", errno_str());
+  return static_cast<usize>(result);
+}
+usize File::read(uchar* buf, usize size) noexcept {
+  isize result = ::read(handle_, buf, size);
+  panic_if(result == -1, "::read() failed: {}", errno_str());
+  return static_cast<usize>(result);
+}
+
+void File::seek_begin(isize offset) noexcept {
+  off_t result = ::lseek(handle_, static_cast<off_t>(offset), SEEK_SET);
+  panic_if(result == -1, "::lseek() failed: {}", errno_str());
+  cursor_pos_ = static_cast<usize>(result);
+}
+void File::seek_end(isize offset) noexcept {
+  off_t result = ::lseek(handle_, static_cast<off_t>(offset), SEEK_END);
+  panic_if(result == -1, "::lseek() failed: {}", errno_str());
+  cursor_pos_ = static_cast<usize>(result);
+}
+void File::seek_cursor(isize offset) noexcept {
+  off_t result = ::lseek(handle_, static_cast<off_t>(offset), SEEK_CUR);
+  panic_if(result == -1, "::lseek() failed: {}", errno_str());
+  cursor_pos_ = static_cast<usize>(result);
+}
+// NOLINTEND(readability-make-member-function-const)
+
+} // namespace base
+
+#ifdef BASE_LSP_ONLY
+template class base::BasicCString<char, 8>;
+template base::BasicCString<char, 8>::BasicCString(const BasicStringView<char>& str);
+#endif
+
+#endif

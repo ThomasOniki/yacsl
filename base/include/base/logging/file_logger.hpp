@@ -14,10 +14,10 @@ namespace base {
 class FileLogger {
 public:
   explicit FileLogger(const StringView& file_path)
-      : file_(file_path, FileOpenFlags::Write | FileOpenFlags::Create | FileOpenFlags::Append) {}
+      : file_(file_path, FileOpenFlags::Write | FileOpenFlags::Create | FileOpenFlags::SeekEnd) {}
 
   explicit FileLogger(const StringView& file_path, LogLevel level)
-      : file_(file_path, FileOpenFlags::Write | FileOpenFlags::Create | FileOpenFlags::Append),
+      : file_(file_path, FileOpenFlags::Write | FileOpenFlags::Create | FileOpenFlags::SeekEnd),
         level_(level) {}
 
   template <typename... Args>

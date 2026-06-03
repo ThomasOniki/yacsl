@@ -20,7 +20,7 @@ no_libcpp = get_option('no_libcpp')
 potential_cpp_flags = []
 
 host_system = host_machine.system()
-is_unix = host_system == 'linux' or host_system == 'darwin' or host_system == 'freebsd'
+is_windows = host_system == 'windows'
 
 if cxx_id == 'clang' or cxx_id == 'emscripten'
   lifetimebound_attribute = '[[clang::lifetimebound]]'
@@ -54,8 +54,8 @@ potential_cpp_flags += [
     '-nostdinc++',
     '-nostdlib++',
   ],
-  f'pub @is_unix@',
-  ['-DBASE_PLATFORM_UNIX'],
+  f'pub @is_windows@',
+  ['-DBASE_PLATFORM_WINDOWS'],
   'pub true',
   [
     '-DBASE_COMPILER_' + cxx_id.to_upper(), f'-DBASE_LIFETIMEBOUND=@lifetimebound_attribute@',

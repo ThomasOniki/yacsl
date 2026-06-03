@@ -10,12 +10,18 @@
 #include <string.h>
 #include <unistd.h>
 
+#ifdef S_IRUSR
+static constexpr int OPEN_PERMISSIONS = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+#else
+static constexpr int OPEN_PERMISSIONS = 0;
+#endif
+
 static int redirect(int stream, const char* path) {
   // NOLINTNEXTLINE(android-cloexec-dup)
   const int old = dup(stream);
   assert(old != -1);
   // NOLINTNEXTLINE(android-cloexec-open)
-  const int file = open(path, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+  const int file = open(path, O_WRONLY | O_CREAT | O_TRUNC, OPEN_PERMISSIONS);
   assert(file != -1);
   assert(dup2(file, stream) != -1);
   assert(close(file) != -1);
@@ -88,9 +94,11 @@ struct Redirected {
 static int check_file(const char* path, base::StringView expected) {
   int ret = 0;
 
-  const int fildes = path == nullptr ? STDIN_FILENO
-                                     : open(path, O_RDWR | O_CREAT | O_CLOEXEC,
-                                            S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+#ifndef O_CLOEXEC
+#define O_CLOEXEC 0
+#endif
+  const int fildes =
+      path == nullptr ? STDIN_FILENO : open(path, O_RDWR | O_CREAT | O_CLOEXEC, OPEN_PERMISSIONS);
   assert(fildes != -1);
 
   base::StackArray<char, 65, size_t> buf            = {};

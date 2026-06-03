@@ -16,7 +16,7 @@ things_to_test = [
   'threads',
 ]
 
-if cxx_id != 'emscripten'
+if cxx_id != 'emscripten' and not is_windows
   things_to_test += 'process'
 endif
 if not no_libcpp

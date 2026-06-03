@@ -58,10 +58,17 @@ public:
 
     Stdio& operator=(const Stdio&) = delete;
 
-    void  write(const StringView& data) noexcept;
-    void  write(const BasicStringView<uchar>& data) noexcept;
-    usize read(char* buf, usize size) noexcept;
+    usize write(const BasicStringView<uchar>& data) noexcept;
+
+    usize write(const StringView& data) noexcept {
+      return write( // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+          BasicStringView<uchar>(reinterpret_cast<const uchar*>(data.data()), data.size()));
+    }
+
     usize read(uchar* buf, usize size) noexcept;
+
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    usize read(char* buf, usize size) noexcept { return read(reinterpret_cast<uchar*>(buf), size); }
 
     void seek_begin(isize offset) noexcept;
     void seek_end(isize offset) noexcept;
@@ -110,7 +117,7 @@ public:
   // NOLINTEND(cppcoreguidelines-pro-type-union-access)
 
   Process() noexcept = default;
-  ~Process() noexcept;
+  ~Process() noexcept { wait(); }
 
   Process(const Process&)            = delete;
   Process(Process&&)                 = delete;
