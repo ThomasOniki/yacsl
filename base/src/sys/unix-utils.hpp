@@ -1,13 +1,47 @@
-#include "base/sys/errno.hpp"
+#ifndef BASE_PLATFORM_WINDOWS
+
+#pragma once
+
 #include "base/containers/string_view.hpp"
+#include "base/sys/common.hpp"
 #include <errno.h>
+#include <fcntl.h>
 
 namespace base {
 
-StringView errno_str() noexcept { return errno_str(errno); }
+inline bool strip_flag(FileOpenFlags* flags, FileOpenFlags flag) noexcept {
+  const FileOpenFlags stripped = *flags & ~flag;
+  if (stripped != *flags) {
+    *flags = stripped;
+    return true;
+  }
+  return false;
+}
+
+inline int unix_flags(FileOpenFlags flags) noexcept {
+  unsigned int ret = 0;
+
+  if (strip_flag(&flags, FileOpenFlags::Trunc)) {
+    ret |= O_TRUNC;
+  }
+  if (strip_flag(&flags, FileOpenFlags::Create)) {
+    ret |= O_CREAT;
+  }
+  if (!strip_flag(&flags, FileOpenFlags::DontCloseOnExec)) {
+    ret |= O_CLOEXEC;
+  }
+  if (flags == FileOpenFlags::Read) {
+    ret |= O_RDONLY;
+  } else if (flags == FileOpenFlags::Write) {
+    ret |= O_WRONLY;
+  } else {
+    ret |= O_RDWR;
+  }
+  return static_cast<int>(ret);
+}
 
 // NOLINTNEXTLINE(google-readability-function-size, readability-function-cognitive-complexity)
-StringView errno_str(int err) noexcept {
+inline StringView errno_str(int err) noexcept {
   // clang-format off
   if (err == 0) { return "Success"; }	
 #ifdef EPERM
@@ -431,4 +465,8 @@ StringView errno_str(int err) noexcept {
   return "Unkown error";
 }
 
+inline StringView errno_str() noexcept { return errno_str(errno); }
+
 } // namespace base
+
+#endif

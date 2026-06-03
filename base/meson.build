@@ -5,9 +5,10 @@ sources = [
   'src/containers/char_buffer.cpp',
   'src/logging/logger.cpp',
   'src/logging/panic.cpp',
-  'src/sys/file.cpp',
-  'src/sys/process.cpp',
-  'src/sys/errno.cpp',
+  'src/sys/unix-file.cpp',
+  'src/sys/unix-process.cpp',
+  'src/sys/win32-file.cpp',
+  'src/sys/win32-process.cpp',
 ]
 threads_dep = dependency('threads')
 lib = library(

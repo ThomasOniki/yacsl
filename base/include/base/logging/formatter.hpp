@@ -252,24 +252,58 @@ private:
   using UnderlyingType = UnderlyingEnumType<T>;
   template <u32... Values>
   static constexpr StackArray<StringView, sizeof...(Values)>
-  table(IntegerSequence<u32, Values...> /*sequence*/) {
+  make_table(IntegerSequence<u32, Values...> /*sequence*/) {
     StackArray<StringView, sizeof...(Values)> ret;
     (..., [&]() { ret[Values] = table_entry<T{static_cast<UnderlyingType>(Values)}>(); }());
     return ret;
   }
 
-  template <T Value> static constexpr StringView table_entry() {
-    constexpr StringView pretty_function = __PRETTY_FUNCTION__;
-    constexpr usize      offset =
-#ifdef BASE_COMPILER_GCC
-        StringView("with ").size() +
-#endif
-        StringView("static StringView base::Formatter<>::table_entry() [T = , Value = ").size() +
-        2 * TYPE_STRING<T>.size();
-    return {pretty_function.begin() + offset, pretty_function.end() - 1};
+  template <T Value> static constexpr StringView table_entry_pretty() {
+    return __PRETTY_FUNCTION__;
   }
 
-  static constexpr StackArray<StringView, 256> TABLE = table(IntegerSequenceToN<u32, 256>{});
+  static constexpr usize TABLE_ENTRY_OFFSET_FROM_BEGIN = []() -> usize {
+    constexpr StringView pretty  = table_entry_pretty<static_cast<T>(0)>();
+    constexpr StringView to_find = "Value = ";
+    for (const char* it = pretty.begin(); it < pretty.end() - to_find.size(); ++it) {
+      for (usize i = 0;; ++i) {
+        if (i == to_find.size()) {
+          return static_cast<usize>(it - pretty.begin()) + i - StringView("_pretty").size();
+        }
+        if (it[i] != to_find[i]) {
+          break;
+        }
+      }
+    }
+    return 0;
+  }();
+
+  static constexpr usize TABLE_ENTRY_OFFSET_FROM_END = []() -> usize {
+    constexpr StringView pretty    = table_entry_pretty<static_cast<T>(0)>();
+    usize                templates = 0;
+    for (usize i = TABLE_ENTRY_OFFSET_FROM_BEGIN; i < pretty.size(); ++i) {
+      if (pretty[i] == '<') {
+        ++templates;
+      } else if (pretty[i] == '>') {
+        --templates;
+      }
+      if (templates > 0) {
+        continue;
+      }
+      if (pretty[i] == ',' || pretty[i] == ';' || pretty[i] == ']') {
+        return pretty.size() - i;
+      }
+    }
+    return pretty.size();
+  }();
+
+  template <T Value> static constexpr StringView table_entry() {
+    constexpr StringView pretty = __PRETTY_FUNCTION__;
+    return {pretty.begin() + TABLE_ENTRY_OFFSET_FROM_BEGIN,
+            pretty.end() - TABLE_ENTRY_OFFSET_FROM_END};
+  }
+
+  static constexpr StackArray<StringView, 256> TABLE = make_table(IntegerSequenceToN<u32, 256>{});
 };
 
 } // namespace base
