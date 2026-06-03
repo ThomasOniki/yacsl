@@ -1,10 +1,12 @@
-#include "base/sys/process.hpp"
+#ifndef BASE_PLATFORM_WINDOWS
+
 #include "base/containers/error.hpp"
 #include "base/containers/stack_array.hpp"
 #include "base/logging/panic.hpp"
-#include "base/sys/errno.hpp"
+#include "base/sys/process.hpp"
 #include "base/utilities/move_forward.hpp"
 #include "base/utilities/nil.hpp"
+#include "unix-utils.hpp"
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -19,28 +21,19 @@
 namespace base {
 
 // NOLINTBEGIN(readability-make-member-function-const, cppcoreguidelines-pro-type-union-access)
-void Process::Stdio::write(const StringView& data) noexcept {
+usize Process::Stdio::write(const BasicStringView<uchar>& data) noexcept {
   assert_buffer("write");
-  panic_if(::write(buffer_info_.handle, data.data(), data.size()) == -1, "::write() failed: {}",
-           errno_str());
-}
-void Process::Stdio::write(const BasicStringView<uchar>& data) noexcept {
-  assert_buffer("write");
-  panic_if(::write(buffer_info_.handle, data.data(), data.size()) == -1, "::write() failed: {}",
-           errno_str());
-}
-usize Process::Stdio::read(char* buf, usize size) noexcept {
-  assert_buffer("read");
-  ssize_t result = ::read(buffer_info_.handle, buf, size);
-  panic_if(result == -1, "::read() failed: {}", errno_str());
+  isize result = ::write(buffer_info_.handle, data.data(), data.size());
+  panic_if(result == -1, "::write() failed: {}", errno_str());
   return static_cast<usize>(result);
 }
 usize Process::Stdio::read(uchar* buf, usize size) noexcept {
   assert_buffer("read");
-  ssize_t result = ::read(buffer_info_.handle, buf, size);
+  isize result = ::read(buffer_info_.handle, buf, size);
   panic_if(result == -1, "::read() failed: {}", errno_str());
   return static_cast<usize>(result);
 }
+
 void Process::Stdio::seek_begin(isize offset) noexcept {
   assert_buffer("seek_begin");
   off_t result = ::lseek(buffer_info_.handle, static_cast<off_t>(offset), SEEK_SET);
@@ -59,41 +52,8 @@ void Process::Stdio::seek_cursor(isize offset) noexcept {
   panic_if(result == -1, "::lseek() failed: {}", errno_str());
   buffer_info_.cursor_pos = static_cast<usize>(result);
 }
+
 // NOLINTEND(readability-make-member-function-const, cppcoreguidelines-pro-type-union-access)
-
-static bool strip_flag(FileOpenFlags* flags, FileOpenFlags flag) {
-  const FileOpenFlags stripped = *flags & ~flag;
-  if (stripped != *flags) {
-    *flags = stripped;
-    return true;
-  }
-  return false;
-}
-
-static int unix_flags(FileOpenFlags flags) {
-  unsigned int ret = 0;
-
-  if (strip_flag(&flags, FileOpenFlags::Trunc)) {
-    ret |= O_TRUNC;
-  }
-  if (strip_flag(&flags, FileOpenFlags::Create)) {
-    ret |= O_CREAT;
-  }
-  if (strip_flag(&flags, FileOpenFlags::Append)) {
-    ret |= O_APPEND;
-  }
-  if (!strip_flag(&flags, FileOpenFlags::DontCloseOnExec)) {
-    ret |= O_CLOEXEC;
-  }
-  if (flags == FileOpenFlags::Read) {
-    ret |= O_RDONLY;
-  } else if (flags == FileOpenFlags::Write) {
-    ret |= O_WRONLY;
-  } else {
-    ret |= O_RDWR;
-  }
-  return static_cast<int>(ret);
-}
 
 // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access, android-cloexec-pipe, android-cloexec-dup)
 
@@ -369,8 +329,8 @@ void Process::send_signal(Signal signal) noexcept {
   handle_ = -1;
 }
 
-Process::~Process() noexcept { wait(); }
-
 // NOLINTEND(cppcoreguidelines-pro-type-union-access, android-cloexec-pipe, android-cloexec-dup)
 
 } // namespace base
+
+#endif
