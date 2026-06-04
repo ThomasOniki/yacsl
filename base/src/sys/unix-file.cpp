@@ -18,18 +18,12 @@
 namespace base {
 
 Error<File::OpenError> File::open(const char* path, FileOpenFlags flags) noexcept {
-  const bool seek_end = strip_flag(&flags, FileOpenFlags::SeekEnd) &&
-                        (flags & FileOpenFlags::Trunc) == FileOpenFlags::None;
-  handle_             = ::open(path, unix_flags(flags), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-  if (handle_ == -1) [[unlikely]] {
-    if (errno == ENOENT) {
-      return File::OpenError::FileNotFound;
-    }
-    panic("::open() failed: {}", errno_str());
+  close();
+  Result<FileHandle, OpenError> result = open_file(path, flags);
+  if (result.is_err()) [[unlikely]] {
+    return result.assert_err();
   }
-  if (seek_end) {
-    this->seek_end(0);
-  }
+  handle_ = result.assert_ok();
   return NIL;
 }
 
