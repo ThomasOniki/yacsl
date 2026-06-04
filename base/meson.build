@@ -5,8 +5,10 @@ sources = [
   'src/containers/char_buffer.cpp',
   'src/logging/logger.cpp',
   'src/logging/panic.cpp',
+  'src/sys/unix-utils.cpp',
   'src/sys/unix-file.cpp',
   'src/sys/unix-process.cpp',
+  'src/sys/win32-utils.cpp',
   'src/sys/win32-file.cpp',
   'src/sys/win32-process.cpp',
 ]
