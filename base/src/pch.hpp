@@ -5,7 +5,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef BASE_PLATFORM_UNIX
+#ifdef BASE_PLATFORM_WINDOWS
+#include <windows.h>
+#else
 #include <fcntl.h>
 #include <sys/types.h>
 #include <unistd.h>

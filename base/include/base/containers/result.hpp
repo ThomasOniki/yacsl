@@ -18,88 +18,136 @@ public:
   Result(Args&&... args) : ok_(base::forward<Args>(args)...) {}
 
   // NOLINTNEXTLINE(google-explicit-constructor)
-  Result(Err error) : status_(error) {}
+  Result(Err err) : err_(err) {}
 
-  ~Result() noexcept {
-    if constexpr (!TriviallyDestructible<Ok>) {
-      if (is_ok()) [[likely]] {
-        ok_.~Ok();
-      }
-    }
-  }
+  ~Result() noexcept { destroy(); }
 
-  constexpr Result(const Result& other) noexcept : status_(other.status_) {
-    if (is_ok()) {
+  constexpr Result(const Result& other) noexcept : is_err_(other.is_err_) {
+    if (other.is_err_) [[unlikely]] {
+      new (&err_) Err(other.err_);
+    } else {
       new (&ok_) Ok(other.ok_);
     }
   }
-  constexpr Result(Result&& other) noexcept : status_(other.status_) {
-    if (is_ok()) {
+  constexpr Result(Result&& other) noexcept : is_err_(other.is_err_) {
+    if (other.is_err_) [[unlikely]] {
+      new (&err_) Ok(base::move(other.err_));
+    } else {
       new (&ok_) Ok(base::move(other.ok_));
     }
   }
+
   constexpr Result& operator=(const Result& other) noexcept {
     if (&other == this) [[unlikely]] {
       return *this;
     }
-    if (is_ok()) {
-      ok_.~Ok();
-    }
-    is_ok() = other.is_ok();
-    if (is_ok()) {
-      ok_ = other.ok_;
-    }
-    return *this;
-  }
-  constexpr Result& operator=(Result&& other) noexcept {
-    if (is_ok()) {
-      ok_.~Ok();
-    }
-    is_ok() = other.is_ok();
-    if (is_ok()) {
-      ok_ = base::move(other.ok_);
+    destroy();
+    is_err_ = other.is_err_;
+    if (other.is_err_) [[unlikely]] {
+      new (&err_) Err(other.err_);
+    } else {
+      new (&ok_) Ok(other.ok_);
     }
     return *this;
   }
 
-  [[nodiscard]] constexpr Err  error() const noexcept { return status_; }
-  [[nodiscard]] constexpr bool is_ok() const noexcept { return status_ == NIL; }
-  [[nodiscard]] constexpr bool is_error() const noexcept { return status_ != NIL; }
+  constexpr Result& operator=(Result&& other) noexcept {
+    destroy();
+    is_err_ = other.is_err_;
+    if (other.is_err_) [[unlikely]] {
+      new (&err_) Ok(base::move(other.err_));
+    } else {
+      new (&ok_) Ok(base::move(other.ok_));
+    }
+    return *this;
+  }
+
+  [[nodiscard]] constexpr bool is_ok() const noexcept { return !is_err_; }
+  [[nodiscard]] constexpr bool is_err() const noexcept { return is_err_; }
 
   [[nodiscard]] constexpr const Ok& expect_ok(StringView error) const noexcept {
-    panic_if(is_error(), error);
+    panic_if(is_err_, error);
     return ok_;
   }
   template <typename... Args>
   [[nodiscard]] constexpr const Ok& expect_ok(FormatString<Args...> error_fmt,
                                               Args&&... error_fmt_args) const noexcept {
-    panic_if(is_error(), error_fmt, base::forward<Args>(error_fmt_args)...);
+    panic_if(is_err_, error_fmt, base::forward<Args>(error_fmt_args)...);
     return ok_;
   }
   [[nodiscard]] constexpr const Ok& expect_ok() const noexcept {
-    return expect_ok("Result<{}, {}> is error {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>, error());
+    if (is_err_) [[unlikely]] {
+      panic("Result<{}, {}> is error {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>, err_);
+    }
+    return ok_;
   }
 
   [[nodiscard]] constexpr const Ok& assert_ok(StringView error) const noexcept {
-    debug_panic_if(is_error(), error);
+    debug_panic_if(is_err_, error);
     return ok_;
   }
   template <typename... Args>
   [[nodiscard]] constexpr const Ok& assert_ok(FormatString<Args...> error_fmt,
                                               Args&&... error_fmt_args) const noexcept {
-    debug_panic_if(is_error(), error_fmt, base::forward<Args>(error_fmt_args)...);
+    debug_panic_if(is_err_, error_fmt, base::forward<Args>(error_fmt_args)...);
     return ok_;
   }
   [[nodiscard]] constexpr const Ok& assert_ok() const noexcept {
-    return assert_ok("Result<{}, {}> is error {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>, error());
+    if (is_err_) [[unlikely]] {
+      debug_panic("Result<{}, {}> is error {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>, err_);
+    }
+    return ok_;
+  }
+
+  [[nodiscard]] constexpr const Err& expect_err(StringView error) const noexcept {
+    panic_if(!is_err_, error);
+    return err_;
+  }
+  template <typename... Args>
+  [[nodiscard]] constexpr const Err& expect_err(FormatString<Args...> error_fmt,
+                                                Args&&... error_fmt_args) const noexcept {
+    panic_if(!is_err_, error_fmt, base::forward<Args>(error_fmt_args)...);
+    return err_;
+  }
+  [[nodiscard]] constexpr const Err& expect_err() const noexcept {
+    if (!is_err_) [[unlikely]] {
+      panic("Result<{}, {}> is ok {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>, ok_);
+    }
+    return err_;
+  }
+
+  [[nodiscard]] constexpr const Err& assert_err(StringView error) const noexcept {
+    debug_panic_if(!is_err_, error);
+    return err_;
+  }
+  template <typename... Args>
+  [[nodiscard]] constexpr const Err& assert_err(FormatString<Args...> error_fmt,
+                                                Args&&... error_fmt_args) const noexcept {
+    debug_panic_if(!is_err_, error_fmt, base::forward<Args>(error_fmt_args)...);
+    return err_;
+  }
+  [[nodiscard]] constexpr const Err& assert_err() const noexcept {
+    if (!is_err_) [[unlikely]] {
+      debug_panic("Result<{}, {}> is ok {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>, ok_);
+    }
+    return err_;
+  }
+
+private:
+  void destroy() noexcept {
+    if (is_err_) [[unlikely]] {
+      err_.~Err();
+    } else if constexpr (!TriviallyDestructible<Ok>) {
+      ok_.~Ok();
+    }
   }
 
 private:
   union {
     Ok  ok_;
-    Nil dummy_{};
+    Err err_;
   };
-  Error<Err> status_ = NIL;
+  bool is_err_ = false;
 };
 // NOLINTEND(cppcoreguidelines-pro-type-union-access)
 

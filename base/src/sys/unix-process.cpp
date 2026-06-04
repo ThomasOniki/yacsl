@@ -60,8 +60,6 @@ void Process::Stdio::seek_cursor(isize offset) noexcept {
 using Type = Process::Stdio::Type;
 using enum Type;
 
-#define CHECK_ERRNO(func) panic_if((func) == -1, #func " failed: {}", errno_str())
-
 #define CHECK_RETURN(func)                                                                         \
   do {                                                                                             \
     const int _result = func;                                                                      \
@@ -73,7 +71,7 @@ static void pipe_child_stdin(posix_spawn_file_actions_t* actions, Type type,
   if (type != Buffer && type != ParentStdout && type != ParentStderr) {
     return;
   }
-  CHECK_ERRNO(::pipe(pipe.data()));
+  BASE_TRY_SYSCALL(::pipe(pipe.data()));
   CHECK_RETURN(posix_spawn_file_actions_adddup2(actions, pipe[0], STDIN_FILENO));
   CHECK_RETURN(posix_spawn_file_actions_addclose(actions, pipe[0]));
   CHECK_RETURN(posix_spawn_file_actions_addclose(actions, pipe[1]));
@@ -85,7 +83,7 @@ static void pipe_child_stdout(posix_spawn_file_actions_t* actions, Type type, in
     return;
   }
 
-  CHECK_ERRNO(::pipe(pipe.data()));
+  BASE_TRY_SYSCALL(::pipe(pipe.data()));
   CHECK_RETURN(posix_spawn_file_actions_adddup2(actions, pipe[1], stream));
   CHECK_RETURN(posix_spawn_file_actions_addclose(actions, pipe[0]));
   CHECK_RETURN(posix_spawn_file_actions_addclose(actions, pipe[1]));
@@ -220,41 +218,37 @@ Error<Process::SpawnError> Process::start(const char* const* argv, Stdio&& stdin
   CHECK_RETURN(posix_spawn_file_actions_destroy(&actions));
 
   if (stdin_.type_ == ParentStdout) {
-    const int original = dup(STDOUT_FILENO);
-    CHECK_ERRNO(original);
-    CHECK_ERRNO(dup2(stdin_pipe_[1], STDOUT_FILENO));
-    CHECK_ERRNO(close(stdin_pipe_[1]));
-    stdin_pipe_[1] = original;
+    original_io_[1] = dup(STDOUT_FILENO);
+    BASE_TRY_SYSCALL(original_io_[1]);
+    BASE_TRY_SYSCALL(dup2(stdin_pipe_[1], STDOUT_FILENO));
+    BASE_TRY_SYSCALL(close(stdin_pipe_[1]));
   } else if (stdin_.type_ == ParentStderr) {
-    const int original = dup(STDERR_FILENO);
-    CHECK_ERRNO(original);
-    CHECK_ERRNO(dup2(stdin_pipe_[1], STDERR_FILENO));
-    CHECK_ERRNO(close(stdin_pipe_[1]));
-    stdin_pipe_[1] = original;
+    original_io_[2] = dup(STDERR_FILENO);
+    BASE_TRY_SYSCALL(original_io_[2]);
+    BASE_TRY_SYSCALL(dup2(stdin_pipe_[1], STDERR_FILENO));
+    BASE_TRY_SYSCALL(close(stdin_pipe_[1]));
   }
   if (stdout_.type_ == ParentStdin) {
-    const int original = dup(STDIN_FILENO);
-    CHECK_ERRNO(original);
-    CHECK_ERRNO(dup2(stdout_pipe_[0], STDIN_FILENO));
-    CHECK_ERRNO(close(stdout_pipe_[0]));
-    stdout_pipe_[0] = original;
+    original_io_[0] = dup(STDIN_FILENO);
+    BASE_TRY_SYSCALL(original_io_[0]);
+    BASE_TRY_SYSCALL(dup2(stdout_pipe_[0], STDIN_FILENO));
+    BASE_TRY_SYSCALL(close(stdout_pipe_[0]));
   }
   if (stderr_.type_ == ParentStdin && stdout_.type_ != ParentStdin) {
-    const int original = dup(STDIN_FILENO);
-    CHECK_ERRNO(original);
-    CHECK_ERRNO(dup2(stderr_pipe_[0], STDIN_FILENO));
-    CHECK_ERRNO(close(stderr_pipe_[0]));
-    stderr_pipe_[0] = original;
+    original_io_[0] = dup(STDIN_FILENO);
+    BASE_TRY_SYSCALL(original_io_[0]);
+    BASE_TRY_SYSCALL(dup2(stderr_pipe_[0], STDIN_FILENO));
+    BASE_TRY_SYSCALL(close(stderr_pipe_[0]));
   }
 
   if (stdin_.type_ == Buffer || stdin_.type_ == ParentStdout || stdin_.type_ == ParentStderr) {
-    CHECK_ERRNO(close(stdin_pipe_[0]));
+    BASE_TRY_SYSCALL(close(stdin_pipe_[0]));
   }
   if (stdout_.type_ == Buffer || stdout_.type_ == ParentStdin) {
-    CHECK_ERRNO(close(stdout_pipe_[1]));
+    BASE_TRY_SYSCALL(close(stdout_pipe_[1]));
   }
   if (stderr_.type_ == Buffer || (stderr_.type_ == ParentStdin && stdout_.type_ != ParentStdin)) {
-    CHECK_ERRNO(close(stderr_pipe_[1]));
+    BASE_TRY_SYSCALL(close(stderr_pipe_[1]));
   }
 
   return result == ENOENT ? Error(SpawnError::FileNotFound) : NIL;
@@ -274,25 +268,28 @@ Process::ExitStatus Process::wait() noexcept {
     stdin_.pipe_->buffer_info_.process->wait();
   }
 
-  if (stdin_.type_ == Buffer || stdin_.type_ == ParentStdout || stdin_.type_ == ParentStderr) {
-    if (stdin_.type_ == ParentStdout) {
-      CHECK_ERRNO(dup2(stdin_pipe_[1], STDOUT_FILENO));
-    } else if (stdin_.type_ == ParentStderr) {
-      CHECK_ERRNO(dup2(stdin_pipe_[1], STDERR_FILENO));
-    }
-    CHECK_ERRNO(close(stdin_pipe_[1]));
+  if (stdin_.type_ == Buffer) {
+    BASE_TRY_SYSCALL(close(stdin_pipe_[1]));
+  } else if (stdin_.type_ == ParentStdout) {
+    BASE_TRY_SYSCALL(dup2(original_io_[1], STDOUT_FILENO));
+    BASE_TRY_SYSCALL(close(original_io_[1]));
+  } else if (stdin_.type_ == ParentStderr) {
+    BASE_TRY_SYSCALL(dup2(original_io_[2], STDERR_FILENO));
+    BASE_TRY_SYSCALL(close(original_io_[2]));
   }
-  if (stdout_.type_ == Buffer || stdout_.type_ == ParentStdin) {
-    if (stdout_.type_ == ParentStdin) {
-      CHECK_ERRNO(dup2(stdout_pipe_[0], STDIN_FILENO));
-    }
-    CHECK_ERRNO(close(stdout_pipe_[0]));
+
+  if (stdout_.type_ == Buffer) {
+    BASE_TRY_SYSCALL(close(stdout_pipe_[0]));
+  } else if (stdout_.type_ == ParentStdin) {
+    BASE_TRY_SYSCALL(dup2(original_io_[0], STDIN_FILENO));
+    BASE_TRY_SYSCALL(close(original_io_[0]));
   }
-  if (stderr_.type_ == Buffer || (stderr_.type_ == ParentStdin && stdout_.type_ != ParentStdin)) {
-    if (stderr_.type_ == ParentStdin) {
-      CHECK_ERRNO(dup2(stderr_pipe_[0], STDIN_FILENO));
-    }
-    CHECK_ERRNO(close(stderr_pipe_[0]));
+
+  if (stderr_.type_ == Buffer) {
+    BASE_TRY_SYSCALL(close(stderr_pipe_[0]));
+  } else if (stderr_.type_ == ParentStdin && stdout_.type_ != ParentStdin) {
+    BASE_TRY_SYSCALL(dup2(original_io_[0], STDIN_FILENO));
+    BASE_TRY_SYSCALL(close(original_io_[0]));
   }
 
   int info = 0;
@@ -324,7 +321,7 @@ Process::ExitStatus Process::wait() noexcept {
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void Process::send_signal(Signal signal) noexcept {
-  CHECK_ERRNO(handle_);
+  debug_panic_if(handle_ == -1, "Tried to send_signal to a Process that isn't running.");
   kill(static_cast<pid_t>(handle_), static_cast<int>(signal));
   handle_ = -1;
 }

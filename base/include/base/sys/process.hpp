@@ -169,7 +169,7 @@ public:
   }
 
   struct ExitStatus {
-    alignas(4) u8 exit_code;
+    alignas(8) u32 exit_code;
     Signal signal;
     Signal stopped;
   };
@@ -183,17 +183,28 @@ public:
   Stdio& get_stderr() noexcept BASE_LIFETIMEBOUND { return stderr_; }
 
 private:
-  void handle_piped_stdio(void* voidp_file_actions) noexcept;
-  void handle_file_stdio(void* voidp_file_actions) noexcept;
+  void handle_piped_stdio(void* voidp) noexcept;
+  void handle_file_stdio(void* voidp) noexcept;
 
 private:
-  ProcessHandle      handle_      = NIL_PROCESS_HANDLE;
-  StackArray<int, 2> stdin_pipe_  = {-1, -1};
-  StackArray<int, 2> stdout_pipe_ = {-1, -1};
-  StackArray<int, 2> stderr_pipe_ = {-1, -1};
-  Stdio              stdin_;
-  Stdio              stdout_;
-  Stdio              stderr_;
+  struct OriginalStdio {
+    alignas(16) FileHandle input;
+    FileHandle output;
+    FileHandle error;
+  };
+
+  ProcessHandle             handle_      = NIL_PROCESS_HANDLE;
+  StackArray<FileHandle, 3> original_io_ = {NIL_FILE_HANDLE, NIL_FILE_HANDLE, NIL_FILE_HANDLE};
+  StackArray<FileHandle, 2> stdin_pipe_  = {NIL_FILE_HANDLE, NIL_FILE_HANDLE};
+  StackArray<FileHandle, 2> stdout_pipe_ = {NIL_FILE_HANDLE, NIL_FILE_HANDLE};
+  StackArray<FileHandle, 2> stderr_pipe_ = {NIL_FILE_HANDLE, NIL_FILE_HANDLE};
+  Stdio                     stdin_;
+  Stdio                     stdout_;
+  Stdio                     stderr_;
+
+#ifdef BASE_PLATFORM_WINDOWS
+  u32 group_;
+#endif
 };
 
 } // namespace base
