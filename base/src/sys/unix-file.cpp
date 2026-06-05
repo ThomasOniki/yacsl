@@ -34,6 +34,10 @@ void File::close() noexcept {
   }
 }
 
+void File::open_stdin() noexcept { handle_ = STDIN_FILENO; }
+void File::open_stdout() noexcept { handle_ = STDOUT_FILENO; }
+void File::open_stderr() noexcept { handle_ = STDERR_FILENO; }
+
 // NOLINTBEGIN(readability-make-member-function-const)
 usize File::write(const BasicStringView<uchar>& data) noexcept {
   isize result = ::write(handle_, data.data(), data.size());

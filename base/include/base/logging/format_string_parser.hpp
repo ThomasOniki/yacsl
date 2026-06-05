@@ -19,7 +19,7 @@ public:
   [[nodiscard]] constexpr u32  check_width();
   [[nodiscard]] constexpr u32  check_precision();
 
-  [[nodiscard]] constexpr char check_option(char default_option, const StringView& possibilities);
+  [[nodiscard]] constexpr char check_option(char default_option, StringView possibilities);
 
   [[nodiscard]] constexpr const char* end_parse();
 
@@ -77,7 +77,7 @@ constexpr u32 FormatStringParser::check_precision() {
 }
 
 constexpr char FormatStringParser::check_option(char              default_option,
-                                                const StringView& possibilities) {
+                                                StringView possibilities) {
   for (const char possibility : possibilities) {
     if (possibility == *fmt_) {
       ++fmt_;

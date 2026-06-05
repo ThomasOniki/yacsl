@@ -11,10 +11,12 @@ namespace base {
 class File {
 public:
   constexpr File() noexcept = default;
-  explicit File(const StringView& path, FileOpenFlags flags) { open(path, flags).expect_nil(); }
+  explicit File(StringView path, FileOpenFlags flags) { open(path, flags).expect_nil(); }
   explicit File(const char* path, FileOpenFlags flags) { open(path, flags).expect_nil(); }
   File(const File&) = delete;
-  File(File&& other) noexcept;
+  File(File&& other) noexcept : handle_(other.handle_), cursor_pos_(other.cursor_pos_) {
+    other.handle_ = NIL_FILE_HANDLE;
+  }
 
   ~File() noexcept { close(); }
 
@@ -29,16 +31,21 @@ public:
 
   [[nodiscard]] Error<OpenError> open(const char* path, FileOpenFlags flags) noexcept;
 
-  [[nodiscard]] Error<OpenError> open(const StringView& path, FileOpenFlags flags) noexcept {
-    CString cstr(path);
-    return open(cstr.data(), flags);
+  [[nodiscard]] Error<OpenError> open(StringView path, FileOpenFlags flags) noexcept {
+    return open(CString(path).data(), flags);
   }
 
   void close() noexcept;
 
+  // seek/close don't do anything. This doesn't duplicate the standard streams, it just sets
+  // handle_.
+  void open_stdin() noexcept;
+  void open_stdout() noexcept;
+  void open_stderr() noexcept;
+
   usize write(const BasicStringView<uchar>& data) noexcept;
 
-  usize write(const StringView& data) noexcept {
+  usize write(StringView data) noexcept {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     return write(BasicStringView<uchar>(reinterpret_cast<const uchar*>(data.data()), data.size()));
   }

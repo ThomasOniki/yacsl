@@ -1,8 +1,9 @@
 #pragma once
 
+#include "base/containers/char_buffer.hpp"
 #include "base/containers/string_view.hpp"
 #include "base/logging/common.hpp"
-#include "base/logging/logger.hpp"
+#include "base/logging/format_string.hpp"
 #include "base/utilities/move_forward.hpp"
 
 namespace base {
@@ -12,13 +13,15 @@ namespace base {
 template <typename... Args>
 [[noreturn]]
 void panic(const FormatString<Args...>& fmt, Args&&... args) {
-  Logger::get_default_instance().panic(fmt, base::forward<Args>(args)...);
-  Logger::flush();
+  CharBuffer buf;
+  buf.append(COLORED_LOG_LEVEL_STRINGS[static_cast<u8>(LogLevel::Panic)]);
+  format_to(buf, fmt, base::forward<Args>(args)...);
   terminate();
 }
 [[noreturn]] inline void panic(StringView msg) {
-  Logger::get_default_instance().panic(msg);
-  Logger::flush();
+  CharBuffer buf;
+  buf.append(COLORED_LOG_LEVEL_STRINGS[static_cast<u8>(LogLevel::Panic)]);
+  buf.append(msg);
   terminate();
 }
 

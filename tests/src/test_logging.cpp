@@ -2,7 +2,7 @@
 #include "base/containers/stack_array.hpp"
 #include "base/containers/string_view.hpp"
 #include "base/logging/common.hpp"
-#include "base/logging/file_logger.hpp"
+#include "base/logging/logger.hpp"
 #include "base/utilities/type_aliases.hpp"
 #include <assert.h>
 #include <stdarg.h>
@@ -25,17 +25,17 @@ static void check(const char* expected) {
   buf[expected_len] = '\n';
 
   base::StackArray<char, buf_size> logs = {};
-  // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
+  // NOLINTNEXTLINE(cppcoreguidelines-owning-memory, android-cloexec-fopen)
   FILE* file = fopen("test_logs.txt", "rb");
   assert(file);
   (void)fread(logs.data(), sizeof(logs), 1, file);
-  // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
+  // NOLINTNEXTLINE(cppcoreguidelines-owning-memory, android-cloexec-fopen)
   (void)fclose(file);
 
-  // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
+  // NOLINTNEXTLINE(cppcoreguidelines-owning-memory, android-cloexec-fopen)
   FILE* truncated = fopen("test_logs.txt", "w");
   assert(truncated);
-  // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
+  // NOLINTNEXTLINE(cppcoreguidelines-owning-memory, android-cloexec-fopen)
   (void)fclose(truncated);
 
   if (memcmp(static_cast<void*>(logs.data()), static_cast<const void*>(buf.data()), buf_size) !=
@@ -57,16 +57,16 @@ enum class EnumClass : base::u16 {
 };
 } // namespace test_ns
 
-static void log(base::LogLevel lvl, base::StringView msg) {
-  base::FileLogger logger("test_logs.txt", base::LogLevel::Trace3);
-  logger.log(lvl, msg);
-}
-
 template <typename... Args>
 static void log(base::LogLevel lvl, const base::FormatString<Args...>& fmt, Args&&... args) {
-  base::FileLogger logger("test_logs.txt", base::LogLevel::Trace3);
+  const base::FileOpenFlags flags =
+      base::FileOpenFlags::Write | base::FileOpenFlags::Create | base::FileOpenFlags::Trunc;
+  base::Logger logger(base::File("test_logs.txt", flags), base::File("test_logs.txt", flags),
+                      base::LogLevel::Trace3, base::Logger::Flags{});
   logger.log(lvl, fmt, base::forward<Args>(args)...);
 }
+
+static void log(base::LogLevel lvl, base::StringView msg) { log(lvl, "{}", msg); }
 
 using enum base::LogLevel;
 

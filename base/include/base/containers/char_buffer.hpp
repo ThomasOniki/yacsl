@@ -8,14 +8,24 @@ namespace base {
 
 class CharBuffer {
 public:
-  void append(const StringView& str);
-  void append(char chr);
+  CharBuffer() noexcept  = default;
+  ~CharBuffer() noexcept = default;
 
-  void reserve(usize capacity);
+  CharBuffer(const CharBuffer& other) noexcept;
+  CharBuffer(CharBuffer&& other) noexcept;
+  CharBuffer& operator=(const CharBuffer& other) noexcept;
+  CharBuffer& operator=(CharBuffer&& other) noexcept;
 
-  // This doesn't initialize the new memory but adds count to size. It is usuful for characters you
+  void append(StringView str) noexcept;
+  void append(char chr) noexcept;
+
+  void reserve(usize capacity) noexcept;
+
+  // This doesn't initialize the new memory but adds count to size. It is useful for characters you
   // want to memcpy into. It returns new_end - count.
-  char* grow(usize count);
+  char* grow(usize count) noexcept;
+
+  void clear() noexcept { end_ = begin_; }
 
   [[nodiscard]] usize size() const noexcept { return static_cast<usize>(end_ - begin_); }
   [[nodiscard]] usize capacity() const noexcept {
@@ -33,7 +43,7 @@ public:
   [[nodiscard]] const char* cend() const noexcept { return end_; }
 
 private:
-  void definitely_reserve(usize capacity);
+  void definitely_reserve(usize capacity) noexcept;
 
 private:
   StackArray<char, 1> fixed_         = {'\0'};
