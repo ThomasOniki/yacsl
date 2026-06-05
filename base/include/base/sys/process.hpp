@@ -34,7 +34,7 @@ public:
     Stdio(const char* path, FileOpenFlags flags) noexcept
         : file_info_{.path = path, .flags = flags}, type_(File) {}
 
-    Stdio(const StringView& path, FileOpenFlags flags) noexcept
+    Stdio(StringView path, FileOpenFlags flags) noexcept
         : file_info_{.path = nullptr, .flags = flags}, type_(File) {
       CString cstr(path);
       file_info_.path = cstr.data();
@@ -60,7 +60,7 @@ public:
 
     usize write(const BasicStringView<uchar>& data) noexcept;
 
-    usize write(const StringView& data) noexcept {
+    usize write(StringView data) noexcept {
       return write( // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
           BasicStringView<uchar>(reinterpret_cast<const uchar*>(data.data()), data.size()));
     }
