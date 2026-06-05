@@ -24,14 +24,14 @@ template <typename... Args> void log_notice(const FormatString<Args...>& fmt, Ar
 template <typename... Args> void log_warning(const FormatString<Args...>& fmt, Args&&... args);
 template <typename... Args> void log_error(const FormatString<Args...>& fmt, Args&&... args);
 
-void log_trace3(const StringView& msg);
-void log_trace2(const StringView& msg);
-void log_trace1(const StringView& msg);
-void log_debug(const StringView& msg);
-void log_info(const StringView& msg);
-void log_notice(const StringView& msg);
-void log_warning(const StringView& msg);
-void log_error(const StringView& msg);
+void log_trace3(StringView msg);
+void log_trace2(StringView msg);
+void log_trace1(StringView msg);
+void log_debug(StringView msg);
+void log_info(StringView msg);
+void log_notice(StringView msg);
+void log_warning(StringView msg);
+void log_error(StringView msg);
 
 enum class LogLevel : u8 {
   Trace3  = 0,

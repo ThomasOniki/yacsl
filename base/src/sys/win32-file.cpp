@@ -30,6 +30,10 @@ void File::close() noexcept {
   }
 }
 
+void File::open_stdin() noexcept { handle_ = GetStdHandle(STD_INPUT_HANDLE); }
+void File::open_stdout() noexcept { handle_ = GetStdHandle(STD_OUTPUT_HANDLE); }
+void File::open_stderr() noexcept { handle_ = GetStdHandle(STD_ERROR_HANDLE); }
+
 // NOLINTBEGIN(readability-make-member-function-const)
 usize File::write(const BasicStringView<uchar>& data) noexcept {
   DWORD ret = 0;
