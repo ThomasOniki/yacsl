@@ -559,9 +559,9 @@ void Formatter<bool>::format(CharBuffer& buf, bool value) const {
       .align = align_,
   };
   if (type_ == 's') {
-    format_string<false>(buf, value ? StringView("true") : StringView("false"), opts);
+    format_string<false>(buf, value ? "true"_sv : "false"_sv, opts);
   } else {
-    format_string<false>(buf, value ? StringView("1") : StringView("0"), opts);
+    format_string<false>(buf, value ? "1"_sv : "0"_sv, opts);
   }
 }
 

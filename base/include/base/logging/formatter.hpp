@@ -268,7 +268,7 @@ private:
     for (const char* it = pretty.begin(); it < pretty.end() - to_find.size(); ++it) {
       for (usize i = 0;; ++i) {
         if (i == to_find.size()) {
-          return static_cast<usize>(it - pretty.begin()) + i - StringView("_pretty").size();
+          return static_cast<usize>(it - pretty.begin()) + i - "_pretty"_sv.size();
         }
         if (it[i] != to_find[i]) {
           break;

@@ -75,10 +75,29 @@ private:
 
 template <Character Char, Integral SizeT>
 BasicStringView(const Char*, SizeT) -> BasicStringView<Char, SizeT>;
+template <Character Char> BasicStringView(const Char*) -> BasicStringView<Char, usize>;
 template <Character Char> BasicStringView(const Char*, const Char*) -> BasicStringView<Char, usize>;
-template <Character Char, usize N> // NOLINTNEXTLINE(modernize-avoid-c-arrays)
-BasicStringView(const Char (&)[N]) -> BasicStringView<Char, usize>;
 
 using StringView = BasicStringView<char>;
+
+constexpr BasicStringView<char> operator""_sv(BASE_LIFETIMEBOUND const char* cstr, usize len) {
+  return {cstr, len};
+}
+constexpr BasicStringView<wchar_t> operator""_sv(BASE_LIFETIMEBOUND const wchar_t* cstr,
+                                                 usize                             len) {
+  return {cstr, len};
+}
+constexpr BasicStringView<char8_t> operator""_sv(BASE_LIFETIMEBOUND const char8_t* cstr,
+                                                 usize                             len) {
+  return {cstr, len};
+}
+constexpr BasicStringView<char16_t> operator""_sv(BASE_LIFETIMEBOUND const char16_t* cstr,
+                                                  usize                              len) {
+  return {cstr, len};
+}
+constexpr BasicStringView<char32_t> operator""_sv(BASE_LIFETIMEBOUND const char32_t* cstr,
+                                                  usize                              len) {
+  return {cstr, len};
+}
 
 } // namespace base
