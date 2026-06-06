@@ -1,9 +1,13 @@
 #ifndef BASE_PLATFORM_WINDOWS
 
 #include "unix-utils.hpp"
+#include "base/containers/result.hpp"
 #include "base/containers/string_view.hpp"
+#include "base/logging/panic.hpp"
 #include "base/sys/common.hpp"
+#include <errno.h>
 #include <fcntl.h>
+#include <stdio.h>
 #include <unistd.h>
 
 namespace base {

@@ -7,7 +7,7 @@
 namespace base {
 
 CharBuffer::CharBuffer(const CharBuffer& other) noexcept {
-  usize size = other.size();
+  const usize size = other.size();
   begin_ = size > fixed_.size() ? MainArenaAllocator::get().allocate<char>(size) : fixed_.data();
   allocated_end_ = end_ = begin_ + size;
   memcpy(begin_, other.begin_, size);
@@ -20,7 +20,7 @@ CharBuffer& CharBuffer::operator=(const CharBuffer& other) noexcept {
   if (&other == this) {
     return *this;
   }
-  usize size = other.size();
+  const usize size = other.size();
   begin_ = size > fixed_.size() ? MainArenaAllocator::get().allocate<char>(size) : fixed_.data();
   allocated_end_ = end_ = begin_ + size;
   memcpy(begin_, other.begin_, size);
