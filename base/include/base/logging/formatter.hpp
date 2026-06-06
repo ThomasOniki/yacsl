@@ -143,9 +143,9 @@ public:
     return parser.end_parse();
   }
 
-  using Reference = const BasicStringView<Char, usize>&;
+  using View = BasicStringView<Char, usize>;
 
-  void format(CharBuffer& buf, Reference str) const;
+  void format(CharBuffer& buf, View str) const;
 
 private:
   u32  width_ = 0;
@@ -154,14 +154,13 @@ private:
   char type_  = 's';
 };
 
-extern template void Formatter<BasicStringView<char>>::format(CharBuffer&, Reference) const;
-extern template void Formatter<BasicStringView<unsigned char>>::format(CharBuffer&,
-                                                                       Reference) const;
-extern template void Formatter<BasicStringView<signed char>>::format(CharBuffer&, Reference) const;
-extern template void Formatter<BasicStringView<wchar_t>>::format(CharBuffer&, Reference) const;
-extern template void Formatter<BasicStringView<char8_t>>::format(CharBuffer&, Reference) const;
-extern template void Formatter<BasicStringView<char16_t>>::format(CharBuffer&, Reference) const;
-extern template void Formatter<BasicStringView<char32_t>>::format(CharBuffer&, Reference) const;
+extern template void Formatter<BasicStringView<char>>::format(CharBuffer&, View) const;
+extern template void Formatter<BasicStringView<unsigned char>>::format(CharBuffer&, View) const;
+extern template void Formatter<BasicStringView<signed char>>::format(CharBuffer&, View) const;
+extern template void Formatter<BasicStringView<wchar_t>>::format(CharBuffer&, View) const;
+extern template void Formatter<BasicStringView<char8_t>>::format(CharBuffer&, View) const;
+extern template void Formatter<BasicStringView<char16_t>>::format(CharBuffer&, View) const;
+extern template void Formatter<BasicStringView<char32_t>>::format(CharBuffer&, View) const;
 
 template <Character Char, Integral SizeT>
 class Formatter<BasicStringView<Char, SizeT>> : Formatter<BasicStringView<Char, usize>> {
