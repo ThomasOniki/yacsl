@@ -23,7 +23,7 @@ class BasicCString : AllocatorMember<Allocator>, FixedBufferMember<Char, N, Size
 public:
   constexpr BasicCString() noexcept = default;
 
-  template <typename OtherSizeT> // NOLINTNEXTLINE(google-explicit-constructor)
+  template <Integral OtherSizeT> // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr BasicCString(const BasicStringView<Char, OtherSizeT>& str) noexcept {
     if (str.size() > N) {
       cstr_ = allocator().template allocate<Char>(str.size() + 1);

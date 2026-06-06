@@ -16,15 +16,17 @@ public:
 
   // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr BasicStringView(BASE_LIFETIMEBOUND const T* cstr) : data_(cstr) {
-    if (is_constant_evaluated()) {
-      usize len = 0;
-      while (cstr[len] != '\0') {
-        ++len;
+    if constexpr (SameAs<char, T>) {
+      if (!is_constant_evaluated()) {
+        size_ = strlen(cstr);
+        return;
       }
-      size_ = len;
-    } else {
-      size_ = strlen(cstr);
     }
+    usize len = 0;
+    while (cstr[len] != '\0') {
+      ++len;
+    }
+    size_ = len;
   }
 
   constexpr BasicStringView(BASE_LIFETIMEBOUND const T* begin, BASE_LIFETIMEBOUND const T* end)

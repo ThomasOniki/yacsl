@@ -152,7 +152,7 @@ template <typename T> static u32 debug_char_len(T chr) {
   return char_len(chr);
 }
 
-template <bool Debug, typename C> static u32 real_string_len(const BasicStringView<C, u32>& str) {
+template <bool Debug, typename C> static u32 real_string_len(BasicStringView<C, u32> str) {
   if constexpr (Debug) {
     u32 len = 2;
     for (const C chr : str) {
@@ -290,7 +290,7 @@ struct FormatOptions {
 };
 } // namespace
 
-template <typename C> static void format_char(CharBuffer& buf, C chr, const FormatOptions& opts) {
+template <typename C> static void format_char(CharBuffer& buf, C chr, FormatOptions opts) {
   const u32 len = char_len(chr);
   if (len >= opts.width) {
     write_char(buf.grow(len), chr);
@@ -310,8 +310,7 @@ template <typename C> static void format_char(CharBuffer& buf, C chr, const Form
   }
 }
 
-template <typename C>
-static void format_debug_char(CharBuffer& buf, C chr, const FormatOptions& opts) {
+template <typename C> static void format_debug_char(CharBuffer& buf, C chr, FormatOptions opts) {
   const u32 len = debug_char_len(chr);
   // +2 for the quotes
   if (len + 2 >= opts.width) {
@@ -347,8 +346,7 @@ static void format_debug_char(CharBuffer& buf, C chr, const FormatOptions& opts)
   }
 }
 
-template <bool Debug, typename C>
-static void write_string(char* buf, const BasicStringView<C, u32>& str) {
+template <bool Debug, typename C> static void write_string(char* buf, BasicStringView<C, u32> str) {
   if constexpr (Debug) {
     *buf = '"';
     ++buf;
@@ -368,7 +366,7 @@ static void write_string(char* buf, const BasicStringView<C, u32>& str) {
 }
 
 template <bool Debug, typename C>
-static void write_string(CharBuffer& buf, const BasicStringView<C, u32>& str) {
+static void write_string(CharBuffer& buf, BasicStringView<C, u32> str) {
   if constexpr (Debug) {
     buf.append('"');
     for (const C chr : str) {
@@ -387,8 +385,8 @@ static void write_string(CharBuffer& buf, const BasicStringView<C, u32>& str) {
 }
 
 template <bool Debug, typename C>
-static void format_string(CharBuffer& buf, const BasicStringView<C, usize>& usize_str,
-                          const FormatOptions& opts) {
+static void format_string(CharBuffer& buf, BasicStringView<C, usize> usize_str,
+                          FormatOptions opts) {
   const BasicStringView<C, u32> str(usize_str.data(), static_cast<u32>(usize_str.size()));
 
   if constexpr (Debug) {
@@ -434,8 +432,7 @@ static void format_string(CharBuffer& buf, const BasicStringView<C, usize>& usiz
 }
 
 template <Character Char>
-void Formatter<BasicStringView<Char>>::format(CharBuffer&                  buf,
-                                              const BasicStringView<Char>& str) const {
+void Formatter<BasicStringView<Char>>::format(CharBuffer& buf, BasicStringView<Char> str) const {
   const FormatOptions opts{.width = width_, .fill = fill_, .align = align_};
   if (type_ == 's') [[likely]] {
     format_string<false>(buf, str, opts);
@@ -444,13 +441,13 @@ void Formatter<BasicStringView<Char>>::format(CharBuffer&                  buf,
   }
 }
 
-template void Formatter<BasicStringView<char>>::format(CharBuffer&, Reference) const;
-template void Formatter<BasicStringView<unsigned char>>::format(CharBuffer&, Reference) const;
-template void Formatter<BasicStringView<signed char>>::format(CharBuffer&, Reference) const;
-template void Formatter<BasicStringView<wchar_t>>::format(CharBuffer&, Reference) const;
-template void Formatter<BasicStringView<char8_t>>::format(CharBuffer&, Reference) const;
-template void Formatter<BasicStringView<char16_t>>::format(CharBuffer&, Reference) const;
-template void Formatter<BasicStringView<char32_t>>::format(CharBuffer&, Reference) const;
+template void Formatter<BasicStringView<char>>::format(CharBuffer&, View) const;
+template void Formatter<BasicStringView<unsigned char>>::format(CharBuffer&, View) const;
+template void Formatter<BasicStringView<signed char>>::format(CharBuffer&, View) const;
+template void Formatter<BasicStringView<wchar_t>>::format(CharBuffer&, View) const;
+template void Formatter<BasicStringView<char8_t>>::format(CharBuffer&, View) const;
+template void Formatter<BasicStringView<char16_t>>::format(CharBuffer&, View) const;
+template void Formatter<BasicStringView<char32_t>>::format(CharBuffer&, View) const;
 
 template <typename T, u32 Base>
 static char* itoa_from_end_base_x(BASE_LIFETIMEBOUND char* buf_end, T value) {
@@ -501,7 +498,7 @@ template <typename T, T Base> static constexpr StackArray<T, 130> gen_powers() {
 }
 
 template <u32 Base, typename T>
-static void format_integral(CharBuffer& buf, T value, const FormatOptions& opts, char sign) {
+static void format_integral(CharBuffer& buf, T value, FormatOptions opts, char sign) {
   // 0, 0, Base, Base^2, Base^3...
   static constexpr StackArray<T, 130> powers = gen_powers<T, Base>();
 

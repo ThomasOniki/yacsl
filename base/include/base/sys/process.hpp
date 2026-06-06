@@ -58,7 +58,7 @@ public:
 
     Stdio& operator=(const Stdio&) = delete;
 
-    usize write(const BasicStringView<uchar>& data) noexcept;
+    usize write(BasicStringView<uchar> data) noexcept;
 
     usize write(StringView data) noexcept {
       return write( // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
@@ -132,16 +132,10 @@ public:
 
   Error<SpawnError> start(InitializerList<const char*> argv, Stdio&& stdin_opts,
                           Stdio&& stdout_opts, Stdio&& stderr_opts) noexcept {
-    return start<InitializerList<const char*>>(argv, base::move(stdin_opts),
-                                               base::move(stdout_opts), base::move(stderr_opts));
-  }
-
-  template <RangeOf<const char*> Range>
-  Error<SpawnError> start(const Range& argv, Stdio&& stdin_opts, Stdio&& stdout_opts,
-                          Stdio&& stderr_opts) noexcept {
     Vector<const char*, 6> cstrs;
-    for (const char* arg : argv) {
-      cstrs.push_back(arg);
+    cstrs.reserve(argv.size());
+    for (const char* str : argv) {
+      cstrs.push_back(str);
     }
     cstrs.push_back(nullptr);
     return start(cstrs.data(), base::move(stdin_opts), base::move(stdout_opts),
