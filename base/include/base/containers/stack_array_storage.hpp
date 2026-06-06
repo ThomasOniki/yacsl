@@ -10,7 +10,7 @@ namespace base {
 // THIS DOES NOT KEEP TRACK OF WHICH ELEMENTS WHERE CREATED AND DESTROYED, YOU ARE RESPONSIBLE FOR
 // THAT.
 
-template <typename T, usize N, typename SizeT = usize> class StackArrayStorage {
+template <typename T, usize N, Integral SizeT = usize> class StackArrayStorage {
 public:
   template <typename... Args> constexpr void construct_at(SizeT index, Args&&... args) {
     new (data() + index) T(base::forward<Args>(args)...);

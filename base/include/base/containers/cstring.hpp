@@ -3,6 +3,7 @@
 #include "base/containers/base_clases.hpp"
 #include "base/containers/string_view.hpp"
 #include "base/memory/arena.hpp"
+#include "base/type_traits/categories.hpp"
 #include "base/utilities/type_aliases.hpp"
 #include <string.h>
 
@@ -17,7 +18,7 @@ static_assert(BBB<>);
 static_assert(!BBB<int&, int>);
 
 template <typename Char, usize N = 16, typename Allocator = MainArenaAllocator,
-          typename SizeT = usize>
+          Integral SizeT = usize>
 class BasicCString : AllocatorMember<Allocator>, FixedBufferMember<Char, N, SizeT> {
 public:
   constexpr BasicCString() noexcept = default;
