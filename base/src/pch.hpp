@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef BASE_PLATFORM_WINDOWS
+#ifdef _WIN32
 #include <windows.h>
 #else
 #include <fcntl.h>
