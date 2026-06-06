@@ -5,7 +5,7 @@
 
 namespace base {
 
-#ifdef BASE_PLATFORM_WINDOWS
+#ifdef _WIN32
 using FileHandle                           = void*;
 constexpr FileHandle NIL_FILE_HANDLE       = nullptr;
 using ProcessHandle                        = void*;

@@ -1,4 +1,4 @@
-#ifndef BASE_PLATFORM_WINDOWS
+#ifndef _WIN32
 
 #include "base/containers/cstring.hpp"
 #include "base/containers/error.hpp"

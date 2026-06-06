@@ -15,7 +15,7 @@ static_assert(static_cast<int>(-1U) == -1, "libbase assumes 2's complement.");
 #error __has_builtin is undefined.
 #endif
 
-#ifdef BASE_PLATFORM_WINDOWS
+#ifdef _WIN32
 #include <windows.h>
 // This page documents this but everything would break if this wasn't true so this asserts it for
 // clean errors.

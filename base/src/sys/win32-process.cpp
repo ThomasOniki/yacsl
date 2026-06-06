@@ -1,4 +1,4 @@
-#ifdef BASE_PLATFORM_WINDOWS
+#ifdef _WIN32
 
 #include "base/containers/error.hpp"
 #include "base/containers/stack_array.hpp"
