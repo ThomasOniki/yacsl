@@ -3,12 +3,13 @@
 #include "base/containers/reverse_iterator.hpp"
 #include "base/containers/structured_bindings.hpp"
 #include "base/metaprogramming/type_manip.hpp"
+#include "base/type_traits/categories.hpp"
 #include "base/type_traits/limits.hpp"
 #include "base/utilities/type_aliases.hpp"
 
 namespace base {
 
-template <typename T, usize N, typename SizeT = ConditionalT<(N > Limits<u32>::max), usize, u32>>
+template <typename T, usize N, Integral SizeT = ConditionalT<(N > Limits<u32>::max), usize, u32>>
 class StackArray {
 public:
   [[nodiscard]] constexpr SizeT size() const noexcept { return static_cast<SizeT>(N); }
@@ -61,11 +62,11 @@ public:
   T data_[N]; // NOLINT
 };
 
-template <typename T, usize N, typename SizeT> struct TupleSize<StackArray<T, N, SizeT>> {
+template <typename T, usize N, Integral SizeT> struct TupleSize<StackArray<T, N, SizeT>> {
   static constexpr usize value = N;
 };
 
-template <typename T, usize N, typename SizeT, usize I>
+template <typename T, usize N, Integral SizeT, usize I>
 struct TupleElement<StackArray<T, N, SizeT>, I> {
   using Type = T;
 };
