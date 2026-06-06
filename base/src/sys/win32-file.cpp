@@ -10,12 +10,13 @@
 #include "win32-utils.hpp"
 #include <fileapi.h>
 #include <intsafe.h>
+#include <windows.h>
 
 namespace base {
 
 [[nodiscard]] Error<File::OpenError> File::open(const char* path, FileOpenFlags flags) noexcept {
   close();
-  Result<HANDLE, OpenError> result = open_file(path, flags);
+  const Result<HANDLE, OpenError> result = open_file(path, flags);
   if (result.is_ok()) [[likely]] {
     handle_ = result.assert_ok();
     return NIL;

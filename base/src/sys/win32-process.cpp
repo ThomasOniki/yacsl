@@ -90,7 +90,8 @@ static void pipe_child_stdout(HANDLE* child_handle, Type type, HANDLE* pipe) {
 
 static void redirect_child_stdio_to_file(HANDLE* child_handle, const char* path,
                                          FileOpenFlags flags) noexcept {
-  Result<HANDLE, File::OpenError> result = open_file(path, flags | FileOpenFlags::DontCloseOnExec);
+  const Result<HANDLE, File::OpenError> result =
+      open_file(path, flags | FileOpenFlags::DontCloseOnExec);
   if (result.is_err()) [[unlikely]] {
     switch (result.assert_err()) {
     case File::OpenError::FileNotFound:
