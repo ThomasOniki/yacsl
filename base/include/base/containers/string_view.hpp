@@ -1,13 +1,14 @@
 #pragma once
 
 #include "base/containers/reverse_iterator.hpp"
+#include "base/type_traits/categories.hpp"
 #include "base/utilities/is_constant_evaluated.hpp"
 #include "base/utilities/type_aliases.hpp"
 #include <string.h>
 
 namespace base {
 
-template <typename T, typename SizeT = usize> class BasicStringView {
+template <Character T, Integral SizeT = usize> class BasicStringView {
 public:
   constexpr BasicStringView() = default;
   constexpr BasicStringView(BASE_LIFETIMEBOUND const T* data, SizeT size)
@@ -72,10 +73,10 @@ private:
   SizeT    size_ = 0;
 };
 
-template <typename Char, typename SizeT>
+template <Character Char, Integral SizeT>
 BasicStringView(const Char*, SizeT) -> BasicStringView<Char, SizeT>;
-template <typename Char> BasicStringView(const Char*, const Char*) -> BasicStringView<Char, usize>;
-template <typename Char, usize N> // NOLINTNEXTLINE(modernize-avoid-c-arrays)
+template <Character Char> BasicStringView(const Char*, const Char*) -> BasicStringView<Char, usize>;
+template <Character Char, usize N> // NOLINTNEXTLINE(modernize-avoid-c-arrays)
 BasicStringView(const Char (&)[N]) -> BasicStringView<Char, usize>;
 
 using StringView = BasicStringView<char>;

@@ -163,7 +163,7 @@ extern template void Formatter<BasicStringView<char8_t>>::format(CharBuffer&, Re
 extern template void Formatter<BasicStringView<char16_t>>::format(CharBuffer&, Reference) const;
 extern template void Formatter<BasicStringView<char32_t>>::format(CharBuffer&, Reference) const;
 
-template <Character Char, typename SizeT>
+template <Character Char, Integral SizeT>
 class Formatter<BasicStringView<Char, SizeT>> : Formatter<BasicStringView<Char, usize>> {
 public:
   constexpr const char* parse(const char* fmt) {
