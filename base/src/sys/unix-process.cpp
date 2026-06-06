@@ -23,7 +23,7 @@
 namespace base {
 
 // NOLINTBEGIN(readability-make-member-function-const, cppcoreguidelines-pro-type-union-access)
-usize Process::Stdio::write(const BasicStringView<uchar>& data) noexcept {
+usize Process::Stdio::write(BasicStringView<uchar> data) noexcept {
   assert_buffer("write");
   const isize result = ::write(buffer_info_.handle, data.data(), data.size());
   panic_if(result == -1, "::write() failed: {}", errno_str());
