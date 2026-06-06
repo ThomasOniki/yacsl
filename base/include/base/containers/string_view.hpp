@@ -12,11 +12,22 @@ public:
   constexpr BasicStringView() = default;
   constexpr BasicStringView(BASE_LIFETIMEBOUND const T* data, SizeT size)
       : data_(data), size_(size) {}
+
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  constexpr BasicStringView(BASE_LIFETIMEBOUND const T* cstr) : data_(cstr) {
+    if (is_constant_evaluated()) {
+      usize len = 0;
+      while (cstr[len] != '\0') {
+        ++len;
+      }
+      size_ = len;
+    } else {
+      size_ = strlen(cstr);
+    }
+  }
+
   constexpr BasicStringView(BASE_LIFETIMEBOUND const T* begin, BASE_LIFETIMEBOUND const T* end)
       : data_(begin), size_(static_cast<SizeT>(end - begin)) {}
-  template <SizeT N> // NOLINTNEXTLINE(google-explicit-constructor, modernize-avoid-c-arrays)
-  constexpr BasicStringView(BASE_LIFETIMEBOUND const T (&arr)[N])
-      : data_(static_cast<const T*>(arr)), size_(N - 1) {}
 
   [[nodiscard]] constexpr const T* data() const noexcept BASE_LIFETIMEBOUND { return data_; }
   [[nodiscard]] constexpr SizeT    size() const noexcept { return size_; }
