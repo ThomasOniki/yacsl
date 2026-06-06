@@ -2,10 +2,12 @@
 
 #include "base/containers/error.hpp"
 #include "base/containers/stack_array.hpp"
+#include "base/containers/string_view.hpp"
 #include "base/logging/panic.hpp"
 #include "base/sys/process.hpp"
 #include "base/utilities/move_forward.hpp"
 #include "base/utilities/nil.hpp"
+#include "base/utilities/type_aliases.hpp"
 #include "unix-utils.hpp"
 #include <errno.h>
 #include <fcntl.h>
@@ -23,32 +25,32 @@ namespace base {
 // NOLINTBEGIN(readability-make-member-function-const, cppcoreguidelines-pro-type-union-access)
 usize Process::Stdio::write(const BasicStringView<uchar>& data) noexcept {
   assert_buffer("write");
-  isize result = ::write(buffer_info_.handle, data.data(), data.size());
+  const isize result = ::write(buffer_info_.handle, data.data(), data.size());
   panic_if(result == -1, "::write() failed: {}", errno_str());
   return static_cast<usize>(result);
 }
 usize Process::Stdio::read(uchar* buf, usize size) noexcept {
   assert_buffer("read");
-  isize result = ::read(buffer_info_.handle, buf, size);
+  const isize result = ::read(buffer_info_.handle, buf, size);
   panic_if(result == -1, "::read() failed: {}", errno_str());
   return static_cast<usize>(result);
 }
 
 void Process::Stdio::seek_begin(isize offset) noexcept {
   assert_buffer("seek_begin");
-  off_t result = ::lseek(buffer_info_.handle, static_cast<off_t>(offset), SEEK_SET);
+  const off_t result = ::lseek(buffer_info_.handle, static_cast<off_t>(offset), SEEK_SET);
   panic_if(result == -1, "::lseek() failed: {}", errno_str());
   buffer_info_.cursor_pos = static_cast<usize>(result);
 }
 void Process::Stdio::seek_end(isize offset) noexcept {
   assert_buffer("seek_end");
-  off_t result = ::lseek(buffer_info_.handle, static_cast<off_t>(offset), SEEK_END);
+  const off_t result = ::lseek(buffer_info_.handle, static_cast<off_t>(offset), SEEK_END);
   panic_if(result == -1, "::lseek() failed: {}", errno_str());
   buffer_info_.cursor_pos = static_cast<usize>(result);
 }
 void Process::Stdio::seek_cursor(isize offset) noexcept {
   assert_buffer("seek_cursor");
-  off_t result = ::lseek(buffer_info_.handle, static_cast<off_t>(offset), SEEK_CUR);
+  const off_t result = ::lseek(buffer_info_.handle, static_cast<off_t>(offset), SEEK_CUR);
   panic_if(result == -1, "::lseek() failed: {}", errno_str());
   buffer_info_.cursor_pos = static_cast<usize>(result);
 }
