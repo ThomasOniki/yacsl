@@ -14,7 +14,7 @@ constexpr const char* num_end(BASE_LIFETIMEBOUND const char* begin) {
 }
 
 template <Integral T, typename Char = char, Integral SizeT = usize>
-constexpr T str_to_int(const BasicStringView<Char, SizeT>& str) noexcept {
+constexpr T str_to_int(BasicStringView<Char, SizeT> str) noexcept {
   T ret = 0;
   for (const char chr : str) {
     ret *= 10;

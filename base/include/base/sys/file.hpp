@@ -43,7 +43,7 @@ public:
   void open_stdout() noexcept;
   void open_stderr() noexcept;
 
-  usize write(const BasicStringView<uchar>& data) noexcept;
+  usize write(BasicStringView<uchar> data) noexcept;
 
   usize write(StringView data) noexcept {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)

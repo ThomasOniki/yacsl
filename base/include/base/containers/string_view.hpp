@@ -55,7 +55,7 @@ public:
   }
   [[nodiscard]] constexpr ReverseIterator<const T*> crend() const noexcept { return data_; }
 
-  [[nodiscard]] constexpr bool operator==(const BasicStringView& other) const noexcept {
+  [[nodiscard]] constexpr bool operator==(BasicStringView other) const noexcept {
     if (size_ != other.size_) {
       return false;
     }

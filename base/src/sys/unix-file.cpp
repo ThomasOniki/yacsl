@@ -39,7 +39,7 @@ void File::open_stdout() noexcept { handle_ = STDOUT_FILENO; }
 void File::open_stderr() noexcept { handle_ = STDERR_FILENO; }
 
 // NOLINTBEGIN(readability-make-member-function-const)
-usize File::write(const BasicStringView<uchar>& data) noexcept {
+usize File::write(BasicStringView<uchar> data) noexcept {
   const isize result = ::write(handle_, data.data(), data.size());
   panic_if(result == -1, "::write() failed: {}", errno_str());
   return static_cast<usize>(result);
