@@ -202,7 +202,7 @@ private:
   Stdio                     stdout_;
   Stdio                     stderr_;
 
-#ifdef BASE_PLATFORM_WINDOWS
+#ifdef _WIN32
   u32 group_;
 #endif
 };

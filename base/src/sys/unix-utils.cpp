@@ -1,4 +1,4 @@
-#ifndef BASE_PLATFORM_WINDOWS
+#ifndef _WIN32
 
 #include "unix-utils.hpp"
 #include "base/containers/result.hpp"
