@@ -30,30 +30,32 @@ public:
   [[nodiscard]] constexpr bool is_ok() const noexcept { return value_ >= 0; }
   [[nodiscard]] constexpr bool is_error() const noexcept { return value_ < 0; }
 
-  [[nodiscard]] constexpr Ok expect_ok(StringView error) const noexcept {
+  [[nodiscard]] constexpr Ok expect_ok(StringView error) const noexcept BASE_LIFETIMEBOUND {
     panic_if(is_error(), error);
     return static_cast<Ok>(value_);
   }
   template <typename... Args>
-  [[nodiscard]] constexpr Ok expect_ok(FormatString<Args...> fmt, Args&&... args) const noexcept {
+  [[nodiscard]] constexpr Ok expect_ok(FormatString<Args...> fmt,
+                                       Args&&... args) const noexcept BASE_LIFETIMEBOUND {
     panic_if(is_error(), fmt, base::forward<Args>(args)...);
     return static_cast<Ok>(value_);
   }
-  [[nodiscard]] constexpr Ok expect_ok() const noexcept {
+  [[nodiscard]] constexpr Ok expect_ok() const noexcept BASE_LIFETIMEBOUND {
     return expect_ok("UnsignedResult<{}, {}> is error {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>,
                      error());
   }
 
-  [[nodiscard]] constexpr Ok assert_ok(StringView error) const noexcept {
+  [[nodiscard]] constexpr Ok assert_ok(StringView error) const noexcept BASE_LIFETIMEBOUND {
     debug_panic_if(is_error(), error);
     return static_cast<Ok>(value_);
   }
   template <typename... Args>
-  [[nodiscard]] constexpr Ok assert_ok(FormatString<Args...> fmt, Args&&... args) const noexcept {
+  [[nodiscard]] constexpr Ok assert_ok(FormatString<Args...> fmt,
+                                       Args&&... args) const noexcept BASE_LIFETIMEBOUND {
     debug_panic_if(is_error(), fmt, base::forward<Args>(args)...);
     return static_cast<Ok>(value_);
   }
-  [[nodiscard]] constexpr Ok assert_ok() const noexcept {
+  [[nodiscard]] constexpr Ok assert_ok() const noexcept BASE_LIFETIMEBOUND {
     return assert_ok("UnsignedResult<{}, {}> is error {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>,
                      error());
   }
