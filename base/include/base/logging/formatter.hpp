@@ -168,7 +168,7 @@ public:
   constexpr const char* parse(const char* fmt) {
     return Formatter<BasicStringView<Char>>::parse(fmt);
   }
-  void format(CharBuffer& buf, const BasicStringView<Char, SizeT>& str) const {
+  void format(CharBuffer& buf, BasicStringView<Char, SizeT> str) const {
     return Formatter<BasicStringView<Char>>::format(
         buf, BasicStringView<Char>(str.data(), static_cast<usize>(str.size())));
   }

@@ -36,7 +36,7 @@ void File::open_stdout() noexcept { handle_ = GetStdHandle(STD_OUTPUT_HANDLE); }
 void File::open_stderr() noexcept { handle_ = GetStdHandle(STD_ERROR_HANDLE); }
 
 // NOLINTBEGIN(readability-make-member-function-const)
-usize File::write(const BasicStringView<uchar>& data) noexcept {
+usize File::write(BasicStringView<uchar> data) noexcept {
   DWORD ret = 0;
   BASE_TRY_SYSCALL(WriteFile(handle_, data.data(), static_cast<DWORD>(data.size()), &ret, nullptr));
   return static_cast<usize>(ret);
