@@ -24,7 +24,7 @@ public:
   constexpr BasicCString() noexcept = default;
 
   template <Integral OtherSizeT> // NOLINTNEXTLINE(google-explicit-constructor)
-  constexpr BasicCString(const BasicStringView<Char, OtherSizeT>& str) noexcept {
+  constexpr BasicCString(BasicStringView<Char, OtherSizeT> str) noexcept {
     if (str.size() > N) {
       cstr_ = allocator().template allocate<Char>(str.size() + 1);
     }
@@ -60,5 +60,5 @@ using CString = BasicCString<char>;
 
 #ifdef BASE_LSP_ONLY
 template class base::BasicCString<char>;
-template base::BasicCString<char>::BasicCString(const BasicStringView<char>& str);
+template base::BasicCString<char>::BasicCString(BasicStringView<char> str);
 #endif
