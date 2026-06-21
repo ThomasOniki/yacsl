@@ -1,6 +1,6 @@
 module;
 #include <stdint.h>
-export module base.sys.common;
+export module base.os.common;
 
 import base.utilities.type_aliases;
 import base.ranges.string_view;

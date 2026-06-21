@@ -4,7 +4,7 @@ module;
 #include "base/attributes.hpp"
 #endif
 
-export module base.sys.process;
+export module base.os.process;
 
 #ifndef __EMSCRIPTEN__
 
@@ -16,7 +16,7 @@ import base.containers.stack_array;
 import base.containers.error;
 import base.containers.cstring;
 import base.type_traits.range_like;
-import base.sys.common;
+import base.os.common;
 import base.ranges.string_view;
 import base.ranges.initializer_list;
 import base.logging.panic;
