@@ -1,8 +1,0 @@
-option(
-  'no_libcpp',
-  type: 'boolean',
-  value: false,
-  description: '''Don't compile with the c++ standard headers in the include path and don't link with libc++.
-  C, unix, and windows headers and their needed libraries will all still be used.
-  If you enable this option, you can't use libc++ in your own apps that use libbase.''',
-)

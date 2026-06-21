@@ -1,6 +1,6 @@
 == Base
 
-Base is a general purpose c++ library designed for speed and no dependencies. It can be built with or without libc++ using the meson build system. If you plan to use this library, know that it is not guaranteed to stable or even to have all commits tested. This project is still early in developpement and I think that it is better to wait before deciding on one stable api. If you still want try this library, look at the tests for examples.
+Base is a general purpose c++ library designed for speed and no dependencies. It can be built with or without libc++ using the cmake build system. If you plan to use this library, know that it is not guaranteed to stable or even to have all commits tested. This project is still early in developpement and I think that it is better to wait before deciding on one stable api. If you still want try this library, look at the tests for examples.
 
 :toc:
 == Dependencies
