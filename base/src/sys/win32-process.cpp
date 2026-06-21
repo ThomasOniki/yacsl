@@ -1,14 +1,6 @@
-#ifdef _WIN32
+module;
 
-#include "base/containers/error.hpp"
-#include "base/containers/stack_array.hpp"
-#include "base/containers/string_view.hpp"
-#include "base/logging/panic.hpp"
-#include "base/sys/process.hpp"
-#include "base/utilities/move_forward.hpp"
-#include "base/utilities/nil.hpp"
-#include "base/utilities/type_aliases.hpp"
-#include "win32-utils.hpp"
+#ifdef _WIN32
 #include <consoleapi.h>
 #include <consoleapi2.h>
 #include <errhandlingapi.h>
@@ -19,6 +11,11 @@
 #include <synchapi.h>
 #include <windows.h>
 #include <winerror.h>
+#endif
+
+module base.sys.process;
+
+#ifdef _WIN32
 
 namespace base {
 

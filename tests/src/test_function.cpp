@@ -1,9 +1,8 @@
-#include "base/containers/char_buffer.hpp"
-#include "base/containers/function.hpp"
-#include "base/logging/common.hpp"
-#include "base/logging/format_string.hpp"
-#include "base/logging/format_string_parser.hpp"
-#include "base/logging/formatter.hpp"
+import base.containers.char_buffer;
+import base.containers.function;
+import base.logging.format_string;
+import base.logging.format_string_parser;
+import base.logging.formatter;
 #include "test_utils.hpp"
 #include <stdint.h>
 #include <stdio.h>

@@ -1,5 +1,6 @@
-#include "base/strings/char_encodings.hpp"
-#include "base/utilities/type_aliases.hpp"
+module base.strings.char_encodings;
+
+import base.utilities.type_aliases;
 
 namespace base {
 

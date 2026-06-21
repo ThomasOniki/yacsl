@@ -1,25 +1,20 @@
-#ifndef _WIN32
+module;
 
-#include "unix-utils.hpp"
-#include "base/containers/result.hpp"
-#include "base/containers/string_view.hpp"
-#include "base/logging/panic.hpp"
-#include "base/sys/common.hpp"
+#ifndef _WIN32
+#include "try_syscall.hpp"
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
+#endif
+
+module base.sys.utils;
+
+import base.logging.panic;
+
+#ifndef _WIN32
 
 namespace base {
-
-bool strip_file_open_flag(FileOpenFlags* flags, FileOpenFlags flag) noexcept {
-  const FileOpenFlags stripped = *flags & ~flag;
-  if (stripped != *flags) {
-    *flags = stripped;
-    return true;
-  }
-  return false;
-}
 
 int unix_flags(FileOpenFlags flags) noexcept {
   unsigned int ret = 0;
