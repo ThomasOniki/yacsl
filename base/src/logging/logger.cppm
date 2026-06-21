@@ -2,7 +2,7 @@ export module base.logging.logger;
 
 import base.logging.common;
 import base.logging.format_string;
-import base.sys.file;
+import base.os.file;
 import base.utilities.type_aliases;
 import base.memory.lifetimes;
 import base.ranges.string_view;

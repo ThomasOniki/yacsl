@@ -2,9 +2,9 @@
 
 import base.containers.stack_array;
 import base.ranges.string_view;
-import base.sys.common;
-import base.sys.file;
-import base.sys.process;
+import base.os.common;
+import base.os.file;
+import base.os.process;
 import base.memory.lifetimes;
 #include "test_utils.hpp"
 #include <assert.h>

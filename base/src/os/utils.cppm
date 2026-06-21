@@ -9,10 +9,10 @@ module;
 #include <errno.h>
 #endif
 
-export module base.sys.utils;
+export module base.os.utils;
 
-import base.sys.common;
-import base.sys.file;
+import base.os.common;
+import base.os.file;
 import base.ranges.string_view;
 import base.type_traits.range_like;
 import base.containers.result;

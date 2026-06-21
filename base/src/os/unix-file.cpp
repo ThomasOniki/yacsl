@@ -8,9 +8,9 @@ module;
 #include <unistd.h>
 #endif
 
-module base.sys.file;
+module base.os.file;
 
-import base.sys.utils;
+import base.os.utils;
 import base.containers.result;
 import base.utilities.nil;
 import base.logging.panic;

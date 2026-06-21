@@ -6,7 +6,7 @@ module;
 #include <windows.h>
 #endif
 
-module base.sys.file;
+module base.os.file;
 
 #ifdef _WIN32
 

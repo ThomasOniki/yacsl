@@ -13,7 +13,7 @@ module;
 #include <winerror.h>
 #endif
 
-module base.sys.process;
+module base.os.process;
 
 #ifdef _WIN32
 
