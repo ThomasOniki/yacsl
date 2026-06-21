@@ -1,14 +1,7 @@
-#ifndef _WIN32
+module;
 
-#include "base/containers/error.hpp"
-#include "base/containers/stack_array.hpp"
-#include "base/containers/string_view.hpp"
-#include "base/logging/panic.hpp"
-#include "base/sys/process.hpp"
-#include "base/utilities/move_forward.hpp"
-#include "base/utilities/nil.hpp"
-#include "base/utilities/type_aliases.hpp"
-#include "unix-utils.hpp"
+#if !defined(__EMSCRIPTEN__) && !defined(_WIN32)
+#include "try_syscall.hpp"
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -19,6 +12,16 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#endif
+
+module base.sys.process;
+
+import base.sys.utils;
+import base.utilities.type_aliases;
+import base.utilities.nil;
+import base.logging.panic;
+
+#if !defined(__EMSCRIPTEN__) && !defined(_WIN32)
 
 namespace base {
 

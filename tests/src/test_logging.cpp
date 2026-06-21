@@ -1,9 +1,13 @@
-#include "base/containers/initializer_list.hpp"
-#include "base/containers/stack_array.hpp"
-#include "base/containers/string_view.hpp"
-#include "base/logging/common.hpp"
-#include "base/logging/logger.hpp"
-#include "base/utilities/type_aliases.hpp"
+import base.ranges.initializer_list;
+import base.ranges.string_view;
+import base.containers.stack_array;
+import base.logging.logger;
+import base.logging.common;
+import base.logging.format_string;
+import base.sys.common;
+import base.sys.file;
+import base.utilities.type_aliases;
+import base.memory.lifetimes;
 #include <assert.h>
 #include <stdarg.h>
 #include <stddef.h>
@@ -67,8 +71,6 @@ static void log_to_file(base::LogLevel lvl, const base::FormatString<Args...>& f
   logger.log(lvl, fmt, base::forward<Args>(args)...);
 }
 
-static void log(base::LogLevel lvl, base::StringView msg) { log_to_file(lvl, "{}", msg); }
-
 using enum base::LogLevel;
 
 int main() {
@@ -121,7 +123,7 @@ int main() {
   check("[INFO] With enum classes: test_ns::EnumClass::Zero, (test_ns::EnumClass)500, "
         "(test_ns::EnumClass)1");
 
-  log(Info, "Goodbye, world!");
+  log_to_file(Info, "Goodbye, world!");
   check("[INFO] Goodbye, world!");
 
   (void)remove("test_logs.txt");

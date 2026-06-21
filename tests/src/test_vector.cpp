@@ -1,10 +1,10 @@
-#include "base/containers/char_buffer.hpp"
-#include "base/containers/string_view.hpp"
-#include "base/containers/vector.hpp"
-#include "base/logging/common.hpp"
-#include "base/logging/formatter.hpp"
-#include "base/memory/arena.hpp"
-#include "base/memory/singleton_allocator.hpp"
+import base.containers.char_buffer;
+import base.containers.vector;
+import base.ranges.string_view;
+import base.logging.formatter;
+import base.memory.arena;
+import base.memory.singleton_allocator;
+
 #include "test_utils.hpp"
 #include <stdint.h>
 #include <stdio.h>

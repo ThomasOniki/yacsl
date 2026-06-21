@@ -3,22 +3,46 @@
 Base is a general purpose c++ library designed for speed and no dependencies. It can be built with or without libc++ using the meson build system. If you plan to use this library, know that it is not guaranteed to stable or even to have all commits tested. This project is still early in developpement and I think that it is better to wait before deciding on one stable api. If you still want try this library, look at the tests for examples.
 
 :toc:
-
 == Dependencies
-- a c++ compiler
-- meson
+- the latest homebrew llvm toolchain (other toolchains may work but aren't tested as of the time of writing this)
+- cmake 3.28+
 
 == Installation
 [source,sh]
 ----
 git clone https://codeberg.org/ThomasReal/base.git
 cd base
-meson setup build --buildtype=release --prefix=[YOUR_PREFIX]
-meson install -C build
+cmake -B build -DCMAKE_INSTALL_PREFIX=<your_prefix> -DCMAKE_BUILD_TYPE=Release
+cmake --build build
 ----
 
 == Testing
 [source,sh]
 ----
-meson test -C build
+cd build/tests/
+ctest --output-on-failure 
 ----
+
+== Emscripten
+You can compile with emscripten using emcmake for the configure step:
+[source,sh]
+----
+emcmake cmake -B build -DCMAKE_INSTALL_PREFIX=<your_prefix> -DCMAKE_BUILD_TYPE=Release
+----
+
+On MacOS I have found that homebrew emscripten does not ship with clang-scan-deps. To fix this you can run
+[source,sh]
+----
+brew install llvm lld
+[[ -z XDG_DATA_HOME ]] && XDG_DATA_HOME="$HOME/.local/share"
+export EM_LLVM_ROOT="$XDG_DATA_HOME/emscripten-llvm-bin"
+mkdir -p "$EM_LLVM_ROOT" 
+ln -s "$HOMEBREW_PREFIX/opt/llvm/bin/clang" "$EM_LLVM_ROOT"
+ln -s "$HOMEBREW_PREFIX/opt/llvm/bin/clang++" "$EM_LLVM_ROOT"
+ln -s "$HOMEBREW_PREFIX/opt/llvm/bin/clang-scan-deps" "$EM_LLVM_ROOT"
+ln -s "$HOMEBREW_PREFIX/opt/llvm/bin/llvm-ar" "$EM_LLVM_ROOT"
+ln -s "$HOMEBREW_PREFIX/opt/llvm/bin/llvm-ranlib" "$EM_LLVM_ROOT"
+ln -s "$HOMEBREW_PREFIX/opt/llvm/bin/llvm-objcopy" "$EM_LLVM_ROOT"
+ln -s "$HOMEBREW_PREFIX/opt/lld/bin/lld" "$EM_LLVM_ROOT/wasm-ld"
+----
+If you want $EM_LLVM_ROOT to persist, put it in either your shell or emscripten's config file.

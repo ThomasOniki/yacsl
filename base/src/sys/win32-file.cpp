@@ -1,16 +1,14 @@
-#ifdef _WIN32
+module;
 
-#include "base/containers/cstring.hpp"
-#include "base/containers/error.hpp"
-#include "base/containers/stack_array.hpp"
-#include "base/containers/string_view.hpp"
-#include "base/sys/file.hpp"
-#include "base/type_traits/limits.hpp"
-#include "base/utilities/type_aliases.hpp"
-#include "win32-utils.hpp"
+#ifdef _WIN32
 #include <fileapi.h>
 #include <intsafe.h>
 #include <windows.h>
+#endif
+
+module base.sys.file;
+
+#ifdef _WIN32
 
 namespace base {
 

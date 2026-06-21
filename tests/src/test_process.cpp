@@ -1,12 +1,16 @@
-#include "base/containers/stack_array.hpp"
-#include "base/containers/string_view.hpp"
-#include "base/sys/file.hpp"
-#include "base/sys/process.hpp"
-#include "base/utilities/move_forward.hpp"
+#ifndef __EMSCRIPTEN__
+
+import base.containers.stack_array;
+import base.ranges.string_view;
+import base.sys.common;
+import base.sys.file;
+import base.sys.process;
+import base.memory.lifetimes;
 #include "test_utils.hpp"
 #include <assert.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -16,6 +20,14 @@ static constexpr int OPEN_PERMISSIONS = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
 static constexpr int OPEN_PERMISSIONS = 0;
 #endif
 
+#define TRY_SYSCALL(syscall)                                                                       \
+  do {                                                                                             \
+    if ((syscall) == -1) [[unlikely]] {                                                            \
+      perror(#syscall);                                                                            \
+      abort();                                                                                     \
+    }                                                                                              \
+  } while (false)
+
 static int redirect(int stream, const char* path) {
   // NOLINTNEXTLINE(android-cloexec-dup)
   const int old = dup(stream);
@@ -23,8 +35,8 @@ static int redirect(int stream, const char* path) {
   // NOLINTNEXTLINE(android-cloexec-open)
   const int file = open(path, O_WRONLY | O_CREAT | O_TRUNC, OPEN_PERMISSIONS);
   assert(file != -1);
-  assert(dup2(file, stream) != -1);
-  assert(close(file) != -1);
+  TRY_SYSCALL(dup2(file, stream));
+  TRY_SYSCALL(close(file));
   return old;
 }
 
@@ -39,12 +51,12 @@ struct Redirected {
         original_stderr(redirect(STDERR_FILENO, STDERR_FILE_PATH)) {}
 
   ~Redirected() noexcept {
-    assert(dup2(original_stdout, STDOUT_FILENO) != -1);
-    assert(close(original_stdout) != -1);
+    TRY_SYSCALL(dup2(original_stdout, STDOUT_FILENO));
+    TRY_SYSCALL(close(original_stdout));
     (void)fputs("stdout restored\n", stdout);
 
-    assert(dup2(original_stderr, STDERR_FILENO) != -1);
-    assert(close(original_stderr) != -1);
+    TRY_SYSCALL(dup2(original_stderr, STDERR_FILENO));
+    TRY_SYSCALL(close(original_stderr));
     (void)fputs("stderr restored\n", stderr);
   }
 
@@ -54,7 +66,7 @@ struct Redirected {
   Redirected& operator=(Redirected&&)      = delete;
 
   [[nodiscard]] static Redirected& get() {
-    static Redirected instance{};
+    static Redirected instance = Redirected();
     return instance;
   }
 
@@ -62,24 +74,24 @@ struct Redirected {
     // NOLINTNEXTLINE(android-cloexec-dup)
     stderr_file = dup(STDERR_FILENO);
     assert(stderr_file != -1);
-    assert(dup2(original_stderr, STDERR_FILENO) != -1);
-    assert(close(original_stderr) != -1);
+    TRY_SYSCALL(dup2(original_stderr, STDERR_FILENO));
+    TRY_SYSCALL(close(original_stderr));
     original_stderr = -1;
   }
   void restore_file_stderr() {
     // NOLINTNEXTLINE(android-cloexec-dup)
     original_stderr = dup(STDERR_FILENO);
     assert(original_stderr != -1);
-    assert(dup2(stderr_file, STDERR_FILENO) != -1);
-    assert(close(stderr_file) != -1);
+    TRY_SYSCALL(dup2(stderr_file, STDERR_FILENO));
+    TRY_SYSCALL(close(stderr_file));
     stderr_file = -1;
   }
   static void maybe_rewind_stdout_stderr(const char* path) {
     if (path != nullptr) {
       if (strcmp(path, STDOUT_FILE_PATH) == 0) {
-        assert(lseek(STDOUT_FILENO, 0, SEEK_SET) != -1);
+        TRY_SYSCALL(lseek(STDOUT_FILENO, 0, SEEK_SET));
       } else if (strcmp(path, STDERR_FILE_PATH) == 0) {
-        assert(lseek(STDERR_FILENO, 0, SEEK_SET) != -1);
+        TRY_SYSCALL(lseek(STDERR_FILENO, 0, SEEK_SET));
       }
     }
   }
@@ -130,8 +142,8 @@ static int check_file(const char* path, base::StringView expected) {
   EXPECT_EQ(size, expected.size());
 
   if (path != nullptr) {
-    assert(ftruncate(fildes, 0) != -1);
-    assert(close(fildes) != -1);
+    TRY_SYSCALL(ftruncate(fildes, 0));
+    TRY_SYSCALL(close(fildes));
   }
 
   return ret;
@@ -302,3 +314,11 @@ int main() {
 
   return ret;
 }
+
+#else
+
+import base.logging.logger;
+
+int main() { base::log_info("test_process does nothing when compiling with emscripten."); }
+
+#endif

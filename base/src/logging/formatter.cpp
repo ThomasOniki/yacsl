@@ -1,14 +1,12 @@
-#include "base/logging/formatter.hpp"
-#include "base/containers/char_buffer.hpp"
-#include "base/containers/stack_array.hpp"
-#include "base/containers/string_view.hpp"
-#include "base/strings/itoa.hpp"
-#include "base/type_traits/categories.hpp"
-#include "base/type_traits/limits.hpp"
-#include "base/type_traits/sign.hpp"
-#include "base/utilities/extended_types.hpp"
-#include "base/utilities/type_aliases.hpp"
+module;
+
+#include "base/attributes.hpp"
 #include <string.h>
+
+module base.logging.formatter;
+
+import base.strings.itoa;
+import base.type_traits.limits;
 
 namespace base {
 
