@@ -14,9 +14,9 @@ module;
 #include <unistd.h>
 #endif
 
-module base.sys.process;
+module base.os.process;
 
-import base.sys.utils;
+import base.os.utils;
 import base.utilities.type_aliases;
 import base.utilities.nil;
 import base.logging.panic;

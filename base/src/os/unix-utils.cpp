@@ -8,7 +8,7 @@ module;
 #include <unistd.h>
 #endif
 
-module base.sys.utils;
+module base.os.utils;
 
 import base.logging.panic;
 

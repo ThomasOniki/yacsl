@@ -1,9 +1,9 @@
-export module base.sys.file;
+export module base.os.file;
 
 import base.utilities.type_aliases;
 import base.utilities.isize;
-import base.sys.common;
-import base.sys.process;
+import base.os.common;
+import base.os.process;
 import base.ranges.string_view;
 import base.containers.error;
 import base.containers.cstring;
