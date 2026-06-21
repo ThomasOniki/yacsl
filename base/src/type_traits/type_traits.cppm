@@ -1,4 +1,4 @@
-export module base.type_triats;
+export module base.type_traits;
 
 export import base.type_traits.allocator;
 export import base.type_traits.categories;
