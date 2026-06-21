@@ -1,8 +1,11 @@
-#include "base/memory/arena.hpp"
-#include "base/logging/panic.hpp"
-#include "base/utilities/type_aliases.hpp"
+module;
+
 #include <stdio.h>
 #include <stdlib.h>
+
+module base.memory.arena;
+
+import base.logging.panic;
 
 namespace base {
 
@@ -28,7 +31,7 @@ bool Arena::reserve(usize capacity) noexcept {
   ptr_   = begin_ + sizeof(Metadata);
 
   panic_if(begin_ == nullptr, "[Arena] malloc failed.");
-  new (begin_) Metadata{metadata};
+  construct_at(reinterpret_cast<Metadata*>(begin_), metadata);
   return true;
 }
 

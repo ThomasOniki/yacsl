@@ -1,19 +1,21 @@
-#ifndef _WIN32
+module;
 
-#include "base/containers/cstring.hpp"
-#include "base/containers/error.hpp"
-#include "base/containers/result.hpp"
-#include "base/containers/string_view.hpp"
-#include "base/logging/panic.hpp"
-#include "base/sys/common.hpp"
-#include "base/sys/file.hpp"
-#include "base/utilities/nil.hpp"
-#include "base/utilities/type_aliases.hpp"
-#include "unix-utils.hpp"
+#ifndef _WIN32
+#include "try_syscall.hpp"
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
+#endif
+
+module base.sys.file;
+
+import base.sys.utils;
+import base.containers.result;
+import base.utilities.nil;
+import base.logging.panic;
+
+#ifndef _WIN32
 
 namespace base {
 
@@ -29,7 +31,7 @@ Error<File::OpenError> File::open(const char* path, FileOpenFlags flags) noexcep
 
 void File::close() noexcept {
   if (is_open()) {
-    panic_if(::close(handle_) == -1, "::close() failed: {}", errno_str());
+    BASE_TRY_SYSCALL(::close(handle_));
     handle_ = NIL_FILE_HANDLE;
   }
 }
@@ -68,10 +70,5 @@ void File::seek_cursor(isize offset) noexcept {
 // NOLINTEND(readability-make-member-function-const)
 
 } // namespace base
-
-#ifdef BASE_LSP_ONLY
-template class base::BasicCString<char, 8>;
-template base::BasicCString<char, 8>::BasicCString(const BasicStringView<char>& str);
-#endif
 
 #endif

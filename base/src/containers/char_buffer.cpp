@@ -1,8 +1,9 @@
-#include "base/containers/char_buffer.hpp"
-#include "base/containers/string_view.hpp"
-#include "base/memory/arena.hpp"
-#include "base/utilities/type_aliases.hpp"
+module;
+
 #include <string.h>
+
+module base.containers.char_buffer;
+import base.memory.arena;
 
 namespace base {
 
