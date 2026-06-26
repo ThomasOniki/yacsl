@@ -2,12 +2,13 @@
 
 import base.logging.logger;
 import base.ranges.string_view;
+
 #include <string.h>
 
 #define EXPECT_EQ(lhs, rhs)                                                                        \
   do {                                                                                             \
     if ((lhs) != (rhs)) {                                                                          \
-      base::log_error("EXPECT_EQ failed. Expected " #lhs " == " #rhs ", got {} and {}.", lhs,      \
+      base::log_error("EXPECT_EQ failed. Expected {} == {}, got {} and {}.", #lhs, #rhs, lhs,      \
                       rhs);                                                                        \
       ret = 1;                                                                                     \
     }                                                                                              \
