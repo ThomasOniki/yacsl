@@ -1,4 +1,4 @@
-import base.containers.char_buffer;
+import base.containers.string;
 import base.containers.function;
 import base.logging.format_string;
 import base.logging.format_string_parser;
@@ -42,7 +42,7 @@ public:
     base::FormatStringParser parser(fmt);
     return parser.end_parse();
   }
-  [[maybe_unused]] static void format(base::CharBuffer& buf, const Counts& counts) {
+  [[maybe_unused]] static void format(base::String& buf, const Counts& counts) {
     base::format_to(
         buf, "constructors: {}, copy_constructors: {}, move_contructors: {}, destructors: {}",
         counts.constructor_call_count, counts.copy_constructor_call_count,

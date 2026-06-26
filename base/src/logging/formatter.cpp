@@ -91,7 +91,7 @@ template <typename C> static char* write_char(BASE_LIFETIMEBOUND char* buf, C ch
   return write_char4(buf, static_cast<char32_t>(chr));
 }
 
-template <typename C> static void write_char(CharBuffer& buf, C chr) {
+template <typename C> static void write_char(String& buf, C chr) {
   if (sizeof(C) == 1 || chr < 0x80) {
     write_char1(buf.grow(1), static_cast<char8_t>(chr));
   } else if (chr < 0x800) {
@@ -218,7 +218,7 @@ template <typename C> static char* write_debug_char(BASE_LIFETIMEBOUND char* buf
   return write_debug_char_below_0x20(buf, static_cast<char>(uchr));
 }
 
-static void write_debug_char_below_0x20(CharBuffer& buf, char chr) {
+static void write_debug_char_below_0x20(String& buf, char chr) {
   char* str = nullptr;
   switch (chr) {
   case '\n':
@@ -263,7 +263,7 @@ static void write_debug_char_below_0x20(CharBuffer& buf, char chr) {
   }
 }
 
-template <typename C> static void write_debug_char(CharBuffer& buf, C chr) {
+template <typename C> static void write_debug_char(String& buf, C chr) {
   // For some reason clang-tidy's warning about casting [signed] char to unsigned types other than
   // uchar also applies to wchar_t, but you can't cast a wchar to uchar like it suggests if you
   // don't want to lose precision.
@@ -288,7 +288,7 @@ struct FormatOptions {
 };
 } // namespace
 
-template <typename C> static void format_char(CharBuffer& buf, C chr, FormatOptions opts) {
+template <typename C> static void format_char(String& buf, C chr, FormatOptions opts) {
   const u32 len = char_len(chr);
   if (len >= opts.width) {
     write_char(buf.grow(len), chr);
@@ -308,7 +308,7 @@ template <typename C> static void format_char(CharBuffer& buf, C chr, FormatOpti
   }
 }
 
-template <typename C> static void format_debug_char(CharBuffer& buf, C chr, FormatOptions opts) {
+template <typename C> static void format_debug_char(String& buf, C chr, FormatOptions opts) {
   const u32 len = debug_char_len(chr);
   // +2 for the quotes
   if (len + 2 >= opts.width) {
@@ -364,7 +364,7 @@ template <bool Debug, typename C> static void write_string(char* buf, BasicStrin
 }
 
 template <bool Debug, typename C>
-static void write_string(CharBuffer& buf, BasicStringView<C, u32> str) {
+static void write_string(String& buf, BasicStringView<C, u32> str) {
   if constexpr (Debug) {
     buf.append('"');
     for (const C chr : str) {
@@ -383,7 +383,7 @@ static void write_string(CharBuffer& buf, BasicStringView<C, u32> str) {
 }
 
 template <bool Debug, typename C>
-static void format_string(CharBuffer& buf, BasicStringView<C, usize> usize_str,
+static void format_string(String& buf, BasicStringView<C, usize> usize_str,
                           FormatOptions opts) {
   const BasicStringView<C, u32> str(usize_str.data(), static_cast<u32>(usize_str.size()));
 
@@ -430,7 +430,7 @@ static void format_string(CharBuffer& buf, BasicStringView<C, usize> usize_str,
 }
 
 template <Character Char>
-void Formatter<BasicStringView<Char>>::format(CharBuffer& buf, BasicStringView<Char> str) const {
+void Formatter<BasicStringView<Char>>::format(String& buf, BasicStringView<Char> str) const {
   const FormatOptions opts{.width = width_, .fill = fill_, .align = align_};
   if (type_ == 's') [[likely]] {
     format_string<false>(buf, str, opts);
@@ -439,13 +439,13 @@ void Formatter<BasicStringView<Char>>::format(CharBuffer& buf, BasicStringView<C
   }
 }
 
-template void Formatter<BasicStringView<char>>::format(CharBuffer&, View) const;
-template void Formatter<BasicStringView<unsigned char>>::format(CharBuffer&, View) const;
-template void Formatter<BasicStringView<signed char>>::format(CharBuffer&, View) const;
-template void Formatter<BasicStringView<wchar_t>>::format(CharBuffer&, View) const;
-template void Formatter<BasicStringView<char8_t>>::format(CharBuffer&, View) const;
-template void Formatter<BasicStringView<char16_t>>::format(CharBuffer&, View) const;
-template void Formatter<BasicStringView<char32_t>>::format(CharBuffer&, View) const;
+template void Formatter<BasicStringView<char>>::format(String&, View) const;
+template void Formatter<BasicStringView<unsigned char>>::format(String&, View) const;
+template void Formatter<BasicStringView<signed char>>::format(String&, View) const;
+template void Formatter<BasicStringView<wchar_t>>::format(String&, View) const;
+template void Formatter<BasicStringView<char8_t>>::format(String&, View) const;
+template void Formatter<BasicStringView<char16_t>>::format(String&, View) const;
+template void Formatter<BasicStringView<char32_t>>::format(String&, View) const;
 
 template <typename T, u32 Base>
 static char* itoa_from_end_base_x(BASE_LIFETIMEBOUND char* buf_end, T value) {
@@ -496,7 +496,7 @@ template <typename T, T Base> static constexpr StackArray<T, 130> gen_powers() {
 }
 
 template <u32 Base, typename T>
-static void format_integral(CharBuffer& buf, T value, FormatOptions opts, char sign) {
+static void format_integral(String& buf, T value, FormatOptions opts, char sign) {
   // 0, 0, Base, Base^2, Base^3...
   static constexpr StackArray<T, 130> powers = gen_powers<T, Base>();
 
@@ -547,7 +547,7 @@ static void format_integral(CharBuffer& buf, T value, FormatOptions opts, char s
   }
 }
 
-void Formatter<bool>::format(CharBuffer& buf, bool value) const {
+void Formatter<bool>::format(String& buf, bool value) const {
   const FormatOptions opts{
       .width = width_,
       .fill  = fill_,
@@ -560,7 +560,7 @@ void Formatter<bool>::format(CharBuffer& buf, bool value) const {
   }
 }
 
-template <Integral T> void Formatter<T>::format(CharBuffer& buf, T value) const {
+template <Integral T> void Formatter<T>::format(String& buf, T value) const {
   const FormatOptions opts{
       .width = width_,
       .fill  = fill_,
@@ -602,7 +602,7 @@ template <Integral T> void Formatter<T>::format(CharBuffer& buf, T value) const 
   }
 }
 
-void Formatter<void*>::format(CharBuffer& buf, const void* ptr) const {
+void Formatter<void*>::format(String& buf, const void* ptr) const {
   const FormatOptions opts{
       .width = width_,
       .fill  = fill_,
@@ -612,28 +612,28 @@ void Formatter<void*>::format(CharBuffer& buf, const void* ptr) const {
   format_integral<16>(buf, reinterpret_cast<uptr>(ptr), opts, '\0');
 }
 
-template void Formatter<signed char>::format(CharBuffer& buf, signed char value) const;
-template void Formatter<wchar_t>::format(CharBuffer& buf, wchar_t value) const;
-template void Formatter<char8_t>::format(CharBuffer& buf, char8_t value) const;
-template void Formatter<char16_t>::format(CharBuffer& buf, char16_t value) const;
-template void Formatter<char32_t>::format(CharBuffer& buf, char32_t value) const;
+template void Formatter<signed char>::format(String& buf, signed char value) const;
+template void Formatter<wchar_t>::format(String& buf, wchar_t value) const;
+template void Formatter<char8_t>::format(String& buf, char8_t value) const;
+template void Formatter<char16_t>::format(String& buf, char16_t value) const;
+template void Formatter<char32_t>::format(String& buf, char32_t value) const;
 
-template void Formatter<unsigned char>::format(CharBuffer& buf, unsigned char value) const;
-template void Formatter<unsigned short>::format(CharBuffer& buf, unsigned short value) const;
-template void Formatter<unsigned int>::format(CharBuffer& buf, unsigned int value) const;
-template void Formatter<unsigned long>::format(CharBuffer& buf, unsigned long value) const;
-template void Formatter<unsigned long long>::format(CharBuffer&        buf,
+template void Formatter<unsigned char>::format(String& buf, unsigned char value) const;
+template void Formatter<unsigned short>::format(String& buf, unsigned short value) const;
+template void Formatter<unsigned int>::format(String& buf, unsigned int value) const;
+template void Formatter<unsigned long>::format(String& buf, unsigned long value) const;
+template void Formatter<unsigned long long>::format(String&        buf,
                                                     unsigned long long value) const;
 
-template void Formatter<char>::format(CharBuffer& buf, char value) const;
-template void Formatter<short>::format(CharBuffer& buf, short value) const;
-template void Formatter<int>::format(CharBuffer& buf, int value) const;
-template void Formatter<long>::format(CharBuffer& buf, long value) const;
-template void Formatter<long long>::format(CharBuffer& buf, long long value) const;
+template void Formatter<char>::format(String& buf, char value) const;
+template void Formatter<short>::format(String& buf, short value) const;
+template void Formatter<int>::format(String& buf, int value) const;
+template void Formatter<long>::format(String& buf, long value) const;
+template void Formatter<long long>::format(String& buf, long long value) const;
 
 #ifdef BASE_INT128_FOUND
-template void Formatter<i128>::format(CharBuffer& buf, i128 value) const;
-template void Formatter<u128>::format(CharBuffer& buf, u128 value) const;
+template void Formatter<i128>::format(String& buf, i128 value) const;
+template void Formatter<u128>::format(String& buf, u128 value) const;
 #endif
 
 } // namespace base
