@@ -79,28 +79,49 @@ public:
     return *this;
   }
 
-  constexpr void append(const Char* ptr, SizeT len) noexcept {
+  constexpr BasicString& append(const Char* ptr, SizeT len) noexcept {
     if (end_ + len > allocated_end_) {
       definitely_reserve(capacity() * 2 + len);
     }
     memcpy(end_, ptr, len);
     end_ += len;
+    return *this;
   }
-  constexpr void append(const Char* begin, const Char* end) noexcept {
-    append(begin, static_cast<SizeT>(end - begin));
+  constexpr BasicString& append(const Char* begin, const Char* end) noexcept {
+    return append(begin, static_cast<SizeT>(end - begin));
   }
 
-  constexpr void append(BasicStringView<Char, SizeT> str) noexcept {
-    append(str.data(), str.size());
+  constexpr BasicString& append(BasicStringView<Char, SizeT> str) noexcept {
+    return append(str.data(), str.size());
   }
-  constexpr void append(const BasicString& other) noexcept { append(other.begin(), other.size()); }
+  constexpr BasicString& append(const BasicString& other) noexcept {
+    return append(other.begin(), other.size());
+  }
 
-  constexpr void append(Char chr) noexcept {
+  constexpr BasicString& append(Char chr) noexcept {
     if (end_ + 1 > allocated_end_) {
       definitely_reserve(capacity() * 2 + 1);
     }
     *end_ = chr;
     ++end_;
+    return *this;
+  }
+
+  constexpr BasicString& operator+=(BasicStringView<Char, SizeT> str) { return append(str); }
+  constexpr BasicString& operator+=(const BasicString& str) { return append(str); }
+  constexpr BasicString& operator+=(Char chr) { return append(chr); }
+
+  constexpr BasicString operator+(const BasicString& rhs) {
+    BasicString ret(*this);
+    return ret += rhs;
+  }
+  constexpr BasicString operator+(BasicStringView<Char, SizeT> rhs) {
+    BasicString ret(*this);
+    return ret += rhs;
+  }
+  constexpr BasicString operator+(Char chr) {
+    BasicString ret(*this);
+    return ret += chr;
   }
 
   constexpr void reserve(SizeT capacity) noexcept {
