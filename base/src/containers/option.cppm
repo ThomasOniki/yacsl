@@ -73,6 +73,14 @@ public:
   [[nodiscard]] constexpr bool is_value() const noexcept { return is_value_; }
 
   template <typename... Args>
+  [[nodiscard]] constexpr T& expect_value(FormatString<Args...> fmt, Args&&... args) noexcept {
+    panic_if(!is_value_, fmt, base::forward<Args>(args)...);
+    return value_;
+  }
+  [[nodiscard]] constexpr T& expect_value() noexcept {
+    return expect_value("Option<{}> is nil.", TYPE_STRING<T>);
+  }
+  template <typename... Args>
   [[nodiscard]] constexpr const T& expect_value(FormatString<Args...> fmt,
                                                 Args&&... args) const noexcept {
     panic_if(!is_value_, fmt, base::forward<Args>(args)...);
@@ -82,6 +90,14 @@ public:
     return expect_value("Option<{}> is nil.", TYPE_STRING<T>);
   }
 
+  template <typename... Args>
+  [[nodiscard]] constexpr T& assert_value(FormatString<Args...> fmt, Args&&... args) noexcept {
+    debug_panic_if(!is_value_, fmt, base::forward<Args>(args)...);
+    return value_;
+  }
+  [[nodiscard]] constexpr T& assert_value() noexcept {
+    return assert_value("Option<{}> is nil.", TYPE_STRING<T>);
+  }
   template <typename... Args>
   [[nodiscard]] constexpr const T& assert_value(FormatString<Args...> fmt,
                                                 Args&&... args) const noexcept {
