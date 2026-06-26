@@ -10,11 +10,20 @@ import base.type_traits.categories;
 
 export namespace base {
 
-constexpr const char* num_end(BASE_LIFETIMEBOUND const char* begin) {
+template <Character Char> constexpr const Char* num_end(BASE_LIFETIMEBOUND const Char* begin) {
   while (*begin >= '0' && *begin <= '9') {
     ++begin;
   }
   return begin;
+}
+
+template <Integral T, Character Char = char, Integral SizeT = usize>
+constexpr T atoi(const Char* begin, const Char* end) {
+  return atoi<T>(BasicStringView<Char, SizeT>(begin, end));
+}
+template <Integral T, Character Char = char, Integral SizeT = usize>
+constexpr T atoi(const Char* ptr, SizeT len) {
+  return atoi<T>(BasicStringView<Char, SizeT>(ptr, len));
 }
 
 template <Integral T, Character Char = char, Integral SizeT = usize>
