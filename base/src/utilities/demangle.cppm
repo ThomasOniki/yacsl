@@ -26,7 +26,7 @@ public:
       String func = base::move(demangled);
       demangle_type();
       demangled.append(' ');
-      demangled.append(StringView(func.begin(), func.end()));
+      demangled.append(func);
     }
 
     demangled.append('(');
@@ -200,7 +200,7 @@ private:
     while (*mangled != 'E') {
       ++mangled;
     }
-    demangled.append(StringView(begin, mangled));
+    demangled.append(begin, mangled);
     ++mangled;
   }
 
@@ -344,7 +344,7 @@ private:
   }
 
 private:
-  String  demangled;
+  String      demangled;
   const char* mangled       = nullptr;
   bool        has_templates = false;
 };
