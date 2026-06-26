@@ -35,9 +35,9 @@ template <typename T>
   return static_cast<T&&>(value);
 }
 
-template <typename T, typename... Args> constexpr T* construct_at(T* locatoin, Args&&... args) {
+template <typename T, typename... Args> constexpr T* construct_at(T* location, Args&&... args) {
   // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
-  return ::new (locatoin) T(base::forward<Args>(args)...);
+  return ::new (location) T(base::forward<Args>(args)...);
 }
 
 constexpr void* copy_bytes(void* dst, const void* src, usize nbytes) {
