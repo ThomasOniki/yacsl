@@ -1,13 +1,10 @@
-module;
-
-#include "base_export.hpp"
-
 export module base.containers.option;
 
 import base.utilities.nil;
 import base.memory.lifetimes;
 import base.type_traits.categories;
 import base.type_traits.trivial;
+import base.type_traits.type_string;
 import base.ranges.string_view;
 import base.logging.format_string;
 import base.logging.panic;
@@ -82,7 +79,7 @@ public:
     return value_;
   }
   [[nodiscard]] constexpr const T& expect_value() const noexcept {
-    return expect_value("Optional has no value.");
+    return expect_value("Option<{}> is nil.", TYPE_STRING<T>);
   }
 
   template <typename... Args>
@@ -92,7 +89,7 @@ public:
     return value_;
   }
   [[nodiscard]] constexpr const T& assert_value() const noexcept {
-    return assert_value("Optional has no value.");
+    return assert_value("Option<{}> is nil.", TYPE_STRING<T>);
   }
 
 private:
