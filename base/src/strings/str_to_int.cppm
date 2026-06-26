@@ -17,7 +17,7 @@ constexpr const char* num_end(BASE_LIFETIMEBOUND const char* begin) {
   return begin;
 }
 
-template <Integral T, typename Char = char, Integral SizeT = usize>
+template <Integral T, Character Char = char, Integral SizeT = usize>
 constexpr T str_to_int(BasicStringView<Char, SizeT> str) noexcept {
   T ret = 0;
   for (const char chr : str) {
