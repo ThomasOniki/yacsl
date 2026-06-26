@@ -86,10 +86,13 @@ public:
     memcpy(end_, ptr, len);
     end_ += len;
   }
-  void append(BasicStringView<Char, SizeT> str) noexcept { append(str.data(), str.size()); }
   void append(const Char* begin, const Char* end) noexcept {
     append(begin, static_cast<SizeT>(end - begin));
   }
+
+  void append(BasicStringView<Char, SizeT> str) noexcept { append(str.data(), str.size()); }
+  void append(const BasicString& other) noexcept { append(other.begin(), other.size()); }
+
   void append(Char chr) noexcept {
     if (end_ + 1 > allocated_end_) {
       definitely_reserve(capacity() * 2 + 1);
