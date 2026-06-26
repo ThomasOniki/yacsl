@@ -63,6 +63,13 @@ public:
     return *this;
   }
 
+  template <typename... Args> constexpr T& emplace(Args&&... args) {
+    if (is_value_) {
+      value_.destruct();
+    }
+    return value_.construct(base::forward<Args>(args)...);
+  }
+
   [[nodiscard]] constexpr bool operator==(Nil /*nil*/) const noexcept { return !is_value_; }
   [[nodiscard]] constexpr bool operator!=(Nil /*nil*/) const noexcept { return is_value_; }
 
