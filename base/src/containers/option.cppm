@@ -63,6 +63,14 @@ public:
     return *this;
   }
 
+  constexpr Option& operator=(Nil /*nil*/) noexcept {
+    if (is_value_) {
+      value_.destruct();
+      is_value_ = false;
+    }
+    return *this;
+  }
+
   template <typename... Args> constexpr T& emplace(Args&&... args) {
     if (is_value_) {
       value_.destruct();
