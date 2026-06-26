@@ -1,55 +1,171 @@
+module;
+
+#include <string.h>
+
 export module base.containers.string;
 
 import base.ranges.string_view;
 import base.utilities.type_aliases;
 import base.containers.stack_array;
+import base.containers.base_classes;
+import base.type_traits.categories;
+import base.memory.arena;
 
 export namespace base {
 
-class String {
+template <Character Char, usize N = 0, typename Allocator = MainArenaAllocator,
+          Integral SizeT = usize>
+class BasicString : AllocatorMember<Allocator>, FixedBufferMember<Char, N, SizeT> {
 public:
-  String() noexcept  = default;
-  ~String() noexcept = default;
+  BasicString() noexcept = default;
 
-  String(const String& other) noexcept;
-  String(String&& other) noexcept;
-  String& operator=(const String& other) noexcept;
-  String& operator=(String&& other) noexcept;
+  ~BasicString() noexcept { free(); }
 
-  void append(StringView str) noexcept;
-  void append(char chr) noexcept;
+  BasicString(const BasicString& other) noexcept {
+    const SizeT size = other.size();
 
-  void reserve(usize capacity) noexcept;
+    if constexpr (N > 0) {
+      if (size > fixed_buffer_.size()) {
+        begin_         = allocator().template allocate<Char>(size);
+        allocated_end_ = end_ = begin_ + size;
+      } else {
+        end_ = begin_ + size;
+      }
+    } else {
+      begin_         = allocator().template allocate<Char>(size);
+      allocated_end_ = end_ = begin_ + size;
+    }
+
+    memcpy(begin_, other.begin_, size);
+  }
+
+  BasicString(BasicString&& other) noexcept
+      : begin_(other.begin_), end_(other.end_), allocated_end_(other.allocated_end_) {
+    other.begin_ = other.end_ = other.fixed_buffer_.begin();
+    other.allocated_end_      = other.fixed_buffer_.end();
+  }
+
+  BasicString& operator=(const BasicString& other) noexcept {
+    if (this == &other) {
+      return *this;
+    }
+    const SizeT size = other.size();
+    if (capacity() < size) {
+      free();
+      begin_         = allocator().template allocate<Char>(size);
+      allocated_end_ = end_ = begin_ + size;
+    } else {
+      end_ = begin_ + size;
+    }
+    memcpy(begin_, other.begin_, size);
+    return *this;
+  }
+
+  BasicString& operator=(BasicString&& other) noexcept {
+    if constexpr (N > 0) {
+      if (other.begin_ == other.fixed_buffer_.begin()) {
+        const SizeT size = other.size();
+        memcpy(fixed_buffer_.begin(), other.fixed_buffer_.begin(), size);
+        end_ = begin_ + size;
+        return *this;
+      }
+    }
+    free();
+    begin_         = other.begin_;
+    end_           = other.end_;
+    allocated_end_ = other.allocated_end_;
+    other.begin_ = other.end_ = other.fixed_buffer_.begin();
+    other.allocated_end_      = other.fixed_buffer_.end();
+    return *this;
+  }
+
+  void append(const Char* ptr, SizeT len) noexcept {
+    if (end_ + len > allocated_end_) {
+      definitely_reserve(capacity() * 2 + len);
+    }
+    memcpy(end_, ptr, len);
+    end_ += len;
+  }
+  void append(BasicStringView<Char, SizeT> str) noexcept { append(str.data(), str.size()); }
+  void append(const Char* begin, const Char* end) noexcept {
+    append(begin, static_cast<SizeT>(end - begin));
+  }
+  void append(Char chr) noexcept {
+    if (end_ + 1 > allocated_end_) {
+      definitely_reserve(capacity() * 2 + 1);
+    }
+    *end_ = chr;
+    ++end_;
+  }
+
+  void reserve(SizeT capacity) noexcept {
+    if (capacity > this->capacity()) {
+      definitely_reserve(capacity);
+    }
+  }
 
   // This doesn't initialize the new memory but adds count to size. It is useful for characters you
   // want to memcpy into. It returns new_end - count.
-  char* grow(usize count) noexcept;
+  Char* grow(SizeT count) noexcept {
+    Char* ret = end_;
+    end_ += count;
+    if (end_ > allocated_end_) {
+      end_ -= count;
+      definitely_reserve(capacity() * 2 + count);
+      ret = end_;
+      end_ += count;
+    }
+    return ret;
+  }
 
   void clear() noexcept { end_ = begin_; }
 
-  [[nodiscard]] usize size() const noexcept { return static_cast<usize>(end_ - begin_); }
-  [[nodiscard]] usize capacity() const noexcept {
-    return static_cast<usize>(allocated_end_ - begin_);
+  [[nodiscard]] SizeT size() const noexcept { return static_cast<SizeT>(end_ - begin_); }
+  [[nodiscard]] SizeT capacity() const noexcept {
+    return static_cast<SizeT>(allocated_end_ - begin_);
   }
 
-  [[nodiscard]] char*       data() noexcept { return begin_; }
-  [[nodiscard]] const char* data() const noexcept { return begin_; }
+  [[nodiscard]] Char*       data() noexcept { return begin_; }
+  [[nodiscard]] const Char* data() const noexcept { return begin_; }
 
-  [[nodiscard]] char*       begin() noexcept { return begin_; }
-  [[nodiscard]] char*       end() noexcept { return end_; }
-  [[nodiscard]] const char* begin() const noexcept { return begin_; }
-  [[nodiscard]] const char* end() const noexcept { return end_; }
-  [[nodiscard]] const char* cbegin() const noexcept { return begin_; }
-  [[nodiscard]] const char* cend() const noexcept { return end_; }
-
-private:
-  void definitely_reserve(usize capacity) noexcept;
+  [[nodiscard]] Char*       begin() noexcept { return begin_; }
+  [[nodiscard]] Char*       end() noexcept { return end_; }
+  [[nodiscard]] const Char* begin() const noexcept { return begin_; }
+  [[nodiscard]] const Char* end() const noexcept { return end_; }
+  [[nodiscard]] const Char* cbegin() const noexcept { return begin_; }
+  [[nodiscard]] const Char* cend() const noexcept { return end_; }
 
 private:
-  StackArray<char, 1> fixed_         = {'\0'};
-  char*               begin_         = fixed_.data();
-  char*               end_           = fixed_.data();
-  char*               allocated_end_ = fixed_.end();
+  using FixedBufferMember<Char, N, SizeT>::fixed_buffer_;
+  using AllocatorMember<Allocator>::allocator;
+
+private:
+  void definitely_reserve(SizeT capacity) noexcept {
+    Char*       data = allocator().template allocate<Char>(capacity);
+    const SizeT size = this->size();
+    memcpy(data, begin_, size);
+    free();
+    begin_         = data;
+    end_           = data + size;
+    allocated_end_ = data + capacity;
+  }
+
+  void free() noexcept {
+    if constexpr (N > 0) {
+      if (begin_ != fixed_buffer_.begin()) {
+        allocator().template free<Char>(begin_, capacity());
+      }
+    } else {
+      allocator().template free<Char>(begin_, capacity());
+    }
+  }
+
+private:
+  Char* begin_         = fixed_buffer_.begin();
+  Char* end_           = fixed_buffer_.begin();
+  Char* allocated_end_ = fixed_buffer_.end();
 };
+
+using String = BasicString<char>;
 
 } // namespace base
