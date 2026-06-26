@@ -248,7 +248,7 @@ public:
       char*       str = buf.grow(len + TYPE_STRING<T>.size() + 2);
       str[0]          = '(';
       ++str;
-      memcpy(str, TYPE_STRING<T>.data(), TYPE_STRING<T>.size());
+      copy_bytes(str, TYPE_STRING<T>.data(), TYPE_STRING<T>.size());
       str[TYPE_STRING<T>.size()] = ')';
       itoa_from_end(buf.end(), scalar);
     }

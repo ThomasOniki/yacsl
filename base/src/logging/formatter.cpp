@@ -7,6 +7,7 @@ module base.logging.formatter;
 
 import base.strings.itoa;
 import base.type_traits.limits;
+import base.memory.lifetimes;
 
 namespace base {
 
@@ -194,7 +195,7 @@ static char* write_debug_char_below_0x20(BASE_LIFETIMEBOUND char* buf, char chr)
       return buf + 3;
     }
     static constexpr StringView table = "101112131415161718191a1b1c1d1e1f";
-    memcpy(buf + 2, &table[static_cast<usize>(chr - 0x10) * 2], 2);
+    copy_bytes(buf + 2, &table[static_cast<usize>(chr - 0x10) * 2], 2);
     return buf + 4;
   }
 }
@@ -258,7 +259,7 @@ static void write_debug_char_below_0x20(String& buf, char chr) {
       str                               = buf.grow(4);
       str[0]                            = '\\';
       str[1]                            = 'x';
-      memcpy(str + 2, &table[static_cast<usize>(chr - 0x10) * 2], 2);
+      copy_bytes(str + 2, &table[static_cast<usize>(chr - 0x10) * 2], 2);
     }
   }
 }
@@ -271,7 +272,7 @@ template <typename C> static void write_debug_char(String& buf, C chr) {
   auto uchr = static_cast<MakeUnsigned<C>>(chr);
   if (uchr >= 0x20) {
     if (uchr == 0x7F) {
-      memcpy(buf.grow(4), "\\x7F", 4);
+      copy_bytes(buf.grow(4), "\\x7F", 4);
     } else {
       write_char(buf, uchr);
     }
@@ -355,7 +356,7 @@ template <bool Debug, typename C> static void write_string(char* buf, BasicStrin
     return;
   }
   if constexpr (sizeof(C) == 1) {
-    memcpy(buf, str.data(), str.size());
+    copy_bytes(buf, str.data(), str.size());
     return;
   }
   for (const C chr : str) {
@@ -374,7 +375,7 @@ static void write_string(String& buf, BasicStringView<C, u32> str) {
     return;
   }
   if constexpr (sizeof(C) == 1) {
-    memcpy(buf.grow(str.size()), str.data(), str.size());
+    copy_bytes(buf.grow(str.size()), str.data(), str.size());
     return;
   }
   for (const C chr : str) {
