@@ -35,6 +35,8 @@ template <typename T, Integral SizeT> class FixedBufferMember<T, 0, SizeT> {
 protected:
   struct DummyFixedBuffer {
     [[nodiscard]] T*    data() const noexcept { return nullptr; }
+    [[nodiscard]] T*    begin() const noexcept { return nullptr; }
+    [[nodiscard]] T*    end() const noexcept { return nullptr; }
     [[nodiscard]] SizeT size() const noexcept { return 0; }
   };
   static constexpr DummyFixedBuffer fixed_buffer_{};
