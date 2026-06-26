@@ -35,8 +35,8 @@ template <typename T>
   return static_cast<T&&>(value);
 }
 
-template <typename T, typename... Args> constexpr T* construct_at(T* location, Args&&... args) {
+template <typename T, typename... Args> constexpr T* construct_at(T* locatoin, Args&&... args) {
   // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
-  return ::new (location) T(base::forward<Args>(args)...);
+  return ::new (locatoin) T(base::forward<Args>(args)...);
 }
 } // namespace base

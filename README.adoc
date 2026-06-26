@@ -7,7 +7,7 @@ Base is a general purpose c++ library designed for speed and no dependencies. It
 - the latest homebrew llvm toolchain (other toolchains may work but aren't tested as of the time of writing this)
 - cmake 3.28+
 
-== Installation
+== Installatoin
 [source,sh]
 ----
 git clone https://codeberg.org/ThomasReal/base.git

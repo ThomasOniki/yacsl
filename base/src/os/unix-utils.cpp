@@ -67,7 +67,7 @@ StringView errno_str(int err) noexcept {
   // clang-format off
   if (err == 0) { return "Success"; }	
 #ifdef EPERM
-  if (err == EPERM) { return "EPERM Operation not permitted"; }
+  if (err == EPERM) { return "EPERM Operatoin not permitted"; }
 #endif
 #ifdef ENOENT
   if (err == ENOENT) { return "ENOENT No such file or directory"; }
@@ -268,7 +268,7 @@ StringView errno_str(int err) noexcept {
   if (err == ESRMNT) { return "ESRMNT Srmount error"; }
 #endif
 #ifdef ECOMM
-  if (err == ECOMM) { return "ECOMM Communication error on send"; }
+  if (err == ECOMM) { return "ECOMM Communicatoin error on send"; }
 #endif
 #ifdef EPROTO
   if (err == EPROTO) { return "EPROTO Protocol error"; }
@@ -322,10 +322,10 @@ StringView errno_str(int err) noexcept {
   if (err == EUSERS) { return "EUSERS Too many users"; }
 #endif
 #ifdef ENOTSOCK
-  if (err == ENOTSOCK) { return "ENOTSOCK Socket operation on non-socket"; }
+  if (err == ENOTSOCK) { return "ENOTSOCK Socket operatoin on non-socket"; }
 #endif
 #ifdef EDESTADDRREQ
-  if (err == EDESTADDRREQ) { return "EDESTADDRREQ Destination address required"; }
+  if (err == EDESTADDRREQ) { return "EDESTADDRREQ Destinatoin address required"; }
 #endif
 #ifdef EMSGSIZE
   if (err == EMSGSIZE) { return "EMSGSIZE Message too long"; }
@@ -343,7 +343,7 @@ StringView errno_str(int err) noexcept {
   if (err == ESOCKTNOSUPPORT) { return "ESOCKTNOSUPPORT Socket type not supported"; }
 #endif
 #ifdef EOPNOTSUPP
-  if (err == EOPNOTSUPP) { return "EOPNOTSUPP Operation not supported"; }
+  if (err == EOPNOTSUPP) { return "EOPNOTSUPP Operatoin not supported"; }
 #endif
 #ifdef EPFNOSUPPORT
   if (err == EPFNOSUPPORT) { return "EPFNOSUPPORT Protocol family not supported"; }
@@ -400,10 +400,10 @@ StringView errno_str(int err) noexcept {
   if (err == EHOSTUNREACH) { return "EHOSTUNREACH No route to host"; }
 #endif
 #ifdef EALREADY
-  if (err == EALREADY) { return "EALREADY Operation already in progress"; }
+  if (err == EALREADY) { return "EALREADY Operatoin already in progress"; }
 #endif
 #ifdef EINPROGRESS
-  if (err == EINPROGRESS) { return "EINPROGRESS Operation now in progress"; }
+  if (err == EINPROGRESS) { return "EINPROGRESS Operatoin now in progress"; }
 #endif
 #ifdef ESTALE
   if (err == ESTALE) { return "ESTALE Stale file handle"; }
@@ -433,7 +433,7 @@ StringView errno_str(int err) noexcept {
   if (err == EMEDIUMTYPE) { return "EMEDIUMTYPE Wrong medium type"; }
 #endif
 #ifdef ECANCELED
-  if (err == ECANCELED) { return "ECANCELED Operation canceled"; }
+  if (err == ECANCELED) { return "ECANCELED Operatoin canceled"; }
 #endif
 #ifdef ENOKEY
   if (err == ENOKEY) { return "ENOKEY Required key not available"; }
@@ -454,7 +454,7 @@ StringView errno_str(int err) noexcept {
   if (err == ENOTRECOVERABLE) { return "ENOTRECOVERABLE State not recoverable"; }
 #endif
 #ifdef ERFKILL
-  if (err == ERFKILL) { return "ERFKILL Operation not possible due to RF-kill"; }
+  if (err == ERFKILL) { return "ERFKILL Operatoin not possible due to RF-kill"; }
 #endif
 #ifdef EHWPOISON
   if (err == EHWPOISON) { return "EHWPOISON Memory page has hardware error"; }
@@ -472,7 +472,7 @@ StringView errno_str(int err) noexcept {
   if (err == EOVERFLOW) { return "EOVERFLOW Value too large"; }
 #endif
 #ifdef ECANCELED
-  if (err == ECANCELED) { return "ECANCELED Asynchronous operation stopped before normal completion"; }
+  if (err == ECANCELED) { return "ECANCELED Asynchronous operatoin stopped before normal completion"; }
 #endif
 #ifdef ENOTRECOVERABLE
   if (err == ENOTRECOVERABLE) { return "ENOTRECOVERABLE State not recoverable"; }

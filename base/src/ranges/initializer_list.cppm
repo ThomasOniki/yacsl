@@ -11,7 +11,7 @@ import base.utilities.type_aliases;
 
 namespace std {
 
-// NOLINTNEXTLINE(bugprone-std-namespace-modification, cert-dcl58-cpp)
+// NOLINTNEXTLINE(bugprone-std-namespace-modificatoin, cert-dcl58-cpp)
 template <typename T> class initializer_list {
 public:
   constexpr initializer_list() noexcept : data_(nullptr), size_(0) {}

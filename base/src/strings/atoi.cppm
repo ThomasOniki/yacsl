@@ -2,7 +2,7 @@ module;
 
 #include "base/attributes.hpp"
 
-export module base.strings.str_to_int;
+export module base.strings.atoi;
 
 import base.ranges.string_view;
 import base.utilities.type_aliases;
@@ -18,7 +18,7 @@ constexpr const char* num_end(BASE_LIFETIMEBOUND const char* begin) {
 }
 
 template <Integral T, Character Char = char, Integral SizeT = usize>
-constexpr T str_to_int(BasicStringView<Char, SizeT> str) noexcept {
+constexpr T atoi(BasicStringView<Char, SizeT> str) noexcept {
   T ret = 0;
   for (const char chr : str) {
     ret *= 10;
