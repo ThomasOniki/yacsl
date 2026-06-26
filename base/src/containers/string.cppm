@@ -17,11 +17,11 @@ template <Character Char, usize N = 0, typename Allocator = MainArenaAllocator,
           Integral SizeT = usize>
 class BasicString : AllocatorMember<Allocator>, FixedBufferMember<Char, N, SizeT> {
 public:
-  BasicString() noexcept = default;
+  constexpr BasicString() noexcept = default;
 
-  ~BasicString() noexcept { free(); }
+  constexpr ~BasicString() noexcept { free(); }
 
-  BasicString(const BasicString& other) noexcept {
+  constexpr BasicString(const BasicString& other) noexcept {
     const SizeT size = other.size();
 
     if constexpr (N > 0) {
@@ -39,13 +39,13 @@ public:
     memcpy(begin_, other.begin_, size);
   }
 
-  BasicString(BasicString&& other) noexcept
+  constexpr BasicString(BasicString&& other) noexcept
       : begin_(other.begin_), end_(other.end_), allocated_end_(other.allocated_end_) {
     other.begin_ = other.end_ = other.fixed_buffer_.begin();
     other.allocated_end_      = other.fixed_buffer_.end();
   }
 
-  BasicString& operator=(const BasicString& other) noexcept {
+  constexpr BasicString& operator=(const BasicString& other) noexcept {
     if (this == &other) {
       return *this;
     }
@@ -61,7 +61,7 @@ public:
     return *this;
   }
 
-  BasicString& operator=(BasicString&& other) noexcept {
+  constexpr BasicString& operator=(BasicString&& other) noexcept {
     if constexpr (N > 0) {
       if (other.begin_ == other.fixed_buffer_.begin()) {
         const SizeT size = other.size();
@@ -79,21 +79,23 @@ public:
     return *this;
   }
 
-  void append(const Char* ptr, SizeT len) noexcept {
+  constexpr void append(const Char* ptr, SizeT len) noexcept {
     if (end_ + len > allocated_end_) {
       definitely_reserve(capacity() * 2 + len);
     }
     memcpy(end_, ptr, len);
     end_ += len;
   }
-  void append(const Char* begin, const Char* end) noexcept {
+  constexpr void append(const Char* begin, const Char* end) noexcept {
     append(begin, static_cast<SizeT>(end - begin));
   }
 
-  void append(BasicStringView<Char, SizeT> str) noexcept { append(str.data(), str.size()); }
-  void append(const BasicString& other) noexcept { append(other.begin(), other.size()); }
+  constexpr void append(BasicStringView<Char, SizeT> str) noexcept {
+    append(str.data(), str.size());
+  }
+  constexpr void append(const BasicString& other) noexcept { append(other.begin(), other.size()); }
 
-  void append(Char chr) noexcept {
+  constexpr void append(Char chr) noexcept {
     if (end_ + 1 > allocated_end_) {
       definitely_reserve(capacity() * 2 + 1);
     }
@@ -101,7 +103,7 @@ public:
     ++end_;
   }
 
-  void reserve(SizeT capacity) noexcept {
+  constexpr void reserve(SizeT capacity) noexcept {
     if (capacity > this->capacity()) {
       definitely_reserve(capacity);
     }
@@ -109,7 +111,7 @@ public:
 
   // This doesn't initialize the new memory but adds count to size. It is useful for characters you
   // want to memcpy into. It returns new_end - count.
-  Char* grow(SizeT count) noexcept {
+  constexpr Char* grow(SizeT count) noexcept {
     Char* ret = end_;
     end_ += count;
     if (end_ > allocated_end_) {
@@ -121,22 +123,22 @@ public:
     return ret;
   }
 
-  void clear() noexcept { end_ = begin_; }
+  constexpr void clear() noexcept { end_ = begin_; }
 
-  [[nodiscard]] SizeT size() const noexcept { return static_cast<SizeT>(end_ - begin_); }
-  [[nodiscard]] SizeT capacity() const noexcept {
+  [[nodiscard]] constexpr SizeT size() const noexcept { return static_cast<SizeT>(end_ - begin_); }
+  [[nodiscard]] constexpr SizeT capacity() const noexcept {
     return static_cast<SizeT>(allocated_end_ - begin_);
   }
 
-  [[nodiscard]] Char*       data() noexcept { return begin_; }
-  [[nodiscard]] const Char* data() const noexcept { return begin_; }
+  [[nodiscard]] constexpr Char*       data() noexcept { return begin_; }
+  [[nodiscard]] constexpr const Char* data() const noexcept { return begin_; }
 
-  [[nodiscard]] Char*       begin() noexcept { return begin_; }
-  [[nodiscard]] Char*       end() noexcept { return end_; }
-  [[nodiscard]] const Char* begin() const noexcept { return begin_; }
-  [[nodiscard]] const Char* end() const noexcept { return end_; }
-  [[nodiscard]] const Char* cbegin() const noexcept { return begin_; }
-  [[nodiscard]] const Char* cend() const noexcept { return end_; }
+  [[nodiscard]] constexpr Char*       begin() noexcept { return begin_; }
+  [[nodiscard]] constexpr Char*       end() noexcept { return end_; }
+  [[nodiscard]] constexpr const Char* begin() const noexcept { return begin_; }
+  [[nodiscard]] constexpr const Char* end() const noexcept { return end_; }
+  [[nodiscard]] constexpr const Char* cbegin() const noexcept { return begin_; }
+  [[nodiscard]] constexpr const Char* cend() const noexcept { return end_; }
 
 private:
   using FixedBufferMember<Char, N, SizeT>::fixed_buffer_;
