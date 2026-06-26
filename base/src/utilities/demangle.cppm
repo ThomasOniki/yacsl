@@ -61,7 +61,7 @@ private:
 
     for (;;) {
       const char*          end = num_end(mangled);
-      const auto           len = atoi<usize>(StringView(mangled, end));
+      const auto           len = atoi<usize>(mangled, end);
       StringView           chunk(end, len);
       constexpr StringView anonymous_ns = "_GLOBAL__N_";
       if (chunk.size() >= anonymous_ns.size() &&

@@ -68,7 +68,7 @@ constexpr char FormatStringParser::check_sign() {
 constexpr u32 FormatStringParser::check_width() {
   const char* begin = fmt_;
   fmt_              = num_end(fmt_);
-  return atoi<u32>({begin, fmt_});
+  return atoi<u32>(begin, fmt_);
 }
 
 constexpr u32 FormatStringParser::check_precision() {
