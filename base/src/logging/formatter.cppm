@@ -57,7 +57,7 @@ extern template void Formatter<unsigned char>::format(String& buf, unsigned char
 extern template void Formatter<unsigned short>::format(String& buf, unsigned short value) const;
 extern template void Formatter<unsigned int>::format(String& buf, unsigned int value) const;
 extern template void Formatter<unsigned long>::format(String& buf, unsigned long value) const;
-extern template void Formatter<unsigned long long>::format(String&        buf,
+extern template void Formatter<unsigned long long>::format(String&            buf,
                                                            unsigned long long value) const;
 
 extern template void Formatter<char>::format(String& buf, char value) const;
@@ -212,18 +212,18 @@ public:
   constexpr const char* parse(const char* fmt) { return Base::parse(fmt); }
 
   void format(String& buf, const T& range) {
-    buf.append('[');
+    buf += '[';
     auto iter = range.begin();
     auto end  = range.end();
     if (iter != end) {
       Base::format(buf, *iter);
       ++iter;
       for (; iter != end; ++iter) {
-        buf.append(", ");
+        buf += ", ";
         Base::format(buf, *iter);
       }
     }
-    buf.append(']');
+    buf += ']';
   }
 
 private:
@@ -242,7 +242,7 @@ public:
     auto scalar = static_cast<UnderlyingType>(value);
     auto u_val  = static_cast<MakeUnsigned<UnderlyingType>>(value);
     if (u_val < 256) {
-      buf.append(TABLE[u_val]);
+      buf += TABLE[u_val];
     } else {
       const usize len = itoa_digit_count(scalar);
       char*       str = buf.grow(len + TYPE_STRING<T>.size() + 2);

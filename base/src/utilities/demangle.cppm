@@ -16,7 +16,7 @@ public:
     demangled.clear();
 
     if (mangled[0] != '_' || mangled[1] != 'Z') {
-      demangled.append(mangled);
+      demangled += mangled;
       return demangled;
     }
     mangled += "_Z"_sv.size();
@@ -25,11 +25,11 @@ public:
     if (has_templates) {
       String func = base::move(demangled);
       demangle_type();
-      demangled.append(' ');
-      demangled.append(func);
+      demangled += ' ';
+      demangled += func;
     }
 
-    demangled.append('(');
+    demangled += '(';
     if (*mangled == 'v' && mangled + 1 == mangled_func.end()) {
       ++mangled;
     }
@@ -39,10 +39,10 @@ public:
         if (mangled == mangled_func.end()) {
           break;
         }
-        demangled.append(", ");
+        demangled += ", ";
       }
     }
-    demangled.append(')');
+    demangled += ')';
     return demangled;
   }
 
@@ -66,9 +66,9 @@ private:
       constexpr StringView anonymous_ns = "_GLOBAL__N_";
       if (chunk.size() >= anonymous_ns.size() &&
           StringView(chunk.data(), anonymous_ns.size()) == anonymous_ns) {
-        demangled.append("(anonymous namespace)");
+        demangled += "(anonymous namespace)";
       } else {
-        demangled.append(chunk);
+        demangled += chunk;
       }
       mangled = chunk.end();
 
@@ -84,16 +84,16 @@ private:
       if (*mangled == 'W') {
         if (!mod_started) {
           mod_started = true;
-          demangled.append('@');
+          demangled += '@';
         } else {
-          demangled.append('.');
+          demangled += '.';
         }
         ++mangled;
       } else if (*mangled == 'E') {
         ++mangled;
         break;
       } else {
-        demangled.append("::");
+        demangled += "::";
       }
     }
   }
@@ -113,16 +113,16 @@ private:
     for (const char* it = suffix_end - 1; it != suffix - 1; --it) {
       switch (*it) {
       case 'K':
-        demangled.append(" const");
+        demangled += " const";
         break;
       case 'V':
-        demangled.append(" volatile");
+        demangled += " volatile";
         break;
       case 'R':
-        demangled.append('&');
+        demangled += '&';
         break;
       case 'P':
-        demangled.append('*');
+        demangled += '*';
         break;
       default:
         break;
@@ -136,7 +136,7 @@ private:
     }
     ++mangled;
     has_templates = true;
-    demangled.append('<');
+    demangled += '<';
     for (;;) {
       if (!demangle_litteral() && !demangle_expression()) {
         demangle_type();
@@ -145,9 +145,9 @@ private:
         ++mangled;
         break;
       }
-      demangled.append(", ");
+      demangled += ", ";
     }
-    demangled.append('>');
+    demangled += '>';
   }
 
   bool demangle_litteral() noexcept {
@@ -163,32 +163,32 @@ private:
     case 'j':
       ++mangled;
       demangle_until_E();
-      demangled.append('u');
+      demangled += 'u';
       break;
     case 'l':
       ++mangled;
       demangle_until_E();
-      demangled.append('l');
+      demangled += 'l';
       break;
     case 'm':
       ++mangled;
       demangle_until_E();
-      demangled.append("ul");
+      demangled += "ul";
       break;
     case 'x':
       ++mangled;
       demangle_until_E();
-      demangled.append("ll");
+      demangled += "ll";
       break;
     case 'y':
       ++mangled;
       demangle_until_E();
-      demangled.append("ull");
+      demangled += "ull";
       break;
     default:
-      demangled.append('(');
+      demangled += '(';
       demangle_type();
-      demangled.append(')');
+      demangled += ')';
       demangle_until_E();
       break;
     }
@@ -222,117 +222,117 @@ private:
     }
     mangled += 2;
     demangle_type();
-    demangled.append('{');
+    demangled += '{';
     for (;;) {
       demangle_litteral();
       if (*mangled == 'E') {
         ++mangled;
         break;
       }
-      demangled.append(", ");
+      demangled += ", ";
     }
-    demangled.append('}');
+    demangled += '}';
   }
 
   void demangle_builtin_type_id() noexcept {
     switch (*mangled) {
     case 'v':
-      demangled.append("void");
+      demangled += "void";
       break;
     case 'w':
-      demangled.append("wchar_t");
+      demangled += "wchar_t";
       break;
     case 'b':
-      demangled.append("bool");
+      demangled += "bool";
       break;
     case 'c':
-      demangled.append("char");
+      demangled += "char";
       break;
     case 'a':
-      demangled.append("signed char");
+      demangled += "signed char";
       break;
     case 'h':
-      demangled.append("unsigned char");
+      demangled += "unsigned char";
       break;
     case 's':
-      demangled.append("short");
+      demangled += "short";
       break;
     case 't':
-      demangled.append("unsigned short");
+      demangled += "unsigned short";
       break;
     case 'i':
-      demangled.append("int");
+      demangled += "int";
       break;
     case 'j':
-      demangled.append("unsigned int");
+      demangled += "unsigned int";
       break;
     case 'l':
-      demangled.append("long");
+      demangled += "long";
       break;
     case 'm':
-      demangled.append("unsigned long");
+      demangled += "unsigned long";
       break;
     case 'x':
-      demangled.append("long long");
+      demangled += "long long";
       break;
     case 'y':
-      demangled.append("unsigned long long");
+      demangled += "unsigned long long";
       break;
     case 'n':
-      demangled.append("__int128");
+      demangled += "__int128";
       break;
     case 'o':
-      demangled.append("unsigned __int128");
+      demangled += "unsigned __int128";
       break;
     case 'f':
-      demangled.append("float");
+      demangled += "float";
       break;
     case 'd':
-      demangled.append("double");
+      demangled += "double";
       break;
     case 'e':
-      demangled.append("long double");
+      demangled += "long double";
       break;
     case 'g':
-      demangled.append("__float128 (ABI extension)");
+      demangled += "__float128 (ABI extension)";
       break;
     case 'z':
-      demangled.append("...");
+      demangled += "...";
       break;
     case 'D':
       switch (mangled[1]) {
       case 'u':
-        demangled.append("char8_t");
+        demangled += "char8_t";
         ++mangled;
         break;
       case 's':
-        demangled.append("char32_t");
+        demangled += "char32_t";
         ++mangled;
         break;
       case 'i':
-        demangled.append("char32_t");
+        demangled += "char32_t";
         ++mangled;
         break;
       case 'h':
-        demangled.append("_Float16");
+        demangled += "_Float16";
         ++mangled;
         break;
       default:
         if (mangled[3] == '6') {
-          demangled.append("_Float16");
+          demangled += "_Float16";
           mangled += "DF16_"_sv.size() - 1;
         } else if (mangled[2] == '3') {
-          demangled.append("_Float32");
+          demangled += "_Float32";
           mangled += "DF32_"_sv.size() - 1;
         } else if (mangled[2] == '6') {
-          demangled.append("_Float64");
+          demangled += "_Float64";
           mangled += "DF64_"_sv.size() - 1;
         } else if (mangled[2] == '1') {
-          demangled.append("_Float128");
+          demangled += "_Float128";
           mangled += "DF128_"_sv.size() - 1;
         }
         if (mangled[4] == 'x') {
-          demangled.append('x');
+          demangled += 'x';
           ++mangled;
         }
       }

@@ -366,11 +366,11 @@ template <bool Debug, typename C> static void write_string(char* buf, BasicStrin
 template <bool Debug, typename C>
 static void write_string(String& buf, BasicStringView<C, u32> str) {
   if constexpr (Debug) {
-    buf.append('"');
+    buf += '"';
     for (const C chr : str) {
       write_debug_char(buf, chr);
     }
-    buf.append('"');
+    buf += '"';
     return;
   }
   if constexpr (sizeof(C) == 1) {
@@ -383,8 +383,7 @@ static void write_string(String& buf, BasicStringView<C, u32> str) {
 }
 
 template <bool Debug, typename C>
-static void format_string(String& buf, BasicStringView<C, usize> usize_str,
-                          FormatOptions opts) {
+static void format_string(String& buf, BasicStringView<C, usize> usize_str, FormatOptions opts) {
   const BasicStringView<C, u32> str(usize_str.data(), static_cast<u32>(usize_str.size()));
 
   if constexpr (Debug) {
@@ -622,8 +621,7 @@ template void Formatter<unsigned char>::format(String& buf, unsigned char value)
 template void Formatter<unsigned short>::format(String& buf, unsigned short value) const;
 template void Formatter<unsigned int>::format(String& buf, unsigned int value) const;
 template void Formatter<unsigned long>::format(String& buf, unsigned long value) const;
-template void Formatter<unsigned long long>::format(String&        buf,
-                                                    unsigned long long value) const;
+template void Formatter<unsigned long long>::format(String& buf, unsigned long long value) const;
 
 template void Formatter<char>::format(String& buf, char value) const;
 template void Formatter<short>::format(String& buf, short value) const;

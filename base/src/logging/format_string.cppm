@@ -73,21 +73,21 @@ private:
 template <usize... Indices, typename... Args>
 class FormatToImpl<FormatStringImpl<IndexSequence<Indices...>, Args...>> {
 public:
-  static void format_to_impl(String&                                                 buf,
+  static void format_to_impl(String&                                                     buf,
                              const FormatStringImpl<IndexSequence<Indices...>, Args...>& fmt,
                              Args&&... args) {
     (..., [&]() {
-      buf.append(fmt.segments_[Indices]);
+      buf += fmt.segments_[Indices];
       fmt.formatters_.template get<Indices>().format(buf, base::forward<Args>(args));
     }());
-    buf.append(fmt.segments_[sizeof...(Args)]);
+    buf += fmt.segments_[sizeof...(Args)];
   }
 };
 
 template <> class FormatToImpl<FormatStringImpl<IndexSequence<>>> {
 public:
   static void format_to_impl(String& buf, const FormatStringImpl<IndexSequence<>>& msg) {
-    buf.append(msg.msg_);
+    buf += msg.msg_;
   }
 };
 

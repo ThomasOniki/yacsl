@@ -104,9 +104,9 @@ public:
       return;
     }
     String buf;
-    buf.append(err_lvl_strings_[static_cast<u8>(lvl)]);
+    buf += err_lvl_strings_[static_cast<u8>(lvl)];
     format_to(buf, fmt, base::forward<Args>(args)...);
-    buf.append('\n');
+    buf += '\n';
     log(lvl, buf);
   }
 

@@ -15,9 +15,9 @@ template <typename... Args>
 [[noreturn]]
 void panic(const FormatString<Args...>& fmt, Args&&... args) noexcept {
   String buf;
-  buf.append(LOG_LEVEL_STRINGS[static_cast<u8>(LogLevel::Panic)]);
+  buf += LOG_LEVEL_STRINGS[static_cast<u8>(LogLevel::Panic)];
   format_to(buf, fmt, base::forward<Args>(args)...);
-  buf.append('\n');
+  buf += '\n';
   panic(buf);
 }
 
