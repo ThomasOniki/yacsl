@@ -6,3 +6,4 @@ export import base.utilities.is_constant_evaluated;
 export import base.utilities.nil;
 export import base.utilities.type_aliases;
 export import base.utilities.isize;
+export import base.utilities.stack_trace;
