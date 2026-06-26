@@ -6,7 +6,7 @@ import base.os.file;
 import base.utilities.type_aliases;
 import base.memory.lifetimes;
 import base.ranges.string_view;
-import base.containers.char_buffer;
+import base.containers.string;
 
 export namespace base {
 
@@ -87,7 +87,7 @@ public:
     log(LogLevel::Panic, fmt, base::forward<Args>(args)...);
   }
 
-  void log(LogLevel lvl, const CharBuffer& formatted) noexcept {
+  void log(LogLevel lvl, const String& formatted) noexcept {
     if (lvl < level_) {
       return;
     }
@@ -103,7 +103,7 @@ public:
     if (lvl < level_) {
       return;
     }
-    CharBuffer buf;
+    String buf;
     buf.append(err_lvl_strings_[static_cast<u8>(lvl)]);
     format_to(buf, fmt, base::forward<Args>(args)...);
     buf.append('\n');
@@ -132,7 +132,7 @@ private:
 };
 
 // lvl is used to determine if it needs to output to the output file or error file.
-void log(LogLevel lvl, const CharBuffer& formatted) noexcept {
+void log(LogLevel lvl, const String& formatted) noexcept {
   Logger::get_default_instance().log(lvl, formatted);
 }
 template <typename... Args>
@@ -140,14 +140,14 @@ void log(LogLevel lvl, const FormatString<Args...>& fmt, Args&&... args) noexcep
   Logger::get_default_instance().log(lvl, fmt, base::forward<Args>(args)...);
 }
 
-void log_trace3(const CharBuffer& formatted) noexcept { log(LogLevel::Trace3, formatted); }
-void log_trace2(const CharBuffer& formatted) noexcept { log(LogLevel::Trace2, formatted); }
-void log_trace1(const CharBuffer& formatted) noexcept { log(LogLevel::Trace1, formatted); }
-void log_debug(const CharBuffer& formatted) noexcept { log(LogLevel::Debug, formatted); }
-void log_info(const CharBuffer& formatted) noexcept { log(LogLevel::Info, formatted); }
-void log_notice(const CharBuffer& formatted) noexcept { log(LogLevel::Notice, formatted); }
-void log_warning(const CharBuffer& formatted) noexcept { log(LogLevel::Warning, formatted); }
-void log_error(const CharBuffer& formatted) noexcept { log(LogLevel::Error, formatted); }
+void log_trace3(const String& formatted) noexcept { log(LogLevel::Trace3, formatted); }
+void log_trace2(const String& formatted) noexcept { log(LogLevel::Trace2, formatted); }
+void log_trace1(const String& formatted) noexcept { log(LogLevel::Trace1, formatted); }
+void log_debug(const String& formatted) noexcept { log(LogLevel::Debug, formatted); }
+void log_info(const String& formatted) noexcept { log(LogLevel::Info, formatted); }
+void log_notice(const String& formatted) noexcept { log(LogLevel::Notice, formatted); }
+void log_warning(const String& formatted) noexcept { log(LogLevel::Warning, formatted); }
+void log_error(const String& formatted) noexcept { log(LogLevel::Error, formatted); }
 
 template <typename... Args>
 void log_trace3(const FormatString<Args...>& fmt, Args&&... args) noexcept {

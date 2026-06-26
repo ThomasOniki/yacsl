@@ -8,7 +8,7 @@ import base.logging.logger;
 
 namespace base {
 
-[[noreturn]] void panic(const CharBuffer& formatted) noexcept {
+[[noreturn]] void panic(const String& formatted) noexcept {
   Logger::get_default_instance().log(LogLevel::Panic, formatted);
   abort();
 }

@@ -1,4 +1,4 @@
-import base.containers.char_buffer;
+import base.containers.string;
 import base.containers.vector;
 import base.ranges.string_view;
 import base.logging.formatter;
@@ -26,7 +26,7 @@ public:
   constexpr const char* parse(const char* fmt) {
     return base::Formatter<base::StringView>::parse(fmt);
   }
-  void format(base::CharBuffer& buf, const std::string_view& str) {
+  void format(base::String& buf, const std::string_view& str) {
     base::Formatter<base::StringView>::format(buf, base::StringView(str.data(), str.size()));
   }
 };

@@ -5,16 +5,16 @@ import base.logging.common;
 import base.ranges.string_view;
 import base.memory.lifetimes;
 import base.utilities.type_aliases;
-import base.containers.char_buffer;
+import base.containers.string;
 
 export namespace base {
 
-[[noreturn]] void panic(const CharBuffer& formatted) noexcept;
+[[noreturn]] void panic(const String& formatted) noexcept;
 
 template <typename... Args>
 [[noreturn]]
 void panic(const FormatString<Args...>& fmt, Args&&... args) noexcept {
-  CharBuffer buf;
+  String buf;
   buf.append(LOG_LEVEL_STRINGS[static_cast<u8>(LogLevel::Panic)]);
   format_to(buf, fmt, base::forward<Args>(args)...);
   buf.append('\n');

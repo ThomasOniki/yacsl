@@ -1,6 +1,6 @@
 export module base.utilities.demangle;
 
-import base.containers.char_buffer;
+import base.containers.string;
 import base.ranges.string_view;
 import base.strings.atoi;
 import base.utilities.type_aliases;
@@ -10,7 +10,7 @@ export namespace base {
 
 class Demangler {
 public:
-  const CharBuffer& demangle(StringView mangled_func) noexcept {
+  const String& demangle(StringView mangled_func) noexcept {
     mangled       = mangled_func.begin();
     has_templates = false;
     demangled.clear();
@@ -23,7 +23,7 @@ public:
     demangle_string();
 
     if (has_templates) {
-      CharBuffer func = base::move(demangled);
+      String func = base::move(demangled);
       demangle_type();
       demangled.append(' ');
       demangled.append(StringView(func.begin(), func.end()));
@@ -344,12 +344,12 @@ private:
   }
 
 private:
-  CharBuffer  demangled;
+  String  demangled;
   const char* mangled       = nullptr;
   bool        has_templates = false;
 };
 
-CharBuffer demangle(StringView mangled) {
+String demangle(StringView mangled) {
   Demangler demangler;
   return demangler.demangle(mangled);
 }

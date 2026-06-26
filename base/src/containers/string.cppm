@@ -1,4 +1,4 @@
-export module base.containers.char_buffer;
+export module base.containers.string;
 
 import base.ranges.string_view;
 import base.utilities.type_aliases;
@@ -6,15 +6,15 @@ import base.containers.stack_array;
 
 export namespace base {
 
-class CharBuffer {
+class String {
 public:
-  CharBuffer() noexcept  = default;
-  ~CharBuffer() noexcept = default;
+  String() noexcept  = default;
+  ~String() noexcept = default;
 
-  CharBuffer(const CharBuffer& other) noexcept;
-  CharBuffer(CharBuffer&& other) noexcept;
-  CharBuffer& operator=(const CharBuffer& other) noexcept;
-  CharBuffer& operator=(CharBuffer&& other) noexcept;
+  String(const String& other) noexcept;
+  String(String&& other) noexcept;
+  String& operator=(const String& other) noexcept;
+  String& operator=(String&& other) noexcept;
 
   void append(StringView str) noexcept;
   void append(char chr) noexcept;

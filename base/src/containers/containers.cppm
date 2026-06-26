@@ -1,7 +1,7 @@
 export module base.containers;
 
 export import base.containers.base_classes;
-export import base.containers.char_buffer;
+export import base.containers.string;
 export import base.containers.cstring;
 export import base.containers.error;
 export import base.containers.function;

@@ -6,7 +6,7 @@ module;
 export module base.utilities.stack_trace;
 
 import base.containers.vector;
-import base.containers.char_buffer;
+import base.containers.string;
 import base.memory.lifetimes;
 import base.utilities.type_aliases;
 import base.utilities.demangle;
@@ -17,7 +17,7 @@ import base.logging.common;
 export namespace base {
 
 struct StackTraceEntry {
-  alignas(64) CharBuffer caller;
+  alignas(64) String caller;
   StringView object;
   void*      base_address = nullptr;
   void*      address      = nullptr;
