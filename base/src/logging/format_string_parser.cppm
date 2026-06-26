@@ -6,7 +6,7 @@ export module base.logging.format_string_parser;
 
 import base.utilities.type_aliases;
 import base.ranges.string_view;
-import base.strings.str_to_int;
+import base.strings.atoi;
 
 export namespace base {
 
@@ -68,7 +68,7 @@ constexpr char FormatStringParser::check_sign() {
 constexpr u32 FormatStringParser::check_width() {
   const char* begin = fmt_;
   fmt_              = num_end(fmt_);
-  return str_to_int<u32>({begin, fmt_});
+  return atoi<u32>({begin, fmt_});
 }
 
 constexpr u32 FormatStringParser::check_precision() {

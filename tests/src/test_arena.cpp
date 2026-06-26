@@ -5,7 +5,7 @@ import base.memory.arena;
 #include <stdint.h>
 #include <stdio.h>
 
-constexpr uint32_t iteration_count = 10000;
+constexpr uint32_t iteratoin_count = 10000;
 
 namespace {
 struct CtorCounter {
@@ -25,15 +25,15 @@ static int test_ctors() {
   CtorCounter::ctor_call_count = 0;
 
   // NOLINTNEXTLINE(modernize-avoid-c-arrays)
-  CtorCounter* ptrs[iteration_count] = {};
-  for (uint32_t i = 0; i < iteration_count; ++i) {
+  CtorCounter* ptrs[iteratoin_count] = {};
+  for (uint32_t i = 0; i < iteratoin_count; ++i) {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
     ptrs[i] = &base::MainArenaAllocator::get().push<CtorCounter>(i);
   }
 
-  EXPECT_EQ(CtorCounter::ctor_call_count, iteration_count);
+  EXPECT_EQ(CtorCounter::ctor_call_count, iteratoin_count);
 
-  for (uint32_t i = 0; i < iteration_count; ++i) {
+  for (uint32_t i = 0; i < iteratoin_count; ++i) {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
     EXPECT_EQ(ptrs[i]->i_, i);
   }
@@ -45,7 +45,7 @@ static int test_ctors() {
     ptr = base::MainArenaAllocator::get().push_array<CtorCounter>(10);
   }
 
-  EXPECT_EQ(CtorCounter::ctor_call_count, iteration_count * 10);
+  EXPECT_EQ(CtorCounter::ctor_call_count, iteratoin_count * 10);
 
   for (const auto& ptr : ptrs) {
     for (uint32_t i = 0; i < 10; ++i) {

@@ -67,7 +67,7 @@ static void pipe_child_stdin(HANDLE* child_handle, Type type, HANDLE* pipe) {
       .bInheritHandle       = TRUE,
   };
   BASE_TRY_SYSCALL(CreatePipe(&pipe[0], &pipe[1], &security_attr, 0));
-  BASE_TRY_SYSCALL(SetHandleInformation(pipe[1], HANDLE_FLAG_INHERIT, 0));
+  BASE_TRY_SYSCALL(SetHandleInformatoin(pipe[1], HANDLE_FLAG_INHERIT, 0));
   *child_handle = pipe[0];
 }
 
@@ -81,7 +81,7 @@ static void pipe_child_stdout(HANDLE* child_handle, Type type, HANDLE* pipe) {
       .bInheritHandle       = TRUE,
   };
   BASE_TRY_SYSCALL(CreatePipe(&pipe[0], &pipe[1], &security_attr, 0));
-  BASE_TRY_SYSCALL(SetHandleInformation(pipe[0], HANDLE_FLAG_INHERIT, 0));
+  BASE_TRY_SYSCALL(SetHandleInformatoin(pipe[0], HANDLE_FLAG_INHERIT, 0));
   *child_handle = pipe[1];
 }
 
