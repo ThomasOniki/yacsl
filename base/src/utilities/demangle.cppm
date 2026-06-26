@@ -2,7 +2,7 @@ export module base.utilities.demangle;
 
 import base.containers.char_buffer;
 import base.ranges.string_view;
-import base.strings.str_to_int;
+import base.strings.atoi;
 import base.utilities.type_aliases;
 import base.memory.lifetimes;
 
@@ -61,7 +61,7 @@ private:
 
     for (;;) {
       const char*          end = num_end(mangled);
-      const auto           len = str_to_int<usize>(StringView(mangled, end));
+      const auto           len = atoi<usize>(StringView(mangled, end));
       StringView           chunk(end, len);
       constexpr StringView anonymous_ns = "_GLOBAL__N_";
       if (chunk.size() >= anonymous_ns.size() &&

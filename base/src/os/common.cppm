@@ -51,11 +51,11 @@ enum class Signal : u8 {
   SigFpe    = 8,  // create core image    floating-point exception
   SigKill   = 9,  // terminate process    kill program
   SigBus    = 10, // create core image    bus error
-  SigSegv   = 11, // create core image    segmentation violation
+  SigSegv   = 11, // create core image    segmentatoin violatoin
   SigSys    = 12, // create core image    non-existent system call invoked
   SigPipe   = 13, // terminate process    write on a pipe with no reader
   SigAlrm   = 14, // terminate process    real-time timer expired
-  SigTerm   = 15, // terminate process    software termination signal
+  SigTerm   = 15, // terminate process    software terminatoin signal
   SigUrg    = 16, // discard signal       urgent condition present on socket
   SigStop   = 17, // stop process         stop (cannot be caught or ignored)
   SigTstp   = 18, // stop process         stop signal generated from keyboard
