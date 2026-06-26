@@ -12,7 +12,7 @@ import base.type_traits.sign;
 import base.type_traits.type_string;
 import base.type_traits.qualifiers;
 import base.logging.format_string_parser;
-import base.containers.char_buffer;
+import base.containers.string;
 import base.containers.stack_array;
 import base.utilities.type_aliases;
 import base.memory.lifetimes;
@@ -37,7 +37,7 @@ public:
     return parser.end_parse();
   }
 
-  void format(CharBuffer& buf, T value) const;
+  void format(String& buf, T value) const;
 
 private:
   u32  width_ = 0;
@@ -47,28 +47,28 @@ private:
   char type_  = 'd';
 };
 
-extern template void Formatter<signed char>::format(CharBuffer& buf, signed char value) const;
-extern template void Formatter<wchar_t>::format(CharBuffer& buf, wchar_t value) const;
-extern template void Formatter<char8_t>::format(CharBuffer& buf, char8_t value) const;
-extern template void Formatter<char16_t>::format(CharBuffer& buf, char16_t value) const;
-extern template void Formatter<char32_t>::format(CharBuffer& buf, char32_t value) const;
+extern template void Formatter<signed char>::format(String& buf, signed char value) const;
+extern template void Formatter<wchar_t>::format(String& buf, wchar_t value) const;
+extern template void Formatter<char8_t>::format(String& buf, char8_t value) const;
+extern template void Formatter<char16_t>::format(String& buf, char16_t value) const;
+extern template void Formatter<char32_t>::format(String& buf, char32_t value) const;
 
-extern template void Formatter<unsigned char>::format(CharBuffer& buf, unsigned char value) const;
-extern template void Formatter<unsigned short>::format(CharBuffer& buf, unsigned short value) const;
-extern template void Formatter<unsigned int>::format(CharBuffer& buf, unsigned int value) const;
-extern template void Formatter<unsigned long>::format(CharBuffer& buf, unsigned long value) const;
-extern template void Formatter<unsigned long long>::format(CharBuffer&        buf,
+extern template void Formatter<unsigned char>::format(String& buf, unsigned char value) const;
+extern template void Formatter<unsigned short>::format(String& buf, unsigned short value) const;
+extern template void Formatter<unsigned int>::format(String& buf, unsigned int value) const;
+extern template void Formatter<unsigned long>::format(String& buf, unsigned long value) const;
+extern template void Formatter<unsigned long long>::format(String&        buf,
                                                            unsigned long long value) const;
 
-extern template void Formatter<char>::format(CharBuffer& buf, char value) const;
-extern template void Formatter<short>::format(CharBuffer& buf, short value) const;
-extern template void Formatter<int>::format(CharBuffer& buf, int value) const;
-extern template void Formatter<long>::format(CharBuffer& buf, long value) const;
-extern template void Formatter<long long>::format(CharBuffer& buf, long long value) const;
+extern template void Formatter<char>::format(String& buf, char value) const;
+extern template void Formatter<short>::format(String& buf, short value) const;
+extern template void Formatter<int>::format(String& buf, int value) const;
+extern template void Formatter<long>::format(String& buf, long value) const;
+extern template void Formatter<long long>::format(String& buf, long long value) const;
 
 #ifdef BASE_INT128_FOUND
-extern template void Formatter<i128>::format(CharBuffer& buf, i128 value) const;
-extern template void Formatter<u128>::format(CharBuffer& buf, u128 value) const;
+extern template void Formatter<i128>::format(String& buf, i128 value) const;
+extern template void Formatter<u128>::format(String& buf, u128 value) const;
 #endif
 
 template <FloatingPoint T> class Formatter<T> {
@@ -83,7 +83,7 @@ public:
     return parser.end_parse();
   }
 
-  void format(CharBuffer& buf, T value) const;
+  void format(String& buf, T value) const;
 
 private:
   u32  precision_ = 0;
@@ -105,7 +105,7 @@ public:
     return parser.end_parse();
   }
 
-  void format(CharBuffer& buf, bool value) const;
+  void format(String& buf, bool value) const;
 
 private:
   u32  width_ = 0;
@@ -124,7 +124,7 @@ public:
     return parser.end_parse();
   }
 
-  void format(CharBuffer& buf, const void* ptr) const;
+  void format(String& buf, const void* ptr) const;
 
 private:
   u32  width_ = 0;
@@ -135,7 +135,7 @@ private:
 template <typename T> class Formatter<T*> : Formatter<void*> {
 public:
   constexpr const char* parse(const char* fmt) { return Formatter<void*>::parse(fmt); }
-  void format(CharBuffer& buf, const T* ptr) const { Formatter<void*>::format(buf, ptr); }
+  void format(String& buf, const T* ptr) const { Formatter<void*>::format(buf, ptr); }
 };
 
 template <Character Char> class Formatter<BasicStringView<Char, usize>> {
@@ -151,7 +151,7 @@ public:
 
   using View = BasicStringView<Char, usize>;
 
-  void format(CharBuffer& buf, View str) const;
+  void format(String& buf, View str) const;
 
 private:
   u32  width_ = 0;
@@ -160,13 +160,13 @@ private:
   char type_  = 's';
 };
 
-extern template void Formatter<BasicStringView<char>>::format(CharBuffer&, View) const;
-extern template void Formatter<BasicStringView<unsigned char>>::format(CharBuffer&, View) const;
-extern template void Formatter<BasicStringView<signed char>>::format(CharBuffer&, View) const;
-extern template void Formatter<BasicStringView<wchar_t>>::format(CharBuffer&, View) const;
-extern template void Formatter<BasicStringView<char8_t>>::format(CharBuffer&, View) const;
-extern template void Formatter<BasicStringView<char16_t>>::format(CharBuffer&, View) const;
-extern template void Formatter<BasicStringView<char32_t>>::format(CharBuffer&, View) const;
+extern template void Formatter<BasicStringView<char>>::format(String&, View) const;
+extern template void Formatter<BasicStringView<unsigned char>>::format(String&, View) const;
+extern template void Formatter<BasicStringView<signed char>>::format(String&, View) const;
+extern template void Formatter<BasicStringView<wchar_t>>::format(String&, View) const;
+extern template void Formatter<BasicStringView<char8_t>>::format(String&, View) const;
+extern template void Formatter<BasicStringView<char16_t>>::format(String&, View) const;
+extern template void Formatter<BasicStringView<char32_t>>::format(String&, View) const;
 
 template <Character Char, Integral SizeT>
 class Formatter<BasicStringView<Char, SizeT>> : Formatter<BasicStringView<Char, usize>> {
@@ -174,7 +174,7 @@ public:
   constexpr const char* parse(const char* fmt) {
     return Formatter<BasicStringView<Char>>::parse(fmt);
   }
-  void format(CharBuffer& buf, BasicStringView<Char, SizeT> str) const {
+  void format(String& buf, BasicStringView<Char, SizeT> str) const {
     return Formatter<BasicStringView<Char>>::format(
         buf, BasicStringView<Char>(str.data(), static_cast<usize>(str.size())));
   }
@@ -187,7 +187,7 @@ public:
     return Formatter<BasicStringView<Char>>::parse(fmt);
   }
   // NOLINTNEXTLINE(modernize-avoid-c-arrays)
-  void format(CharBuffer& buf, const Char (&str)[N]) const {
+  void format(String& buf, const Char (&str)[N]) const {
     return Formatter<BasicStringView<Char>>::format(
         buf, BasicStringView(static_cast<const Char*>(str), N - 1));
   }
@@ -201,7 +201,7 @@ public:
     return Formatter<BasicStringView<Char>>::parse(fmt);
   }
   // NOLINTNEXTLINE(modernize-avoid-c-arrays)
-  void format(CharBuffer& buf, const Char (&str)[N]) const {
+  void format(String& buf, const Char (&str)[N]) const {
     return Formatter<BasicStringView<Char>>::format(buf, BasicStringView(str, N - 1));
   }
 };
@@ -211,7 +211,7 @@ class Formatter<T> : Formatter<RemoveCVRef<decltype(*declval<T>().begin())>> {
 public:
   constexpr const char* parse(const char* fmt) { return Base::parse(fmt); }
 
-  void format(CharBuffer& buf, const T& range) {
+  void format(String& buf, const T& range) {
     buf.append('[');
     auto iter = range.begin();
     auto end  = range.end();
@@ -238,7 +238,7 @@ public:
     return parser.end_parse();
   }
 
-  void format(CharBuffer& buf, T value) {
+  void format(String& buf, T value) {
     auto scalar = static_cast<UnderlyingType>(value);
     auto u_val  = static_cast<MakeUnsigned<UnderlyingType>>(value);
     if (u_val < 256) {

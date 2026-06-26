@@ -7,7 +7,7 @@ import base.utilities.type_aliases;
 import base.memory.lifetimes;
 import base.metaprogramming.integer_sequence;
 import base.type_traits.qualifiers;
-import base.containers.char_buffer;
+import base.containers.string;
 import base.containers.stack_array;
 import base.containers.tuple;
 import base.ranges.string_view;
@@ -73,7 +73,7 @@ private:
 template <usize... Indices, typename... Args>
 class FormatToImpl<FormatStringImpl<IndexSequence<Indices...>, Args...>> {
 public:
-  static void format_to_impl(CharBuffer&                                                 buf,
+  static void format_to_impl(String&                                                 buf,
                              const FormatStringImpl<IndexSequence<Indices...>, Args...>& fmt,
                              Args&&... args) {
     (..., [&]() {
@@ -86,7 +86,7 @@ public:
 
 template <> class FormatToImpl<FormatStringImpl<IndexSequence<>>> {
 public:
-  static void format_to_impl(CharBuffer& buf, const FormatStringImpl<IndexSequence<>>& msg) {
+  static void format_to_impl(String& buf, const FormatStringImpl<IndexSequence<>>& msg) {
     buf.append(msg.msg_);
   }
 };
@@ -100,7 +100,7 @@ using FormatString =
     internal::FormatStringImpl<IndexSequenceToN<sizeof...(Args)>, Args...>::TypeIdentity;
 
 template <typename... Args>
-void format_to(CharBuffer& buf, const FormatString<Args...>& fmt, Args&&... args) {
+void format_to(String& buf, const FormatString<Args...>& fmt, Args&&... args) {
   internal::FormatToImpl<FormatString<Args...>>::format_to_impl(buf, fmt,
                                                                 base::forward<Args>(args)...);
 }
