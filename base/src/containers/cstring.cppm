@@ -6,6 +6,7 @@ import base.containers.base_classes;
 import base.utilities.type_aliases;
 import base.type_traits.categories;
 import base.memory.arena;
+import base.memory.lifetimes;
 import base.ranges.string_view;
 
 export namespace base {
@@ -21,7 +22,7 @@ public:
     if (str.size() > N) {
       cstr_ = allocator().template allocate<Char>(str.size() + 1);
     }
-    memcpy(cstr_, str.data(), str.size());
+    copy_bytes(cstr_, str.data(), str.size());
     cstr_[str.size()] = '\0';
   }
 

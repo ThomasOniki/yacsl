@@ -39,4 +39,9 @@ template <typename T, typename... Args> constexpr T* construct_at(T* locatoin, A
   // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
   return ::new (locatoin) T(base::forward<Args>(args)...);
 }
+
+constexpr void* copy_bytes(void* dst, const void* src, usize nbytes) {
+  return __builtin_memcpy(dst, src, nbytes);
+}
+
 } // namespace base

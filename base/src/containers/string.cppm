@@ -10,6 +10,7 @@ import base.containers.stack_array;
 import base.containers.base_classes;
 import base.type_traits.categories;
 import base.memory.arena;
+import base.memory.lifetimes;
 
 export namespace base {
 
@@ -36,7 +37,7 @@ public:
       allocated_end_ = end_ = begin_ + size;
     }
 
-    memcpy(begin_, other.begin_, size);
+    copy_bytes(begin_, other.begin_, size);
   }
 
   constexpr BasicString(BasicString&& other) noexcept
@@ -57,7 +58,7 @@ public:
     } else {
       end_ = begin_ + size;
     }
-    memcpy(begin_, other.begin_, size);
+    copy_bytes(begin_, other.begin_, size);
     return *this;
   }
 
@@ -65,7 +66,7 @@ public:
     if constexpr (N > 0) {
       if (other.begin_ == other.fixed_buffer_.begin()) {
         const SizeT size = other.size();
-        memcpy(fixed_buffer_.begin(), other.fixed_buffer_.begin(), size);
+        copy_bytes(fixed_buffer_.begin(), other.fixed_buffer_.begin(), size);
         end_ = begin_ + size;
         return *this;
       }
@@ -83,7 +84,7 @@ public:
     if (end_ + len > allocated_end_) {
       definitely_reserve(capacity() * 2 + len);
     }
-    memcpy(end_, ptr, len);
+    copy_bytes(end_, ptr, len);
     end_ += len;
     return *this;
   }
@@ -131,7 +132,7 @@ public:
   }
 
   // This doesn't initialize the new memory but adds count to size. It is useful for characters you
-  // want to memcpy into. It returns new_end - count.
+  // want to copy_bytes into. It returns new_end - count.
   constexpr Char* grow(SizeT count) noexcept {
     Char* ret = end_;
     end_ += count;
@@ -169,7 +170,7 @@ private:
   void definitely_reserve(SizeT capacity) noexcept {
     Char*       data = allocator().template allocate<Char>(capacity);
     const SizeT size = this->size();
-    memcpy(data, begin_, size);
+    copy_bytes(data, begin_, size);
     free();
     begin_         = data;
     end_           = data + size;
