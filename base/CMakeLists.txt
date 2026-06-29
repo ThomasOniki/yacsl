@@ -9,7 +9,11 @@ target_sources(base PUBLIC FILE_SET CXX_MODULES FILES
 
 file(GLOB_RECURSE BASE_HEADERS "${PROJECT_SOURCE_DIR}/base/include/*.hpp")
 target_sources(base PUBLIC FILE_SET HEADERS FILES "${BASE_HEADERS}")
-target_include_directories(base PRIVATE "${PROJECT_SOURCE_DIR}/base/include")
+
+include(GNUInstallDirs)
+target_include_directories(
+  base PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/base/include>"
+              "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
 
 file(GLOB_RECURSE BASE_SOURCES "${PROJECT_SOURCE_DIR}/base/src/*.cpp")
 target_sources(base PRIVATE "${BASE_SOURCES}")
@@ -51,8 +55,6 @@ write_basic_package_version_file(
   "${PROJECT_BINARY_DIR}/base-config-version.cmake"
   VERSION 1.0.0
   COMPATIBILITY SameMajorVersion)
-
-include(GNUInstallDirs)
 
 install(
   TARGETS base
