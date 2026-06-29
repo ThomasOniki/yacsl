@@ -19,6 +19,14 @@ target_compile_features(base PUBLIC cxx_std_20)
 set_target_properties(base PROPERTIES VISIBILITY_INLINES_HIDDEN YES
                                       CXX_VISIBILITY_PRESET hidden)
 
+find_package(Threads REQUIRED)
+target_link_libraries(base PUBLIC Threads::Threads)
+
+if(EMSCRIPTEN)
+  target_compile_options(base PUBLIC "-pthread")
+  target_link_options(base PUBLIC "-pthread")
+endif()
+
 include(GenerateExportHeader)
 generate_export_header(base EXPORT_FILE_NAME "base_export.hpp")
 
