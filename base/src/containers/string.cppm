@@ -162,6 +162,13 @@ public:
   [[nodiscard]] constexpr const Char* cbegin() const noexcept { return begin_; }
   [[nodiscard]] constexpr const Char* cend() const noexcept { return end_; }
 
+  constexpr BasicStringView<Char, SizeT> view() const noexcept { return {begin_, end_}; }
+
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  [[nodiscard]] constexpr operator BasicStringView<Char, SizeT>() const noexcept {
+    return {begin_, end_};
+  }
+
 private:
   using FixedBufferMember<Char, N, SizeT>::fixed_buffer_;
   using AllocatorMember<Allocator>::allocator;
