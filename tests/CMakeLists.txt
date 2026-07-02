@@ -9,6 +9,8 @@ foreach(path IN LISTS BASE_TESTS)
   add_executable("${name}" "${path}")
   init_target("${name}")
 
+  target_compile_options("${name}" PRIVATE "${BASE_PRIVATE_FLAGS}")
+
   target_link_libraries("${name}" PRIVATE base)
   add_test(NAME "${name}" COMMAND "${name}")
 endforeach()
