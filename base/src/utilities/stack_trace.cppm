@@ -1,7 +1,11 @@
 module;
 
+#include "base/attributes.hpp"
 #include <dlfcn.h>
+
+#ifndef __EMSCRIPTEN__
 #include <execinfo.h>
+#endif
 
 export module base.utilities.stack_trace;
 
@@ -35,10 +39,12 @@ struct StackTrace {
     for (usize i = 0; i < addresses_.size(); ++i) {
       Dl_info info;
       dladdr(addresses_[i], &info);
-      entries_[i].address      = addresses_[i];
-      entries_[i].base_address = info.dli_fbase;
-      entries_[i].object       = StringView(info.dli_fname);
-      entries_[i].caller       = demangle(info.dli_sname);
+      entries_[i] = {
+          .caller       = demangle(info.dli_sname),
+          .object       = StringView(info.dli_fname),
+          .base_address = info.dli_fbase,
+          .address      = addresses_[i],
+      };
     }
     return entries_;
   }
@@ -46,20 +52,28 @@ struct StackTrace {
   void print(LogLevel lvl) noexcept {
     compute_entries();
     for (usize i = 0; i < entries_.size(); ++i) {
-      base::log(lvl, "#{} {} in {}", i, entries_[i].address,
-                StringView(entries_[i].caller.begin(), entries_[i].caller.end()));
+      base::log(lvl, "#{} {} in {}", i, entries_[i].address, entries_[i].caller);
     }
   }
 
+#ifdef __EMSCRIPTEN__
   static StackTrace current() noexcept {
     StackTrace ret;
-    ret.addresses_.resize(ret.addresses_.capacity());
-    while (backtrace(ret.addresses_.data(), static_cast<int>(ret.addresses_.size())) ==
-           ret.addresses_.size()) {
-      ret.addresses_.resize(ret.addresses_.capacity() * 2);
-    }
     return ret;
   }
+#else
+  BASE_NOINLINE static StackTrace current() noexcept {
+    StackTrace ret;
+    ret.addresses_.resize(ret.addresses_.capacity());
+    usize size = ret.addresses_.size();
+    while (size == ret.addresses_.size()) {
+      ret.addresses_.resize(ret.addresses_.capacity() * 2);
+      size = backtrace(ret.addresses_.data(), static_cast<int>(ret.addresses_.size()));
+    }
+    ret.addresses_.resize(size);
+    return ret;
+  }
+#endif
 
   alignas(128) Vector<StackTraceEntry, 16> entries_;
   Vector<void*, 21> addresses_;
