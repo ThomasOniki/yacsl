@@ -4,6 +4,7 @@ import base.logging.common;
 import base.utilities.stack_trace;
 import base.ranges.string_view;
 
+#include "base/attributes.hpp"
 #include "test_utils.hpp"
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
@@ -12,7 +13,7 @@ import base.ranges.string_view;
                              stack_trace.entries_[entry_idx].caller.end()),                        \
             base::StringView(expected_caller))
 
-static int f1(bool /*unused*/, char /*unused*/) {
+BASE_NOINLINE static int f1(bool /*unused*/, char /*unused*/) {
   int              ret         = 0;
   base::StackTrace stack_trace = base::StackTrace::current();
   stack_trace.compute_entries();
@@ -26,11 +27,17 @@ static int f1(bool /*unused*/, char /*unused*/) {
 }
 
 namespace ns1::ns2 {
-static int f2(void* /*unused*/) { return ::f1(true, 'a'); }
+BASE_NOINLINE static int f2(void* /*unused*/) {
+  volatile int result = ::f1(true, 'a');
+  return result;
+}
 
 namespace {
 template <typename T = void, int I = 0> struct S {
-  template <typename U = void, int J = 15> static int f3() { return f2(nullptr); }
+  template <typename U = void, int J = 15> BASE_NOINLINE static int f3() {
+    volatile int result = f2(nullptr);
+    return result;
+  }
 
   alignas(16) void* p = nullptr;
   char chr            = 'a';
@@ -39,7 +46,10 @@ template <typename T = void, int I = 0> struct S {
 } // namespace ns1::ns2
 
 namespace {
-template <ns1::ns2::S<> S = ns1::ns2::S<>{}> int f4() noexcept { return ns1::ns2::S<>::f3(); }
+template <ns1::ns2::S<> S = ns1::ns2::S<>{}> BASE_NOINLINE int f4() noexcept {
+  volatile int result = ns1::ns2::S<>::f3();
+  return result;
+}
 } // namespace
 
 int main() {
