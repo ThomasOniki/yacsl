@@ -23,8 +23,8 @@ public:
 
   ~Function() noexcept { cleanup_(data_, allocator()); }
 
-  Function& operator=(const Function&)     = delete;
-  Function& operator=(Function&&) noexcept = delete;
+  Function& operator=(const Function&) = delete;
+  Function& operator=(Function&&) noexcept;
 
   Ret operator()(Args... args) { return call_(data_, base::forward<Args>(args)...); }
 
