@@ -1,7 +1,7 @@
 export module base.logging.logger;
 
 import base.logging.common;
-import base.logging.format_string;
+import base.formatting.format_string;
 import base.os.file;
 import base.utilities.type_aliases;
 import base.memory.lifetimes;

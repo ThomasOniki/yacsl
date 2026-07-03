@@ -9,7 +9,8 @@ import base.type_traits.qualifiers;
 import base.type_traits.sign;
 import base.type_traits.type_string;
 import base.ranges.string_view;
-import base.logging.format_string;
+import base.formatting.format_string;
+import base.logging.panic;
 import base.memory.lifetimes;
 
 export namespace base {
@@ -34,14 +35,13 @@ public:
   [[nodiscard]] constexpr bool is_ok() const noexcept { return value_ >= 0; }
   [[nodiscard]] constexpr bool is_error() const noexcept { return value_ < 0; }
 
-  [[nodiscard]] constexpr Ok expect_ok(StringView error) const noexcept BASE_LIFETIMEBOUND {
-    panic_if(is_error(), error);
-    return static_cast<Ok>(value_);
-  }
   template <typename... Args>
   [[nodiscard]] constexpr Ok expect_ok(FormatString<Args...> fmt,
                                        Args&&... args) const noexcept BASE_LIFETIMEBOUND {
-    panic_if(is_error(), fmt, base::forward<Args>(args)...);
+    if (is_error()) [[unlikely]] {
+      panic("UnsignedResult<{}, {}> is error {}.", Err(-value_));
+      panic(fmt, base::forward<Args>(args)...);
+    }
     return static_cast<Ok>(value_);
   }
   [[nodiscard]] constexpr Ok expect_ok() const noexcept BASE_LIFETIMEBOUND {
@@ -49,10 +49,6 @@ public:
                      error());
   }
 
-  [[nodiscard]] constexpr Ok assert_ok(StringView error) const noexcept BASE_LIFETIMEBOUND {
-    debug_panic_if(is_error(), error);
-    return static_cast<Ok>(value_);
-  }
   template <typename... Args>
   [[nodiscard]] constexpr Ok assert_ok(FormatString<Args...> fmt,
                                        Args&&... args) const noexcept BASE_LIFETIMEBOUND {

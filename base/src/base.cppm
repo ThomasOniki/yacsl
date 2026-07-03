@@ -2,6 +2,7 @@ export module base;
 
 export import base.containers;
 export import base.logging;
+export import base.formatting;
 export import base.math;
 export import base.memory;
 export import base.metaprogramming;

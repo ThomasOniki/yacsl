@@ -1,6 +1,6 @@
 export module base.logging.panic;
 
-import base.logging.format_string;
+import base.formatting.format_string;
 import base.logging.common;
 import base.ranges.string_view;
 import base.memory.lifetimes;

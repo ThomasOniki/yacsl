@@ -4,7 +4,7 @@ import base.type_traits.categories;
 import base.utilities.nil;
 import base.memory.lifetimes;
 import base.ranges.string_view;
-import base.logging.format_string;
+import base.formatting.format_string;
 import base.logging.panic;
 
 export namespace base {

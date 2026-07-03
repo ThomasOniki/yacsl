@@ -1,7 +1,7 @@
-module base.logging.format_string_parser;
+module base.formatting.format_string_parser;
 
 import base.logging.common;
-import base.logging.format_string;
+import base.formatting.format_string;
 import base.logging.logger;
 import base.containers.string;
 import base.utilities.type_aliases;
