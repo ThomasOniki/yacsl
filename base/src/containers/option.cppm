@@ -6,7 +6,7 @@ import base.type_traits.categories;
 import base.type_traits.trivial;
 import base.type_traits.type_string;
 import base.ranges.string_view;
-import base.logging.format_string;
+import base.formatting.format_string;
 import base.logging.panic;
 import base.containers.stack_storage;
 

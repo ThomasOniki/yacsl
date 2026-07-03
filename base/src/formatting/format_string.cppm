@@ -1,8 +1,8 @@
-export module base.logging.format_string;
+export module base.formatting.format_string;
 
 import base.logging.common;
-import base.logging.formatter;
-import base.logging.format_string_parser;
+import base.formatting.formatter;
+import base.formatting.format_string_parser;
 import base.utilities.type_aliases;
 import base.memory.lifetimes;
 import base.metaprogramming.integer_sequence;

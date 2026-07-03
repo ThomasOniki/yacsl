@@ -1,7 +1,7 @@
 import base.containers.string;
 import base.containers.vector;
 import base.ranges.string_view;
-import base.logging.formatter;
+import base.formatting.formatter;
 import base.memory.arena;
 import base.memory.singleton_allocator;
 
@@ -23,10 +23,10 @@ import base.memory.singleton_allocator;
 
 template <> class base::Formatter<std::string> : base::Formatter<base::StringView> {
 public:
-  constexpr const char* parse(const char* fmt) {
+  constexpr const char* parse(const char* fmt) noexcept {
     return base::Formatter<base::StringView>::parse(fmt);
   }
-  void format(base::String& buf, const std::string_view& str) {
+  void format(base::String& buf, const std::string_view& str) const noexcept {
     base::Formatter<base::StringView>::format(buf, base::StringView(str.data(), str.size()));
   }
 };

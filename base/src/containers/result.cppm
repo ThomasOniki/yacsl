@@ -10,7 +10,7 @@ import base.type_traits.trivial;
 import base.memory.lifetimes;
 import base.ranges.string_view;
 import base.logging.panic;
-import base.logging.format_string;
+import base.formatting.format_string;
 
 export namespace base {
 
@@ -72,7 +72,10 @@ public:
   [[nodiscard]] constexpr const Ok&
   expect_ok(const FormatString<Args...>& error_fmt,
             Args&&... error_fmt_args) const noexcept BASE_LIFETIMEBOUND {
-    panic_if(is_err_, error_fmt, base::forward<Args>(error_fmt_args)...);
+    if (is_err_) [[unlikely]] {
+      panic("Result<{}, {}> is error {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>, err_);
+      panic(error_fmt, base::forward<Args>(error_fmt_args)...);
+    }
     return ok_;
   }
   [[nodiscard]] constexpr const Ok& expect_ok() const noexcept BASE_LIFETIMEBOUND {
@@ -86,7 +89,10 @@ public:
   [[nodiscard]] constexpr const Ok&
   assert_ok(const FormatString<Args...>& error_fmt,
             Args&&... error_fmt_args) const noexcept BASE_LIFETIMEBOUND {
-    debug_panic_if(is_err_, error_fmt, base::forward<Args>(error_fmt_args)...);
+    if (is_err_) [[unlikely]] {
+      debug_panic("Result<{}, {}> is error {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>, err_);
+      debug_panic(error_fmt, base::forward<Args>(error_fmt_args)...);
+    }
     return ok_;
   }
   [[nodiscard]] constexpr const Ok& assert_ok() const noexcept BASE_LIFETIMEBOUND {
@@ -100,7 +106,10 @@ public:
   [[nodiscard]] constexpr const Err&
   expect_err(const FormatString<Args...>& error_fmt,
              Args&&... error_fmt_args) const noexcept BASE_LIFETIMEBOUND {
-    panic_if(!is_err_, error_fmt, base::forward<Args>(error_fmt_args)...);
+    if (!is_err_) [[unlikely]] {
+      panic("Result<{}, {}> is ok {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>, ok_);
+      panic(error_fmt, base::forward<Args>(error_fmt_args)...);
+    }
     return err_;
   }
   [[nodiscard]] constexpr const Err& expect_err() const noexcept BASE_LIFETIMEBOUND {
@@ -114,7 +123,10 @@ public:
   [[nodiscard]] constexpr const Err&
   assert_err(const FormatString<Args...>& error_fmt,
              Args&&... error_fmt_args) const noexcept BASE_LIFETIMEBOUND {
-    debug_panic_if(!is_err_, error_fmt, base::forward<Args>(error_fmt_args)...);
+    if (!is_err_) [[unlikely]] {
+      debug_panic("Result<{}, {}> is ok {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>, ok_);
+      debug_panic(error_fmt, base::forward<Args>(error_fmt_args)...);
+    }
     return err_;
   }
   [[nodiscard]] constexpr const Err& assert_err() const noexcept BASE_LIFETIMEBOUND {

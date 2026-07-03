@@ -2,7 +2,7 @@ module;
 
 #include "base/attributes.hpp"
 
-export module base.logging.format_string_parser;
+export module base.formatting.format_string_parser;
 
 import base.utilities.type_aliases;
 import base.ranges.string_view;

@@ -1,8 +1,8 @@
 import base.containers.string;
 import base.containers.function;
-import base.logging.format_string;
-import base.logging.format_string_parser;
-import base.logging.formatter;
+import base.formatting.format_string;
+import base.formatting.format_string_parser;
+import base.formatting.formatter;
 #include "test_utils.hpp"
 #include <stdint.h>
 #include <stdio.h>
