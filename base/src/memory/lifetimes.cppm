@@ -10,6 +10,7 @@ export module base.memory.lifetimes;
 
 import base.utilities.type_aliases;
 import base.type_traits.qualifiers;
+import base.ranges.string_view;
 
 #ifdef BASE_NO_LIBCPP
 export [[__nodiscard__]] constexpr void* operator new(base::usize /*count*/, void* ptr) noexcept {
@@ -40,8 +41,22 @@ template <typename T, typename... Args> constexpr T* construct_at(T* location, A
   return ::new (location) T(base::forward<Args>(args)...);
 }
 
-constexpr void* copy_bytes(void* dst, const void* src, usize nbytes) {
-  return __builtin_memcpy(dst, src, nbytes);
+template <typename T> constexpr T* copy_bytes(T* dst, const void* src, usize nbytes) {
+  return static_cast<T*>(__builtin_memcpy(dst, src, nbytes));
+}
+template <typename T> constexpr T* copy_bytes(T* dst, const void* src_begin, const void* src_end) {
+  return static_cast<T*>(
+      __builtin_memcpy(dst, src_begin,
+                       static_cast<usize>(static_cast<const uchar*>(src_end) -
+                                          static_cast<const uchar*>(src_begin))));
+}
+template <typename T, typename SizeT>
+constexpr T* copy_bytes(T* dst, BasicStringView<char, SizeT> src) {
+  return copy_bytes(dst, src.data(), src.size());
+}
+template <typename T, typename SizeT>
+constexpr T* copy_bytes(T* dst, BasicStringView<uchar, SizeT> src) {
+  return copy_bytes(dst, src.data(), src.size());
 }
 
 } // namespace base
