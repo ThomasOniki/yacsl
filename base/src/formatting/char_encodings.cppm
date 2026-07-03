@@ -1,10 +1,10 @@
-module base.strings.char_encodings;
+export module base.formatting.char_encodings;
 
 import base.utilities.type_aliases;
 
-namespace base {
+export namespace base {
 
-u32 utf8_char_len(uchar utf8) {
+constexpr u32 utf8_char_len(uchar utf8) noexcept {
   if (utf8 <= 127) {
     return 1;
   }
