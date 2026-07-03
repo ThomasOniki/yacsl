@@ -3,7 +3,7 @@ module;
 #include "base/attributes.hpp"
 #include <string.h>
 
-export module base.strings.itoa;
+export module base.formatting.itoa;
 
 import base.utilities.type_aliases;
 import base.type_traits.categories;
