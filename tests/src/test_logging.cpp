@@ -3,7 +3,7 @@ import base.ranges.string_view;
 import base.containers.stack_array;
 import base.logging.logger;
 import base.logging.common;
-import base.logging.format_string;
+import base.formatting.format_string;
 import base.os.common;
 import base.os.file;
 import base.utilities.type_aliases;

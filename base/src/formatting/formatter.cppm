@@ -3,7 +3,7 @@ module;
 #include "base/attributes.hpp"
 #include <string.h>
 
-export module base.logging.formatter;
+export module base.formatting.formatter;
 
 import base.type_traits.categories;
 import base.type_traits.limits;
@@ -12,7 +12,7 @@ import base.type_traits.range_like;
 import base.type_traits.sign;
 import base.type_traits.type_string;
 import base.type_traits.qualifiers;
-import base.logging.format_string_parser;
+import base.formatting.format_string_parser;
 import base.containers.string;
 import base.containers.stack_array;
 import base.containers.nttp_string;
