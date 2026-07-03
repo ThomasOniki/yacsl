@@ -2,7 +2,7 @@ export module base.utilities.demangle;
 
 import base.containers.string;
 import base.ranges.string_view;
-import base.strings.atoi;
+import base.formatting.atoi;
 import base.utilities.type_aliases;
 import base.memory.lifetimes;
 

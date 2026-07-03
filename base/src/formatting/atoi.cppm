@@ -2,7 +2,7 @@ module;
 
 #include "base/attributes.hpp"
 
-export module base.strings.atoi;
+export module base.formatting.atoi;
 
 import base.ranges.string_view;
 import base.utilities.type_aliases;
