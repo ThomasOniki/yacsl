@@ -123,6 +123,16 @@ int main() {
   check("[INFO] With enum classes: test_ns::EnumClass::Zero, (test_ns::EnumClass)500, "
         "(test_ns::EnumClass)1");
 
+  log_to_file(Info, "With padding: {*<30} {*^30} {*>30}", test_ns::Enum1::Zero,
+              test_ns::Enum1::Zero, test_ns::Enum1::Zero);
+  check("[INFO] With padding: test_ns::Zero***************** ********test_ns::Zero********* "
+        "*****************test_ns::Zero");
+
+  log_to_file(Info, "With padding: {*<30} {*^30} {*>30}", test_ns::EnumClass::FiveHundred,
+              test_ns::EnumClass::FiveHundred, test_ns::EnumClass::FiveHundred);
+  check("[INFO] With padding: (test_ns::EnumClass)500******* ***(test_ns::EnumClass)500**** "
+        "*******(test_ns::EnumClass)500");
+
   log_to_file(Info, "Goodbye, world!");
   check("[INFO] Goodbye, world!");
 

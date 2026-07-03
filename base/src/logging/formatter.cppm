@@ -15,6 +15,7 @@ import base.type_traits.qualifiers;
 import base.logging.format_string_parser;
 import base.containers.string;
 import base.containers.stack_array;
+import base.containers.nttp_string;
 import base.utilities.type_aliases;
 import base.memory.lifetimes;
 import base.ranges.string_view;
@@ -494,23 +495,23 @@ template <typename T, u32 Base> u32 count_digits_base_x(T value) {
   return 0;
 }
 
-template <typename T, T Base> constexpr StackArray<T, 130> gen_powers() {
+template <UnsignedIntegral T, T Base> constexpr StackArray<T, 130> gen_powers() noexcept {
   StackArray<T, 130> ret = {};
   T                  pow = Base;
 
   for (u32 i = 2; i < 130; ++i) {
+    ret[i] = pow;
     if (pow <= Limits<T>::max / Base) {
       pow = static_cast<T>(pow * Base);
     } else {
       pow = Limits<T>::max;
     }
-    ret[i] = pow;
   }
   return ret;
 }
 
-template <u32 Base, typename T>
-void format_integral(String& buf, T value, FormatOptions opts, char sign) {
+template <u32 Base, UnsignedIntegral T>
+void format_integral(String& buf, T value, FormatOptions opts, char sign) noexcept {
   // 0, 0, Base, Base^2, Base^3...
   static constexpr StackArray<T, 130> powers = gen_powers<T, Base>();
 
@@ -668,7 +669,7 @@ public:
     return parser.end_parse();
   }
 
-  void format(String& buf, T value) const;
+  void format(String& buf, T value) const noexcept;
 
 private:
   u32  precision_ = 0;
@@ -681,7 +682,7 @@ private:
 
 template <typename T> class Formatter<T*> {
 public:
-  constexpr const char* parse(const char* fmt) {
+  constexpr const char* parse(const char* fmt) noexcept {
     FormatStringParser parser(fmt);
     fill_  = parser.check_fill();
     align_ = parser.check_align('>');
@@ -707,7 +708,7 @@ private:
 
 template <Character Char, Integral SizeT> class Formatter<BasicStringView<Char, SizeT>> {
 public:
-  constexpr const char* parse(const char* fmt) {
+  constexpr const char* parse(const char* fmt) noexcept {
     FormatStringParser parser(fmt);
     fill_  = parser.check_fill();
     align_ = parser.check_align('<');
@@ -716,7 +717,7 @@ public:
     return parser.end_parse();
   }
 
-  void format(String& buf, BasicStringView<Char, SizeT> str) const {
+  void format(String& buf, BasicStringView<Char, SizeT> str) const noexcept {
     const FormatOptions opts{.width = width_, .fill = fill_, .align = align_};
     if (type_ == 's') [[likely]] {
       format_string<false>(buf, BasicStringView<Char>(str.data(), static_cast<usize>(str.size())),
@@ -737,11 +738,11 @@ private:
 // NOLINTNEXTLINE(modernize-avoid-c-arrays)
 template <Character Char, usize N> class Formatter<Char[N]> : Formatter<BasicStringView<Char>> {
 public:
-  constexpr const char* parse(const char* fmt) {
+  constexpr const char* parse(const char* fmt) noexcept {
     return Formatter<BasicStringView<Char>>::parse(fmt);
   }
   // NOLINTNEXTLINE(modernize-avoid-c-arrays)
-  void format(String& buf, const Char (&str)[N]) const {
+  void format(String& buf, const Char (&str)[N]) const noexcept {
     return Formatter<BasicStringView<Char>>::format(
         buf, BasicStringView(static_cast<const Char*>(str), N - 1));
   }
@@ -751,11 +752,11 @@ template <Character Char, usize N>
 // NOLINTNEXTLINE(modernize-avoid-c-arrays)
 class Formatter<const Char[N]> : Formatter<BasicStringView<Char>> {
 public:
-  constexpr const char* parse(const char* fmt) {
+  constexpr const char* parse(const char* fmt) noexcept {
     return Formatter<BasicStringView<Char>>::parse(fmt);
   }
   // NOLINTNEXTLINE(modernize-avoid-c-arrays)
-  void format(String& buf, const Char (&str)[N]) const {
+  void format(String& buf, const Char (&str)[N]) const noexcept {
     return Formatter<BasicStringView<Char>>::format(buf, BasicStringView(str, N - 1));
   }
 };
@@ -763,9 +764,9 @@ public:
 template <RangeLike T>
 class Formatter<T> : Formatter<RemoveCVRef<decltype(*declval<T>().begin())>> {
 public:
-  constexpr const char* parse(const char* fmt) { return Base::parse(fmt); }
+  constexpr const char* parse(const char* fmt) noexcept { return Base::parse(fmt); }
 
-  void format(String& buf, const T& range) {
+  void format(String& buf, const T& range) const noexcept {
     buf += '[';
     auto iter = range.begin();
     auto end  = range.end();
@@ -787,28 +788,70 @@ private:
 
 template <Enum T> class Formatter<T> {
 public:
-  constexpr const char* parse(const char* fmt) {
+  constexpr const char* parse(const char* fmt) noexcept {
     FormatStringParser parser(fmt);
+    fill_  = parser.check_fill();
+    align_ = parser.check_align('<');
+    width_ = parser.check_width();
     return parser.end_parse();
   }
 
-  void format(String& buf, T value) {
-    auto scalar = static_cast<UnderlyingType>(value);
-    auto u_val  = static_cast<MakeUnsigned<UnderlyingType>>(value);
+  void format(String& buf, T value) const noexcept {
+    auto          scalar = static_cast<UnderlyingType>(value);
+    auto          u_val  = static_cast<MakeUnsigned<UnderlyingType>>(value);
+    FormatOptions opts   = {
+        .width = width_,
+        .fill  = fill_,
+        .align = align_,
+    };
     if (u_val < 256) {
-      buf += TABLE[u_val];
-    } else {
+      format_string<false>(buf, TABLE[u_val], opts);
+      return;
+    }
+    static constexpr StackArray<UnderlyingType, 130> powers = gen_powers<UnderlyingType, 10>();
+
+    if (scalar < 0) {
+      u_val = static_cast<MakeUnsigned<UnderlyingType>>(-scalar);
+    }
+
+    if (u_val >= powers[1 + width_ - (scalar < 0)]) {
       const usize len = itoa_digit_count(scalar);
-      char*       str = buf.grow(len + TYPE_STRING<T>.size() + 2);
-      str[0]          = '(';
-      ++str;
-      copy_bytes(str, TYPE_STRING<T>.data(), TYPE_STRING<T>.size());
-      str[TYPE_STRING<T>.size()] = ')';
+      char*       str = buf.grow(len + CAST_STRING.size());
+      copy_bytes(str, CAST_STRING);
       itoa_from_end(buf.end(), scalar);
+      return;
+    }
+
+    char* str = buf.grow(width_);
+    if (align_ == '>') {
+      char* end = itoa_from_end(buf.end(), scalar);
+      end -= CAST_STRING.size();
+      copy_bytes(end, CAST_STRING);
+      memset(str, fill_, static_cast<usize>(end - str));
+    } else if (align_ == '<') {
+      copy_bytes(str, CAST_STRING);
+      char* end = itoa(str + CAST_STRING.size(), scalar);
+      memset(end, fill_, static_cast<usize>(buf.end() - end));
+    } else {
+      memset(str, fill_, width_);
+      const usize len    = itoa_digit_count(scalar) + CAST_STRING.size();
+      const usize offset = (width_ - len) / 2;
+      copy_bytes(str + offset, CAST_STRING);
+      itoa_from_end(str + offset + len, scalar);
     }
   }
 
 private:
+  static constexpr StackArray<char, TYPE_STRING<T>.size() + 2> CAST_STRING_ARR = []() {
+    StackArray<char, TYPE_STRING<T>.size() + 2> arr{};
+    arr[0]              = '(';
+    arr[arr.size() - 1] = ')';
+    copy_bytes(static_cast<void*>(&arr[1]), TYPE_STRING<T>);
+    return arr;
+  }();
+
+  static constexpr StringView CAST_STRING{CAST_STRING_ARR.data(), CAST_STRING_ARR.size()};
+
   using UnderlyingType = UnderlyingEnumType<T>;
   template <u32... Values>
   static constexpr StackArray<StringView, sizeof...(Values)>
@@ -864,6 +907,11 @@ private:
   }
 
   static constexpr StackArray<StringView, 256> TABLE = make_table(IntegerSequenceToN<u32, 256>{});
+
+private:
+  u32  width_ = 0;
+  char fill_  = ' ';
+  char align_ = '>';
 };
 
 } // namespace base
