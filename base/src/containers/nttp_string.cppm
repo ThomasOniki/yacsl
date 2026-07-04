@@ -9,7 +9,7 @@ export namespace base {
 template <usize N> class NTTPString {
 public:
   // NOLINTNEXTLINE(modernize-avoid-c-arrays, google-explicit-constructor)
-  constexpr NTTPString(const char (&str)[N]) noexcept {
+  constexpr NTTPString(const char (&str)[N + 1]) noexcept {
     for (usize i = 0; i < N; ++i) {
       // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
       data_[i] = str[i];
@@ -25,7 +25,7 @@ public:
 
   constexpr NTTPString() noexcept = default;
 
-  [[nodiscard]] constexpr usize       size() const noexcept { return N - 1; }
+  [[nodiscard]] constexpr usize       size() const noexcept { return N; }
   [[nodiscard]] constexpr char*       data() noexcept { return data_; }
   [[nodiscard]] constexpr const char* data() const noexcept { return data_; }
 
@@ -35,21 +35,19 @@ public:
   }
 
   [[nodiscard]] constexpr char*       begin() noexcept { return data_; }
-  [[nodiscard]] constexpr char*       end() noexcept { return data_ + N - 1; }
+  [[nodiscard]] constexpr char*       end() noexcept { return data_ + N; }
   [[nodiscard]] constexpr const char* begin() const noexcept { return data_; }
-  [[nodiscard]] constexpr const char* end() const noexcept { return data_ + N - 1; }
+  [[nodiscard]] constexpr const char* end() const noexcept { return data_ + N; }
   [[nodiscard]] constexpr const char* cbegin() const noexcept { return data_; }
-  [[nodiscard]] constexpr const char* cend() const noexcept { return data_ + N - 1; }
+  [[nodiscard]] constexpr const char* cend() const noexcept { return data_ + N; }
 
-  [[nodiscard]] constexpr ReverseIterator<char*>       rbegin() noexcept { return data_ + N - 1; }
+  [[nodiscard]] constexpr ReverseIterator<char*>       rbegin() noexcept { return data_ + N; }
   [[nodiscard]] constexpr ReverseIterator<char*>       rend() noexcept { return data_; }
-  [[nodiscard]] constexpr ReverseIterator<const char*> rbegin() const noexcept {
-    return data_ + N - 1;
-  }
+  [[nodiscard]] constexpr ReverseIterator<const char*> rbegin() const noexcept { return data_ + N; }
   [[nodiscard]] constexpr ReverseIterator<const char*> rend() const noexcept { return data_; }
 
   [[nodiscard]] constexpr ReverseIterator<const char*> crbegin() const noexcept {
-    return data_ + N - 1;
+    return data_ + N;
   }
   [[nodiscard]] constexpr ReverseIterator<const char*> crend() const noexcept { return data_; }
 
@@ -59,6 +57,6 @@ public:
 };
 
 // NOLINTNEXTLINE(modernize-avoid-c-arrays)
-template <usize N> NTTPString(const char (&str)[N]) -> NTTPString<N>;
+template <usize N> NTTPString(const char (&str)[N]) -> NTTPString<N - 1>;
 
 } // namespace base
