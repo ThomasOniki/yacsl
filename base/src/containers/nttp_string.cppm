@@ -8,12 +8,14 @@ export namespace base {
 template <usize N> class NTTPString {
 public:
   // NOLINTNEXTLINE(modernize-avoid-c-arrays, google-explicit-constructor)
-  constexpr NTTPString(const char (&str)[N]) {
+  constexpr NTTPString(const char (&str)[N]) noexcept {
     for (usize i = 0; i < N; ++i) {
       // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
       data_[i] = str[i];
     }
   }
+
+  constexpr NTTPString() noexcept = default;
 
   [[nodiscard]] constexpr usize       size() const noexcept { return N - 1; }
   [[nodiscard]] constexpr char*       data() noexcept { return data_; }
