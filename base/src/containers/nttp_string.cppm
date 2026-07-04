@@ -15,20 +15,25 @@ public:
     }
   }
 
-  [[nodiscard]] usize       size() const noexcept { return N - 1; }
-  [[nodiscard]] const char* data() const noexcept { return data_; }
+  [[nodiscard]] constexpr usize       size() const noexcept { return N - 1; }
+  [[nodiscard]] constexpr const char* data() const noexcept { return data_; }
 
-  [[nodiscard]] const char& operator[](usize index) { return data_[index]; }
+  [[nodiscard]] constexpr const char& operator[](usize index) { return data_[index]; }
 
-  [[nodiscard]] const char* begin() const noexcept { return data_; }
-  [[nodiscard]] const char* end() const noexcept { return data_ + N - 1; }
-  [[nodiscard]] const char* cbegin() const noexcept { return data_; }
-  [[nodiscard]] const char* cend() const noexcept { return data_ + N - 1; }
+  [[nodiscard]] constexpr const char* begin() const noexcept { return data_; }
+  [[nodiscard]] constexpr const char* end() const noexcept { return data_ + N - 1; }
+  [[nodiscard]] constexpr const char* cbegin() const noexcept { return data_; }
+  [[nodiscard]] constexpr const char* cend() const noexcept { return data_ + N - 1; }
 
-  [[nodiscard]] ReverseIterator<const char*> rbegin() const noexcept { return data_ + N - 1; }
-  [[nodiscard]] ReverseIterator<const char*> rend() const noexcept { return data_; }
-  [[nodiscard]] ReverseIterator<const char*> crbegin() const noexcept { return data_ + N - 1; }
-  [[nodiscard]] ReverseIterator<const char*> crend() const noexcept { return data_; }
+  [[nodiscard]] constexpr ReverseIterator<const char*> rbegin() const noexcept {
+    return data_ + N - 1;
+  }
+  [[nodiscard]] constexpr ReverseIterator<const char*> rend() const noexcept { return data_; }
+
+  [[nodiscard]] constexpr ReverseIterator<const char*> crbegin() const noexcept {
+    return data_ + N - 1;
+  }
+  [[nodiscard]] constexpr ReverseIterator<const char*> crend() const noexcept { return data_; }
 
 public:
   // NOLINTNEXTLINE(modernize-avoid-c-arrays)
