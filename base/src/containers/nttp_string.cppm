@@ -16,15 +16,20 @@ public:
   }
 
   [[nodiscard]] constexpr usize       size() const noexcept { return N - 1; }
+  [[nodiscard]] constexpr char*       data() noexcept { return data_; }
   [[nodiscard]] constexpr const char* data() const noexcept { return data_; }
 
   [[nodiscard]] constexpr const char& operator[](usize index) { return data_[index]; }
 
+  [[nodiscard]] constexpr char*       begin() noexcept { return data_; }
+  [[nodiscard]] constexpr char*       end() noexcept { return data_ + N - 1; }
   [[nodiscard]] constexpr const char* begin() const noexcept { return data_; }
   [[nodiscard]] constexpr const char* end() const noexcept { return data_ + N - 1; }
   [[nodiscard]] constexpr const char* cbegin() const noexcept { return data_; }
   [[nodiscard]] constexpr const char* cend() const noexcept { return data_ + N - 1; }
 
+  [[nodiscard]] constexpr ReverseIterator<char*>       rbegin() noexcept { return data_ + N - 1; }
+  [[nodiscard]] constexpr ReverseIterator<char*>       rend() noexcept { return data_; }
   [[nodiscard]] constexpr ReverseIterator<const char*> rbegin() const noexcept {
     return data_ + N - 1;
   }
