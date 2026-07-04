@@ -21,7 +21,10 @@ public:
   [[nodiscard]] constexpr char*       data() noexcept { return data_; }
   [[nodiscard]] constexpr const char* data() const noexcept { return data_; }
 
-  [[nodiscard]] constexpr const char& operator[](usize index) { return data_[index]; }
+  [[nodiscard]] constexpr char&       operator[](usize index) noexcept { return data_[index]; }
+  [[nodiscard]] constexpr const char& operator[](usize index) const noexcept {
+    return data_[index];
+  }
 
   [[nodiscard]] constexpr char*       begin() noexcept { return data_; }
   [[nodiscard]] constexpr char*       end() noexcept { return data_ + N - 1; }
