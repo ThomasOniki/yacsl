@@ -2,6 +2,7 @@ export module base.containers.nttp_string;
 
 import base.utilities.type_aliases;
 import base.ranges.reverse_iterator;
+import base.ranges.string_view;
 
 export namespace base {
 
@@ -12,6 +13,13 @@ public:
     for (usize i = 0; i < N; ++i) {
       // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
       data_[i] = str[i];
+    }
+  }
+
+  // NOLINTNEXTLINE(modernize-avoid-c-arrays, google-explicit-constructor)
+  constexpr NTTPString(StringView view) noexcept {
+    for (usize i = 0; i < view.size(); ++i) {
+      data_[i] = view[i];
     }
   }
 
