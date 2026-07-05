@@ -34,7 +34,7 @@ public:
     return data_[index];
   }
 
-  [[nodiscard]] constexpr StringView view() const noexcept { return StringView(data_, N); }
+  [[nodiscard]] constexpr StringView view() const noexcept { return {data_, N}; }
 
   [[nodiscard]] constexpr char*       begin() noexcept { return data_; }
   [[nodiscard]] constexpr char*       end() noexcept { return data_ + N; }
