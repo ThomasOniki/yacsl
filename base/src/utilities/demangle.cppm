@@ -105,7 +105,7 @@ private:
     }
     const char* suffix_end = mangled;
 
-    if (*mangled >= '0' && *mangled <= '9' || *mangled == 'N') {
+    if ((*mangled >= '0' && *mangled <= '9') || *mangled == 'N') {
       demangle_string();
     } else {
       demangle_builtin_type_id();

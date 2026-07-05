@@ -61,7 +61,7 @@ public:
 template <> class NTTPString<0> {
 public:
   // NOLINTNEXTLINE(modernize-avoid-c-arrays,google-explicit-constructor)
-  constexpr NTTPString(const char (& /*str*/)[1]) noexcept {};
+  constexpr NTTPString(const char (& /*str*/)[1]) noexcept {}
   constexpr NTTPString() noexcept = default;
 
   [[nodiscard]] static constexpr usize size() noexcept { return 0; }

@@ -68,7 +68,8 @@ struct StackTrace {
     usize size = ret.addresses_.size();
     while (size == ret.addresses_.size()) {
       ret.addresses_.resize(ret.addresses_.capacity() * 2);
-      size = backtrace(ret.addresses_.data(), static_cast<int>(ret.addresses_.size()));
+      size = static_cast<usize>(
+          backtrace(ret.addresses_.data(), static_cast<int>(ret.addresses_.size())));
     }
     ret.addresses_.resize(size);
     return ret;

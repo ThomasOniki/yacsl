@@ -13,7 +13,7 @@ import base.type_traits.qualifiers;
 import base.ranges.string_view;
 
 #ifdef BASE_NO_LIBCPP
-export [[__nodiscard__]] constexpr void* operator new(base::usize /*count*/, void* ptr) noexcept {
+export [[nodiscard]] constexpr void* operator new(base::usize /*count*/, void* ptr) noexcept {
   return ptr;
 }
 #else
