@@ -27,8 +27,23 @@ class Thread {
 public:
   Thread() noexcept = default;
 
-  template <typename Func, typename... Args>
-  explicit Thread(Func&& func, Args&&... args) { // NOLINT(cppcoreguidelines-missing-std-forward)
+  template <typename Func, typename... Args> explicit Thread(Func&& func, Args&&... args) {
+    start(base::forward<Func>(func), base::forward<Args>(args)...);
+  }
+
+  Thread(void* func(void*), void* arg) { pthread_create(&handle_, nullptr, func, arg); }
+
+  void start(void* func(void*), void* arg) {
+    if (joinable()) {
+      join();
+    }
+    pthread_create(&handle_, nullptr, func, arg);
+  }
+
+  template <typename Func, typename... Args> void start(Func&& func, Args&&... args) {
+    if (joinable()) {
+      join();
+    }
     static_assert(SameAs<void, decltype(func(base::forward<Args>(args)...))>);
 
     using StoredFunction = internal::StorableFunctionType<RemoveReference<Func>>::Type;
@@ -40,8 +55,6 @@ public:
     while (!ready.load(MemoryOrder::Acquire)) {
     }
   }
-
-  Thread(void* func(void*), void* arg) { pthread_create(&handle_, nullptr, func, arg); }
 
   Thread(Thread&& other) noexcept : handle_(other.handle_) { other.handle_ = NIL_PTHREAD; }
   Thread(const Thread&) = delete;
