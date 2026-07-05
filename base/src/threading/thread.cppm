@@ -41,9 +41,28 @@ public:
     }
   }
 
+  Thread(Thread&& other) noexcept : handle_(other.handle_) { other.handle_ = NIL_PTHREAD; }
+  Thread(const Thread&) = delete;
+
+  Thread& operator=(Thread&& other) noexcept {
+    handle_       = other.handle_;
+    other.handle_ = NIL_PTHREAD;
+    return *this;
+  }
+  Thread& operator=(const Thread&) = delete;
+
+  ~Thread() noexcept {
+    if (joinable()) {
+      join();
+    }
+  }
+
+  [[nodiscard]] bool joinable() const noexcept { return handle_ != NIL_PTHREAD; }
+
   void join() {
     void* result = nullptr;
     pthread_join(handle_, &result);
+    handle_ = NIL_PTHREAD;
   }
 
 private:
@@ -66,7 +85,9 @@ private:
   };
 
 private:
-  pthread_t handle_ = {};
+  static constexpr pthread_t NIL_PTHREAD{};
+
+  pthread_t handle_ = NIL_PTHREAD;
 };
 
 } // namespace base
