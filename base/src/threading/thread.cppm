@@ -73,9 +73,7 @@ private:
     static void* callback(void* data) {
       using StoredFunction = internal::StorableFunctionType<RemoveReference<Func>>::Type;
       using Pack           = Tuple<StoredFunction, Atomic<bool>&, Args...>;
-      Pack& ref            = *static_cast<Pack*>(data);
-      Pack  pack(ref.template get<0>(), ref.template get<1>(),
-                 base::forward<Args>(ref.template get<Indices + 2>())...);
+      Pack pack(base::move(*static_cast<Pack*>(data)));
 
       pack.template get<1>().store(true, MemoryOrder::SeqCst);
 
