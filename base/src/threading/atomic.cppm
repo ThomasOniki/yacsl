@@ -40,6 +40,10 @@ public:
     return __atomic_fetch_sub(&value_, value, static_cast<int>(order));
   }
 
+  T exchange(T value, MemoryOrder order) noexcept {
+    return __atomic_exchange_n(&value_, value, order);
+  }
+
   T operator++() noexcept { return fetch_add(1, MemoryOrder::SeqCst) + 1; }
   T operator++(int) noexcept { return fetch_add(1, MemoryOrder::SeqCst); }
   T operator--() noexcept { return fetch_sub(1, MemoryOrder::SeqCst) - 1; }
