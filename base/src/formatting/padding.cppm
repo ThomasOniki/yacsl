@@ -106,7 +106,7 @@ void pad_string_right_aligned(String& buf, BasicStringView<C, usize> str,
     return;
   }
   char*     begin = buf.grow(opts.width);
-  const u32 pad   = opts.width - real_len;
+  const u32 pad   = static_cast<u32>(opts.width - real_len);
   memset(begin, opts.fill, pad);
   write_maybe_debug_string<IsDebug>(begin + pad, str);
 }
@@ -120,7 +120,7 @@ void pad_string_middle_aligned(String& buf, BasicStringView<C, usize> str,
     return;
   }
   char*     begin = buf.grow(opts.width);
-  const u32 pad   = opts.width - real_len;
+  const u32 pad   = static_cast<u32>(opts.width - real_len);
   memset(begin, opts.fill, opts.width);
   write_maybe_debug_string<IsDebug>(begin + pad / 2, str);
 }
