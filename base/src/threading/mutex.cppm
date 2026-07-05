@@ -3,7 +3,7 @@ module;
 #include "base/attributes.hpp"
 #include <pthread.h>
 
-export module base.threads.mutex;
+export module base.threading.mutex;
 
 export namespace base {
 

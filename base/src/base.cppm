@@ -8,6 +8,6 @@ export import base.memory;
 export import base.metaprogramming;
 export import base.os;
 export import base.ranges;
-export import base.threads;
+export import base.threading;
 export import base.type_traits;
 export import base.utilities;
