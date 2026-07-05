@@ -2,9 +2,9 @@ module;
 
 #include <pthread.h>
 
-export module base.threads.thread;
+export module base.threading.thread;
 
-import base.threads.atomic;
+import base.threading.atomic;
 import base.containers.tuple;
 import base.memory.lifetimes;
 import base.utilities.type_aliases;
