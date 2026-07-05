@@ -12,14 +12,10 @@ import base.type_traits.comparaison;
 import base.type_traits.limits;
 import base.math.powers;
 import base.memory.lifetimes;
+import base.containers.string;
 
 export namespace base {
 
-template <Integral T> constexpr char* itoa_bin(BASE_LIFETIMEBOUND char* buf, T value) noexcept;
-template <Integral T> constexpr char* itoa_oct(BASE_LIFETIMEBOUND char* buf, T value) noexcept;
-template <Integral T> constexpr char* itoa(BASE_LIFETIMEBOUND char* buf, T value) noexcept;
-template <Integral T> constexpr char* itoa_hex(BASE_LIFETIMEBOUND char* buf, T value) noexcept;
-
 template <UnsignedIntegral T>
 constexpr char* itoa_from_end_bin(BASE_LIFETIMEBOUND char* buf_end, T value) noexcept;
 template <UnsignedIntegral T>
@@ -37,6 +33,23 @@ template <SignedIntegral T>
 constexpr char* itoa_from_end(BASE_LIFETIMEBOUND char* buf_end, T value) noexcept;
 template <SignedIntegral T>
 constexpr char* itoa_from_end_hex(BASE_LIFETIMEBOUND char* buf_end, T value) noexcept;
+
+template <u32 Base, Integral T>
+constexpr char* itoa_from_end_base_x(BASE_LIFETIMEBOUND char* buf_end, T value) noexcept {
+  if constexpr (Base == 2) {
+    return itoa_from_end_bin(buf_end, value);
+  }
+  if constexpr (Base == 8) {
+    return itoa_from_end_oct(buf_end, value);
+  }
+  if constexpr (Base == 10) {
+    return itoa_from_end(buf_end, value);
+  }
+  if constexpr (Base == 16) {
+    return itoa_from_end_hex(buf_end, value);
+  }
+  return buf_end;
+}
 
 template <UnsignedIntegral T> constexpr u32 itoa_bit_count(T value) noexcept;
 template <UnsignedIntegral T> constexpr u32 itoa_octal_digit_count(T value) noexcept;
@@ -47,6 +60,22 @@ template <SignedIntegral T> constexpr u32 itoa_bit_count(T value) noexcept;
 template <SignedIntegral T> constexpr u32 itoa_octal_digit_count(T value) noexcept;
 template <SignedIntegral T> constexpr u32 itoa_digit_count(T value) noexcept;
 template <SignedIntegral T> constexpr u32 itoa_hex_digit_count(T value) noexcept;
+
+template <u32 Base, Integral T> constexpr u32 count_digits_base_x(T value) noexcept {
+  if constexpr (Base == 2) {
+    return itoa_bit_count(value);
+  }
+  if constexpr (Base == 8) {
+    return itoa_octal_digit_count(value);
+  }
+  if constexpr (Base == 10) {
+    return itoa_digit_count(value);
+  }
+  if constexpr (Base == 16) {
+    return itoa_hex_digit_count(value);
+  }
+  return 0;
+}
 
 template <Integral T> constexpr char* itoa_bin(char* buf, T value) noexcept {
   u32 len = itoa_bit_count(value);
@@ -67,6 +96,19 @@ template <Integral T> constexpr char* itoa_hex(char* buf, T value) noexcept {
   u32 len = itoa_hex_digit_count(value);
   itoa_from_end_hex(buf + len, value);
   return buf + len;
+}
+
+template <Integral T> constexpr void itoa_bin(String& buf, T value) noexcept {
+  itoa_from_end_bin(buf.grow(itoa_bit_count(value)), value);
+}
+template <Integral T> constexpr void itoa_oct(String& buf, T value) noexcept {
+  itoa_from_end_oct(buf.grow(itoa_octal_digit_count(value)), value);
+}
+template <Integral T> constexpr void itoa(String& buf, T value) noexcept {
+  itoa_from_end(buf.grow(itoa_digit_count(value)), value);
+}
+template <Integral T> constexpr void itoa_hex(String& buf, T value) noexcept {
+  itoa_from_end_hex(buf.grow(itoa_hex_digit_count(value)), value);
 }
 
 template <SignedIntegral T> constexpr u32 itoa_bit_count(T value) noexcept {
