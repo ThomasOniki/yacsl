@@ -4,12 +4,14 @@ file(GLOB_RECURSE BASE_TESTS "${PROJECT_SOURCE_DIR}/tests/*.cpp")
 foreach(path IN LISTS BASE_TESTS)
   get_filename_component(name "${path}" NAME_WE)
 
+  if("${name}" STREQUAL "test_vector" AND BASE_NO_LIBCPP)
+    continue()
+  endif()
+
   message(STATUS "Added test ${name} (${path})")
 
   add_executable("${name}" "${path}")
   init_target("${name}")
-
-  target_compile_options("${name}" PRIVATE "${BASE_PRIVATE_FLAGS}")
 
   target_link_libraries("${name}" PRIVATE base)
   add_test(NAME "${name}" COMMAND "${name}")

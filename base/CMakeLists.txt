@@ -2,6 +2,11 @@ add_library(base)
 
 init_target(base)
 
+if(BASE_NO_LIBCPP)
+  target_compile_options(base PUBLIC "-nostdlib++" "-nostdinc++")
+  target_compile_definitions(base PUBLIC BASE_NO_LIBCPP)
+endif()
+
 file(GLOB_RECURSE BASE_MODULE_INTERFACES
      "${PROJECT_SOURCE_DIR}/base/src/*.cppm")
 target_sources(base PUBLIC FILE_SET CXX_MODULES FILES
