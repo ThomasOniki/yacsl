@@ -37,9 +37,11 @@ public:
     Pack         pack    = Pack(forward<Func>(func), ready, base::forward<Args>(args)...);
     pthread_create(&handle_, nullptr,
                    Callback<Func, IndexSequenceToN<sizeof...(Args)>, Args...>::callback, &pack);
-    while (!ready.load(MemoryOrder::SeqCst)) {
+    while (!ready.load(MemoryOrder::Acquire)) {
     }
   }
+
+  Thread(void* func(void*), void* arg) { pthread_create(&handle_, nullptr, func, arg); }
 
   Thread(Thread&& other) noexcept : handle_(other.handle_) { other.handle_ = NIL_PTHREAD; }
   Thread(const Thread&) = delete;
@@ -75,7 +77,7 @@ private:
       using Pack           = Tuple<StoredFunction, Atomic<bool>&, Args...>;
       Pack pack(base::move(*static_cast<Pack*>(data)));
 
-      pack.template get<1>().store(true, MemoryOrder::SeqCst);
+      pack.template get<1>().store(true, MemoryOrder::Release);
 
       pack.template get<0>()(base::forward<Args>(pack.template get<Indices + 2>())...);
       return nullptr;
