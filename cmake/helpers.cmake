@@ -1,7 +1,7 @@
 function(init_target target_name)
-  # set_target_properties("${target_name}" PROPERTIES COMPILE_WARNING_AS_ERROR
-  # ${BASE_WERROR}) target_compile_options("${target_name}" PRIVATE
-  # "${BASE_PRIVATE_FLAGS}")
+  set_target_properties("${target_name}" PROPERTIES COMPILE_WARNING_AS_ERROR
+                                                    ${BASE_WERROR})
+  target_compile_options("${target_name}" PRIVATE "${BASE_PRIVATE_FLAGS}")
 endfunction()
 
 if(MSVC)
