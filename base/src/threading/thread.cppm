@@ -34,16 +34,12 @@ public:
   Thread(void* func(void*), void* arg) { pthread_create(&handle_, nullptr, func, arg); }
 
   void start(void* func(void*), void* arg) {
-    if (joinable()) {
-      join();
-    }
+    join();
     pthread_create(&handle_, nullptr, func, arg);
   }
 
   template <typename Func, typename... Args> void start(Func&& func, Args&&... args) {
-    if (joinable()) {
-      join();
-    }
+    join();
     static_assert(SameAs<void, decltype(func(base::forward<Args>(args)...))>);
 
     using StoredFunction = internal::StorableFunctionType<RemoveReference<Func>>::Type;
@@ -66,18 +62,16 @@ public:
   }
   Thread& operator=(const Thread&) = delete;
 
-  ~Thread() noexcept {
-    if (joinable()) {
-      join();
-    }
-  }
+  ~Thread() noexcept { join(); }
 
   [[nodiscard]] bool joinable() const noexcept { return handle_ != NIL_PTHREAD; }
 
   void join() {
-    void* result = nullptr;
-    pthread_join(handle_, &result);
-    handle_ = NIL_PTHREAD;
+    if (joinable()) {
+      void* result = nullptr;
+      pthread_join(handle_, &result);
+      handle_ = NIL_PTHREAD;
+    }
   }
 
 private:
