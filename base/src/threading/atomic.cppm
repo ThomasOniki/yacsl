@@ -1,5 +1,8 @@
 export module base.threading.atomic;
 
+import base.type_traits.trivial;
+import base.containers.stack_storage;
+
 export namespace base {
 
 // NOLINTNEXTLINE(performance-enum-size)
@@ -12,7 +15,9 @@ enum class MemoryOrder {
   SeqCst  = __ATOMIC_SEQ_CST
 };
 
-template <typename T> class Atomic {
+template <typename T>
+  requires TriviallyCopyable<T>
+class Atomic {
 public:
   constexpr Atomic() noexcept = default;
   // NOLINTNEXTLINE(google-explicit-constructor)
@@ -26,11 +31,13 @@ public:
   Atomic& operator=(Atomic&&) noexcept = delete;
 
   [[nodiscard]] T load(MemoryOrder order) const noexcept {
-    return __atomic_load_n(&value_, static_cast<int>(order));
+    StackStorage<T> ret;
+    __atomic_load(&value_, &*ret, static_cast<int>(order));
+    return *ret;
   }
 
   void store(T value, MemoryOrder order) noexcept {
-    __atomic_store_n(&value_, value, static_cast<int>(order));
+    __atomic_store(&value_, &value, static_cast<int>(order));
   }
 
   T fetch_add(T value, MemoryOrder order) noexcept {
@@ -41,7 +48,9 @@ public:
   }
 
   T exchange(T value, MemoryOrder order) noexcept {
-    return __atomic_exchange_n(&value_, value, order);
+    StackStorage<T> ret;
+    __atomic_exchange(&value_, &value, &*ret, static_cast<int>(order));
+    return *ret;
   }
 
   T operator++() noexcept { return fetch_add(1, MemoryOrder::SeqCst) + 1; }
