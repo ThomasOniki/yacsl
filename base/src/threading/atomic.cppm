@@ -53,6 +53,16 @@ public:
     return *ret;
   }
 
+  bool compare_exchange(T& expected, T desired, MemoryOrder success, MemoryOrder failure) noexcept {
+    return __atomic_compare_exchange(&value_, &expected, &desired, /*weak:*/ false,
+                                     static_cast<int>(success), static_cast<int>(failure));
+  }
+  bool compare_exchange_weak(T& expected, T desired, MemoryOrder success,
+                             MemoryOrder failure) noexcept {
+    return __atomic_compare_exchange(&value_, &expected, &desired, /*weak:*/ true,
+                                     static_cast<int>(success), static_cast<int>(failure));
+  }
+
   T operator++() noexcept { return fetch_add(1, MemoryOrder::SeqCst) + 1; }
   T operator++(int) noexcept { return fetch_add(1, MemoryOrder::SeqCst); }
   T operator--() noexcept { return fetch_sub(1, MemoryOrder::SeqCst) - 1; }
