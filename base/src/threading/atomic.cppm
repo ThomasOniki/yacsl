@@ -2,11 +2,11 @@ export module base.threading.atomic;
 
 import base.type_traits.trivial;
 import base.containers.stack_storage;
+import base.utilities.type_aliases;
 
 export namespace base {
 
-// NOLINTNEXTLINE(performance-enum-size)
-enum class MemoryOrder {
+enum class MemoryOrder : u8 {
   Relaxed = __ATOMIC_RELAXED,
   Consume = __ATOMIC_CONSUME,
   Acquire = __ATOMIC_ACQUIRE,
