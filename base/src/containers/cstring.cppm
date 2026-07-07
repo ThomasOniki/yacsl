@@ -1,5 +1,3 @@
-module;
-#include <string.h>
 export module base.containers.cstring;
 
 import base.containers.base_classes;
