@@ -1,6 +1,6 @@
 module;
 
-#include <string.h>
+#include "base/attributes.hpp"
 
 export module base.containers.string;
 
@@ -22,8 +22,9 @@ public:
 
   constexpr ~BasicString() noexcept { free(); }
 
-  constexpr BasicString(const BasicString& other) noexcept {
-    const SizeT size = other.size();
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  constexpr BasicString(StringView str) noexcept {
+    const SizeT size = str.size();
 
     if constexpr (N > 0) {
       if (size > fixed_buffer_.size()) {
@@ -37,8 +38,10 @@ public:
       allocated_end_ = end_ = begin_ + size;
     }
 
-    copy_bytes(begin_, other.begin_, size);
+    copy_bytes(begin_, str.data(), size);
   }
+
+  constexpr BasicString(const BasicString& other) noexcept : BasicString(other.view()) {}
 
   constexpr BasicString(BasicString&& other) noexcept
       : begin_(other.begin_), end_(other.end_), allocated_end_(other.allocated_end_) {
