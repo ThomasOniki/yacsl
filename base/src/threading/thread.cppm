@@ -32,8 +32,13 @@ public:
   }
 
   Thread(void* func(void*), void* arg) { pthread_create(&handle_, nullptr, func, arg); }
+  Thread(void* func(void*) noexcept, void* arg) { pthread_create(&handle_, nullptr, func, arg); }
 
   void start(void* func(void*), void* arg) {
+    join();
+    pthread_create(&handle_, nullptr, func, arg);
+  }
+  void start(void* func(void*) noexcept, void* arg) {
     join();
     pthread_create(&handle_, nullptr, func, arg);
   }
