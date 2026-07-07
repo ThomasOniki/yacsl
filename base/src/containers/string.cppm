@@ -155,6 +155,11 @@ public:
     return static_cast<SizeT>(allocated_end_ - begin_);
   }
 
+  [[nodiscard]] constexpr Char&       operator[](SizeT index) noexcept { return begin_[index]; }
+  [[nodiscard]] constexpr const Char& operator[](SizeT index) const noexcept {
+    return begin_[index];
+  }
+
   [[nodiscard]] constexpr Char*       data() noexcept { return begin_; }
   [[nodiscard]] constexpr const Char* data() const noexcept { return begin_; }
 
