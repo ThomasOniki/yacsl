@@ -1,7 +1,6 @@
 module;
 
 #include "base/attributes.hpp"
-#include <string.h>
 
 export module base.formatting.formatter;
 
