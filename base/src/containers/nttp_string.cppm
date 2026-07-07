@@ -1,3 +1,7 @@
+module;
+
+#include "base/attributes.hpp"
+
 export module base.containers.nttp_string;
 
 import base.utilities.type_aliases;
@@ -26,32 +30,44 @@ public:
   constexpr NTTPString() noexcept = default;
 
   [[nodiscard]] constexpr usize       size() const noexcept { return N; }
-  [[nodiscard]] constexpr char*       data() noexcept { return data_; }
-  [[nodiscard]] constexpr const char* data() const noexcept { return data_; }
+  [[nodiscard]] constexpr char*       data() noexcept BASE_LIFETIMEBOUND { return data_; }
+  [[nodiscard]] constexpr const char* data() const noexcept BASE_LIFETIMEBOUND { return data_; }
 
-  [[nodiscard]] constexpr char&       operator[](usize index) noexcept { return data_[index]; }
-  [[nodiscard]] constexpr const char& operator[](usize index) const noexcept {
+  [[nodiscard]] constexpr char& operator[](usize index) noexcept BASE_LIFETIMEBOUND {
+    return data_[index];
+  }
+  [[nodiscard]] constexpr const char& operator[](usize index) const noexcept BASE_LIFETIMEBOUND {
     return data_[index];
   }
 
-  [[nodiscard]] constexpr StringView view() const noexcept { return {data_, N}; }
+  [[nodiscard]] constexpr StringView view() const noexcept BASE_LIFETIMEBOUND { return {data_, N}; }
 
-  [[nodiscard]] constexpr char*       begin() noexcept { return data_; }
-  [[nodiscard]] constexpr char*       end() noexcept { return data_ + N; }
-  [[nodiscard]] constexpr const char* begin() const noexcept { return data_; }
-  [[nodiscard]] constexpr const char* end() const noexcept { return data_ + N; }
-  [[nodiscard]] constexpr const char* cbegin() const noexcept { return data_; }
-  [[nodiscard]] constexpr const char* cend() const noexcept { return data_ + N; }
+  [[nodiscard]] constexpr char*       begin() noexcept BASE_LIFETIMEBOUND { return data_; }
+  [[nodiscard]] constexpr char*       end() noexcept BASE_LIFETIMEBOUND { return data_ + N; }
+  [[nodiscard]] constexpr const char* begin() const noexcept BASE_LIFETIMEBOUND { return data_; }
+  [[nodiscard]] constexpr const char* end() const noexcept BASE_LIFETIMEBOUND { return data_ + N; }
+  [[nodiscard]] constexpr const char* cbegin() const noexcept BASE_LIFETIMEBOUND { return data_; }
+  [[nodiscard]] constexpr const char* cend() const noexcept BASE_LIFETIMEBOUND { return data_ + N; }
 
-  [[nodiscard]] constexpr ReverseIterator<char*>       rbegin() noexcept { return data_ + N; }
-  [[nodiscard]] constexpr ReverseIterator<char*>       rend() noexcept { return data_; }
-  [[nodiscard]] constexpr ReverseIterator<const char*> rbegin() const noexcept { return data_ + N; }
-  [[nodiscard]] constexpr ReverseIterator<const char*> rend() const noexcept { return data_; }
-
-  [[nodiscard]] constexpr ReverseIterator<const char*> crbegin() const noexcept {
+  [[nodiscard]] constexpr ReverseIterator<char*> rbegin() noexcept BASE_LIFETIMEBOUND {
     return data_ + N;
   }
-  [[nodiscard]] constexpr ReverseIterator<const char*> crend() const noexcept { return data_; }
+  [[nodiscard]] constexpr ReverseIterator<char*> rend() noexcept BASE_LIFETIMEBOUND {
+    return data_;
+  }
+  [[nodiscard]] constexpr ReverseIterator<const char*> rbegin() const noexcept BASE_LIFETIMEBOUND {
+    return data_ + N;
+  }
+  [[nodiscard]] constexpr ReverseIterator<const char*> rend() const noexcept BASE_LIFETIMEBOUND {
+    return data_;
+  }
+
+  [[nodiscard]] constexpr ReverseIterator<const char*> crbegin() const noexcept BASE_LIFETIMEBOUND {
+    return data_ + N;
+  }
+  [[nodiscard]] constexpr ReverseIterator<const char*> crend() const noexcept BASE_LIFETIMEBOUND {
+    return data_;
+  }
 
 public:
   // NOLINTNEXTLINE(modernize-avoid-c-arrays)
@@ -65,30 +81,47 @@ public:
   constexpr NTTPString() noexcept = default;
 
   [[nodiscard]] static constexpr usize size() noexcept { return 0; }
-  [[nodiscard]] constexpr char*        data() noexcept { return &char_; }
-  [[nodiscard]] constexpr const char*  data() const noexcept { return &char_; }
+  [[nodiscard]] constexpr char*        data() noexcept BASE_LIFETIMEBOUND { return &char_; }
+  [[nodiscard]] constexpr const char*  data() const noexcept BASE_LIFETIMEBOUND { return &char_; }
 
-  [[nodiscard]] constexpr char&       operator[](usize /*index*/) noexcept { return char_; }
-  [[nodiscard]] constexpr const char& operator[](usize /*index*/) const noexcept { return char_; }
+  [[nodiscard]] constexpr char& operator[](usize /*index*/) noexcept BASE_LIFETIMEBOUND {
+    return char_;
+  }
+  [[nodiscard]] constexpr const char&
+  operator[](usize /*index*/) const noexcept BASE_LIFETIMEBOUND {
+    return char_;
+  }
 
-  [[nodiscard]] constexpr StringView view() const noexcept {
+  [[nodiscard]] constexpr StringView view() const noexcept BASE_LIFETIMEBOUND {
     return {&char_, static_cast<usize>(0)};
   }
 
-  [[nodiscard]] constexpr char*       begin() noexcept { return &char_; }
-  [[nodiscard]] constexpr char*       end() noexcept { return &char_; }
-  [[nodiscard]] constexpr const char* begin() const noexcept { return &char_; }
-  [[nodiscard]] constexpr const char* end() const noexcept { return &char_; }
-  [[nodiscard]] constexpr const char* cbegin() const noexcept { return &char_; }
-  [[nodiscard]] constexpr const char* cend() const noexcept { return &char_; }
+  [[nodiscard]] constexpr char*       begin() noexcept BASE_LIFETIMEBOUND { return &char_; }
+  [[nodiscard]] constexpr char*       end() noexcept BASE_LIFETIMEBOUND { return &char_; }
+  [[nodiscard]] constexpr const char* begin() const noexcept BASE_LIFETIMEBOUND { return &char_; }
+  [[nodiscard]] constexpr const char* end() const noexcept BASE_LIFETIMEBOUND { return &char_; }
+  [[nodiscard]] constexpr const char* cbegin() const noexcept BASE_LIFETIMEBOUND { return &char_; }
+  [[nodiscard]] constexpr const char* cend() const noexcept BASE_LIFETIMEBOUND { return &char_; }
 
-  [[nodiscard]] constexpr ReverseIterator<char*>       rbegin() noexcept { return &char_; }
-  [[nodiscard]] constexpr ReverseIterator<char*>       rend() noexcept { return &char_; }
-  [[nodiscard]] constexpr ReverseIterator<const char*> rbegin() const noexcept { return &char_; }
-  [[nodiscard]] constexpr ReverseIterator<const char*> rend() const noexcept { return &char_; }
+  [[nodiscard]] constexpr ReverseIterator<char*> rbegin() noexcept BASE_LIFETIMEBOUND {
+    return &char_;
+  }
+  [[nodiscard]] constexpr ReverseIterator<char*> rend() noexcept BASE_LIFETIMEBOUND {
+    return &char_;
+  }
+  [[nodiscard]] constexpr ReverseIterator<const char*> rbegin() const noexcept BASE_LIFETIMEBOUND {
+    return &char_;
+  }
+  [[nodiscard]] constexpr ReverseIterator<const char*> rend() const noexcept BASE_LIFETIMEBOUND {
+    return &char_;
+  }
 
-  [[nodiscard]] constexpr ReverseIterator<const char*> crbegin() const noexcept { return &char_; }
-  [[nodiscard]] constexpr ReverseIterator<const char*> crend() const noexcept { return &char_; }
+  [[nodiscard]] constexpr ReverseIterator<const char*> crbegin() const noexcept BASE_LIFETIMEBOUND {
+    return &char_;
+  }
+  [[nodiscard]] constexpr ReverseIterator<const char*> crend() const noexcept BASE_LIFETIMEBOUND {
+    return &char_;
+  }
 
   char char_ = '\0';
 };
