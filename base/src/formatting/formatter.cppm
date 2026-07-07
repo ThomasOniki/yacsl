@@ -231,6 +231,36 @@ private:
   char type_  = 's';
 };
 
+template <Character Char> class Formatter<Char*> {
+public:
+  constexpr const char* parse(const char* fmt) noexcept {
+    FormatStringParser parser(fmt);
+    fill_  = parser.check_fill();
+    align_ = parser.check_align('<');
+    width_ = parser.check_width();
+    type_  = parser.check_option('s', "s?x");
+    return parser.end_parse();
+  }
+
+  void format(String& buf, const Char* str) const noexcept {
+    const PaddingOptions opts{.width = width_, .fill = fill_, .align = align_};
+    if (type_ == 's') [[likely]] {
+      pad_string<false>(buf, BasicStringView<Char>(str), opts);
+    } else if (type_ == '?') {
+      pad_string<true>(buf, BasicStringView<Char>(str), opts);
+    } else {
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+      pad_integral<16>(buf, reinterpret_cast<uptr>(str), opts);
+    }
+  }
+
+private:
+  u32  width_ = 0;
+  char fill_  = ' ';
+  char align_ = '<';
+  char type_  = 's';
+};
+
 template <Character Char, usize N, typename Allocator, Integral SizeT>
 class Formatter<BasicString<Char, N, Allocator, SizeT>> : Formatter<BasicStringView<Char>> {
 public:
