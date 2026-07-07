@@ -31,12 +31,12 @@ public:
 
   constexpr Option(const Option& other) noexcept : is_value_(other.is_value_) {
     if (is_value_) {
-      value_.construct(other.value_);
+      value_.construct(*other.value_);
     }
   }
   constexpr Option(Option&& other) noexcept : is_value_(other.is_value_) {
     if (is_value_) {
-      value_.construct(base::move(other.value_));
+      value_.construct(base::move(*other.value_));
     }
   }
   constexpr Option& operator=(const Option& other) noexcept {
@@ -48,7 +48,7 @@ public:
     }
     is_value_ = other.is_value_;
     if (is_value_) {
-      value_.construct(other.value_);
+      value_.construct(*other.value_);
     }
     return *this;
   }
@@ -58,7 +58,7 @@ public:
     }
     is_value_ = other.is_value_;
     if (is_value_) {
-      value_.construct(base::move(other.value_));
+      value_.construct(base::move(*other.value_));
     }
     return *this;
   }
@@ -80,6 +80,10 @@ public:
 
   [[nodiscard]] constexpr bool operator==(Nil /*nil*/) const noexcept { return !is_value_; }
   [[nodiscard]] constexpr bool operator!=(Nil /*nil*/) const noexcept { return is_value_; }
+
+  [[nodiscard]] constexpr bool operator==(const T& value) const noexcept {
+    return is_value_ && *value_ == value;
+  }
 
   [[nodiscard]] constexpr bool is_nil() const noexcept { return !is_value_; }
   [[nodiscard]] constexpr bool is_value() const noexcept { return is_value_; }
