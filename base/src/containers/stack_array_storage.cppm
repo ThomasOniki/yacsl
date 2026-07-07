@@ -1,3 +1,7 @@
+module;
+
+#include "base/attributes.hpp"
+
 export module base.containers.stack_array_storage;
 
 import base.containers.stack_array;
@@ -36,32 +40,44 @@ public:
     }
   }
 
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-  [[nodiscard]] constexpr T*       data() noexcept { return reinterpret_cast<T*>(data_.data()); }
-  [[nodiscard]] constexpr const T* data() const noexcept { return data(); }
+  [[nodiscard]] constexpr T* data() noexcept BASE_LIFETIMEBOUND {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    return reinterpret_cast<T*>(data_.data());
+  }
+  [[nodiscard]] constexpr const T* data() const noexcept BASE_LIFETIMEBOUND { return data(); }
 
   [[nodiscard]] constexpr SizeT size() const noexcept { return static_cast<SizeT>(N); }
 
-  [[nodiscard]] constexpr T& operator[](SizeT index) noexcept {
+  [[nodiscard]] constexpr T& operator[](SizeT index) noexcept BASE_LIFETIMEBOUND {
     return data()[static_cast<usize>(index)];
   }
-  [[nodiscard]] constexpr const T& operator[](SizeT index) const noexcept {
+  [[nodiscard]] constexpr const T& operator[](SizeT index) const noexcept BASE_LIFETIMEBOUND {
     return data()[static_cast<usize>(index)];
   }
 
-  [[nodiscard]] constexpr T*       begin() noexcept { return data(); }
-  [[nodiscard]] constexpr T*       end() noexcept { return data() + N; }
-  [[nodiscard]] constexpr const T* begin() const noexcept { return data(); }
-  [[nodiscard]] constexpr const T* end() const noexcept { return data() + N; }
-  [[nodiscard]] constexpr const T* cbegin() const noexcept { return data(); }
-  [[nodiscard]] constexpr const T* cend() const noexcept { return data() + N; }
+  [[nodiscard]] constexpr T*       begin() noexcept BASE_LIFETIMEBOUND { return data(); }
+  [[nodiscard]] constexpr T*       end() noexcept BASE_LIFETIMEBOUND { return data() + N; }
+  [[nodiscard]] constexpr const T* begin() const noexcept BASE_LIFETIMEBOUND { return data(); }
+  [[nodiscard]] constexpr const T* end() const noexcept BASE_LIFETIMEBOUND { return data() + N; }
+  [[nodiscard]] constexpr const T* cbegin() const noexcept BASE_LIFETIMEBOUND { return data(); }
+  [[nodiscard]] constexpr const T* cend() const noexcept BASE_LIFETIMEBOUND { return data() + N; }
 
-  [[nodiscard]] constexpr ReverseIterator<T*>       rbegin() noexcept { return data() + N; }
-  [[nodiscard]] constexpr ReverseIterator<T*>       rend() noexcept { return data(); }
-  [[nodiscard]] constexpr ReverseIterator<const T*> rbegin() const noexcept { return data() + N; }
-  [[nodiscard]] constexpr ReverseIterator<const T*> rend() const noexcept { return data(); }
-  [[nodiscard]] constexpr ReverseIterator<const T*> crbegin() const noexcept { return data() + N; }
-  [[nodiscard]] constexpr ReverseIterator<const T*> crend() const noexcept { return data(); }
+  [[nodiscard]] constexpr ReverseIterator<T*> rbegin() noexcept BASE_LIFETIMEBOUND {
+    return data() + N;
+  }
+  [[nodiscard]] constexpr ReverseIterator<T*> rend() noexcept BASE_LIFETIMEBOUND { return data(); }
+  [[nodiscard]] constexpr ReverseIterator<const T*> rbegin() const noexcept BASE_LIFETIMEBOUND {
+    return data() + N;
+  }
+  [[nodiscard]] constexpr ReverseIterator<const T*> rend() const noexcept BASE_LIFETIMEBOUND {
+    return data();
+  }
+  [[nodiscard]] constexpr ReverseIterator<const T*> crbegin() const noexcept BASE_LIFETIMEBOUND {
+    return data() + N;
+  }
+  [[nodiscard]] constexpr ReverseIterator<const T*> crend() const noexcept BASE_LIFETIMEBOUND {
+    return data();
+  }
 
 private:
   alignas(T) StackArray<uchar, N * sizeof(T)> data_;

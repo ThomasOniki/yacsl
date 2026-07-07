@@ -57,8 +57,12 @@ public:
     return data();
   }
 
-  template <usize I> [[nodiscard]] constexpr T&       get() noexcept { return data_[I]; }
-  template <usize I> [[nodiscard]] constexpr const T& get() const noexcept { return data_[I]; }
+  template <usize I> [[nodiscard]] constexpr T& get() noexcept BASE_LIFETIMEBOUND {
+    return data_[I];
+  }
+  template <usize I> [[nodiscard]] constexpr const T& get() const noexcept BASE_LIFETIMEBOUND {
+    return data_[I];
+  }
 
   constexpr bool operator==(const StackArray& other) const noexcept = default;
 
