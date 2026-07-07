@@ -231,6 +231,17 @@ private:
   char type_  = 's';
 };
 
+template <Character Char, usize N, typename Allocator, Integral SizeT>
+class Formatter<BasicString<Char, N, Allocator, SizeT>> : Formatter<BasicStringView<Char>> {
+public:
+  constexpr const char* parse(const char* fmt) noexcept {
+    return Formatter<BasicStringView<Char>>::parse(fmt);
+  }
+  void format(String& buf, const BasicString<Char, N, Allocator, SizeT>& str) const noexcept {
+    return Formatter<BasicStringView<Char>>::format(buf, str.view());
+  }
+};
+
 // NOLINTNEXTLINE(modernize-avoid-c-arrays)
 template <Character Char, usize N> class Formatter<Char[N]> : Formatter<BasicStringView<Char>> {
 public:
