@@ -9,15 +9,13 @@ import base.ranges.string_view;
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define CHECK_ENTRY(entry_idx, expected_caller)                                                    \
-  EXPECT_EQ(base::StringView(stack_trace.entries_[entry_idx].caller.begin(),                       \
-                             stack_trace.entries_[entry_idx].caller.end()),                        \
-            base::StringView(expected_caller))
+  EXPECT_EQ(stack_trace.entries_[entry_idx].caller.view(), base::StringView(expected_caller))
 
 BASE_NOINLINE static int f1(bool /*unused*/, char /*unused*/) {
   int              ret         = 0;
   base::StackTrace stack_trace = base::StackTrace::current();
   stack_trace.compute_entries();
-  CHECK_ENTRY(0, "base@base.utilities.stack_trace::StackTrace::current()");
+  CHECK_ENTRY(0, "base::StackTrace@base.utilities.stack_trace::current()");
   CHECK_ENTRY(1, "f1(bool, char)");
   CHECK_ENTRY(2, "ns1::ns2::f2(void*)");
   CHECK_ENTRY(3, "int ns1::ns2::(anonymous namespace)::S<void, 0>::f3<void, 15>()");
