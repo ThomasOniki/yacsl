@@ -102,7 +102,7 @@ private:
 
         char* bytes = module_string.grow(to_add.size() + 1);
 
-        if (module_string.size() == 0) {
+        if (module_string.size() == to_add.size() + 1) {
           bytes[0] = '@';
         } else {
           bytes[0] = '.';
