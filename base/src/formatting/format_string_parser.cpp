@@ -9,11 +9,7 @@ import base.utilities.type_aliases;
 namespace base {
 
 void FormatStringParser::log_error_no_deps(StringView msg) noexcept {
-  String buf;
-  buf += LOG_LEVEL_STRINGS[static_cast<u8>(LogLevel::Error)];
-  buf += msg;
-  buf += '\n';
-  Logger::get_default_instance().log(LogLevel::Error, buf);
+  Logger::get_default_instance().log(LogLevel::Error, String(msg));
 }
 
 } // namespace base
