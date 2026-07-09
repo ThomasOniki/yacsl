@@ -8,8 +8,8 @@ import base.utilities.type_aliases;
 import base.memory.lifetimes;
 import base.logging.logger;
 
-export namespace base {
-
+namespace base {
+namespace {
 class Demangler {
 public:
   const String& demangle(StringView mangled_func) noexcept {
@@ -575,6 +575,10 @@ private:
 
   bool has_templates_ = false;
 };
+} // namespace
+} // namespace base
+
+export namespace base {
 
 String demangle(StringView mangled) {
   Demangler demangler;
