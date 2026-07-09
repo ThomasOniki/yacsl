@@ -24,8 +24,15 @@ target_sources(
 
 file(GLOB_RECURSE BASE_HEADERS "${PROJECT_SOURCE_DIR}/include/*.hpp")
 target_sources(
-  base PUBLIC FILE_SET HEADERS BASE_DIRS "${PROJECT_SOURCE_DIR}/include" FILES
-              "${BASE_HEADERS}")
+  base
+  PUBLIC FILE_SET
+         HEADERS
+         BASE_DIRS
+         "${PROJECT_SOURCE_DIR}/include"
+         "${PROJECT_BINARY_DIR}"
+         FILES
+         "${BASE_HEADERS}"
+         "${PROJECT_BINARY_DIR}/base/export.hpp")
 
 include(GNUInstallDirs)
 target_include_directories(
@@ -49,18 +56,7 @@ if(EMSCRIPTEN)
 endif()
 
 include(GenerateExportHeader)
-generate_export_header(base EXPORT_FILE_NAME "base_export.hpp")
-
-target_sources(
-  base
-  PUBLIC FILE_SET
-         generated_headers
-         TYPE
-         HEADERS
-         BASE_DIRS
-         "${CMAKE_CURRENT_BINARY_DIR}"
-         FILES
-         "${CMAKE_CURRENT_BINARY_DIR}/base_export.hpp")
+generate_export_header(base EXPORT_FILE_NAME "base/export.hpp")
 
 include(CMakePackageConfigHelpers)
 
@@ -84,8 +80,6 @@ install(
           FILE_SET CXX_MODULES
           DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/src"
           FILE_SET HEADERS
-          DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
-          FILE_SET generated_headers
           DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
 install(
