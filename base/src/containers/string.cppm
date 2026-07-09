@@ -155,22 +155,26 @@ public:
     return static_cast<SizeT>(allocated_end_ - begin_);
   }
 
-  [[nodiscard]] constexpr Char&       operator[](SizeT index) noexcept { return begin_[index]; }
-  [[nodiscard]] constexpr const Char& operator[](SizeT index) const noexcept {
+  [[nodiscard]] constexpr Char& operator[](SizeT index) noexcept BASE_LIFETIMEBOUND {
+    return begin_[index];
+  }
+  [[nodiscard]] constexpr const Char& operator[](SizeT index) const noexcept BASE_LIFETIMEBOUND {
     return begin_[index];
   }
 
-  [[nodiscard]] constexpr Char*       data() noexcept { return begin_; }
-  [[nodiscard]] constexpr const Char* data() const noexcept { return begin_; }
+  [[nodiscard]] constexpr Char*       data() noexcept BASE_LIFETIMEBOUND { return begin_; }
+  [[nodiscard]] constexpr const Char* data() const noexcept BASE_LIFETIMEBOUND { return begin_; }
 
-  [[nodiscard]] constexpr Char*       begin() noexcept { return begin_; }
-  [[nodiscard]] constexpr Char*       end() noexcept { return end_; }
-  [[nodiscard]] constexpr const Char* begin() const noexcept { return begin_; }
-  [[nodiscard]] constexpr const Char* end() const noexcept { return end_; }
-  [[nodiscard]] constexpr const Char* cbegin() const noexcept { return begin_; }
-  [[nodiscard]] constexpr const Char* cend() const noexcept { return end_; }
+  [[nodiscard]] constexpr Char*       begin() noexcept BASE_LIFETIMEBOUND { return begin_; }
+  [[nodiscard]] constexpr Char*       end() noexcept BASE_LIFETIMEBOUND { return end_; }
+  [[nodiscard]] constexpr const Char* begin() const noexcept BASE_LIFETIMEBOUND { return begin_; }
+  [[nodiscard]] constexpr const Char* end() const noexcept BASE_LIFETIMEBOUND { return end_; }
+  [[nodiscard]] constexpr const Char* cbegin() const noexcept BASE_LIFETIMEBOUND { return begin_; }
+  [[nodiscard]] constexpr const Char* cend() const noexcept BASE_LIFETIMEBOUND { return end_; }
 
-  constexpr BasicStringView<Char, SizeT> view() const noexcept { return {begin_, end_}; }
+  constexpr BasicStringView<Char, SizeT> view() const noexcept BASE_LIFETIMEBOUND {
+    return {begin_, end_};
+  }
 
   // NOLINTNEXTLINE(google-explicit-constructor)
   [[nodiscard]] constexpr operator BasicStringView<Char, SizeT>() const noexcept {
