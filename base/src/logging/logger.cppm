@@ -1,3 +1,7 @@
+module;
+
+#include <sched.h>
+
 export module base.logging.logger;
 
 import base.logging.common;
@@ -7,6 +11,10 @@ import base.utilities.type_aliases;
 import base.memory.lifetimes;
 import base.ranges.string_view;
 import base.containers.string;
+import base.containers.option;
+import base.threading.thread;
+import base.threading.mpsc_ring_buffer;
+import base.threading.atomic;
 
 export namespace base {
 
@@ -46,7 +54,7 @@ public:
 
   Logger() : Logger(DEFAULT_LOG_LEVEL, Flags::ColorOutput | Flags::ColorError) {}
 
-  ~Logger() noexcept { flush(); }
+  ~Logger() noexcept { work_.store(Work::Stop, MemoryOrder::Release); }
 
   Logger(const Logger&)            = delete;
   Logger(Logger&&)                 = delete;
@@ -57,7 +65,13 @@ public:
 
   [[nodiscard]] LogLevel level() const noexcept { return level_; }
 
-  void flush() noexcept {}
+  void flush() noexcept {
+    work_.store(Work::Flush, MemoryOrder::Release);
+    trace3("[Logger] flushing...");
+    while (work_.load(MemoryOrder::Acquire) == Work::Flush) {
+      sched_yield();
+    }
+  }
 
   template <typename... Args> void trace3(const FormatString<Args...>& fmt, Args&&... args) {
     log(LogLevel::Trace3, fmt, base::forward<Args>(args)...);
@@ -91,11 +105,7 @@ public:
     if (lvl < level_) {
       return;
     }
-    if (lvl < LogLevel::Error) {
-      output_.write(StringView(formatted.begin(), formatted.end()));
-    } else {
-      error_.write(StringView(formatted.begin(), formatted.end()));
-    }
+    ring_.emplace(formatted, lvl);
   }
 
   template <typename... Args>
@@ -104,13 +114,57 @@ public:
       return;
     }
     String buf;
-    buf += err_lvl_strings_[static_cast<u8>(lvl)];
     format_to(buf, fmt, base::forward<Args>(args)...);
-    buf += '\n';
     log(lvl, buf);
   }
 
 private:
+  struct Message {
+    alignas(32) String formatted;
+    LogLevel level;
+  };
+
+  void write_message(const Message& msg) {
+    if (msg.level >= LogLevel::Error) {
+      String     buf;
+      StringView lvl_str = err_lvl_strings_[static_cast<u8>(msg.level)];
+      char*      data    = buf.grow(lvl_str.size() + msg.formatted.size() + 1);
+      copy_bytes(data, lvl_str);
+      copy_bytes(data + lvl_str.size(), msg.formatted.view());
+      data[lvl_str.size() + msg.formatted.size()] = '\n';
+      error_.write(buf.view());
+    } else {
+      String     buf;
+      StringView lvl_str = out_lvl_strings_[static_cast<u8>(msg.level)];
+      char*      data    = buf.grow(lvl_str.size() + msg.formatted.size() + 1);
+      copy_bytes(data, lvl_str);
+      copy_bytes(data + lvl_str.size(), msg.formatted.view());
+      data[lvl_str.size() + msg.formatted.size()] = '\n';
+      output_.write(buf.view());
+    }
+  }
+
+  static void* work(void* pvoid) noexcept {
+    Logger& self = *static_cast<Logger*>(pvoid);
+    for (;;) {
+      Work status = self.work_.load(MemoryOrder::Acquire);
+      if (status != Work::Spin) {
+        for (Option<Message> option = self.ring_.try_pop(); option.is_value();
+             option                 = self.ring_.try_pop()) {
+          self.write_message(option.assert_value());
+        }
+
+        if (status == Work::Stop) {
+          break;
+        }
+
+        self.work_.store(Work::Spin, MemoryOrder::Release);
+      }
+      self.write_message(self.ring_.pop());
+    }
+    return nullptr;
+  }
+
   static const StringView* out_lvl_strings(Flags flags) {
     return (static_cast<u8>(flags) & static_cast<u8>(Flags::ColorOutput)) != 0
                ? COLORED_LOG_LEVEL_STRINGS.data()
@@ -123,12 +177,22 @@ private:
   }
 
 private:
-  File              output_;
-  File              error_;
-  const StringView* out_lvl_strings_;
-  const StringView* err_lvl_strings_;
-  LogLevel          level_ = DEFAULT_LOG_LEVEL;
-  Flags             flags_;
+  MPSCRingBuffer<Message, 64> ring_;
+  File                        output_;
+  File                        error_;
+  Thread                      worker_{work, static_cast<void*>(this)};
+  const StringView*           out_lvl_strings_;
+  const StringView*           err_lvl_strings_;
+
+  enum class Work : u8 {
+    Spin  = 0,
+    Flush = 1,
+    Stop  = 2,
+  };
+
+  Atomic<Work> work_  = Work::Spin;
+  LogLevel     level_ = DEFAULT_LOG_LEVEL;
+  Flags        flags_;
 };
 
 // lvl is used to determine if it needs to output to the output file or error file.

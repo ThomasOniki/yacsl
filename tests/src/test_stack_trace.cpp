@@ -21,6 +21,7 @@ BASE_NOINLINE static int f1(bool /*unused*/, char /*unused*/) {
   CHECK_ENTRY(3, "int ns1::ns2::(anonymous namespace)::S<void, 0>::f3<void, 15>()");
   CHECK_ENTRY(4, "int (anonymous namespace)::f4<ns1::ns2::(anonymous namespace)::S<void, "
                  "0>{(void*)0, (char)97}>()");
+  base::log_info("returning {}", ret);
   return ret;
 }
 
