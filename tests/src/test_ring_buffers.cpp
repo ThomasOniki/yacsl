@@ -1,7 +1,6 @@
 import base;
 
 #include "test_utils.hpp"
-#include <signal.h>
 
 static constexpr base::usize SLOTS = 64;
 
