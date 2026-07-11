@@ -9,6 +9,7 @@ option(BASE_NO_LIBCPP "Don't link with the c++ standard library." OFF)
 include("${PROJECT_SOURCE_DIR}/cmake/helpers.cmake")
 
 add_library(base)
+add_library(base::base ALIAS base)
 
 init_target(base)
 
