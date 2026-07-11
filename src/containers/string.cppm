@@ -137,14 +137,11 @@ public:
   // This doesn't initialize the new memory but adds count to size. It is useful for characters you
   // want to copy_bytes into. It returns new_end - count.
   constexpr Char* grow(SizeT count) noexcept {
+    if (static_cast<SizeT>(allocated_end_ - end_) < count) {
+      definitely_reserve(capacity() * 2 + count);
+    }
     Char* ret = end_;
     end_ += count;
-    if (end_ > allocated_end_) {
-      end_ -= count;
-      definitely_reserve(capacity() * 2 + count);
-      ret = end_;
-      end_ += count;
-    }
     return ret;
   }
 
