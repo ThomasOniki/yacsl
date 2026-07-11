@@ -84,7 +84,7 @@ public:
   }
 
   constexpr BasicString& append(const Char* ptr, SizeT len) noexcept {
-    if (end_ + len > allocated_end_) {
+    if (static_cast<SizeT>(allocated_end_ - end_) < len) {
       definitely_reserve(capacity() * 2 + len);
     }
     copy_bytes(end_, ptr, len);
