@@ -30,7 +30,7 @@ public:
   }
 
 private:
-  StackArray<uchar, sizeof(T)> data_;
+  alignas(T) StackArray<uchar, sizeof(T)> data_;
 };
 
 } // namespace base
