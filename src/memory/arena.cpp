@@ -31,6 +31,7 @@ void Arena::reserve(usize capacity) noexcept {
   ptr_   = begin_ + sizeof(Metadata);
 
   panic_if(begin_ == nullptr, "[Arena] malloc failed.");
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
   construct_at(reinterpret_cast<Metadata*>(begin_), metadata);
 }
 

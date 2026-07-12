@@ -3,6 +3,8 @@ import base.containers.function;
 import base.formatting.format_string;
 import base.formatting.format_string_parser;
 import base.formatting.formatter;
+import base.ranges.slice;
+
 #include "test_utils.hpp"
 #include <stdint.h>
 #include <stdio.h>
@@ -56,15 +58,17 @@ public:
   inline static uint32_t allocate_call_count = 0;
   inline static uint32_t free_call_count     = 0;
 
-  template <typename T> [[maybe_unused]] T* allocate() {
+  using SizeT = size_t;
+
+  template <typename T> base::Slice<T, SizeT> allocate(SizeT count) {
     ++allocate_call_count;
     // NOLINTNEXTLINE(cppcoreguidelines-no-malloc, hicpp-no-malloc, cppcoreguidelines-owning-memory)
-    return static_cast<T*>(malloc(sizeof(T)));
+    return {static_cast<T*>(malloc(sizeof(T) * count)), count};
   }
-  template <typename T> [[maybe_unused]] void free(T* ptr) {
+  template <typename T> void free(base::Slice<T, SizeT> mem) {
     ++free_call_count;
     // NOLINTNEXTLINE(cppcoreguidelines-no-malloc, hicpp-no-malloc, cppcoreguidelines-owning-memory)
-    ::free(ptr);
+    ::free(mem.data());
   }
 };
 } // namespace

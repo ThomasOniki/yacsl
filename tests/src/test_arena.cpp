@@ -42,7 +42,7 @@ static int test_ctors() {
 
   for (auto& ptr : ptrs) {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-    ptr = base::MainArenaAllocator::get().push_array<CtorCounter>(10);
+    ptr = base::MainArenaAllocator::get().push_array<CtorCounter>(10).data();
   }
 
   EXPECT_EQ(CtorCounter::ctor_call_count, iteratoin_count * 10);
@@ -72,7 +72,7 @@ static int test_align() {
 
   (void)base::MainArenaAllocator::get().push_array<char>(15);
 
-  aligned = base::MainArenaAllocator::get().push_array<Aligned>(10);
+  aligned = base::MainArenaAllocator::get().push_array<Aligned>(10).data();
 
   EXPECT(is_aligned(aligned));
 
@@ -90,13 +90,14 @@ static int test_rewind() {
   {
     const base::Arena::Scope scope(base::MainArenaAllocator::get());
 
-    ptr = base::MainArenaAllocator::get().push_array<char>(10);
+    ptr = base::MainArenaAllocator::get().push_array<char>(10).data();
 
     test_align();
     test_ctors();
   }
 
-  EXPECT(base::MainArenaAllocator::get().push_array<char>(1) == ptr && "Arena didn't rewind");
+  EXPECT(base::MainArenaAllocator::get().push_array<char>(1).data() == ptr &&
+         "Arena didn't rewind");
   return ret;
 }
 

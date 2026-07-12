@@ -2,14 +2,15 @@ export module base.type_traits.allocator;
 
 import base.type_traits.qualifiers;
 import base.type_traits.comparaison;
+import base.ranges.slice;
 
 namespace base {
 namespace internal {
 template <typename T>
 concept TypeWithAllocatorMethods =
-    requires(T allocator, RemoveCVRef<T>::SizeT count, int* to_free) {
-      { allocator.template allocate<int>(count) } -> SameAs<int*>;
-      { allocator.template free<int>(to_free, count) };
+    requires(T allocator, RemoveCVRef<T>::SizeT count, Slice<int, decltype(count)> slice) {
+      { allocator.template allocate<int>(count) } -> SameAs<decltype(slice)>;
+      { allocator.template free<int>(slice) };
     };
 } // namespace internal
 

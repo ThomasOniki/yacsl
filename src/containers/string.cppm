@@ -29,13 +29,13 @@ public:
 
     if constexpr (N > 0) {
       if (size > fixed_buffer_.size()) {
-        begin_         = allocator().template allocate<Char>(size);
+        begin_         = allocator().template allocate<Char>(size).begin();
         allocated_end_ = end_ = begin_ + size;
       } else {
         end_ = begin_ + size;
       }
     } else {
-      begin_         = allocator().template allocate<Char>(size);
+      begin_         = allocator().template allocate<Char>(size).begin();
       allocated_end_ = end_ = begin_ + size;
     }
 
@@ -202,7 +202,7 @@ private:
 
 private:
   void definitely_reserve(SizeT capacity) noexcept {
-    Char*       data = allocator().template allocate<Char>(capacity);
+    Char*       data = allocator().template allocate<Char>(capacity).data();
     const SizeT size = this->size();
     copy_bytes(data, begin_, size);
     free();
@@ -214,10 +214,10 @@ private:
   void free() noexcept {
     if constexpr (N > 0) {
       if (begin_ != fixed_buffer_.begin()) {
-        allocator().template free<Char>(begin_, capacity());
+        allocator().template free<Char>({begin_, allocated_end_});
       }
     } else {
-      allocator().template free<Char>(begin_, capacity());
+      allocator().template free<Char>({begin_, allocated_end_});
     }
   }
 

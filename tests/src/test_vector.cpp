@@ -1,6 +1,7 @@
 import base.containers.string;
 import base.containers.vector;
 import base.ranges.string_view;
+import base.ranges.slice;
 import base.formatting.formatter;
 import base.memory.arena;
 import base.memory.singleton_allocator;
@@ -41,7 +42,7 @@ public:
   // NOLINTNEXTLINE(fuchsia-statically-constructed-objects)
   inline static std::vector<std::string> events_with_ptrs;
 
-  template <typename T> T* allocate(SizeT count) noexcept {
+  template <typename T> base::Slice<T, SizeT> allocate(SizeT count) noexcept {
     void* ret = ::operator new(count * sizeof(T), std::align_val_t{alignof(T)});
     if (freed.contains(ret)) {
       freed.erase(ret);
@@ -49,29 +50,29 @@ public:
     allocated.insert(ret);
     events.push_back(std::format("allocated {}", count));
     events_with_ptrs.push_back(std::format("allocated {} at {}", count, ret));
-    return static_cast<T*>(ret);
+    return {static_cast<T*>(ret), count};
   }
 
-  template <typename T> void free(T* ptr, SizeT count) noexcept {
-
-    if (ptr) {
-      if (freed.contains(ptr)) {
+  template <typename T> void free(base::Slice<T, SizeT> mem) noexcept {
+    if (mem.data()) {
+      if (freed.contains(mem.data())) {
         base::log_error("double free");
         return;
       }
-      if (!allocated.contains(ptr)) {
+      if (!allocated.contains(mem.data())) {
         base::log_error("unallocated free");
         return;
       }
 
-      freed.emplace(ptr);
-      events.push_back(std::format("freed {}", count));
-      events_with_ptrs.push_back(std::format("freed {} at {}", count, static_cast<void*>(ptr)));
-      ::operator delete(ptr, count * sizeof(T), std::align_val_t{alignof(T)});
+      freed.emplace(mem.data());
+      events.push_back(std::format("freed {}", mem.size()));
+      events_with_ptrs.push_back(
+          std::format("freed {} at {}", mem.size(), static_cast<void*>(mem.data())));
+      ::operator delete(mem.data(), mem.size() * sizeof(T), std::align_val_t{alignof(T)});
     } else {
-      events.push_back(std::format("freed {} (nullptr)", count));
+      events.push_back(std::format("freed {} (nullptr)", mem.size()));
     }
-    events_with_ptrs.push_back(std::format("freed {} (nullptr)", count));
+    events_with_ptrs.push_back(std::format("freed {} (nullptr)", mem.size()));
   }
 
 private:
@@ -218,8 +219,8 @@ static int test_allocator() {
   int ret = 0;
   TestAllocator::events.clear();
   TestAllocator allocator;
-  auto*         ptr = allocator.allocate<uint64_t>(10);
-  allocator.free<uint64_t>(ptr, 10);
+  auto          mem = allocator.allocate<uint64_t>(10);
+  allocator.free<uint64_t>(mem);
 
   std::vector<std::string> expected = {"allocated 10", "freed 10"};
   EXPECT_EQ(TestAllocator::events, expected);
