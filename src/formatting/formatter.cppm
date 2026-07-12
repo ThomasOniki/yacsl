@@ -364,7 +364,7 @@ private:
   static constexpr StackArray<StringView, sizeof...(Values)>
   make_table(IntegerSequence<u32, Values...> /*sequence*/) {
     StackArray<StringView, sizeof...(Values)> ret;
-    (..., [&]() { ret[Values] = table_entry<T{static_cast<UnderlyingType>(Values)}>(); }());
+    (..., [&]() { ret[Values] = table_entry<T(Values)>(); }());
     return ret;
   }
 

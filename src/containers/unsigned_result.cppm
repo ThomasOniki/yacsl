@@ -27,7 +27,7 @@ public:
 
   [[nodiscard]] constexpr Err error() const noexcept {
     if (value_ >= 0) [[likely]] {
-      return Err{0};
+      return Err(0);
     } else {
       return Err(-value_);
     }
