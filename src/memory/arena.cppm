@@ -36,10 +36,8 @@ public:
   template <TriviallyDestructible T, typename... Args> [[nodiscard]] T& push(Args&&... args);
   template <TriviallyDestructible T> [[nodiscard]] T*                   push_array(SizeT count);
 
-  // Returns nullptr if malloc fails.
   template <typename T> [[nodiscard]] T* allocate(SizeT count) noexcept;
-
-  template <typename T> void free(T* /*ptr*/, SizeT /*count*/) {}
+  template <typename T> void             free(T* /*ptr*/, SizeT /*count*/) {}
 
 public:
   class Scope {
@@ -57,7 +55,7 @@ public:
   };
 
 private:
-  bool reserve(usize capacity) noexcept;
+  void reserve(usize capacity) noexcept;
 
 private:
   uchar* begin_            = nullptr;
@@ -88,9 +86,7 @@ template <typename T> T* Arena::allocate(SizeT count) noexcept {
 
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
   if (top > reinterpret_cast<uptr>(end_)) [[unlikely]] {
-    if (!reserve(static_cast<usize>(end_ - begin_) * 2 + sizeof(T) * count)) [[unlikely]] {
-      return nullptr;
-    }
+    reserve(static_cast<usize>(end_ - begin_) * 2 + sizeof(T) * count);
 
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     top = reinterpret_cast<uptr>(ptr_);
