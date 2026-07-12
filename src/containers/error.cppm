@@ -17,13 +17,13 @@ public:
   constexpr Error(Err error) noexcept : value_(error) {}
 
   [[nodiscard]] constexpr bool operator==(Err error) const noexcept { return value_ == error; }
-  [[nodiscard]] constexpr bool operator==(Nil /*nil*/) const noexcept { return value_ == Err{0}; }
+  [[nodiscard]] constexpr bool operator==(Nil /*nil*/) const noexcept { return value_ == Err(0); }
 
   [[nodiscard]] constexpr Err error() const noexcept { return value_; }
 
   template <typename... Args>
   constexpr void expect_nil(const FormatString<Args...>& error_fmt, Args&&... args) {
-    if (value_ != Err{0}) [[unlikely]] {
+    if (value_ != Err(0)) [[unlikely]] {
       panic(error_fmt, base::forward<Args>(args)...);
     }
   }
@@ -31,7 +31,7 @@ public:
 
   template <typename... Args>
   constexpr void assert_nil(const FormatString<Args...>& error_fmt, Args&&... args) {
-    if (value_ != Err{0}) [[unlikely]] {
+    if (value_ != Err(0)) [[unlikely]] {
       debug_panic(error_fmt, base::forward<Args>(args)...);
     }
   }
