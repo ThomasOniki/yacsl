@@ -10,7 +10,7 @@ export module base.memory.lifetimes;
 
 import base.utilities.type_aliases;
 import base.type_traits.qualifiers;
-import base.ranges.string_view;
+import base.ranges.slice;
 
 #ifdef BASE_NO_LIBCPP
 export [[nodiscard]] constexpr void* operator new(base::usize /*count*/, void* ptr) noexcept {
@@ -50,12 +50,9 @@ template <typename T> constexpr T* copy_bytes(T* dst, const void* src_begin, con
                        static_cast<usize>(static_cast<const uchar*>(src_end) -
                                           static_cast<const uchar*>(src_begin))));
 }
+
 template <typename T, typename SizeT>
-constexpr T* copy_bytes(T* dst, BasicStringView<char, SizeT> src) {
-  return copy_bytes(dst, src.data(), src.size());
-}
-template <typename T, typename SizeT>
-constexpr T* copy_bytes(T* dst, BasicStringView<uchar, SizeT> src) {
+constexpr T* copy_bytes(T* dst, Slice<const uchar, SizeT> src) {
   return copy_bytes(dst, src.data(), src.size());
 }
 

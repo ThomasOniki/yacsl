@@ -129,16 +129,16 @@ private:
       String     buf;
       StringView lvl_str = err_lvl_strings_[static_cast<u8>(msg.level)];
       char*      data    = buf.grow(lvl_str.size() + msg.formatted.size() + 1);
-      copy_bytes(data, lvl_str);
-      copy_bytes(data + lvl_str.size(), msg.formatted.view());
+      copy_bytes(data, lvl_str.bytes());
+      copy_bytes(data + lvl_str.size(), msg.formatted.bytes());
       data[lvl_str.size() + msg.formatted.size()] = '\n';
       error_.write(buf.view());
     } else {
       String     buf;
       StringView lvl_str = out_lvl_strings_[static_cast<u8>(msg.level)];
       char*      data    = buf.grow(lvl_str.size() + msg.formatted.size() + 1);
-      copy_bytes(data, lvl_str);
-      copy_bytes(data + lvl_str.size(), msg.formatted.view());
+      copy_bytes(data, lvl_str.bytes());
+      copy_bytes(data + lvl_str.size(), msg.formatted.bytes());
       data[lvl_str.size() + msg.formatted.size()] = '\n';
       output_.write(buf.view());
     }
