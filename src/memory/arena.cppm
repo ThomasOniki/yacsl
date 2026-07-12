@@ -10,6 +10,7 @@ import base.type_traits.trivial;
 import base.utilities.type_aliases;
 import base.memory.lifetimes;
 import base.utilities.constants;
+import base.ranges.slice;
 
 export namespace base {
 
@@ -34,10 +35,10 @@ public:
   Arena& operator=(Arena&&) noexcept = delete;
 
   template <TriviallyDestructible T, typename... Args> [[nodiscard]] T& push(Args&&... args);
-  template <TriviallyDestructible T> [[nodiscard]] T*                   push_array(SizeT count);
+  template <TriviallyDestructible T> [[nodiscard]] Slice<T, SizeT>      push_array(SizeT count);
 
-  template <typename T> [[nodiscard]] T* allocate(SizeT count) noexcept;
-  template <typename T> void             free(T* /*ptr*/, SizeT /*count*/) {}
+  template <typename T> [[nodiscard]] Slice<T, SizeT> allocate(SizeT count) noexcept;
+  template <typename T> void                          free(Slice<T, SizeT> /*mem*/) noexcept {}
 
 public:
   class Scope {
@@ -65,19 +66,19 @@ private:
 };
 
 template <TriviallyDestructible T, typename... Args> T& Arena::push(Args&&... args) {
-  return *base::construct_at(allocate<T>(1), base::forward<Args>(args)...);
+  return *base::construct_at(allocate<T>(1).data(), base::forward<Args>(args)...);
 }
 
-template <TriviallyDestructible T> T* Arena::push_array(SizeT count) {
-  T* ptr = allocate<T>(count);
+template <TriviallyDestructible T> Slice<T, Arena::SizeT> Arena::push_array(SizeT count) {
+  Slice allocated = allocate<T>(count);
 
-  for (SizeT i = 0; i < count; ++i) {
-    base::construct_at(ptr + i);
+  for (T& elem : allocated) {
+    base::construct_at(&elem);
   }
-  return ptr;
+  return allocated;
 }
 
-template <typename T> T* Arena::allocate(SizeT count) noexcept {
+template <typename T> Slice<T, Arena::SizeT> Arena::allocate(SizeT count) noexcept {
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
   uptr top = reinterpret_cast<uptr>(ptr_);
   top      = (top + alignof(T) - 1) & ~(alignof(T) - 1);
@@ -98,7 +99,7 @@ template <typename T> T* Arena::allocate(SizeT count) noexcept {
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast, performance-no-int-to-ptr)
   ptr_ = reinterpret_cast<uchar*>(top);
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast, performance-no-int-to-ptr)
-  return reinterpret_cast<T*>(ret);
+  return {reinterpret_cast<T*>(ret), count};
 }
 
 #ifdef BASE_LSP_ONLY
