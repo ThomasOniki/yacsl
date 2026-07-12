@@ -148,6 +148,14 @@ public:
 
   constexpr void clear() noexcept { end_ = begin_; }
 
+  [[nodiscard]] constexpr const char* c_str() noexcept {
+    if (end_ == allocated_end_) {
+      definitely_reserve(capacity() * 2 + 1);
+    }
+    *end_ = '\0';
+    return begin_;
+  }
+
   [[nodiscard]] constexpr SizeT size() const noexcept { return static_cast<SizeT>(end_ - begin_); }
   [[nodiscard]] constexpr SizeT capacity() const noexcept {
     return static_cast<SizeT>(allocated_end_ - begin_);
