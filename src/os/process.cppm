@@ -13,8 +13,8 @@ import base.utilities.isize;
 import base.memory.lifetimes;
 import base.containers.vector;
 import base.containers.stack_array;
+import base.containers.string;
 import base.containers.error;
-import base.containers.cstring;
 import base.type_traits.range_like;
 import base.os.common;
 import base.ranges.string_view;
@@ -44,8 +44,8 @@ public:
 
     Stdio(StringView path, FileOpenFlags flags) noexcept
         : file_info_{.path = nullptr, .flags = flags}, type_(File) {
-      CString cstr(path);
-      file_info_.path = cstr.data();
+      String cstr(path);
+      file_info_.path = cstr.c_str();
     }
 
     // NOLINTNEXTLINE(google-explicit-constructor)
@@ -159,11 +159,11 @@ public:
   template <RangeOf<StringView> Range>
   Error<SpawnError> start(const Range& argv, Stdio&& stdin_opts, Stdio&& stdout_opts,
                           Stdio&& stderr_opts) noexcept {
-    const Vector<CString, 6> cstrs(argv);
-    Vector<const char*, 6>   cstr_ptrs;
+    Vector<BasicString<char, 16>, 6> cstrs(argv);
+    Vector<const char*, 6>           cstr_ptrs;
     cstr_ptrs.reserve(cstrs.size() + 1);
-    for (const CString& cstr : cstrs) {
-      cstr_ptrs.push_back(cstr.data());
+    for (auto& cstr : cstrs) {
+      cstr_ptrs.push_back(cstr.c_str());
     }
     cstr_ptrs.push_back(nullptr);
     return start(cstr_ptrs.data(), base::move(stdin_opts), base::move(stdout_opts),

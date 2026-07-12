@@ -6,7 +6,7 @@ import base.os.common;
 import base.os.process;
 import base.ranges.string_view;
 import base.containers.error;
-import base.containers.cstring;
+import base.containers.string;
 
 export namespace base {
 
@@ -34,7 +34,7 @@ public:
   [[nodiscard]] Error<OpenError> open(const char* path, FileOpenFlags flags) noexcept;
 
   [[nodiscard]] Error<OpenError> open(StringView path, FileOpenFlags flags) noexcept {
-    return open(CString(path).data(), flags);
+    return open(String(path).c_str(), flags);
   }
 
   void close() noexcept;
