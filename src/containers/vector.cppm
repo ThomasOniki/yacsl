@@ -14,6 +14,7 @@ import base.type_traits.comparaison;
 import base.type_traits.trivial;
 import base.ranges.initializer_list;
 import base.ranges.reverse_iterator;
+import base.ranges.slice;
 import base.memory.arena;
 import base.memory.lifetimes;
 
@@ -67,6 +68,35 @@ public:
   [[nodiscard]] constexpr T*       data() noexcept BASE_LIFETIMEBOUND { return data_; }
   [[nodiscard]] constexpr const T* data() const noexcept BASE_LIFETIMEBOUND { return data_; }
 
+  [[nodiscard]] constexpr T& operator[](SizeT index) noexcept BASE_LIFETIMEBOUND {
+    return data_[static_cast<usize>(index)];
+  }
+  [[nodiscard]] constexpr T& operator[](SizeT index) const noexcept BASE_LIFETIMEBOUND {
+    return data_[static_cast<usize>(index)];
+  }
+
+  [[nodiscard]] constexpr Slice<T, SizeT> slice() noexcept BASE_LIFETIMEBOUND {
+    return {data_, size_};
+  }
+  [[nodiscard]] constexpr Slice<const T, SizeT> slice() const noexcept BASE_LIFETIMEBOUND {
+    return {data_, size_};
+  }
+  [[nodiscard]] constexpr Slice<uchar, SizeT> bytes() noexcept BASE_LIFETIMEBOUND {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    return {reinterpret_cast<uchar*>(data_), static_cast<SizeT>(size_ * sizeof(T))};
+  }
+  [[nodiscard]] constexpr Slice<const uchar, SizeT> bytes() const noexcept BASE_LIFETIMEBOUND {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    return {reinterpret_cast<const uchar*>(data_), static_cast<SizeT>(size_ * sizeof(T))};
+  }
+
+  [[nodiscard]] constexpr T&       front() noexcept BASE_LIFETIMEBOUND { return data_[0]; }
+  [[nodiscard]] constexpr const T& front() const noexcept BASE_LIFETIMEBOUND { return data_[0]; }
+  [[nodiscard]] constexpr T&       back() noexcept BASE_LIFETIMEBOUND { return data_[size_ - 1]; }
+  [[nodiscard]] constexpr const T& back() const noexcept BASE_LIFETIMEBOUND {
+    return data_[size_ - 1];
+  }
+
   [[nodiscard]] constexpr T*       begin() noexcept BASE_LIFETIMEBOUND { return data_; }
   [[nodiscard]] constexpr const T* begin() const noexcept BASE_LIFETIMEBOUND { return data_; }
   [[nodiscard]] constexpr T*       end() noexcept BASE_LIFETIMEBOUND { return data_ + size_; }
@@ -93,20 +123,6 @@ public:
   }
   [[nodiscard]] constexpr ReverseIterator<const T*> crend() const noexcept BASE_LIFETIMEBOUND {
     return data_;
-  }
-
-  [[nodiscard]] constexpr T& operator[](SizeT index) noexcept BASE_LIFETIMEBOUND {
-    return data_[static_cast<usize>(index)];
-  }
-  [[nodiscard]] constexpr T& operator[](SizeT index) const noexcept BASE_LIFETIMEBOUND {
-    return data_[static_cast<usize>(index)];
-  }
-
-  [[nodiscard]] constexpr T&       front() noexcept BASE_LIFETIMEBOUND { return data_[0]; }
-  [[nodiscard]] constexpr const T& front() const noexcept BASE_LIFETIMEBOUND { return data_[0]; }
-  [[nodiscard]] constexpr T&       back() noexcept BASE_LIFETIMEBOUND { return data_[size_ - 1]; }
-  [[nodiscard]] constexpr const T& back() const noexcept BASE_LIFETIMEBOUND {
-    return data_[size_ - 1];
   }
 
 private:
