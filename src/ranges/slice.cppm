@@ -1,6 +1,8 @@
 export module base.ranges.slice;
 
 import base.type_traits.categories;
+import base.type_traits.qualifiers;
+import base.type_traits.comparaison;
 import base.utilities.type_aliases;
 import base.ranges.reverse_iterator;
 
@@ -12,6 +14,10 @@ public:
       : data_(begin), size_(static_cast<SizeT>(end - begin)) {}
 
   constexpr Slice(T* data, SizeT size) noexcept : data_(data), size_(size) {}
+
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  constexpr Slice(const Slice<RemoveConst<T>>& mutable_slice) noexcept
+      : data_(mutable_slice.data_), size_(mutable_slice.size_) {}
 
   [[nodiscard]] constexpr T*       data() noexcept { return data_; }
   [[nodiscard]] constexpr const T* data() const noexcept { return data_; }
