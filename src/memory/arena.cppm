@@ -37,11 +37,8 @@ public:
   template <TriviallyDestructible T> [[nodiscard]] T*                   push_array(SizeT count);
 
   // Returns nullptr if malloc fails.
-  template <typename T> [[nodiscard]] T* allocate() noexcept;
-  // Returns nullptr if malloc fails.
   template <typename T> [[nodiscard]] T* allocate(SizeT count) noexcept;
 
-  template <typename T> void free(T* /*ptr*/) {}
   template <typename T> void free(T* /*ptr*/, SizeT /*count*/) {}
 
 public:
@@ -70,7 +67,7 @@ private:
 };
 
 template <TriviallyDestructible T, typename... Args> T& Arena::push(Args&&... args) {
-  return *base::construct_at(allocate<T>(), base::forward<Args>(args)...);
+  return *base::construct_at(allocate<T>(1), base::forward<Args>(args)...);
 }
 
 template <TriviallyDestructible T> T* Arena::push_array(SizeT count) {
@@ -80,32 +77,6 @@ template <TriviallyDestructible T> T* Arena::push_array(SizeT count) {
     base::construct_at(ptr + i);
   }
   return ptr;
-}
-
-template <typename T> T* Arena::allocate() noexcept {
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-  uptr top = reinterpret_cast<uptr>(ptr_);
-  top      = (top + alignof(T) - 1) & ~(alignof(T) - 1);
-  uptr ret = top;
-  top += sizeof(T);
-
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-  if (top > reinterpret_cast<uptr>(end_)) [[unlikely]] {
-    if (!reserve(static_cast<usize>(end_ - begin_) * 2 + sizeof(T))) [[unlikely]] {
-      return nullptr;
-    }
-
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-    top = reinterpret_cast<uptr>(ptr_);
-    top = (top + alignof(T) - 1) & ~(alignof(T) - 1);
-    ret = top;
-    top += sizeof(T);
-  }
-
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast, performance-no-int-to-ptr)
-  ptr_ = reinterpret_cast<uchar*>(top);
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast, performance-no-int-to-ptr)
-  return reinterpret_cast<T*>(ret);
 }
 
 template <typename T> T* Arena::allocate(SizeT count) noexcept {

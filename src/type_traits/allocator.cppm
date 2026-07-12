@@ -8,9 +8,7 @@ namespace internal {
 template <typename T>
 concept TypeWithAllocatorMethods =
     requires(T allocator, RemoveCVRef<T>::SizeT count, int* to_free) {
-      { allocator.template allocate<int>() } -> SameAs<int*>;
       { allocator.template allocate<int>(count) } -> SameAs<int*>;
-      { allocator.template free<int>(to_free) };
       { allocator.template free<int>(to_free, count) };
     };
 } // namespace internal
