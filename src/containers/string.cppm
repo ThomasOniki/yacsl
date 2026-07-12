@@ -10,12 +10,13 @@ import base.utilities.type_aliases;
 import base.containers.stack_array;
 import base.containers.base_classes;
 import base.type_traits.categories;
+import base.type_traits.allocator;
 import base.memory.arena;
 import base.memory.lifetimes;
 
 export namespace base {
 
-template <Character Char, usize N = 0, typename Allocator = MainArenaAllocator,
+template <Character Char, usize N = 0, AllocatorLike Allocator = MainArenaAllocator,
           Integral SizeT = usize>
 class BasicString : AllocatorMember<Allocator>, FixedBufferMember<Char, N, SizeT> {
 public:

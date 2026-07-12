@@ -9,9 +9,9 @@ import base.memory.arena;
 
 export namespace base {
 
-template <typename F, usize BufSz = 8, typename Allocator = MainArenaAllocator> class Function;
+template <typename F, usize BufSz = 8, AllocatorLike Allocator = MainArenaAllocator> class Function;
 
-template <typename Ret, typename... Args, usize BufSz, typename Allocator>
+template <typename Ret, typename... Args, usize BufSz, AllocatorLike Allocator>
 class Function<Ret(Args...), BufSz, Allocator> : AllocatorMember<Allocator>,
                                                  FixedBufferMember<char, 16, usize> {
 public:
@@ -40,7 +40,7 @@ private:
   Ret (*call_)(void* func, Args... args)                              = nullptr;
 };
 
-template <typename Ret, typename... Args, usize BufSz, typename Allocator>
+template <typename Ret, typename... Args, usize BufSz, AllocatorLike Allocator>
 Function<Ret(Args...), BufSz, Allocator>::Function(auto&& func) {
   using Func = RemoveReference<decltype(func)>;
 

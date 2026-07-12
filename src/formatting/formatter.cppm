@@ -4,6 +4,7 @@ module;
 
 export module base.formatting.formatter;
 
+import base.type_traits.allocator;
 import base.type_traits.categories;
 import base.type_traits.range_like;
 import base.type_traits.qualifiers;
@@ -261,7 +262,7 @@ private:
   char type_  = 's';
 };
 
-template <Character Char, usize N, typename Allocator, Integral SizeT>
+template <Character Char, usize N, AllocatorLike Allocator, Integral SizeT>
 class Formatter<BasicString<Char, N, Allocator, SizeT>> : Formatter<BasicStringView<Char>> {
 public:
   constexpr const char* parse(const char* fmt) noexcept {

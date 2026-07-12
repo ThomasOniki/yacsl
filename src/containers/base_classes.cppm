@@ -14,7 +14,7 @@ import base.metaprogramming.type_manip;
 
 export namespace base {
 
-template <typename Allocator> class AllocatorMember {
+template <AllocatorLike Allocator> class AllocatorMember {
 protected:
   Allocator& allocator() noexcept BASE_LIFETIMEBOUND { return allocator_; }
 

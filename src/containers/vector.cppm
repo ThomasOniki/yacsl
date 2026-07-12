@@ -20,7 +20,7 @@ import base.memory.lifetimes;
 
 export namespace base {
 
-template <typename T, usize N = 0, typename Allocator = MainArenaAllocator, Integral SizeT = usize>
+template <typename T, usize N = 0, AllocatorLike Allocator = MainArenaAllocator, Integral SizeT = usize>
 class Vector : private FixedBufferMember<T, N, SizeT>, AllocatorMember<Allocator> {
 public:
   constexpr Vector() noexcept : FixedBufferMember<T, N, SizeT>(), AllocatorMember<Allocator>() {}
@@ -31,19 +31,19 @@ public:
 
   constexpr ~Vector() noexcept;
 
-  template <usize OtherN, typename OtherAllocator, Integral OtherSizeT>
+  template <usize OtherN, AllocatorLike OtherAllocator, Integral OtherSizeT>
   // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr Vector(const Vector<T, OtherN, OtherAllocator, OtherSizeT>& other);
   constexpr Vector(const Vector& other);
-  template <usize OtherN, typename OtherAllocator, Integral OtherSizeT>
+  template <usize OtherN, AllocatorLike OtherAllocator, Integral OtherSizeT>
   // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr Vector(Vector<T, OtherN, OtherAllocator, OtherSizeT>&& other) noexcept;
   constexpr Vector(Vector&& other) noexcept;
 
-  template <usize OtherN, typename OtherAllocator, Integral OtherSizeT>
+  template <usize OtherN, AllocatorLike OtherAllocator, Integral OtherSizeT>
   constexpr Vector& operator=(const Vector<T, OtherN, OtherAllocator, OtherSizeT>& other);
   constexpr Vector& operator=(const Vector& other);
-  template <usize OtherN, typename OtherAllocator, Integral OtherSizeT>
+  template <usize OtherN, AllocatorLike OtherAllocator, Integral OtherSizeT>
   constexpr Vector& operator=(Vector<T, OtherN, OtherAllocator, OtherSizeT>&& other) noexcept;
   constexpr Vector& operator=(Vector&& other) noexcept;
 
@@ -137,11 +137,11 @@ private:
 
   void definitely_reserve(SizeT capacity);
 
-  template <usize OtherN, typename OtherAllocator, Integral OtherSizeT>
+  template <usize OtherN, AllocatorLike OtherAllocator, Integral OtherSizeT>
   void steal_ptr(Vector<T, OtherN, OtherAllocator, OtherSizeT>&& other);
 
 private:
-  template <typename OtherT, usize OtherN, typename OtherAllocator, Integral OtherSizeT>
+  template <typename OtherT, usize OtherN, AllocatorLike OtherAllocator, Integral OtherSizeT>
   friend class Vector;
 
   using FixedBufferMember<T, N, SizeT>::fixed_buffer_;
@@ -152,13 +152,13 @@ private:
   SizeT capacity_ = fixed_buffer_.size();
 };
 
-template <typename T, usize N, typename Allocator, Integral SizeT>
+template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 constexpr Vector<T, N, Allocator, SizeT>::Vector(const InitializerList<T>& init)
     : size_(static_cast<SizeT>(init.size())) {
   maybe_alloc_size();
   copy(init.begin());
 }
-template <typename T, usize N, typename Allocator, Integral SizeT>
+template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 template <RangeOf<T> Range>
 constexpr Vector<T, N, Allocator, SizeT>::Vector(const Range& range) {
   if constexpr (requires(Range with_size) {
@@ -193,7 +193,7 @@ constexpr Vector<T, N, Allocator, SizeT>::Vector(const Range& range) {
   }
 }
 
-template <typename T, usize N, typename Allocator, Integral SizeT>
+template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 constexpr Vector<T, N, Allocator, SizeT>::Vector(SizeT count) : size_(count) {
   maybe_alloc_size();
   for (SizeT i = 0; i < count; ++i) {
@@ -201,14 +201,14 @@ constexpr Vector<T, N, Allocator, SizeT>::Vector(SizeT count) : size_(count) {
   }
 }
 
-template <typename T, usize N, typename Allocator, Integral SizeT>
+template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 constexpr Vector<T, N, Allocator, SizeT>::~Vector() noexcept {
   clear();
   free();
 }
 
-template <typename T, usize N, typename Allocator, Integral SizeT>
-template <usize OtherN, typename OtherAllocator, Integral OtherSizeT>
+template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
+template <usize OtherN, AllocatorLike OtherAllocator, Integral OtherSizeT>
 constexpr Vector<T, N, Allocator, SizeT>::Vector(
     const Vector<T, OtherN, OtherAllocator, OtherSizeT>& other)
     : size_(static_cast<SizeT>(other.size_)) {
@@ -216,15 +216,15 @@ constexpr Vector<T, N, Allocator, SizeT>::Vector(
   copy(other.data_);
 }
 
-template <typename T, usize N, typename Allocator, Integral SizeT>
+template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 constexpr Vector<T, N, Allocator, SizeT>::Vector(const Vector& other)
     : size_(static_cast<SizeT>(other.size_)) {
   maybe_alloc_size();
   copy(other.data_);
 }
 
-template <typename T, usize N, typename Allocator, Integral SizeT>
-template <usize OtherN, typename OtherAllocator, Integral OtherSizeT>
+template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
+template <usize OtherN, AllocatorLike OtherAllocator, Integral OtherSizeT>
 constexpr Vector<T, N, Allocator, SizeT>::Vector(
     Vector<T, OtherN, OtherAllocator, OtherSizeT>&& other) noexcept
     : size_(static_cast<SizeT>(other.size_)) {
@@ -246,7 +246,7 @@ constexpr Vector<T, N, Allocator, SizeT>::Vector(
   steal_ptr(base::move(other));
 }
 
-template <typename T, usize N, typename Allocator, Integral SizeT>
+template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 constexpr Vector<T, N, Allocator, SizeT>::Vector(Vector&& other) noexcept
     : size_(static_cast<SizeT>(other.size_)) {
   if constexpr (N > 0) {
@@ -258,8 +258,8 @@ constexpr Vector<T, N, Allocator, SizeT>::Vector(Vector&& other) noexcept
   steal_ptr(base::move(other));
 }
 
-template <typename T, usize N, typename Allocator, Integral SizeT>
-template <usize OtherN, typename OtherAllocator, Integral OtherSizeT>
+template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
+template <usize OtherN, AllocatorLike OtherAllocator, Integral OtherSizeT>
 constexpr Vector<T, N, Allocator, SizeT>& Vector<T, N, Allocator, SizeT>::operator=(
     const Vector<T, OtherN, OtherAllocator, OtherSizeT>& other) {
   clear();
@@ -269,7 +269,7 @@ constexpr Vector<T, N, Allocator, SizeT>& Vector<T, N, Allocator, SizeT>::operat
   return *this;
 }
 
-template <typename T, usize N, typename Allocator, Integral SizeT>
+template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 constexpr Vector<T, N, Allocator, SizeT>&
 Vector<T, N, Allocator, SizeT>::operator=(const Vector& other) {
   if (&other == this) [[unlikely]] {
@@ -282,8 +282,8 @@ Vector<T, N, Allocator, SizeT>::operator=(const Vector& other) {
   return *this;
 }
 
-template <typename T, usize N, typename Allocator, Integral SizeT>
-template <usize OtherN, typename OtherAllocator, Integral OtherSizeT>
+template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
+template <usize OtherN, AllocatorLike OtherAllocator, Integral OtherSizeT>
 constexpr Vector<T, N, Allocator, SizeT>& Vector<T, N, Allocator, SizeT>::operator=(
     Vector<T, OtherN, OtherAllocator, OtherSizeT>&& other) noexcept {
   clear();
@@ -309,7 +309,7 @@ constexpr Vector<T, N, Allocator, SizeT>& Vector<T, N, Allocator, SizeT>::operat
   return *this;
 }
 
-template <typename T, usize N, typename Allocator, Integral SizeT>
+template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 constexpr Vector<T, N, Allocator, SizeT>&
 Vector<T, N, Allocator, SizeT>::operator=(Vector&& other) noexcept {
   clear();
@@ -326,7 +326,7 @@ Vector<T, N, Allocator, SizeT>::operator=(Vector&& other) noexcept {
   return *this;
 }
 
-template <typename T, usize N, typename Allocator, Integral SizeT>
+template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 constexpr Vector<T, N, Allocator, SizeT>&
 Vector<T, N, Allocator, SizeT>::operator=(const InitializerList<T>& init) {
   clear();
@@ -336,7 +336,7 @@ Vector<T, N, Allocator, SizeT>::operator=(const InitializerList<T>& init) {
   return *this;
 }
 
-template <typename T, usize N, typename Allocator, Integral SizeT>
+template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 template <typename... Args>
 constexpr T& Vector<T, N, Allocator, SizeT>::emplace_back(Args&&... args) {
   if (size_ == capacity_) [[unlikely]] {
@@ -345,13 +345,13 @@ constexpr T& Vector<T, N, Allocator, SizeT>::emplace_back(Args&&... args) {
   return *base::construct_at(data_ + size_++, base::forward<Args>(args)...);
 }
 
-template <typename T, usize N, typename Allocator, Integral SizeT>
+template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 constexpr void Vector<T, N, Allocator, SizeT>::pop_back() noexcept {
   --size_;
   data_[size_].~T();
 }
 
-template <typename T, usize N, typename Allocator, Integral SizeT>
+template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 constexpr void Vector<T, N, Allocator, SizeT>::clear() noexcept {
   if constexpr (!TriviallyDestructible<T>) {
     while (size_ > 0) {
@@ -362,14 +362,14 @@ constexpr void Vector<T, N, Allocator, SizeT>::clear() noexcept {
   }
 }
 
-template <typename T, usize N, typename Allocator, Integral SizeT>
+template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 constexpr void Vector<T, N, Allocator, SizeT>::reserve(SizeT capacity) {
   if (capacity > capacity_) {
     definitely_reserve(capacity);
   }
 }
 
-template <typename T, usize N, typename Allocator, Integral SizeT>
+template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 constexpr void Vector<T, N, Allocator, SizeT>::resize(SizeT count) {
   if (size_ >= count) {
     if constexpr (TriviallyDestructible<T>) {
@@ -387,7 +387,7 @@ constexpr void Vector<T, N, Allocator, SizeT>::resize(SizeT count) {
   }
 }
 
-template <typename T, usize N, typename Allocator, Integral SizeT>
+template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 void Vector<T, N, Allocator, SizeT>::maybe_alloc_size() {
   if constexpr (N > 0) {
     if (size_ > static_cast<SizeT>(N)) {
@@ -398,13 +398,13 @@ void Vector<T, N, Allocator, SizeT>::maybe_alloc_size() {
   }
 }
 
-template <typename T, usize N, typename Allocator, Integral SizeT>
+template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 void Vector<T, N, Allocator, SizeT>::alloc(SizeT capacity) {
   capacity_ = capacity;
   data_     = allocator().template allocate<T>(static_cast<Allocator::SizeT>(capacity_)).data();
 }
 
-template <typename T, usize N, typename Allocator, Integral SizeT>
+template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 void Vector<T, N, Allocator, SizeT>::free() {
   if constexpr (N > 0) {
     if (data_ != fixed_buffer_.data()) {
@@ -415,7 +415,7 @@ void Vector<T, N, Allocator, SizeT>::free() {
   }
 }
 
-template <typename T, usize N, typename Allocator, Integral SizeT>
+template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 void Vector<T, N, Allocator, SizeT>::definitely_reserve(SizeT capacity) {
   T* old_data = data_;
   data_       = allocator().template allocate<T>(static_cast<Allocator::SizeT>(capacity)).data();
@@ -435,7 +435,7 @@ void Vector<T, N, Allocator, SizeT>::definitely_reserve(SizeT capacity) {
   capacity_ = capacity;
 }
 
-template <typename T, usize N, typename Allocator, Integral SizeT>
+template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 template <typename Copied>
 void Vector<T, N, Allocator, SizeT>::copy(const Copied* data) {
   if constexpr (TriviallyCopyable<T> && SameAs<T, Copied>) {
@@ -448,7 +448,7 @@ void Vector<T, N, Allocator, SizeT>::copy(const Copied* data) {
   }
 }
 
-template <typename T, usize N, typename Allocator, Integral SizeT>
+template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 void Vector<T, N, Allocator, SizeT>::move(T* data) {
   if constexpr (TriviallyCopyable<T>) {
     if (size_ > 0) {
@@ -462,8 +462,8 @@ void Vector<T, N, Allocator, SizeT>::move(T* data) {
   }
 }
 
-template <typename T, usize N, typename Allocator, Integral SizeT>
-template <usize OtherN, typename OtherAllocator, Integral OtherSizeT>
+template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
+template <usize OtherN, AllocatorLike OtherAllocator, Integral OtherSizeT>
 void Vector<T, N, Allocator, SizeT>::steal_ptr(
     Vector<T, OtherN, OtherAllocator, OtherSizeT>&& other) {
   data_       = other.data_;
