@@ -6,6 +6,7 @@ module;
 export module base.ranges.string_view;
 
 import base.ranges.reverse_iterator;
+import base.ranges.slice;
 import base.utilities.type_aliases;
 import base.utilities.is_constant_evaluated;
 import base.type_traits.categories;
@@ -37,7 +38,13 @@ public:
   constexpr BasicStringView(BASE_LIFETIMEBOUND const T* begin, BASE_LIFETIMEBOUND const T* end)
       : data_(begin), size_(static_cast<SizeT>(end - begin)) {}
 
-  [[nodiscard]] constexpr const T* data() const noexcept BASE_LIFETIMEBOUND { return data_; }
+  [[nodiscard]] constexpr Slice<const T, SizeT> slice() const noexcept { return {data_, size_}; }
+  [[nodiscard]] constexpr Slice<const uchar, SizeT> bytes() const noexcept {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    return {reinterpret_cast<const uchar*>(data_), static_cast<SizeT>(size_ * sizeof(T))};
+  }
+
+  [[nodiscard]] constexpr const T* data() const noexcept { return data_; }
   [[nodiscard]] constexpr SizeT    size() const noexcept { return size_; }
 
   [[nodiscard]] constexpr const T& front() const noexcept { return data_[0]; }

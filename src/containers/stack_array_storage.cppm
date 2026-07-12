@@ -9,6 +9,7 @@ import base.utilities.type_aliases;
 import base.memory.lifetimes;
 import base.type_traits.categories;
 import base.ranges.reverse_iterator;
+import base.ranges.slice;
 
 export namespace base {
 
@@ -53,6 +54,21 @@ public:
   }
   [[nodiscard]] constexpr const T& operator[](SizeT index) const noexcept BASE_LIFETIMEBOUND {
     return data()[static_cast<usize>(index)];
+  }
+
+  [[nodiscard]] constexpr Slice<T, SizeT> slice() noexcept BASE_LIFETIMEBOUND {
+    return {data_, static_cast<SizeT>(N)};
+  }
+  [[nodiscard]] constexpr Slice<const T, SizeT> slice() const noexcept BASE_LIFETIMEBOUND {
+    return {data_, static_cast<SizeT>(N)};
+  }
+  [[nodiscard]] constexpr Slice<uchar, SizeT> bytes() noexcept BASE_LIFETIMEBOUND {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    return {reinterpret_cast<uchar*>(data_), static_cast<SizeT>(N * sizeof(T))};
+  }
+  [[nodiscard]] constexpr Slice<const uchar, SizeT> bytes() const noexcept BASE_LIFETIMEBOUND {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    return {reinterpret_cast<const uchar*>(data_), static_cast<SizeT>(N * sizeof(T))};
   }
 
   [[nodiscard]] constexpr T*       begin() noexcept BASE_LIFETIMEBOUND { return data(); }

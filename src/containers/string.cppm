@@ -5,6 +5,7 @@ module;
 export module base.containers.string;
 
 import base.ranges.string_view;
+import base.ranges.slice;
 import base.utilities.type_aliases;
 import base.containers.stack_array;
 import base.containers.base_classes;
@@ -159,6 +160,24 @@ public:
     return begin_[index];
   }
 
+  [[nodiscard]] constexpr BasicStringView<Char, SizeT> view() const noexcept BASE_LIFETIMEBOUND {
+    return {begin_, end_};
+  }
+  [[nodiscard]] constexpr Slice<Char, SizeT> slice() noexcept BASE_LIFETIMEBOUND {
+    return {begin_, end_};
+  }
+  [[nodiscard]] constexpr Slice<const Char, SizeT> slice() const noexcept BASE_LIFETIMEBOUND {
+    return {begin_, end_};
+  }
+  [[nodiscard]] constexpr Slice<uchar, SizeT> bytes() noexcept BASE_LIFETIMEBOUND {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    return {reinterpret_cast<uchar*>(begin_), static_cast<SizeT>(size() * sizeof(Char))};
+  }
+  [[nodiscard]] constexpr Slice<const uchar, SizeT> bytes() const noexcept BASE_LIFETIMEBOUND {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    return {reinterpret_cast<const uchar*>(begin_), static_cast<SizeT>(size() * sizeof(Char))};
+  }
+
   [[nodiscard]] constexpr Char*       data() noexcept BASE_LIFETIMEBOUND { return begin_; }
   [[nodiscard]] constexpr const Char* data() const noexcept BASE_LIFETIMEBOUND { return begin_; }
 
@@ -168,15 +187,6 @@ public:
   [[nodiscard]] constexpr const Char* end() const noexcept BASE_LIFETIMEBOUND { return end_; }
   [[nodiscard]] constexpr const Char* cbegin() const noexcept BASE_LIFETIMEBOUND { return begin_; }
   [[nodiscard]] constexpr const Char* cend() const noexcept BASE_LIFETIMEBOUND { return end_; }
-
-  constexpr BasicStringView<Char, SizeT> view() const noexcept BASE_LIFETIMEBOUND {
-    return {begin_, end_};
-  }
-
-  // NOLINTNEXTLINE(google-explicit-constructor)
-  [[nodiscard]] constexpr operator BasicStringView<Char, SizeT>() const noexcept {
-    return {begin_, end_};
-  }
 
 private:
   using FixedBufferMember<Char, N, SizeT>::fixed_buffer_;
