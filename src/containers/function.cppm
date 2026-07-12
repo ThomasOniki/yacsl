@@ -45,11 +45,11 @@ Function<Ret(Args...), BufSz, Allocator>::Function(auto&& func) {
   using Func = RemoveReference<decltype(func)>;
 
   if constexpr (sizeof(Func) > sizeof(uchar) * BufSz || alignof(Func) > 8) {
-    data_ = allocator().template allocate<Func>();
+    data_ = allocator().template allocate<Func>(1).data();
 
     cleanup_ = [](void* data, UnderlyingAllocator<Allocator>& alloc) {
       static_cast<Func*>(data)->~Func();
-      alloc.template free<Func>(static_cast<Func*>(data));
+      alloc.template free<Func>({static_cast<Func*>(data), 1});
     };
   } else {
     cleanup_ = [](void* data, UnderlyingAllocator<Allocator>& /*allocator*/) {

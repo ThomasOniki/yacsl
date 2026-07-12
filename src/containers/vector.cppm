@@ -401,24 +401,24 @@ void Vector<T, N, Allocator, SizeT>::maybe_alloc_size() {
 template <typename T, usize N, typename Allocator, Integral SizeT>
 void Vector<T, N, Allocator, SizeT>::alloc(SizeT capacity) {
   capacity_ = capacity;
-  data_     = allocator().template allocate<T>(static_cast<Allocator::SizeT>(capacity_));
+  data_     = allocator().template allocate<T>(static_cast<Allocator::SizeT>(capacity_)).data();
 }
 
 template <typename T, usize N, typename Allocator, Integral SizeT>
 void Vector<T, N, Allocator, SizeT>::free() {
   if constexpr (N > 0) {
     if (data_ != fixed_buffer_.data()) {
-      allocator().template free<T>(data_, static_cast<Allocator::SizeT>(capacity_));
+      allocator().template free<T>({data_, static_cast<Allocator::SizeT>(capacity_)});
     }
   } else {
-    allocator().template free<T>(data_, static_cast<Allocator::SizeT>(capacity_));
+    allocator().template free<T>({data_, static_cast<Allocator::SizeT>(capacity_)});
   }
 }
 
 template <typename T, usize N, typename Allocator, Integral SizeT>
 void Vector<T, N, Allocator, SizeT>::definitely_reserve(SizeT capacity) {
   T* old_data = data_;
-  data_       = allocator().template allocate<T>(static_cast<Allocator::SizeT>(capacity));
+  data_       = allocator().template allocate<T>(static_cast<Allocator::SizeT>(capacity)).data();
   move(old_data);
 
   for (SizeT i = 0; i < size_; ++i) {
@@ -427,10 +427,10 @@ void Vector<T, N, Allocator, SizeT>::definitely_reserve(SizeT capacity) {
 
   if constexpr (N > 0) {
     if (old_data != fixed_buffer_.data()) {
-      allocator().template free<T>(old_data, static_cast<Allocator::SizeT>(capacity_));
+      allocator().template free<T>({old_data, static_cast<Allocator::SizeT>(capacity_)});
     }
   } else {
-    allocator().template free<T>(old_data, static_cast<Allocator::SizeT>(capacity_));
+    allocator().template free<T>({old_data, static_cast<Allocator::SizeT>(capacity_)});
   }
   capacity_ = capacity;
 }
