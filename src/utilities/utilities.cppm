@@ -7,3 +7,4 @@ export import base.utilities.nil;
 export import base.utilities.type_aliases;
 export import base.utilities.isize;
 export import base.utilities.stack_trace;
+export import base.utilities.demangle;
