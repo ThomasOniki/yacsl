@@ -23,6 +23,9 @@ public:
   [[nodiscard]] constexpr const T* data() const noexcept { return data_; }
   [[nodiscard]] constexpr SizeT    size() const noexcept { return size_; }
 
+  [[nodiscard]] constexpr T&       operator[](SizeT index) noexcept { return data_[index]; }
+  [[nodiscard]] constexpr const T& operator[](SizeT index) const noexcept { return data_[index]; }
+
   [[nodiscard]] constexpr T*       begin() noexcept { return data_; }
   [[nodiscard]] constexpr T*       end() noexcept { return data_ + size_; }
   [[nodiscard]] constexpr const T* begin() const noexcept { return data_; }
