@@ -14,3 +14,4 @@ export import base.containers.structured_bindings;
 export import base.containers.tuple;
 export import base.containers.unsigned_result;
 export import base.containers.vector;
+export import base.containers.ref_wrapper;
