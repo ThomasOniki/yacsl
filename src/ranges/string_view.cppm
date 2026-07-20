@@ -1,6 +1,5 @@
 module;
 
-#include "base/attributes.hpp"
 #include <string.h>
 
 export module base.ranges.string_view;
@@ -17,11 +16,10 @@ export namespace base {
 template <Character T, Integral SizeT = usize> class BasicStringView {
 public:
   constexpr BasicStringView() = default;
-  constexpr BasicStringView(BASE_LIFETIMEBOUND const T* data, SizeT size)
-      : data_(data), size_(size) {}
+  constexpr BasicStringView(const T* data, SizeT size) : data_(data), size_(size) {}
 
   // NOLINTNEXTLINE(google-explicit-constructor)
-  constexpr BasicStringView(BASE_LIFETIMEBOUND const T* cstr) : data_(cstr) {
+  constexpr BasicStringView(const T* cstr) : data_(cstr) {
     if constexpr (SameAs<char, T>) {
       if (!is_constant_evaluated()) {
         size_ = strlen(cstr);
@@ -35,7 +33,7 @@ public:
     size_ = len;
   }
 
-  constexpr BasicStringView(BASE_LIFETIMEBOUND const T* begin, BASE_LIFETIMEBOUND const T* end)
+  constexpr BasicStringView(const T* begin, const T* end)
       : data_(begin), size_(static_cast<SizeT>(end - begin)) {}
 
   [[nodiscard]] constexpr Slice<const T, SizeT> slice() const noexcept { return {data_, size_}; }
@@ -95,23 +93,17 @@ using StringView = BasicStringView<char>;
 
 inline namespace litterals {
 
-constexpr BasicStringView<char> operator""_sv(BASE_LIFETIMEBOUND const char* cstr, usize len) {
+constexpr BasicStringView<char> operator""_sv(const char* cstr, usize len) { return {cstr, len}; }
+constexpr BasicStringView<wchar_t> operator""_sv(const wchar_t* cstr, usize len) {
   return {cstr, len};
 }
-constexpr BasicStringView<wchar_t> operator""_sv(BASE_LIFETIMEBOUND const wchar_t* cstr,
-                                                 usize                             len) {
+constexpr BasicStringView<char8_t> operator""_sv(const char8_t* cstr, usize len) {
   return {cstr, len};
 }
-constexpr BasicStringView<char8_t> operator""_sv(BASE_LIFETIMEBOUND const char8_t* cstr,
-                                                 usize                             len) {
+constexpr BasicStringView<char16_t> operator""_sv(const char16_t* cstr, usize len) {
   return {cstr, len};
 }
-constexpr BasicStringView<char16_t> operator""_sv(BASE_LIFETIMEBOUND const char16_t* cstr,
-                                                  usize                              len) {
-  return {cstr, len};
-}
-constexpr BasicStringView<char32_t> operator""_sv(BASE_LIFETIMEBOUND const char32_t* cstr,
-                                                  usize                              len) {
+constexpr BasicStringView<char32_t> operator""_sv(const char32_t* cstr, usize len) {
   return {cstr, len};
 }
 
