@@ -24,7 +24,16 @@ import base.memory.lifetimes;
 
 namespace base {
 
-export template <typename T> class Formatter;
+export template <typename T> class Formatter {
+public:
+  constexpr const char* parse(const char* fmt) noexcept { return fmt + 2; }
+  void                  format(String& buf, const T& value) const noexcept {
+    buf += TYPE_STRING<T>;
+    buf += " at ";
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    itoa_hex(buf, reinterpret_cast<uptr>(&value));
+  }
+};
 
 template <Integral T> class Formatter<T> {
 public:
