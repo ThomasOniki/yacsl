@@ -1,7 +1,3 @@
-module;
-
-#include "base/attributes.hpp"
-
 export module base.ranges.slice;
 
 import base.type_traits.categories;
@@ -9,6 +5,7 @@ import base.type_traits.qualifiers;
 import base.type_traits.comparaison;
 import base.utilities.type_aliases;
 import base.ranges.reverse_iterator;
+import base.ranges.initializer_list;
 
 export namespace base {
 
@@ -32,13 +29,13 @@ public:
   [[nodiscard]] constexpr T&       operator[](SizeT index) noexcept { return data_[index]; }
   [[nodiscard]] constexpr const T& operator[](SizeT index) const noexcept { return data_[index]; }
 
-  [[nodiscard]] constexpr Slice<uchar, SizeT> bytes() noexcept BASE_LIFETIMEBOUND
+  [[nodiscard]] constexpr Slice<uchar, SizeT> bytes() noexcept
     requires(!SameAs<T, const T>)
   {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     return {reinterpret_cast<uchar*>(data_), static_cast<SizeT>(size_ * sizeof(T))};
   }
-  [[nodiscard]] constexpr Slice<const uchar, SizeT> bytes() const noexcept BASE_LIFETIMEBOUND {
+  [[nodiscard]] constexpr Slice<const uchar, SizeT> bytes() const noexcept {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     return {reinterpret_cast<const uchar*>(data_), static_cast<SizeT>(size_ * sizeof(T))};
   }
