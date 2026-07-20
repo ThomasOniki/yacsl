@@ -93,6 +93,8 @@ template <Character Char> BasicStringView(const Char*, const Char*) -> BasicStri
 
 using StringView = BasicStringView<char>;
 
+inline namespace litterals {
+
 constexpr BasicStringView<char> operator""_sv(BASE_LIFETIMEBOUND const char* cstr, usize len) {
   return {cstr, len};
 }
@@ -112,5 +114,7 @@ constexpr BasicStringView<char32_t> operator""_sv(BASE_LIFETIMEBOUND const char3
                                                   usize                              len) {
   return {cstr, len};
 }
+
+} // namespace litterals
 
 } // namespace base
