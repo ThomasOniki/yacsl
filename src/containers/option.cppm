@@ -70,6 +70,22 @@ public:
     }
     return *this;
   }
+  constexpr Option& operator=(const T& value) noexcept {
+    if (is_value_) {
+      value_.destruct();
+    }
+    is_value_ = true;
+    value_.construct(value);
+    return *this;
+  }
+  constexpr Option& operator=(T&& value) noexcept {
+    if (is_value_) {
+      value_.destruct();
+    }
+    is_value_ = true;
+    value_.construct(base::move(value));
+    return *this;
+  }
 
   template <typename... Args> constexpr T& emplace(Args&&... args) {
     if (is_value_) {
@@ -145,6 +161,10 @@ public:
 
   constexpr Option& operator=(Nil /*nil*/) noexcept {
     ptr_ = nullptr;
+    return *this;
+  }
+  constexpr Option& operator=(T& value) noexcept {
+    ptr_ = &value;
     return *this;
   }
 
