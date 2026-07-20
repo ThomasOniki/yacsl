@@ -16,6 +16,7 @@ import base.os.file;
 import base.ranges.string_view;
 import base.type_traits.range_like;
 import base.containers.result;
+import base.utilities.type_aliases;
 
 export namespace base {
 
@@ -28,7 +29,11 @@ bool strip_file_open_flag(FileOpenFlags* flags, FileOpenFlags flag) noexcept {
   return false;
 }
 
-Result<FileHandle, File::OpenError> open_file(const char* path, FileOpenFlags flags) noexcept;
+struct OpenedFile {
+  alignas(16) FileHandle handle;
+  usize cursor_pos;
+};
+Result<OpenedFile, File::OpenError> open_file(const char* path, FileOpenFlags flags) noexcept;
 
 #ifdef _WIN32
 

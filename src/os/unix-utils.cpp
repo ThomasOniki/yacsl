@@ -11,6 +11,7 @@ module;
 module base.os.utils;
 
 import base.logging.panic;
+import base.utilities.isize;
 
 #ifndef _WIN32
 
@@ -38,7 +39,7 @@ int unix_flags(FileOpenFlags flags) noexcept {
   return static_cast<int>(ret);
 }
 
-Result<FileHandle, File::OpenError> open_file(const char* path, FileOpenFlags flags) noexcept {
+Result<OpenedFile, File::OpenError> open_file(const char* path, FileOpenFlags flags) noexcept {
   const bool seek_end = strip_file_open_flag(&flags, FileOpenFlags::SeekEnd) &&
                         (flags & FileOpenFlags::Trunc) == FileOpenFlags::None;
   const int  handle   = ::open(path, unix_flags(flags), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
@@ -50,10 +51,13 @@ Result<FileHandle, File::OpenError> open_file(const char* path, FileOpenFlags fl
       panic("::open() failed: {}", errno_str());
     }
   }
+  usize cursor = 0;
   if (seek_end) {
-    BASE_TRY_SYSCALL(lseek(handle, 0, SEEK_END));
+    const isize result = ::lseek(handle, 0, SEEK_END);
+    panic_if(result == -1, "::lseek() failed: {}", errno_str());
+    cursor = static_cast<usize>(result);
   }
-  return handle;
+  return OpenedFile{.handle = handle, .cursor_pos = cursor};
 }
 
 void try_syscall(bool success, StringView function_name) noexcept {
