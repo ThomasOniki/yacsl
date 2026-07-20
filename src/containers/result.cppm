@@ -21,7 +21,7 @@ public:
   Result(Args&&... args) : ok_(base::forward<Args>(args)...) {}
 
   // NOLINTNEXTLINE(google-explicit-constructor)
-  Result(Err err) : err_(err) {}
+  Result(Err err) : err_(err), is_err_(true) {}
 
   ~Result() noexcept { destroy(); }
 
