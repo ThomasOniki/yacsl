@@ -14,7 +14,7 @@ export namespace base {
 
 template <typename T, Integral SizeT = usize> class Slice {
 public:
-  friend class Slice<const T>;
+  friend class Slice<const T, SizeT>;
 
   constexpr Slice(T* begin, T* end) noexcept
       : data_(begin), size_(static_cast<SizeT>(end - begin)) {}
@@ -22,7 +22,7 @@ public:
   constexpr Slice(T* data, SizeT size) noexcept : data_(data), size_(size) {}
 
   // NOLINTNEXTLINE(google-explicit-constructor)
-  constexpr Slice(const Slice<RemoveConst<T>>& mutable_slice) noexcept
+  constexpr Slice(const Slice<RemoveConst<T>, SizeT>& mutable_slice) noexcept
       : data_(mutable_slice.data_), size_(mutable_slice.size_) {}
 
   [[nodiscard]] constexpr T*       data() noexcept { return data_; }
