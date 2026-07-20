@@ -26,15 +26,15 @@ import base.logging.panic;
 namespace base {
 
 // NOLINTBEGIN(readability-make-member-function-const, cppcoreguidelines-pro-type-union-access)
-usize Process::Stdio::write(BasicStringView<uchar> data) noexcept {
+usize Process::Stdio::write(Slice<const uchar> data) noexcept {
   assert_buffer("write");
   const isize result = ::write(buffer_info_.handle, data.data(), data.size());
   panic_if(result == -1, "::write() failed: {}", errno_str());
   return static_cast<usize>(result);
 }
-usize Process::Stdio::read(uchar* buf, usize size) noexcept {
+usize Process::Stdio::read(Slice<uchar> buffer) noexcept {
   assert_buffer("read");
-  const isize result = ::read(buffer_info_.handle, buf, size);
+  const isize result = ::read(buffer_info_.handle, buffer.data(), buffer.size());
   panic_if(result == -1, "::read() failed: {}", errno_str());
   return static_cast<usize>(result);
 }

@@ -41,13 +41,13 @@ void File::open_stdout() noexcept { handle_ = STDOUT_FILENO; }
 void File::open_stderr() noexcept { handle_ = STDERR_FILENO; }
 
 // NOLINTBEGIN(readability-make-member-function-const)
-usize File::write(BasicStringView<uchar> data) noexcept {
+usize File::write(Slice<const uchar> data) noexcept {
   const isize result = ::write(handle_, data.data(), data.size());
   panic_if(result == -1, "::write() failed: {}", errno_str());
   return static_cast<usize>(result);
 }
-usize File::read(uchar* buf, usize size) noexcept {
-  const isize result = ::read(handle_, buf, size);
+usize File::read(Slice<uchar> buffer) noexcept {
+  const isize result = ::read(handle_, buffer.data(), buffer.size());
   panic_if(result == -1, "::read() failed: {}", errno_str());
   return static_cast<usize>(result);
 }

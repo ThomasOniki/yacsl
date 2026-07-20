@@ -291,10 +291,12 @@ static int test_buffer() {
   int                        ret = 0;
   base::StackArray<char, 64> buf{};
 
+  using base::litterals::operator""_sv;
+
   Process cat1;
   cat1.start({"cat"}, Buffer, Buffer, ParentStderr);
-  cat1.get_stdin().write("buffer test");
-  EXPECT_EQ(cat1.get_stdout().read(buf.data(), buf.size()), 11);
+  cat1.get_stdin().write("buffer test"_sv.bytes());
+  EXPECT_EQ(cat1.get_stdout().read({buf.bytes().data(), buf.bytes().size()}), 11);
   EXPECT_STREQ(buf.data(), "buffer test");
   cat1.wait();
   return ret;
