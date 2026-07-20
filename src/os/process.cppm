@@ -19,6 +19,7 @@ import base.type_traits.range_like;
 import base.os.common;
 import base.ranges.string_view;
 import base.ranges.initializer_list;
+import base.ranges.slice;
 import base.logging.panic;
 
 export namespace base {
@@ -66,17 +67,8 @@ public:
 
     Stdio& operator=(const Stdio&) = delete;
 
-    usize write(BasicStringView<uchar> data) noexcept;
-
-    usize write(StringView data) noexcept {
-      return write( // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-          BasicStringView<uchar>(reinterpret_cast<const uchar*>(data.data()), data.size()));
-    }
-
-    usize read(uchar* buf, usize size) noexcept;
-
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-    usize read(char* buf, usize size) noexcept { return read(reinterpret_cast<uchar*>(buf), size); }
+    usize write(Slice<const uchar> data) noexcept;
+    usize read(Slice<uchar> buffer) noexcept;
 
     void seek_begin(isize offset) noexcept;
     void seek_end(isize offset) noexcept;

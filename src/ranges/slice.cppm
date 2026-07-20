@@ -14,6 +14,8 @@ export namespace base {
 
 template <typename T, Integral SizeT = usize> class Slice {
 public:
+  friend class Slice<const T>;
+
   constexpr Slice(T* begin, T* end) noexcept
       : data_(begin), size_(static_cast<SizeT>(end - begin)) {}
 

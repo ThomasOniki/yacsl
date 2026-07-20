@@ -34,14 +34,15 @@ void File::open_stdout() noexcept { handle_ = GetStdHandle(STD_OUTPUT_HANDLE); }
 void File::open_stderr() noexcept { handle_ = GetStdHandle(STD_ERROR_HANDLE); }
 
 // NOLINTBEGIN(readability-make-member-function-const)
-usize File::write(BasicStringView<uchar> data) noexcept {
+usize File::write(Slice<const uchar> data) noexcept {
   DWORD ret = 0;
   BASE_TRY_SYSCALL(WriteFile(handle_, data.data(), static_cast<DWORD>(data.size()), &ret, nullptr));
   return static_cast<usize>(ret);
 }
-usize File::read(uchar* buf, usize size) noexcept {
+usize File::read(Slice<uchar> buffer) noexcept {
   DWORD ret = 0;
-  BASE_TRY_SYSCALL(ReadFile(handle_, buf, static_cast<DWORD>(size), &ret, nullptr));
+  BASE_TRY_SYSCALL(
+      ReadFile(handle_, buffer.data(), static_cast<DWORD>(buffer.size()), &ret, nullptr));
   return static_cast<usize>(ret);
 }
 

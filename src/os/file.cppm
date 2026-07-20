@@ -5,6 +5,7 @@ import base.utilities.isize;
 import base.os.common;
 import base.os.process;
 import base.ranges.string_view;
+import base.ranges.slice;
 import base.containers.error;
 import base.containers.string;
 
@@ -45,16 +46,8 @@ public:
   void open_stdout() noexcept;
   void open_stderr() noexcept;
 
-  usize write(BasicStringView<uchar> data) noexcept;
-
-  usize write(StringView data) noexcept {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-    return write(BasicStringView<uchar>(reinterpret_cast<const uchar*>(data.data()), data.size()));
-  }
-  usize read(uchar* buf, usize size) noexcept;
-
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-  usize read(char* buf, usize size) noexcept { return read(reinterpret_cast<uchar*>(buf), size); }
+  usize write(Slice<const uchar> data) noexcept;
+  usize read(Slice<uchar> buffer) noexcept;
 
   [[nodiscard]] usize get_cursor() const noexcept { return cursor_pos_; }
 

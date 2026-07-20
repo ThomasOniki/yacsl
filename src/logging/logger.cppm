@@ -132,7 +132,7 @@ private:
       copy_bytes(data, lvl_str.bytes());
       copy_bytes(data + lvl_str.size(), msg.formatted.bytes());
       data[lvl_str.size() + msg.formatted.size()] = '\n';
-      error_.write(buf.view());
+      error_.write(buf.bytes());
     } else {
       String     buf;
       StringView lvl_str = out_lvl_strings_[static_cast<u8>(msg.level)];
@@ -140,7 +140,7 @@ private:
       copy_bytes(data, lvl_str.bytes());
       copy_bytes(data + lvl_str.size(), msg.formatted.bytes());
       data[lvl_str.size() + msg.formatted.size()] = '\n';
-      output_.write(buf.view());
+      output_.write(buf.bytes());
     }
   }
 

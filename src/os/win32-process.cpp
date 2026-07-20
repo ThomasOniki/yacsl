@@ -20,15 +20,15 @@ module base.os.process;
 namespace base {
 
 // NOLINTBEGIN(readability-make-member-function-const, cppcoreguidelines-pro-type-union-access)
-usize Process::Stdio::write(BasicStringView<uchar> data) noexcept {
+usize Process::Stdio::write(Slice<const uchar> data) noexcept {
   DWORD ret = 0;
   BASE_TRY_SYSCALL(
       WriteFile(buffer_info_.handle, data.data(), static_cast<DWORD>(data.size()), &ret, nullptr));
   return static_cast<usize>(ret);
 }
-usize Process::Stdio::read(uchar* buf, usize size) noexcept {
+usize Process::Stdio::read(Slice<uchar> buffer) noexcept {
   DWORD ret = 0;
-  BASE_TRY_SYSCALL(ReadFile(buffer_info_.handle, buf, static_cast<DWORD>(size), &ret, nullptr) ==
+  BASE_TRY_SYSCALL(ReadFile(buffer_info_.handle, buffer.data()), static_cast<DWORD>(buffer.size()), &ret, nullptr) ==
                    FALSE);
   return static_cast<usize>(ret);
 }
