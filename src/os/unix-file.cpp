@@ -21,11 +21,12 @@ namespace base {
 
 Error<File::OpenError> File::open(const char* path, FileOpenFlags flags) noexcept {
   close();
-  const Result<FileHandle, OpenError> result = open_file(path, flags);
+  const Result<OpenedFile, OpenError> result = open_file(path, flags);
   if (result.is_err()) [[unlikely]] {
     return result.assert_err();
   }
-  handle_ = result.assert_ok();
+  handle_     = result.assert_ok().handle;
+  cursor_pos_ = result.assert_ok().cursor_pos;
   return NIL;
 }
 
