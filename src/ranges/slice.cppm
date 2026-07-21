@@ -6,6 +6,7 @@ import base.type_traits.comparaison;
 import base.utilities.type_aliases;
 import base.ranges.reverse_iterator;
 import base.ranges.initializer_list;
+import base.ranges.integer_range;
 
 export namespace base {
 
@@ -39,6 +40,8 @@ public:
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     return {reinterpret_cast<const uchar*>(data_), static_cast<SizeT>(size_ * sizeof(T))};
   }
+
+  [[nodiscard]] constexpr IntegerRange<SizeT> indices() const noexcept { return {0, size_}; }
 
   [[nodiscard]] constexpr T*       begin() noexcept { return data_; }
   [[nodiscard]] constexpr T*       end() noexcept { return data_ + size_; }
