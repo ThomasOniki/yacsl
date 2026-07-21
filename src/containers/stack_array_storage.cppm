@@ -10,6 +10,7 @@ import base.memory.lifetimes;
 import base.type_traits.categories;
 import base.ranges.reverse_iterator;
 import base.ranges.slice;
+import base.ranges.integer_range;
 
 export namespace base {
 
@@ -70,6 +71,8 @@ public:
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     return {reinterpret_cast<const uchar*>(data_), static_cast<SizeT>(N * sizeof(T))};
   }
+
+  [[nodiscard]] constexpr IntegerRange<SizeT> indices() const noexcept { return {0, N}; }
 
   [[nodiscard]] constexpr T*       begin() noexcept BASE_LIFETIMEBOUND { return data(); }
   [[nodiscard]] constexpr T*       end() noexcept BASE_LIFETIMEBOUND { return data() + N; }

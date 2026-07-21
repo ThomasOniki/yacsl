@@ -10,6 +10,7 @@ import base.type_traits.categories;
 import base.type_traits.limits;
 import base.ranges.reverse_iterator;
 import base.ranges.slice;
+import base.ranges.integer_range;
 import base.metaprogramming.type_manip;
 
 export namespace base {
@@ -45,6 +46,8 @@ public:
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     return {reinterpret_cast<const uchar*>(data_), static_cast<SizeT>(N * sizeof(T))};
   }
+
+  [[nodiscard]] constexpr IntegerRange<SizeT> indices() const noexcept { return {0, N}; }
 
   [[nodiscard]] constexpr T&       front() noexcept BASE_LIFETIMEBOUND { return data_[0]; }
   [[nodiscard]] constexpr T&       back() noexcept BASE_LIFETIMEBOUND { return data_[N - 1]; }
