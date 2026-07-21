@@ -15,12 +15,14 @@ import base.type_traits.trivial;
 import base.ranges.initializer_list;
 import base.ranges.reverse_iterator;
 import base.ranges.slice;
+import base.ranges.integer_range;
 import base.memory.arena;
 import base.memory.lifetimes;
 
 export namespace base {
 
-template <typename T, usize N = 0, AllocatorLike Allocator = MainArenaAllocator, Integral SizeT = usize>
+template <typename T, usize N = 0, AllocatorLike Allocator = MainArenaAllocator,
+          Integral SizeT = usize>
 class Vector : private FixedBufferMember<T, N, SizeT>, AllocatorMember<Allocator> {
 public:
   constexpr Vector() noexcept : FixedBufferMember<T, N, SizeT>(), AllocatorMember<Allocator>() {}
@@ -89,6 +91,8 @@ public:
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     return {reinterpret_cast<const uchar*>(data_), static_cast<SizeT>(size_ * sizeof(T))};
   }
+
+  [[nodiscard]] constexpr IntegerRange<SizeT> indices() const noexcept { return {0, size_}; }
 
   [[nodiscard]] constexpr T&       front() noexcept BASE_LIFETIMEBOUND { return data_[0]; }
   [[nodiscard]] constexpr const T& front() const noexcept BASE_LIFETIMEBOUND { return data_[0]; }
