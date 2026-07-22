@@ -1,10 +1,9 @@
-module base.utilities.demangle;
-
-import base.containers.vector;
-import base.formatting.atoi;
-import base.utilities.type_aliases;
-import base.memory.lifetimes;
-import base.logging.logger;
+#include "base/containers/string.hpp"
+#include "base/containers/vector.hpp"
+#include "base/formatting/atoi.hpp"
+#include "base/memory/lifetimes.hpp"
+#include "base/ranges/string_view.hpp"
+#include "base/utilities/type_aliases.hpp"
 
 namespace base {
 

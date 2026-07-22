@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef BASE_LSP_ONLY
 #include <errno.h>
 #include <stddef.h>

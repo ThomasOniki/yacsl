@@ -1,10 +1,9 @@
-import base.containers.string;
-import base.containers.function;
-import base.formatting.format_string;
-import base.formatting.format_string_parser;
-import base.formatting.formatter;
-import base.ranges.slice;
-
+#include "base/containers/function.hpp"
+#include "base/containers/string.hpp"
+#include "base/formatting/format_string.hpp"
+#include "base/formatting/format_string_parser.hpp"
+#include "base/formatting/formatter.hpp"
+#include "base/ranges/slice.hpp"
 #include "test_utils.hpp"
 #include <stdint.h>
 #include <stdio.h>

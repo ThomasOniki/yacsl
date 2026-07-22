@@ -1,10 +1,7 @@
-import base.logging.logger;
-import base.logging.panic;
-import base.logging.common;
-import base.utilities.stack_trace;
-import base.ranges.string_view;
-
 #include "base/attributes.hpp"
+#include "base/logging/logger.hpp"
+#include "base/ranges/string_view.hpp"
+#include "base/utilities/stack_trace.hpp"
 #include "test_utils.hpp"
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
@@ -15,7 +12,7 @@ BASE_NOINLINE static int f1(bool /*unused*/, char /*unused*/) {
   int              ret         = 0;
   base::StackTrace stack_trace = base::StackTrace::current();
   stack_trace.compute_entries();
-  CHECK_ENTRY(0, "base::StackTrace@base.utilities.stack_trace::current()");
+  CHECK_ENTRY(0, "base::StackTrace::current()");
   CHECK_ENTRY(1, "f1(bool, char)");
   CHECK_ENTRY(2, "ns1::ns2::f2(void*)");
   CHECK_ENTRY(3, "int ns1::ns2::(anonymous namespace)::S<void, 0>::f3<void, 15>()");

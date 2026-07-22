@@ -1,19 +1,20 @@
-module;
-
 #ifndef _WIN32
 #include "try_syscall.hpp"
 #include <fcntl.h>
 #include <stdio.h>
-#include <sys/types.h>
 #include <unistd.h>
 #endif
 
-module base.os.file;
-
-import base.os.utils;
-import base.containers.result;
-import base.utilities.nil;
-import base.logging.panic;
+#include "base/containers/error.hpp"
+#include "base/containers/result.hpp"
+#include "base/logging/panic.hpp"
+#include "base/os/common.hpp"
+#include "base/os/file.hpp"
+#include "base/ranges/slice.hpp"
+#include "base/utilities/isize.hpp"
+#include "base/utilities/nil.hpp"
+#include "base/utilities/type_aliases.hpp"
+#include "utils.hpp"
 
 #ifndef _WIN32
 

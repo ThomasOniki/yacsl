@@ -1,6 +1,5 @@
-module base.logging.logger;
-
-import base.containers.stack_storage;
+#include "base/logging/logger.hpp"
+#include "base/containers/stack_storage.hpp"
 
 namespace base {
 

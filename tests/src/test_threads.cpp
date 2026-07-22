@@ -1,7 +1,7 @@
-import base.containers.vector;
-import base.threading.atomic;
-import base.threading.mutex;
-import base.threading.thread;
+#include "base/containers/vector.hpp"
+#include "base/threading/atomic.hpp"
+#include "base/threading/mutex.hpp"
+#include "base/threading/thread.hpp"
 #include "test_utils.hpp"
 #include <stdint.h>
 

@@ -1,11 +1,10 @@
 #ifndef __EMSCRIPTEN__
 
-import base.containers.stack_array;
-import base.ranges.string_view;
-import base.os.common;
-import base.os.file;
-import base.os.process;
-import base.memory.lifetimes;
+#include "base/containers/stack_array.hpp"
+#include "base/memory/lifetimes.hpp"
+#include "base/os/common.hpp"
+#include "base/os/process.hpp"
+#include "base/ranges/string_view.hpp"
 #include "test_utils.hpp"
 #include <assert.h>
 #include <fcntl.h>
@@ -319,7 +318,7 @@ int main() {
 
 #else
 
-import base.logging.logger;
+#include "base/logging/logger.hpp"
 
 int main() { base::log_info("test_process does nothing when compiling with emscripten."); }
 
