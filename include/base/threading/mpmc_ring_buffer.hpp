@@ -86,9 +86,9 @@ public:
 
   Option<T> try_pop() noexcept {
     for (;;) {
-      usize read  = read_.load(MemoryOrder::Relaxed);
-      usize index = read % N;
-      usize diff  = slots_[index].epoch.load(MemoryOrder::Acquire) - (read + 1);
+      usize       read  = read_.load(MemoryOrder::Relaxed);
+      const usize index = read % N;
+      const usize diff  = slots_[index].epoch.load(MemoryOrder::Acquire) - (read + 1);
       if (diff == 0) {
         if (read_.compare_exchange_weak(read, read + 1, MemoryOrder::Relaxed,
                                         MemoryOrder::Relaxed)) {
@@ -106,6 +106,7 @@ public:
   }
 
 private:
+  // NOLINTNEXTLINE(altera-struct-pack-align)
   struct Slot {
     StackStorage<T> value;
     Atomic<usize>   epoch;

@@ -24,14 +24,14 @@ BASE_NOINLINE static int f1(bool /*unused*/, char /*unused*/) {
 
 namespace ns1::ns2 {
 BASE_NOINLINE static int f2(void* /*unused*/) {
-  volatile int result = ::f1(true, 'a');
+  const volatile int result = ::f1(true, 'a');
   return result;
 }
 
 namespace {
 template <typename T = void, int I = 0> struct S {
   template <typename U = void, int J = 15> BASE_NOINLINE static int f3() {
-    volatile int result = f2(nullptr);
+    const volatile int result = f2(nullptr);
     return result;
   }
 

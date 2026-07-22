@@ -28,8 +28,8 @@ public:
   MPSCRingBuffer& operator=(MPSCRingBuffer&&)      = delete;
 
   template <typename... Args> void emplace(Args&&... args) {
-    usize write = write_.fetch_add(1, MemoryOrder::Relaxed);
-    usize index = write % N;
+    const usize write = write_.fetch_add(1, MemoryOrder::Relaxed);
+    const usize index = write % N;
     while (slots_[index].epoch.load(MemoryOrder::Acquire) != write) {
       sched_yield();
     }
@@ -41,7 +41,7 @@ public:
   void push(const T& value) { emplace(value); }
 
   T pop() noexcept {
-    usize index = read_ % N;
+    const usize index = read_ % N;
     while (slots_[index].epoch.load(MemoryOrder::Acquire) != read_ + 1) {
       sched_yield();
     }
@@ -54,9 +54,9 @@ public:
 
   template <typename... Args> bool try_emplace(Args&&... args) {
     for (;;) {
-      usize write = write_.load(MemoryOrder::Relaxed);
-      usize index = write % N;
-      usize diff  = slots_[index].epoch.load(MemoryOrder::Acquire) - write;
+      usize       write = write_.load(MemoryOrder::Relaxed);
+      const usize index = write % N;
+      const usize diff  = slots_[index].epoch.load(MemoryOrder::Acquire) - write;
       if (diff == 0) {
         if (write_.compare_exchange_weak(write, write + 1, MemoryOrder::Relaxed,
                                          MemoryOrder::Relaxed)) {
@@ -85,7 +85,7 @@ public:
   bool try_push(const T& value) { return try_emplace(value); }
 
   Option<T> try_pop() noexcept {
-    usize index = read_ % N;
+    const usize index = read_ % N;
     if (slots_[index].epoch.load(MemoryOrder::Acquire) != read_ + 1) {
       return NIL;
     }
@@ -97,6 +97,7 @@ public:
   }
 
 private:
+  // NOLINTNEXTLINE(altera-struct-pack-align)
   struct Slot {
     StackStorage<T> value;
     Atomic<usize>   epoch;

@@ -14,6 +14,7 @@ struct Metadata {
 };
 } // namespace
 
+// NOLINTNEXTLINE(misc-no-recursion)
 void Arena::reserve(usize capacity) noexcept {
   if (begin_ == nullptr && capacity < initial_capacity_) {
     capacity = initial_capacity_;
