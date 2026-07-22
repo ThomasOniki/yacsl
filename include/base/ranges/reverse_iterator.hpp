@@ -1,13 +1,19 @@
 #pragma once
 
+#include <__iterator/reverse_iterator.h>
+
 namespace base {
 
 template <typename It> class ReverseIterator {
 public:
   // NOLINTNEXTLINE(google-explicit-constructor)
-  constexpr ReverseIterator(const It& iter) noexcept : it_(iter) { --it_; }
+  constexpr ReverseIterator(const It& iter) noexcept : it_(iter) {}
 
-  [[nodiscard]] constexpr auto operator*() const noexcept { return *it_; }
+  [[nodiscard]] constexpr auto operator*() const noexcept {
+    It tmp = it_;
+    --tmp;
+    return *tmp;
+  }
 
   constexpr ReverseIterator& operator++() noexcept {
     --it_;
