@@ -1,12 +1,8 @@
-module;
-
 #ifdef _WIN32
 #include <fileapi.h>
 #include <intsafe.h>
 #include <windows.h>
 #endif
-
-module base.os.file;
 
 #ifdef _WIN32
 

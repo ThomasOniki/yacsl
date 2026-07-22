@@ -1,14 +1,13 @@
-import base.ranges.initializer_list;
-import base.ranges.string_view;
-import base.containers.stack_array;
-import base.logging.logger;
-import base.logging.common;
-import base.formatting.format_string;
-import base.os.common;
-import base.os.file;
-import base.utilities.type_aliases;
-import base.memory.lifetimes;
-
+#include "base/containers/stack_array.hpp"
+#include "base/formatting/format_string.hpp"
+#include "base/logging/common.hpp"
+#include "base/logging/logger.hpp"
+#include "base/memory/lifetimes.hpp"
+#include "base/os/common.hpp"
+#include "base/os/file.hpp"
+#include "base/ranges/initializer_list.hpp"
+#include "base/ranges/string_view.hpp"
+#include "base/utilities/type_aliases.hpp"
 #include <assert.h>
 #include <stdarg.h>
 #include <stddef.h>

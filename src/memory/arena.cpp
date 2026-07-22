@@ -1,11 +1,9 @@
-module;
-
+#include "base/memory/arena.hpp"
+#include "base/logging/panic.hpp"
+#include "base/memory/lifetimes.hpp"
+#include "base/utilities/type_aliases.hpp"
 #include <stdio.h>
 #include <stdlib.h>
-
-module base.memory.arena;
-
-import base.logging.panic;
 
 namespace base {
 
