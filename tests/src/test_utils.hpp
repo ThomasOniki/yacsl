@@ -1,8 +1,7 @@
 #pragma once
 
-import base.logging.logger;
-import base.ranges.string_view;
-
+#include "base/logging/logger.hpp"
+#include "base/ranges/string_view.hpp"
 #include <string.h>
 
 #define EXPECT_EQ(lhs, rhs)                                                                        \

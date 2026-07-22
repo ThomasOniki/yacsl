@@ -1,5 +1,4 @@
-import base;
-
+#include "base/base.hpp"
 #include "test_utils.hpp"
 
 static constexpr base::usize SLOTS = 64;

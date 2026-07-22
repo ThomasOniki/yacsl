@@ -35,7 +35,7 @@ On MacOS I have found that homebrew emscripten does not ship with clang-scan-dep
 ----
 brew install llvm lld
 [[ -z XDG_DATA_HOME ]] && XDG_DATA_HOME="$HOME/.local/share"
-export EM_LLVM_ROOT="$XDG_DATA_HOME/emscripten-llvm-bin"
+EM_LLVM_ROOT="$XDG_DATA_HOME/emscripten-llvm-bin"
 mkdir -p "$EM_LLVM_ROOT" 
 ln -s "$HOMEBREW_PREFIX/opt/llvm/bin/clang" "$EM_LLVM_ROOT"
 ln -s "$HOMEBREW_PREFIX/opt/llvm/bin/clang++" "$EM_LLVM_ROOT"

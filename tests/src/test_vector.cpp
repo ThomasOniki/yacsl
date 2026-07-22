@@ -1,11 +1,11 @@
-import base.containers.string;
-import base.containers.vector;
-import base.ranges.string_view;
-import base.ranges.slice;
-import base.formatting.formatter;
-import base.memory.arena;
-import base.memory.singleton_allocator;
-
+#include "base/containers/string.hpp"
+#include "base/containers/vector.hpp"
+#include "base/formatting/formatter.hpp"
+#include "base/logging/logger.hpp"
+#include "base/memory/arena.hpp"
+#include "base/memory/singleton_allocator.hpp"
+#include "base/ranges/slice.hpp"
+#include "base/ranges/string_view.hpp"
 #include "test_utils.hpp"
 #include <stdint.h>
 #include <stdio.h>

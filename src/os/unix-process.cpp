@@ -1,5 +1,3 @@
-module;
-
 #if !defined(__EMSCRIPTEN__) && !defined(_WIN32)
 #include "try_syscall.hpp"
 #include <errno.h>
@@ -14,12 +12,17 @@ module;
 #include <unistd.h>
 #endif
 
-module base.os.process;
-
-import base.os.utils;
-import base.utilities.type_aliases;
-import base.utilities.nil;
-import base.logging.panic;
+#include "base/containers/error.hpp"
+#include "base/containers/stack_array.hpp"
+#include "base/logging/panic.hpp"
+#include "base/memory/lifetimes.hpp"
+#include "base/os/common.hpp"
+#include "base/os/process.hpp"
+#include "base/ranges/slice.hpp"
+#include "base/utilities/isize.hpp"
+#include "base/utilities/nil.hpp"
+#include "base/utilities/type_aliases.hpp"
+#include "utils.hpp"
 
 #if !defined(__EMSCRIPTEN__) && !defined(_WIN32)
 

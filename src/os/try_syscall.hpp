@@ -1,3 +1,5 @@
+#pragma once
+
 #ifdef _WIN32
 #define BASE_TRY_SYSCALL(syscall)                                                                  \
   if (syscall == FALSE)                                                                            \

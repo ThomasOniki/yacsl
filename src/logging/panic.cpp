@@ -1,11 +1,8 @@
-module;
-
+#include "base/containers/string.hpp"
+#include "base/logging/common.hpp"
+#include "base/logging/logger.hpp"
+#include "base/utilities/stack_trace.hpp"
 #include <stdlib.h>
-
-module base.logging.panic;
-
-import base.logging.logger;
-import base.utilities.stack_trace;
 
 namespace base {
 

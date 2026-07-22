@@ -1,0 +1,12 @@
+#pragma once
+
+// IWYU pragma: begin_exports
+#include "base/utilities/constants.hpp"
+#include "base/utilities/demangle.hpp"
+#include "base/utilities/extended_types.hpp"
+#include "base/utilities/is_constant_evaluated.hpp"
+#include "base/utilities/isize.hpp"
+#include "base/utilities/nil.hpp"
+#include "base/utilities/stack_trace.hpp"
+#include "base/utilities/type_aliases.hpp"
+// IWYU pragma: end_exports

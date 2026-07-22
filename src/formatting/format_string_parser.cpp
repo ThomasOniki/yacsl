@@ -1,10 +1,8 @@
-module base.formatting.format_string_parser;
-
-import base.logging.common;
-import base.formatting.format_string;
-import base.logging.logger;
-import base.containers.string;
-import base.utilities.type_aliases;
+#include "base/formatting/format_string_parser.hpp"
+#include "base/containers/string.hpp"
+#include "base/logging/common.hpp"
+#include "base/logging/logger.hpp"
+#include "base/ranges/string_view.hpp"
 
 namespace base {
 

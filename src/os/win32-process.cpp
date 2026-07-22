@@ -1,5 +1,3 @@
-module;
-
 #ifdef _WIN32
 #include <consoleapi.h>
 #include <consoleapi2.h>
@@ -12,8 +10,6 @@ module;
 #include <windows.h>
 #include <winerror.h>
 #endif
-
-module base.os.process;
 
 #ifdef _WIN32
 
