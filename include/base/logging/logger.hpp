@@ -123,17 +123,17 @@ private:
 
   void write_message(const Message& msg) {
     if (msg.level >= LogLevel::Error) {
-      String     buf;
-      StringView lvl_str = err_lvl_strings_[static_cast<u8>(msg.level)];
-      char*      data    = buf.grow(lvl_str.size() + msg.formatted.size() + 1);
+      String           buf;
+      const StringView lvl_str = err_lvl_strings_[static_cast<u8>(msg.level)];
+      char*            data    = buf.grow(lvl_str.size() + msg.formatted.size() + 1);
       copy_bytes(data, lvl_str.bytes());
       copy_bytes(data + lvl_str.size(), msg.formatted.bytes());
       data[lvl_str.size() + msg.formatted.size()] = '\n';
       error_.write(buf.bytes());
     } else {
-      String     buf;
-      StringView lvl_str = out_lvl_strings_[static_cast<u8>(msg.level)];
-      char*      data    = buf.grow(lvl_str.size() + msg.formatted.size() + 1);
+      String           buf;
+      const StringView lvl_str = out_lvl_strings_[static_cast<u8>(msg.level)];
+      char*            data    = buf.grow(lvl_str.size() + msg.formatted.size() + 1);
       copy_bytes(data, lvl_str.bytes());
       copy_bytes(data + lvl_str.size(), msg.formatted.bytes());
       data[lvl_str.size() + msg.formatted.size()] = '\n';
@@ -144,14 +144,14 @@ private:
   static void* work(void* pvoid) noexcept {
     Logger& self = *static_cast<Logger*>(pvoid);
     for (;;) {
-      Work status = self.work_.load(MemoryOrder::Acquire);
-      if (status != Work::Spin) {
+      const Work work = self.work_.load(MemoryOrder::Acquire);
+      if (work != Work::Spin) {
         for (Option<Message> option = self.ring_.try_pop(); option.is_value();
              option                 = self.ring_.try_pop()) {
           self.write_message(option.assert_value());
         }
 
-        if (status == Work::Stop) {
+        if (work == Work::Stop) {
           break;
         }
 

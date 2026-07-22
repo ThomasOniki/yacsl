@@ -63,4 +63,6 @@ CheckOptions:
   - key: readability-function-cognitive-complexity.IgnoreMacros
     value: true
   - key: misc-include-cleaner.IgnoreHeaders
-    value: "sys/fcntl.h"
+    value: 'sys/fcntl\.h;sys/_types/.*\.h;_abort.h'
+  - key: performance-unnecessary-value-param.AllowedTypes
+    value: "base::Slice.*"

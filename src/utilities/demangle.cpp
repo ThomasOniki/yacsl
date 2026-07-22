@@ -1,3 +1,4 @@
+#include "base/utilities/demangle.hpp"
 #include "base/containers/string.hpp"
 #include "base/containers/vector.hpp"
 #include "base/formatting/atoi.hpp"
@@ -26,7 +27,7 @@ public:
 
     String return_type;
 
-    bool has_templates = has_templates_;
+    const bool has_templates = has_templates_;
 
     if (has_templates) {
       String func = base::move(demangled_);
@@ -84,8 +85,8 @@ private:
           if (!is_substitution()) {
             break;
           }
-          const char* before_sub = mangled_;
-          StringView  sub        = substitution();
+          const char*      before_sub = mangled_;
+          const StringView sub        = substitution();
           if (sub.data() == demangled_.data() || sub.data()[-1] != '@') {
             mangled_ = before_sub;
             break;
@@ -127,7 +128,7 @@ private:
         const char* end = num_end(mangled_);
         const auto  len = atoi<usize>(mangled_, end);
 
-        StringView           chunk(end, len);
+        const StringView     chunk(end, len);
         constexpr StringView anonymous_ns = "_GLOBAL__N_";
         if (chunk.size() >= anonymous_ns.size() &&
             StringView(chunk.data(), anonymous_ns.size()) == anonymous_ns) {
@@ -138,7 +139,7 @@ private:
         mangled_ = chunk.end();
       }
 
-      for (Submodule submodule : submodules) {
+      for (const Submodule submodule : submodules) {
         if (submodule.is_substitution) {
           continue;
         }
@@ -167,7 +168,7 @@ private:
 
   // NOLINTNEXTLINE(misc-no-recursion)
   void demangle_type() noexcept {
-    StringView qualifiers = get_mangled_qualifiers();
+    const StringView qualifiers = get_mangled_qualifiers();
 
     if (mangled_[0] == 'D' && mangled_[1] == 'p') {
       demangle_template_parameter_pack(qualifiers);
@@ -215,8 +216,8 @@ private:
   // NOLINTNEXTLINE(misc-no-recursion)
   void demangle_array_type(StringView qualifiers) noexcept {
     ++mangled_;
-    const char* end = num_end(mangled_);
-    StringView  arr_len(mangled_, end);
+    const char*      end = num_end(mangled_);
+    const StringView arr_len(mangled_, end);
     mangled_ = end + 1;
     demangle_type();
     StringView prefix = " [";
