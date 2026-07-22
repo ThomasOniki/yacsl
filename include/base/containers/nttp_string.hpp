@@ -43,6 +43,18 @@ public:
   [[nodiscard]] constexpr StringView view() const noexcept BASE_LIFETIMEBOUND {
     return {data_.data(), N};
   }
+  [[nodiscard]] constexpr Slice<char> slice() noexcept BASE_LIFETIMEBOUND { return {data_, N}; }
+  [[nodiscard]] constexpr Slice<char> slice() const noexcept BASE_LIFETIMEBOUND {
+    return {data_, N};
+  }
+  [[nodiscard]] constexpr Slice<uchar> bytes() noexcept BASE_LIFETIMEBOUND {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    return {reinterpret_cast<uchar*>(data_), N * sizeof(char)};
+  }
+  [[nodiscard]] constexpr Slice<const uchar> bytes() const noexcept BASE_LIFETIMEBOUND {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    return {reinterpret_cast<const uchar*>(data_), N * sizeof(uchar)};
+  }
 
   [[nodiscard]] constexpr char*       begin() noexcept BASE_LIFETIMEBOUND { return data_.begin(); }
   [[nodiscard]] constexpr char*       end() noexcept BASE_LIFETIMEBOUND { return data_.end(); }
