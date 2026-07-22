@@ -81,6 +81,7 @@ public:
     return *this;
   }
 
+  // NOLINTNEXTLINE(misc-no-recursion)
   constexpr BasicString& append(const Char* ptr, SizeT len) noexcept {
     if (static_cast<SizeT>(allocated_end_ - end_) < len) {
       definitely_reserve(capacity() * 2 + len);
@@ -92,6 +93,7 @@ public:
   constexpr BasicString& append(const Char* begin, const Char* end) noexcept {
     return append(begin, static_cast<SizeT>(end - begin));
   }
+  // NOLINTNEXTLINE(misc-no-recursion)
   constexpr BasicString& append(BasicStringView<Char, SizeT> str) noexcept {
     return append(str.data(), str.size());
   }
@@ -108,6 +110,7 @@ public:
     return *this;
   }
 
+  // NOLINTNEXTLINE(misc-no-recursion)
   constexpr BasicString& operator+=(BasicStringView<Char, SizeT> str) { return append(str); }
   constexpr BasicString& operator+=(const BasicString& str) { return append(str); }
   constexpr BasicString& operator+=(Char chr) { return append(chr); }
@@ -197,6 +200,7 @@ private:
   using AllocatorMember<Allocator>::allocator;
 
 private:
+  // NOLINTNEXTLINE(misc-no-recursion)
   void definitely_reserve(SizeT capacity) noexcept {
     Char*       data = allocator().template allocate<Char>(capacity).data();
     const SizeT size = this->size();

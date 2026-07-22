@@ -74,6 +74,7 @@ template <TriviallyDestructible T> Slice<T, Arena::SizeT> Arena::push_array(Size
   return allocated;
 }
 
+// NOLINTNEXTLINE(misc-no-recursion)
 template <typename T> Slice<T, Arena::SizeT> Arena::allocate(SizeT count) noexcept {
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
   uptr top = reinterpret_cast<uptr>(ptr_);

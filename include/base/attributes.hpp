@@ -1,10 +1,13 @@
 #pragma once
 
 #ifdef __clang__
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define BASE_ATTRIBUTE(attr) [[clang::attr]]
 #elif defined(__GNUC__)
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define BASE_ATTRIBUTE(attr) [[gnu::attr]]
 #else
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define BASE_ATTRIBUTE(attr)
 #endif
 

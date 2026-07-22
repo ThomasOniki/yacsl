@@ -73,6 +73,7 @@ private:
 template <usize... Indices, typename... Args>
 class FormatToImpl<FormatStringImpl<IndexSequence<Indices...>, Args...>> {
 public:
+  // NOLINTNEXTLINE(misc-no-recursion)
   static void format_to_impl(String&                                                     buf,
                              const FormatStringImpl<IndexSequence<Indices...>, Args...>& fmt,
                              Args&&... args) {
@@ -86,6 +87,7 @@ public:
 
 template <> class FormatToImpl<FormatStringImpl<IndexSequence<>>> {
 public:
+  // NOLINTNEXTLINE(misc-no-recursion)
   static void format_to_impl(String& buf, const FormatStringImpl<IndexSequence<>>& msg) {
     buf += msg.msg_;
   }
@@ -99,7 +101,7 @@ template <typename... Args>
 using FormatString =
     internal::FormatStringImpl<IndexSequenceToN<sizeof...(Args)>, Args...>::TypeIdentity;
 
-template <typename... Args>
+template <typename... Args> // NOLINTNEXTLINE(misc-no-recursion)
 void format_to(String& buf, const FormatString<Args...>& fmt, Args&&... args) {
   internal::FormatToImpl<FormatString<Args...>>::format_to_impl(buf, fmt,
                                                                 base::forward<Args>(args)...);

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "base/attributes.hpp"
 #include "base/containers/nttp_string.hpp"
 #include "base/containers/stack_array.hpp"
 #include "base/containers/string.hpp"
@@ -141,7 +140,7 @@ public:
   }
 
   void format(String& buf, bool value) const noexcept {
-    PaddingOptions opts{
+    const PaddingOptions opts{
         .width = width_,
         .fill  = fill_,
         .align = align_,
@@ -341,9 +340,9 @@ public:
   }
 
   void format(String& buf, T value) const noexcept {
-    auto           scalar = static_cast<UnderlyingType>(value);
-    auto           u_val  = static_cast<MakeUnsigned<UnderlyingType>>(value);
-    PaddingOptions opts   = {
+    const auto           scalar = static_cast<UnderlyingType>(value);
+    const auto           u_val  = static_cast<MakeUnsigned<UnderlyingType>>(value);
+    const PaddingOptions opts   = {
         .width = width_,
         .fill  = fill_,
         .align = align_,

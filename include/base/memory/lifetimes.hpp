@@ -3,7 +3,7 @@
 #include "base/attributes.hpp"
 
 #ifndef BASE_NO_LIBCPP
-#include <new>
+#include <new> // IWYU pragma: keep
 #endif
 
 #include "base/ranges/slice.hpp"
@@ -14,11 +14,13 @@
 [[nodiscard]] constexpr void* operator new(base::usize /*count*/, void* ptr) noexcept {
   return ptr;
 }
-#else
-using ::operator new;
 #endif
 
 namespace base {
+
+namespace _export_placement_new {
+using ::operator new;
+} // namespace _export_placement_new
 
 template <typename T> // NOLINTNEXTLINE(cppcoreguidelines-missing-std-forward)
 [[nodiscard]] constexpr RemoveReference<T>&& move(BASE_LIFETIMEBOUND T&& value) {
@@ -36,7 +38,7 @@ template <typename T>
 
 template <typename T, typename... Args> constexpr T* construct_at(T* location, Args&&... args) {
   // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
-  return ::new (location) T(base::forward<Args>(args)...);
+  return ::new (static_cast<void*>(location)) T(base::forward<Args>(args)...);
 }
 
 template <typename T> constexpr T* copy_bytes(T* dst, const void* src, usize nbytes) {

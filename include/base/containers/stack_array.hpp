@@ -12,6 +12,7 @@
 
 namespace base {
 
+// NOLINTBEGIN(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
 template <typename T, usize N, Integral SizeT = ConditionalT<(N > Limits<u32>::max), usize, u32>>
 class StackArray {
 public:
@@ -23,9 +24,11 @@ public:
   }
 
   [[nodiscard]] constexpr T& operator[](SizeT index) noexcept BASE_LIFETIMEBOUND {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
     return data_[index];
   }
   [[nodiscard]] constexpr const T& operator[](SizeT index) const noexcept BASE_LIFETIMEBOUND {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
     return data_[index];
   }
 
@@ -85,6 +88,7 @@ public:
 public:
   T data_[N]; // NOLINT
 };
+// NOLINTEND(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
 
 template <typename T, usize N, Integral SizeT> struct TupleSize<StackArray<T, N, SizeT>> {
   static constexpr usize value = N;

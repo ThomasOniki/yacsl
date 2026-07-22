@@ -31,7 +31,7 @@ public:
   Atomic& operator=(Atomic&&) noexcept = delete;
 
   [[nodiscard]] T load(MemoryOrder order) const noexcept {
-    StackStorage<T> ret;
+    StackStorage<T> ret{};
     __atomic_load(&value_, &*ret, static_cast<int>(order));
     return *ret;
   }
