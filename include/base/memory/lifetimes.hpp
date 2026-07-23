@@ -1,14 +1,16 @@
 #pragma once
 
 #include "base/attributes.hpp"
+#include "base/ranges/slice.hpp"
+#include "base/type_traits/qualifiers.hpp"
+#include "base/type_traits/trivial.hpp"
+#include "base/utilities/is_constant_evaluated.hpp"
+#include "base/utilities/type_aliases.hpp"
+#include <string.h>
 
 #ifndef BASE_NO_LIBCPP
 #include <new> // IWYU pragma: keep
 #endif
-
-#include "base/ranges/slice.hpp"
-#include "base/type_traits/qualifiers.hpp"
-#include "base/utilities/type_aliases.hpp"
 
 #ifdef BASE_NO_LIBCPP
 [[nodiscard]] constexpr void* operator new(base::usize /*count*/, void* ptr) noexcept {
@@ -41,19 +43,26 @@ template <typename T, typename... Args> constexpr T* construct_at(T* location, A
   return ::new (static_cast<void*>(location)) T(base::forward<Args>(args)...);
 }
 
-template <typename T> constexpr T* copy_bytes(T* dst, const void* src, usize nbytes) {
-  return static_cast<T*>(__builtin_memcpy(dst, src, nbytes));
+template <typename T> constexpr Slice<T> copy(Slice<const T> src, Slice<T> dst) noexcept {
+  const usize size = dst.size() < src.size() ? dst.size() : src.size();
+  if (is_constant_evaluated() || !TriviallyCopyable<T>) {
+    for (usize i = 0; i < size; ++i) {
+      dst[i] = src[i];
+    }
+  } else {
+    ::memcpy(dst.data(), src.data(), size);
+  }
+  return {dst.data(), size};
 }
-template <typename T> constexpr T* copy_bytes(T* dst, const void* src_begin, const void* src_end) {
-  return static_cast<T*>(
-      __builtin_memcpy(dst, src_begin,
-                       static_cast<usize>(static_cast<const uchar*>(src_end) -
-                                          static_cast<const uchar*>(src_begin))));
-}
-
-template <typename T, typename SizeT>
-constexpr T* copy_bytes(T* dst, Slice<const uchar, SizeT> src) {
-  return copy_bytes(dst, src.data(), src.size());
+template <typename T> constexpr Slice<T> copy(Slice<const T> src, T* dst) noexcept {
+  if (is_constant_evaluated() || !TriviallyCopyable<T>) {
+    for (usize i = 0; i < src.size(); ++i) {
+      dst[i] = src[i];
+    }
+  } else {
+    ::memcpy(dst, src.data(), src.size());
+  }
+  return {dst, src.size()};
 }
 
 } // namespace base

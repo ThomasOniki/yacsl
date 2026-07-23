@@ -309,7 +309,7 @@ template <UnsignedIntegral T> constexpr char* itoa_from_end_bin(char* buf_end, T
 
   while (value >= 64) {
     buf_end -= 6;
-    copy_bytes(buf_end, table + (value % 64) * 6, 6);
+    copy({table + (value % 64) * 6, 6}, buf_end);
     value /= 64;
   }
 
@@ -317,23 +317,23 @@ template <UnsignedIntegral T> constexpr char* itoa_from_end_bin(char* buf_end, T
     if (value >= 16) {
       if (value >= 32) {
         buf_end -= 6;
-        copy_bytes(buf_end, table + value * 6, 6);
+        copy({table + value * 6, 6}, buf_end);
       } else {
         buf_end -= 5;
-        copy_bytes(buf_end, table + 1 + value * 6, 5);
+        copy({table + 1 + value * 6, 5}, buf_end);
       }
     } else {
       buf_end -= 4;
-      copy_bytes(buf_end, table + 2 + value * 6, 4);
+      copy({table + 2 + value * 6, 4}, buf_end);
     }
   } else {
     if (value >= 2) {
       if (value >= 4) {
         buf_end -= 3;
-        copy_bytes(buf_end, table + 3 + value * 6, 3);
+        copy({table + 3 + value * 6, 3}, buf_end);
       } else {
         buf_end -= 2;
-        copy_bytes(buf_end, table + 4 + value * 6, 2);
+        copy({table + 4 + value * 6, 2}, buf_end);
       }
     } else {
       --buf_end;
@@ -355,12 +355,12 @@ template <UnsignedIntegral T> constexpr char* itoa_from_end_oct(char* buf_end, T
 
   while (value >= 64) {
     buf_end -= 2;
-    copy_bytes(buf_end, table + (value % 64) * 2, 2);
+    copy({table + (value % 64) * 2, 2}, buf_end);
     value /= 64;
   }
   if (value >= 16) {
     buf_end -= 2;
-    copy_bytes(buf_end, table + value * 2, 2);
+    copy({table + value * 2, 2}, buf_end);
   } else {
     --buf_end;
     *buf_end = static_cast<char>('0' + value);
@@ -382,13 +382,13 @@ template <UnsignedIntegral T> constexpr char* itoa_from_end(char* buf_end, T val
 
   while (value >= 100) {
     buf_end -= 2;
-    copy_bytes(buf_end, table + (value % 100) * 2, 2);
+    copy({table + (value % 100) * 2, 2}, buf_end);
     value /= 100;
   }
 
   if (value >= 10) {
     buf_end -= 2;
-    copy_bytes(buf_end, table + value * 2, 2);
+    copy({table + value * 2, 2}, buf_end);
   } else {
     --buf_end;
     *buf_end = static_cast<char>('0' + value);
@@ -418,12 +418,12 @@ template <UnsignedIntegral T> constexpr char* itoa_from_end_hex(char* buf_end, T
 
   while (value >= 256) {
     buf_end -= 2;
-    copy_bytes(buf_end, table + (value % 256) * 2, 2);
+    copy({table + (value % 256) * 2, 2}, buf_end);
     value = static_cast<T>(value / 256);
   }
   if (value >= 16) {
     buf_end -= 2;
-    copy_bytes(buf_end, table + value * 2, 2);
+    copy({table + value * 2, 2}, buf_end);
   } else {
     --buf_end;
     *buf_end = hexits[value];

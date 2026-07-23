@@ -126,16 +126,16 @@ private:
       String           buf;
       const StringView lvl_str = err_lvl_strings_[static_cast<u8>(msg.level)];
       char*            data    = buf.grow(lvl_str.size() + msg.formatted.size() + 1);
-      copy_bytes(data, lvl_str.bytes());
-      copy_bytes(data + lvl_str.size(), msg.formatted.bytes());
+      copy(lvl_str.slice(), data);
+      copy(msg.formatted.slice(), data + lvl_str.size());
       data[lvl_str.size() + msg.formatted.size()] = '\n';
       error_.write(buf.bytes());
     } else {
       String           buf;
       const StringView lvl_str = out_lvl_strings_[static_cast<u8>(msg.level)];
       char*            data    = buf.grow(lvl_str.size() + msg.formatted.size() + 1);
-      copy_bytes(data, lvl_str.bytes());
-      copy_bytes(data + lvl_str.size(), msg.formatted.bytes());
+      copy(lvl_str.slice(), data);
+      copy(msg.formatted.slice(), data + lvl_str.size());
       data[lvl_str.size() + msg.formatted.size()] = '\n';
       output_.write(buf.bytes());
     }

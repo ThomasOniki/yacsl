@@ -173,7 +173,7 @@ void pad_integral(String& buf, T value, PaddingOptions opts) noexcept {
   // and just use itoa.
   if (opts.width < max_len && value >= powers[opts.width]) {
     char* str = buf.grow(count_digits_base_x<Base>(value) + Prefix.size());
-    copy_bytes(str, Prefix.data(), Prefix.size());
+    copy(Prefix.slice(), str);
     itoa_from_end_base_x<Base>(buf.end(), value);
     return;
   }
@@ -181,11 +181,11 @@ void pad_integral(String& buf, T value, PaddingOptions opts) noexcept {
   char* begin = buf.grow(opts.width);
   if (opts.align == '>') {
     char* prefix_begin = itoa_from_end_base_x<Base>(buf.end(), value) - Prefix.size();
-    copy_bytes(prefix_begin, Prefix.data(), Prefix.size());
+    copy(Prefix.slice(), prefix_begin);
     memset(begin, opts.fill, static_cast<usize>(prefix_begin - begin));
   } else if (opts.align == '<') {
     const usize len = count_digits_base_x<Base>(value);
-    copy_bytes(begin, Prefix.data(), Prefix.size());
+    copy(Prefix.slice(), begin);
     char* num_end = begin + Prefix.size() + len;
     itoa_from_end_base_x<Base>(num_end, value);
     memset(num_end, opts.fill, static_cast<usize>(buf.end() - num_end));
@@ -194,7 +194,7 @@ void pad_integral(String& buf, T value, PaddingOptions opts) noexcept {
     const usize len     = count_digits_base_x<Base>(value);
     usize       padding = opts.width - (len + Prefix.size());
     padding /= 2;
-    copy_bytes(begin + padding, Prefix.data(), Prefix.size());
+    copy(Prefix.slice(), begin + padding);
     itoa_from_end_base_x<Base>(begin + padding + Prefix.size() + len, value);
   }
 }
@@ -204,7 +204,7 @@ void pad_integral(String& buf, T value, PaddingOptions opts) noexcept {
   if (value < 0) {
     constexpr auto with_minus = []() {
       NTTPString<Prefix.size() + 1> ret;
-      copy_bytes(static_cast<void*>(ret.data()), Prefix.data(), Prefix.size());
+      copy(Prefix.slice(), ret.data());
       ret[Prefix.size()] = '-';
       return ret;
     }();

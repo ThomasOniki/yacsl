@@ -359,7 +359,7 @@ private:
     StackArray<char, TYPE_STRING<T>.size() + 2> arr{};
     arr[0]              = '(';
     arr[arr.size() - 1] = ')';
-    copy_bytes(static_cast<void*>(&arr[1]), TYPE_STRING<T>.data(), TYPE_STRING<T>.size());
+    copy(TYPE_STRING<T>.slice(), &arr[1]);
     return arr;
   }();
 

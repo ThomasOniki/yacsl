@@ -55,7 +55,7 @@ inline char* write_debug_char_below_0x20(BASE_LIFETIMEBOUND char* buf, char chr)
       return buf + 3;
     }
     static constexpr StringView table = "101112131415161718191a1b1c1d1e1f";
-    copy_bytes(buf + 2, &table[static_cast<usize>(chr - 0x10) * 2], 2);
+    copy({&table[static_cast<usize>(chr - 0x10) * 2], 2}, buf + 2);
     return buf + 4;
   }
 }
@@ -119,7 +119,7 @@ inline void write_debug_char_below_0x20(String& buf, char chr) {
       str                               = buf.grow(4);
       str[0]                            = '\\';
       str[1]                            = 'x';
-      copy_bytes(str + 2, &table[static_cast<usize>(chr - 0x10) * 2], 2);
+      copy({&table[static_cast<usize>(chr - 0x10) * 2], 2}, str + 2);
     }
   }
 }
@@ -132,7 +132,7 @@ template <Character C> void write_debug_char(String& buf, C chr) {
   auto uchr = static_cast<MakeUnsigned<C>>(chr);
   if (uchr >= 0x20) {
     if (uchr == 0x7F) {
-      copy_bytes(buf.grow(4), "\x7F", 4);
+      copy("\x7F"_sv.slice(), buf.grow(4));
     } else {
       write_char(buf, chr);
     }

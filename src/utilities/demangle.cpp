@@ -107,7 +107,7 @@ private:
           bytes[0] = '.';
         }
 
-        copy_bytes(bytes + 1, to_add.bytes());
+        copy(to_add.slice(), bytes + 1);
         submodules.emplace_back(module_string.size(), is_substituted);
       }
 
@@ -227,8 +227,8 @@ private:
       prefix = ") [";
     }
     char* data = demangled_.grow(prefix.size() + arr_len.size() + 1);
-    copy_bytes(data, prefix.bytes());
-    copy_bytes(data + prefix.size(), arr_len.bytes());
+    copy(prefix.slice(), data);
+    copy(arr_len.slice(), data + prefix.size());
     data[prefix.size() + arr_len.size()] = ']';
   }
 

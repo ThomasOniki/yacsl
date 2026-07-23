@@ -440,8 +440,7 @@ template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 template <typename Copied>
 void Vector<T, N, Allocator, SizeT>::copy(const Copied* data) {
   if constexpr (TriviallyCopyable<T> && SameAs<T, Copied>) {
-    copy_bytes(static_cast<void*>(data_), static_cast<const void*>(data),
-               static_cast<usize>(size_) * sizeof(T));
+    base::copy({data, static_cast<usize>(size_) * sizeof(T)}, data_);
   } else {
     for (SizeT i = 0; i < size_; ++i) {
       base::construct_at(data_ + i, data[i]);
@@ -453,8 +452,7 @@ template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 void Vector<T, N, Allocator, SizeT>::move(T* data) {
   if constexpr (TriviallyCopyable<T>) {
     if (size_ > 0) {
-      copy_bytes(static_cast<void*>(data_), static_cast<const void*>(data),
-                 static_cast<usize>(size_) * sizeof(T));
+      base::copy({data, static_cast<usize>(size_) * sizeof(T)}, data_);
     }
   } else {
     for (SizeT i = 0; i < size_; ++i) {
