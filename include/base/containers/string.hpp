@@ -36,7 +36,7 @@ public:
       allocated_end_ = end_ = begin_ + size;
     }
 
-    copy_bytes(begin_, str.data(), size);
+    copy(str.slice(), begin_);
   }
 
   constexpr BasicString(const BasicString& other) noexcept : BasicString(other.view()) {}
@@ -59,7 +59,7 @@ public:
     } else {
       end_ = begin_ + size;
     }
-    copy_bytes(begin_, other.begin_, size);
+    copy({other.begin_, size}, begin_);
     return *this;
   }
 
@@ -67,7 +67,7 @@ public:
     if constexpr (N > 0) {
       if (other.begin_ == other.fixed_buffer_.begin()) {
         const SizeT size = other.size();
-        copy_bytes(fixed_buffer_.begin(), other.fixed_buffer_.begin(), size);
+        copy({other.fixed_buffer_.begin(), size}, fixed_buffer_.begin());
         end_ = begin_ + size;
         return *this;
       }
@@ -86,7 +86,7 @@ public:
     if (static_cast<SizeT>(allocated_end_ - end_) < len) {
       definitely_reserve(capacity() * 2 + len);
     }
-    copy_bytes(end_, ptr, len);
+    copy({ptr, len}, end_);
     end_ += len;
     return *this;
   }
@@ -135,7 +135,7 @@ public:
   }
 
   // This doesn't initialize the new memory but adds count to size. It is useful for characters you
-  // want to copy_bytes into. It returns new_end - count.
+  // want to memcpy into. It returns new_end - count.
   constexpr Char* grow(SizeT count) noexcept {
     if (static_cast<SizeT>(allocated_end_ - end_) < count) {
       definitely_reserve(capacity() * 2 + count);
@@ -204,7 +204,7 @@ private:
   void definitely_reserve(SizeT capacity) noexcept {
     Char*       data = allocator().template allocate<Char>(capacity).data();
     const SizeT size = this->size();
-    copy_bytes(data, begin_, size);
+    copy({begin_, size}, data);
     free();
     begin_         = data;
     end_           = data + size;
