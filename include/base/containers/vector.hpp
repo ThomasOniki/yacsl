@@ -383,7 +383,7 @@ constexpr void Vector<T, N, Allocator, SizeT>::resize(SizeT count) {
   } else {
     definitely_reserve(count);
     for (; size_ < count; ++size_) {
-      base::construct_at(data_ + size_ - 1);
+      base::construct_at(&data_[size_]);
     }
   }
 }
