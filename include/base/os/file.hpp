@@ -51,6 +51,9 @@ public:
 
   [[nodiscard]] usize get_cursor() const noexcept { return cursor_pos_; }
 
+  [[nodiscard]] bool is_tty() const noexcept;
+  void               invalidate_is_tty_cache() noexcept { is_tty_ = IsTtyFlag::NotComputed; }
+
   void seek_begin(isize offset) noexcept;
   void seek_end(isize offset) noexcept;
   void seek_cursor(isize offset) noexcept;
@@ -60,6 +63,13 @@ private:
 
   FileHandle handle_     = NIL_FILE_HANDLE;
   usize      cursor_pos_ = 0;
+
+  enum class IsTtyFlag : u8 {
+    False       = 0,
+    True        = 1,
+    NotComputed = 255,
+  };
+  mutable IsTtyFlag is_tty_ = IsTtyFlag::NotComputed;
 
   friend class Process;
 };

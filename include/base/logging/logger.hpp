@@ -17,39 +17,43 @@ namespace base {
 
 class Logger {
 public:
-  enum class Flags : u8 {
-    ColorOutput = 1 << 0,
-    ColorError  = 1 << 1,
+  struct LogLevelStrings {
+    alignas(32) Slice<const StringView, u32> output;
+    Slice<const StringView, u32> error;
   };
 
-  friend constexpr Flags operator|(Flags rhs, Flags lhs) noexcept {
-    return static_cast<Flags>(static_cast<u8>(rhs) | static_cast<u8>(lhs));
-  }
-
-  Logger(File&& output, File&& error, LogLevel lvl, Flags flags) noexcept
-      : output_(base::move(output)), error_(base::move(error)),
-        out_lvl_strings_(out_lvl_strings(flags)), err_lvl_strings_(err_lvl_strings(flags)),
+  Logger(File&& output, File&& error, LogLevel lvl, LogLevelStrings log_level_strings) noexcept
+      : output_(base::move(output)), error_(base::move(error)), log_lvl_strings_(log_level_strings),
         level_(lvl) {}
+  Logger(File&& output, File&& error, LogLevel lvl) noexcept
+      : output_(base::move(output)), error_(base::move(error)),
+        log_lvl_strings_{.output = output_.is_tty() ? COLORED_LOG_LEVEL_STRINGS.slice()
+                                                    : LOG_LEVEL_STRINGS.slice(),
+                         .error  = error_.is_tty() ? COLORED_LOG_LEVEL_STRINGS.slice()
+                                                   : LOG_LEVEL_STRINGS.slice()},
+        level_(lvl) {}
+  Logger(File&& output, File&& error, LogLevelStrings log_level_strings) noexcept
+      : Logger(base::move(output), base::move(error), DEFAULT_LOG_LEVEL, log_level_strings) {}
+  Logger(File&& output, File&& error) noexcept
+      : Logger(base::move(output), base::move(error), DEFAULT_LOG_LEVEL) {}
 
-  Logger(LogLevel lvl, Flags flags) noexcept
-      : out_lvl_strings_(out_lvl_strings(flags)), err_lvl_strings_(err_lvl_strings(flags)),
-        level_(lvl) {
+  Logger(LogLevel lvl, LogLevelStrings log_level_strings) noexcept
+      : log_lvl_strings_{log_level_strings}, level_(lvl) {
     output_.open_stdout();
     error_.open_stderr();
   }
 
-  Logger(File&& output, File&& error, LogLevel lvl) noexcept
-      : Logger(base::move(output), base::move(error), lvl, Flags::ColorOutput | Flags::ColorError) {
+  explicit Logger(LogLevel lvl) noexcept
+      : log_lvl_strings_{.output = LOG_LEVEL_STRINGS.slice(), .error = LOG_LEVEL_STRINGS.slice()},
+        level_(lvl) {
+    output_.open_stdout();
+    error_.open_stderr();
+    log_lvl_strings_ = {
+        .output = output_.is_tty() ? COLORED_LOG_LEVEL_STRINGS.slice() : LOG_LEVEL_STRINGS.slice(),
+        .error  = error_.is_tty() ? COLORED_LOG_LEVEL_STRINGS.slice() : LOG_LEVEL_STRINGS.slice(),
+    };
   }
-  Logger(File&& output, File&& error, Flags flags) noexcept
-      : Logger(base::move(output), base::move(error), DEFAULT_LOG_LEVEL, flags) {}
-  Logger(File&& output, File&& error) noexcept
-      : Logger(base::move(output), base::move(error), DEFAULT_LOG_LEVEL) {}
-
-  explicit Logger(LogLevel lvl) noexcept : Logger(lvl, Flags::ColorOutput | Flags::ColorError) {}
-  explicit Logger(Flags flags) noexcept : Logger(DEFAULT_LOG_LEVEL, flags) {}
-
-  Logger() : Logger(DEFAULT_LOG_LEVEL, Flags::ColorOutput | Flags::ColorError) {}
+  Logger() : Logger(DEFAULT_LOG_LEVEL) {}
 
   ~Logger() noexcept { work_.store(Work::Stop, MemoryOrder::Release); }
 
@@ -124,7 +128,7 @@ private:
   void write_message(const Message& msg) {
     if (msg.level >= LogLevel::Error) {
       String           buf;
-      const StringView lvl_str = err_lvl_strings_[static_cast<u8>(msg.level)];
+      const StringView lvl_str = log_lvl_strings_.error[static_cast<u8>(msg.level)];
       char*            data    = buf.grow(lvl_str.size() + msg.formatted.size() + 1);
       copy(lvl_str.slice(), data);
       copy(msg.formatted.slice(), data + lvl_str.size());
@@ -132,7 +136,7 @@ private:
       error_.write(buf.bytes());
     } else {
       String           buf;
-      const StringView lvl_str = out_lvl_strings_[static_cast<u8>(msg.level)];
+      const StringView lvl_str = log_lvl_strings_.output[static_cast<u8>(msg.level)];
       char*            data    = buf.grow(lvl_str.size() + msg.formatted.size() + 1);
       copy(lvl_str.slice(), data);
       copy(msg.formatted.slice(), data + lvl_str.size());
@@ -156,37 +160,25 @@ private:
         }
 
         self.work_.store(Work::Spin, MemoryOrder::Release);
+      } else {
+        self.write_message(self.ring_.pop());
       }
-      self.write_message(self.ring_.pop());
     }
     return nullptr;
-  }
-
-  static const StringView* out_lvl_strings(Flags flags) {
-    return (static_cast<u8>(flags) & static_cast<u8>(Flags::ColorOutput)) != 0
-               ? COLORED_LOG_LEVEL_STRINGS.data()
-               : LOG_LEVEL_STRINGS.data();
-  }
-  static const StringView* err_lvl_strings(Flags flags) {
-    return (static_cast<u8>(flags) & static_cast<u8>(Flags::ColorError)) != 0
-               ? COLORED_LOG_LEVEL_STRINGS.data()
-               : LOG_LEVEL_STRINGS.data();
   }
 
 private:
   MPSCRingBuffer<Message, 64> ring_;
   File                        output_;
   File                        error_;
-  Thread                      worker_{work, static_cast<void*>(this)};
-  const StringView*           out_lvl_strings_;
-  const StringView*           err_lvl_strings_;
+  LogLevelStrings             log_lvl_strings_;
 
   enum class Work : u8 {
     Spin  = 0,
     Flush = 1,
     Stop  = 2,
   };
-
+  Thread       worker_{work, static_cast<void*>(this)};
   Atomic<Work> work_  = Work::Spin;
   LogLevel     level_ = DEFAULT_LOG_LEVEL;
 };

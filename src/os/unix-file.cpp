@@ -1,10 +1,4 @@
 #ifndef _WIN32
-#include "try_syscall.hpp"
-#include <fcntl.h>
-#include <stdio.h>
-#include <unistd.h>
-#endif
-
 #include "base/containers/error.hpp"
 #include "base/containers/result.hpp"
 #include "base/logging/panic.hpp"
@@ -14,9 +8,11 @@
 #include "base/utilities/isize.hpp"
 #include "base/utilities/nil.hpp"
 #include "base/utilities/type_aliases.hpp"
+#include "try_syscall.hpp"
 #include "utils.hpp"
-
-#ifndef _WIN32
+#include <fcntl.h>
+#include <stdio.h>
+#include <unistd.h>
 
 namespace base {
 
@@ -70,6 +66,13 @@ void File::seek_cursor(isize offset) noexcept {
   cursor_pos_ = static_cast<usize>(result);
 }
 // NOLINTEND(readability-make-member-function-const)
+
+bool File::is_tty() const noexcept {
+  if (is_tty_ == IsTtyFlag::NotComputed) {
+    is_tty_ = static_cast<IsTtyFlag>(isatty(handle_));
+  }
+  return static_cast<bool>(is_tty_);
+}
 
 } // namespace base
 
