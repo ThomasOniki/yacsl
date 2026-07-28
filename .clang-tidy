@@ -30,12 +30,16 @@ Checks: >
   -hicpp-avoid-c-arrays,
   -cert-dcl58-cpp,
 
+  -cert-dcl37-c,
+  -cert-dcl51-cpp,
+
 # hicpp-explicit-conversions is an alias for google-explicit-constructor, so I removed
 # it so that if you want to ignore it you don't have to write // NOLINT for both 
 # google-explicit-constructor and hicpp-explicit-conversions.
 # Same thing for hicpp-avoid-c-arrays and cppcoreguidelines-avoid-c-arrays, 
 # they are alises for modernize-avoid-c-arrays
 # cert-dcl58-cpp is an alias for bugprone-std-namespace-modification
+# cert-dcl37-c and cert-dcl51-cpp  are the same as bugprone-reserved-identifier
 
  
 WarningsAsErrors: ""
