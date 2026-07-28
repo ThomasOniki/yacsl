@@ -14,7 +14,8 @@ add_library(base::base ALIAS base)
 init_target(base)
 
 if(BASE_NO_LIBCPP)
-  target_compile_options(base PUBLIC "-nostdlib++" "-nostdinc++")
+  target_compile_options(base PUBLIC "-nostdinc++" "-fno-exceptions")
+  target_link_options(base PUBLIC "-nostdlib++")
   target_compile_definitions(base PUBLIC BASE_NO_LIBCPP)
 endif()
 
