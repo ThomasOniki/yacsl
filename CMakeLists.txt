@@ -19,8 +19,6 @@ if(BASE_NO_LIBCPP)
   target_compile_definitions(base PUBLIC BASE_NO_LIBCPP)
 endif()
 
-file(GLOB_RECURSE BASE_MODULE_INTERFACES "${PROJECT_SOURCE_DIR}/src/*.cppm")
-
 file(GLOB_RECURSE BASE_HEADERS "${PROJECT_SOURCE_DIR}/include/*.hpp")
 target_sources(
   base
