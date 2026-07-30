@@ -43,6 +43,18 @@ public:
 
   [[nodiscard]] constexpr IntegerRange<SizeT> indices() const noexcept { return {0, size_}; }
 
+  [[nodiscard]] constexpr bool operator==(const Slice& other) const noexcept {
+    if (other.size_ != size_) {
+      return false;
+    }
+    for (SizeT i = 0; i < size_; ++i) {
+      if (other.data_[i] != data_[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   [[nodiscard]] constexpr T*       begin() noexcept { return data_; }
   [[nodiscard]] constexpr T*       end() noexcept { return data_ + size_; }
   [[nodiscard]] constexpr const T* begin() const noexcept { return data_; }
