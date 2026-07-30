@@ -21,6 +21,10 @@ public:
   constexpr ~BasicString() noexcept { free(); }
 
   // NOLINTNEXTLINE(google-explicit-constructor)
+  constexpr BasicString(const Char* cstr) noexcept
+      : BasicString(BasicStringView<Char, usize>(cstr)) {}
+
+  // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr BasicString(BasicStringView<Char, SizeT> str) noexcept {
     const SizeT size = str.size();
 
@@ -97,6 +101,9 @@ public:
   constexpr BasicString& append(BasicStringView<Char, SizeT> str) noexcept {
     return append(str.data(), str.size());
   }
+  constexpr BasicString& append(const Char* cstr) noexcept {
+    return append(BasicStringView<Char, usize>(cstr));
+  }
   constexpr BasicString& append(const BasicString& other) noexcept {
     return append(other.begin(), other.size());
   }
@@ -113,6 +120,7 @@ public:
   // NOLINTNEXTLINE(misc-no-recursion)
   constexpr BasicString& operator+=(BasicStringView<Char, SizeT> str) { return append(str); }
   constexpr BasicString& operator+=(const BasicString& str) { return append(str); }
+  constexpr BasicString& operator+=(const Char* cstr) { return append(cstr); }
   constexpr BasicString& operator+=(Char chr) { return append(chr); }
 
   constexpr BasicString operator+(const BasicString& rhs) {
@@ -122,6 +130,10 @@ public:
   constexpr BasicString operator+(BasicStringView<Char, SizeT> rhs) {
     BasicString ret(*this);
     return ret += rhs;
+  }
+  constexpr BasicString operator+(const Char* cstr) {
+    BasicString ret(*this);
+    return ret += cstr;
   }
   constexpr BasicString operator+(Char chr) {
     BasicString ret(*this);
