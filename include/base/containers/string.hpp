@@ -179,6 +179,16 @@ public:
     return begin_[index];
   }
 
+  [[nodiscard]] constexpr bool operator==(const BasicString& other) const noexcept {
+    return view() == other.view();
+  }
+  [[nodiscard]] constexpr bool operator==(const BasicStringView<Char, SizeT>& rhs) const noexcept {
+    return view() == rhs;
+  }
+  [[nodiscard]] constexpr bool operator==(const Char* cstr) const noexcept {
+    return view() == BasicStringView(cstr);
+  }
+
   [[nodiscard]] constexpr BasicStringView<Char, SizeT> view() const noexcept BASE_LIFETIMEBOUND {
     return {begin_, end_};
   }
