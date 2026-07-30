@@ -22,6 +22,11 @@ public:
   // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr Slice(const Slice<RemoveConst<T>, SizeT>& mutable_slice) noexcept
       : data_(mutable_slice.data_), size_(mutable_slice.size_) {}
+  constexpr Slice& operator=(const Slice<RemoveConst<T>, SizeT>& mutable_slice) noexcept {
+    data_ = mutable_slice.data_;
+    size_ = mutable_slice.size_;
+    return *this;
+  }
 
   [[nodiscard]] constexpr T*       data() noexcept { return data_; }
   [[nodiscard]] constexpr const T* data() const noexcept { return data_; }
