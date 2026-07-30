@@ -21,7 +21,7 @@ public:
   constexpr ~BasicString() noexcept { free(); }
 
   // NOLINTNEXTLINE(google-explicit-constructor)
-  constexpr BasicString(StringView str) noexcept {
+  constexpr BasicString(BasicStringView<Char, SizeT> str) noexcept {
     const SizeT size = str.size();
 
     if constexpr (N > 0) {
