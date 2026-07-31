@@ -15,9 +15,9 @@
 
 #define EXPECT_STREQ(lhs, rhs)                                                                     \
   do {                                                                                             \
-    const char* lhs_v = lhs;                                                                       \
-    const char* rhs_v = rhs;                                                                       \
-    if (strcmp(lhs_v, rhs_v) != 0) {                                                               \
+    const char* _lhs_v = lhs;                                                                      \
+    const char* _rhs_v = rhs;                                                                      \
+    if (strcmp(_lhs_v, _rhs_v) != 0) {                                                             \
       base::log_error("EXPECT_STREQ failed. Expected " #lhs " == " #rhs ", got {?} and {?}.",      \
                       base::StringView(lhs, strlen(lhs)), base::StringView(rhs, strlen(rhs)));     \
       ret = 1;                                                                                     \
@@ -26,8 +26,8 @@
 
 #define EXPECT(cond)                                                                               \
   do {                                                                                             \
-    const bool expected = cond;                                                                    \
-    if (!expected) {                                                                               \
+    const bool _expected = cond;                                                                   \
+    if (!_expected) {                                                                              \
       base::log_error("EXPECT failed. " #cond " is false.");                                       \
       ret = 1;                                                                                     \
     }                                                                                              \
@@ -35,8 +35,8 @@
 
 #define ASSERT(cond)                                                                               \
   do {                                                                                             \
-    const bool result = cond;                                                                      \
-    if (!result) {                                                                                 \
+    const bool _result = cond;                                                                     \
+    if (!_result) {                                                                                \
       base::log_error("ASSERT failed. " #cond " is false.");                                       \
       return -1;                                                                                   \
     }                                                                                              \
