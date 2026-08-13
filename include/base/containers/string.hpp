@@ -145,9 +145,13 @@ public:
       definitely_reserve(capacity);
     }
   }
+  constexpr void resize(SizeT size) noexcept {
+    reserve(size);
+    end_ = begin_ + size;
+  }
 
-  // This doesn't initialize the new memory but adds count to size. It is useful for characters you
-  // want to memcpy into. It returns new_end - count.
+  // This doesn't initialize the new memory but adds count to size. It is useful for characters
+  // you want to memcpy into. It returns new_end - count.
   constexpr Char* grow(SizeT count) noexcept {
     if (static_cast<SizeT>(allocated_end_ - end_) < count) {
       definitely_reserve(capacity() * 2 + count);
