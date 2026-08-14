@@ -3,7 +3,6 @@
 #include "base/containers/error.hpp"
 #include "base/containers/stack_array.hpp"
 #include "base/logging/panic.hpp"
-#include "base/os/common.hpp"
 #include "base/os/process.hpp"
 #include "base/utilities/nil.hpp"
 #include "base/utilities/type_aliases.hpp"
@@ -65,9 +64,8 @@ void Process::Input::write(Slice<const uchar> bytes) noexcept {
 
 static void redirect_child_stdio_to_file(posix_spawn_file_actions_t* actions, File::Flags flags,
                                          const char* path, int stream) noexcept {
-  const int oflag =
-      unix_flags(flags | File::Flags::DontCloseOnExec |
-                 (stream == STDIN_FILENO ? File::Flags::Read : File::Flags::Write));
+  const int oflag = unix_flags(flags | File::Flags::DontCloseOnExec |
+                               (stream == STDIN_FILENO ? File::Flags::Read : File::Flags::Write));
 
   CHECK_RETURN(posix_spawn_file_actions_addopen(actions, stream, path, oflag, 0644));
 }
@@ -80,8 +78,7 @@ void Process::open_files(void* pvoid_state) noexcept {
                                  static_cast<const char*>(state.stdio->input.file_info_.path),
                                  STDIN_FILENO);
   } else if (stdin_type_ == Null) {
-    redirect_child_stdio_to_file(&state.file_actions, File::Flags::None, "/dev/null",
-                                 STDIN_FILENO);
+    redirect_child_stdio_to_file(&state.file_actions, File::Flags::None, "/dev/null", STDIN_FILENO);
   }
   if (stdout_type_ == TYPE_FILE) {
     redirect_child_stdio_to_file(&state.file_actions, state.stdio->output.file_info_.flags,
