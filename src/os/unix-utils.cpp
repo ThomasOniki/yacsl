@@ -39,7 +39,7 @@ int unix_flags(FileOpenFlags flags) noexcept {
 Result<OpenedFile, File::OpenError> open_file(const char* path, FileOpenFlags flags) noexcept {
   const bool seek_end = strip_file_open_flag(&flags, FileOpenFlags::SeekEnd) &&
                         (flags & FileOpenFlags::Trunc) == FileOpenFlags::None;
-  const int  handle   = ::open(path, unix_flags(flags), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+  const int  handle   = ::open(path, unix_flags(flags), 0644);
   if (handle == -1) [[unlikely]] {
     switch (errno) {
     case ENOENT:
