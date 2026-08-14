@@ -2,116 +2,121 @@
 
 #ifndef __EMSCRIPTEN__
 #include "base/attributes.hpp"
-#endif
-
-#ifndef __EMSCRIPTEN__
-
 #include "base/containers/error.hpp"
-#include "base/containers/stack_array.hpp"
 #include "base/containers/string.hpp"
 #include "base/containers/vector.hpp"
-#include "base/logging/panic.hpp"
-#include "base/memory/lifetimes.hpp"
 #include "base/os/common.hpp"
 #include "base/ranges/initializer_list.hpp"
 #include "base/ranges/slice.hpp"
 #include "base/ranges/string_view.hpp"
 #include "base/type_traits/range_like.hpp"
-#include "base/utilities/isize.hpp"
 #include "base/utilities/type_aliases.hpp"
 
 namespace base {
 
 class Process {
 public:
-  // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access)
-  class Stdio {
+  class Input;
+  class Output;
+
+  enum class StdioType : u8 {
+    Null,
+    Inherit,
+    Pipe,
+  };
+
+private:
+  template <bool IsInput> class StdioInit {
   public:
-    enum class Type : u8 {
-      Buffer       = 0,
-      ParentStdin  = 1,
-      ParentStdout = 2,
-      ParentStderr = 3,
-
-      File = 254,
-      Pipe = 255,
-    };
-    using enum Type;
-
-    Stdio(const char* path, FileOpenFlags flags) noexcept
-        : file_info_{.path = path, .flags = flags}, type_(File) {}
-
-    Stdio(StringView path, FileOpenFlags flags) noexcept
-        : file_info_{.path = nullptr, .flags = flags}, type_(File) {
-      String cstr(path);
-      file_info_.path = cstr.c_str();
-    }
+    constexpr StdioInit() noexcept = default;
 
     // NOLINTNEXTLINE(google-explicit-constructor)
-    Stdio(Type type) noexcept : type_(type) {
-      debug_panic_if(type == Pipe || type == File,
-                     "Process::Stdio instances of types File and Pipe must be constructed with "
-                     "Stdio(path, flags) and Stdio(pipe) respectively.");
+    constexpr StdioInit(StdioType type) noexcept : type_(type) {}
+
+    // NOLINTNEXTLINE(google-explicit-constructor)
+    constexpr StdioInit(Input& pipe) noexcept
+      requires(!IsInput)
+        : type_(TYPE_OTHER_PIPE), other_pipe_handle_(pipe.handle_) {
+      pipe.handle_ = NIL_FILE_HANDLE;
+    }
+    // NOLINTNEXTLINE(google-explicit-constructor)
+    constexpr StdioInit(Output& pipe) noexcept
+      requires(IsInput)
+        : type_(TYPE_OTHER_PIPE), other_pipe_handle_(pipe.handle_) {
+      pipe.handle_ = NIL_FILE_HANDLE;
     }
 
-    Stdio(BASE_LIFETIMEBOUND Stdio& pipe) noexcept : pipe_(&pipe), type_(Pipe) {
-      debug_panic_if(pipe.type_ != Buffer, "In Process::Stdio(Stdio& pipe), pipe must be a buffer");
-      debug_panic_if(pipe.buffer_info_.process == nullptr,
-                     "In Process::Stdio(Stdio& pipe) pipe must be a Stdio& acquired with "
-                     "process.get_{stdout, stderr}.");
-    }
-
-    ~Stdio() noexcept = default;
-
-    Stdio& operator=(const Stdio&) = delete;
-
-    usize write(Slice<const uchar> data) noexcept;
-    usize read(Slice<uchar> buffer) noexcept;
-
-    void seek_begin(isize offset) noexcept;
-    void seek_end(isize offset) noexcept;
-    void seek_cursor(isize offset) noexcept;
-
-    [[nodiscard]] usize get_cursor() const noexcept {
-      assert_buffer("get_cursor");
-      return buffer_info_.cursor_pos;
-    }
+    constexpr StdioInit(const char* path, FileOpenFlags flags) noexcept
+        : type_(TYPE_FILE), file_info_{.path = path, .flags = flags} {}
+    constexpr StdioInit(StringView path, FileOpenFlags flags) noexcept
+        : type_(TYPE_FILE),
+          file_info_{.path  = (BasicString<char, 0, MainArenaAllocator>(path).c_str()),
+                     .flags = flags} {}
 
   private:
-    void assert_buffer(StringView method) const noexcept {
-      debug_panic_if(type_ != Buffer,
-                     "Process::Stdio::{} must be called on an instance that is a buffer.", method);
-      debug_panic_if(buffer_info_.process == nullptr,
-                     "Process::Stdio::{} must be called on an Stdio& acquired from process.get_{}.",
-                     method, "{stdout, stderr}");
-    }
+    friend class Process;
 
-  private:
-    Stdio& operator=(Stdio&&) = default;
-    Stdio(Stdio&&) noexcept   = default;
-    Stdio() noexcept          = default;
-
-  private:
+    StdioType type_ = StdioType::Null;
     struct FileInfo {
-      alignas(16) const char* path;
-      FileOpenFlags flags;
+      alignas(16) const char* path = nullptr;
+      FileOpenFlags flags          = FileOpenFlags::None;
     };
-    struct BufferInfo {
-      alignas(32) Process* process = nullptr;
-      FileHandle handle;
-      usize      cursor_pos;
-    };
-
     union {
       FileInfo   file_info_;
-      BufferInfo buffer_info_{};
-      Stdio*     pipe_;
+      FileHandle other_pipe_handle_;
+      Nil        dummy_ = NIL;
     };
 
-    Type type_{0};
-
-    friend class Process;
+    static constexpr auto TYPE_FILE       = StdioType{254};
+    static constexpr auto TYPE_OTHER_PIPE = StdioType{255};
   };
+
+public:
+  class Input {
+  public:
+    void write(Slice<const uchar> bytes) noexcept;
+
+    Input(const Input&)            = delete;
+    Input(Input&&)                 = delete;
+    Input& operator=(const Input&) = delete;
+    Input& operator=(Input&&)      = delete;
+    ~Input() noexcept              = default;
+
+    using Init = StdioInit<true>;
+    using enum StdioType;
+
+  private:
+    friend class Process;
+
+    Input() noexcept = default;
+
+  private:
+    FileHandle handle_ = NIL_FILE_HANDLE;
+  };
+
+  class Output {
+  public:
+    Output(const Output&)            = delete;
+    Output(Output&&)                 = delete;
+    Output& operator=(const Output&) = delete;
+    Output& operator=(Output&&)      = delete;
+    ~Output() noexcept               = default;
+
+    // returns 0 on EOF, between 1 and buffer.size() when sucessful.
+    usize read(Slice<uchar> buffer) noexcept;
+
+    using Init = StdioInit<false>;
+    using enum StdioType;
+
+  private:
+    friend class Process;
+
+    Output() noexcept = default;
+
+  private:
+    FileHandle handle_ = NIL_FILE_HANDLE;
+  };
+
   // NOLINTEND(cppcoreguidelines-pro-type-union-access)
 
   Process() noexcept = default;
@@ -125,30 +130,33 @@ public:
   enum class SpawnError : u8 {
     FileNotFound = 1,
   };
-  Error<SpawnError> start(const char* const* argv, Stdio&& stdin_opts, Stdio&& stdout_opts,
-                          Stdio&& stderr_opts) noexcept;
 
-  Error<SpawnError> start(InitializerList<const char*> argv, Stdio&& stdin_opts,
-                          Stdio&& stdout_opts, Stdio&& stderr_opts) noexcept {
+  struct Stdio {
+    alignas(128) Input::Init input;
+    Output::Init output;
+    Output::Init error;
+  };
+
+  [[nodiscard]] Error<SpawnError> start(const char* const* argv, const Stdio& stdio) noexcept;
+
+  [[nodiscard]] Error<SpawnError> start(InitializerList<const char*> argv,
+                                        const Stdio&                 stdio) noexcept {
     Vector<const char*, 6> cstrs;
     cstrs.reserve(argv.size());
     for (const char* str : argv) {
       cstrs.push_back(str);
     }
     cstrs.push_back(nullptr);
-    return start(cstrs.data(), base::move(stdin_opts), base::move(stdout_opts),
-                 base::move(stderr_opts));
+    return start(cstrs.data(), stdio);
   }
 
-  Error<SpawnError> start(InitializerList<StringView> argv, Stdio&& stdin_opts, Stdio&& stdout_opts,
-                          Stdio&& stderr_opts) noexcept {
-    return start<InitializerList<StringView>>(argv, base::move(stdin_opts), base::move(stdout_opts),
-                                              base::move(stderr_opts));
+  [[nodiscard]] Error<SpawnError> start(InitializerList<StringView> argv,
+                                        const Stdio&                stdio) noexcept {
+    return start<InitializerList<StringView>>(argv, stdio);
   }
 
   template <RangeOf<StringView> Range>
-  Error<SpawnError> start(const Range& argv, Stdio&& stdin_opts, Stdio&& stdout_opts,
-                          Stdio&& stderr_opts) noexcept {
+  [[nodiscard]] Error<SpawnError> start(const Range& argv, const Stdio& stdio) noexcept {
     Vector<BasicString<char, 16>, 6> cstrs(argv);
     Vector<const char*, 6>           cstr_ptrs;
     cstr_ptrs.reserve(cstrs.size() + 1);
@@ -156,12 +164,13 @@ public:
       cstr_ptrs.push_back(cstr.c_str());
     }
     cstr_ptrs.push_back(nullptr);
-    return start(cstr_ptrs.data(), base::move(stdin_opts), base::move(stdout_opts),
-                 base::move(stderr_opts));
+    return start(cstr_ptrs.data(), stdio);
   }
 
   struct ExitStatus {
-    alignas(8) u32 exit_code;
+    alignas(64) String unread_stdout;
+    String unread_stderr;
+    u32    exit_code;
     Signal signal;
     Signal stopped;
   };
@@ -170,29 +179,25 @@ public:
 
   void send_signal(Signal signal) noexcept;
 
-  Stdio& get_stdin() noexcept BASE_LIFETIMEBOUND { return stdin_; }
-  Stdio& get_stdout() noexcept BASE_LIFETIMEBOUND { return stdout_; }
-  Stdio& get_stderr() noexcept BASE_LIFETIMEBOUND { return stderr_; }
+  Input&  get_stdin() noexcept BASE_LIFETIMEBOUND { return stdin_input_; }
+  Output& get_stdout() noexcept BASE_LIFETIMEBOUND { return stdout_output_; }
+  Output& get_stderr() noexcept BASE_LIFETIMEBOUND { return stderr_output_; }
 
 private:
-  void handle_piped_stdio(void* voidp) noexcept;
-  void handle_file_stdio(void* voidp) noexcept;
+  void create_pipes(void* pvoid_state) noexcept;
+  void open_files(void* pvoid_state) noexcept;
+  void cleanup_after_spawn(void* pvoid_state) noexcept;
+  void cleanup_before_wait(ExitStatus* status) noexcept;
 
 private:
-  struct OriginalStdio {
-    alignas(16) FileHandle input;
-    FileHandle output;
-    FileHandle error;
-  };
+  ProcessHandle handle_      = NIL_PROCESS_HANDLE;
+  StdioType     stdin_type_  = Input::Inherit;
+  StdioType     stdout_type_ = Output::Inherit;
+  StdioType     stderr_type_ = Output::Inherit;
 
-  ProcessHandle             handle_      = NIL_PROCESS_HANDLE;
-  StackArray<FileHandle, 3> original_io_ = {NIL_FILE_HANDLE, NIL_FILE_HANDLE, NIL_FILE_HANDLE};
-  StackArray<FileHandle, 2> stdin_pipe_  = {NIL_FILE_HANDLE, NIL_FILE_HANDLE};
-  StackArray<FileHandle, 2> stdout_pipe_ = {NIL_FILE_HANDLE, NIL_FILE_HANDLE};
-  StackArray<FileHandle, 2> stderr_pipe_ = {NIL_FILE_HANDLE, NIL_FILE_HANDLE};
-  Stdio                     stdin_;
-  Stdio                     stdout_;
-  Stdio                     stderr_;
+  Input  stdin_input_;
+  Output stdout_output_;
+  Output stderr_output_;
 
 #ifdef _WIN32
   u32 group_;
