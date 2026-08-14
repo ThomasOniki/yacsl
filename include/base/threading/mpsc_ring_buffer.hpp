@@ -27,7 +27,7 @@ public:
   MPSCRingBuffer& operator=(const MPSCRingBuffer&) = delete;
   MPSCRingBuffer& operator=(MPSCRingBuffer&&)      = delete;
 
-  template <typename... Args> void emplace(Args&&... args) {
+  template <typename... Args> T& emplace(Args&&... args) {
     const usize write = write_.fetch_add(1, MemoryOrder::Relaxed);
     const usize index = write % N;
     while (slots_[index].epoch.load(MemoryOrder::Acquire) != write) {
@@ -35,10 +35,11 @@ public:
     }
     slots_[index].value.construct(base::forward<Args>(args)...);
     slots_[index].epoch.store(write + 1, MemoryOrder::Release);
+    return *slots_[index].value;
   }
 
-  void push(T&& value) { emplace(base::move(value)); }
-  void push(const T& value) { emplace(value); }
+  T& push(T&& value) { return emplace(base::move(value)); }
+  T& push(const T& value) { return emplace(value); }
 
   T pop() noexcept {
     const usize index = read_ % N;
