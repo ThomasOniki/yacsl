@@ -1,5 +1,4 @@
 #include "base/attributes.hpp"
-#include "base/logging/logger.hpp"
 #include "base/ranges/string_view.hpp"
 #include "base/utilities/stack_trace.hpp"
 #include "test_utils.hpp"

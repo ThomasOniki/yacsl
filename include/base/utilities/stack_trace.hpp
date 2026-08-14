@@ -9,7 +9,6 @@
 
 #include "base/containers/string.hpp"
 #include "base/containers/vector.hpp"
-#include "base/logging/common.hpp"
 #include "base/logging/logger.hpp"
 #include "base/memory/lifetimes.hpp"
 #include "base/ranges/string_view.hpp"
@@ -47,7 +46,7 @@ struct StackTrace {
     return entries_;
   }
 
-  void print(LogLevel lvl) noexcept {
+  void print(Logger::Level lvl) noexcept {
     compute_entries();
     for (usize i = 0; i < entries_.size(); ++i) {
       base::log(lvl, "#{} {} in {}", i, entries_[i].address, entries_[i].caller);
