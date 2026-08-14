@@ -1,10 +1,4 @@
 #ifndef _WIN32
-#include <errno.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <unistd.h>
-#endif
-
 #include "base/containers/result.hpp"
 #include "base/logging/panic.hpp"
 #include "base/os/common.hpp"
@@ -13,8 +7,10 @@
 #include "base/utilities/isize.hpp"
 #include "base/utilities/type_aliases.hpp"
 #include "utils.hpp"
-
-#ifndef _WIN32
+#include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <unistd.h>
 
 namespace base {
 
