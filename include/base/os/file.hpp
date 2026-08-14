@@ -66,6 +66,8 @@ public:
   void seek_end(isize offset) noexcept;
   void seek_cursor(isize offset) noexcept;
 
+  [[nodiscard]] constexpr FileHandle handle() const noexcept { return handle_; }
+
 private:
   explicit constexpr File(FileHandle handle) noexcept : handle_(handle) {}
 
