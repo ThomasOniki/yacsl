@@ -6,7 +6,6 @@
 #include "base/os/common.hpp"
 #include "base/os/file.hpp"
 #include "base/ranges/string_view.hpp"
-#include "base/utilities/isize.hpp"
 #include "base/utilities/type_aliases.hpp"
 #include <errno.h>
 #include <fcntl.h>
