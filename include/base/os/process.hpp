@@ -38,13 +38,13 @@ private:
     constexpr StdioInit(Input& pipe) noexcept
       requires(!IsInput)
         : type_(TYPE_OTHER_PIPE), other_pipe_handle_(pipe.handle_) {
-      pipe.handle_ = NIL_FILE_HANDLE;
+      pipe.handle_ = File::NIL_HANDLE;
     }
     // NOLINTNEXTLINE(google-explicit-constructor)
     constexpr StdioInit(Output& pipe) noexcept
       requires(IsInput)
         : type_(TYPE_OTHER_PIPE), other_pipe_handle_(pipe.handle_) {
-      pipe.handle_ = NIL_FILE_HANDLE;
+      pipe.handle_ = File::NIL_HANDLE;
     }
 
     constexpr StdioInit(const char* path, File::Flags flags) noexcept
@@ -60,12 +60,12 @@ private:
     StdioType type_ = StdioType::Null;
     struct FileInfo {
       alignas(16) const char* path = nullptr;
-      File::Flags flags        = File::Flags::None;
+      File::Flags flags            = File::Flags::None;
     };
     union {
-      FileInfo   file_info_;
-      FileHandle other_pipe_handle_;
-      Nil        dummy_ = NIL;
+      FileInfo     file_info_;
+      File::Handle other_pipe_handle_;
+      Nil          dummy_ = NIL;
     };
 
     static constexpr auto TYPE_FILE       = StdioType{254};
@@ -92,7 +92,7 @@ public:
     Input() noexcept = default;
 
   private:
-    FileHandle handle_ = NIL_FILE_HANDLE;
+    File::Handle handle_ = File::NIL_HANDLE;
   };
 
   class Output {
@@ -115,7 +115,7 @@ public:
     Output() noexcept = default;
 
   private:
-    FileHandle handle_ = NIL_FILE_HANDLE;
+    File::Handle handle_ = File::NIL_HANDLE;
   };
 
   // NOLINTEND(cppcoreguidelines-pro-type-union-access)

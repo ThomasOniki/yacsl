@@ -2,7 +2,6 @@
 
 #include "base/containers/error.hpp"
 #include "base/containers/result.hpp"
-#include "base/os/common.hpp"
 #include "base/os/file.hpp"
 #include "base/ranges/slice.hpp"
 #include "base/utilities/isize.hpp"
@@ -29,7 +28,7 @@ Error<File::OpenError> File::open(const char* path, File::Flags flags) noexcept 
 void File::close() noexcept {
   if (is_open()) {
     BASE_TRY_SYSCALL(::close(handle_));
-    handle_ = NIL_FILE_HANDLE;
+    handle_ = NIL_HANDLE;
   }
 }
 
