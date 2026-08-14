@@ -15,7 +15,7 @@
 
 namespace base {
 
-Error<File::OpenError> File::open(const char* path, FileOpenFlags flags) noexcept {
+Error<File::OpenError> File::open(const char* path, File::Flags flags) noexcept {
   close();
   const Result<OpenedFile, OpenError> result = open_file(path, flags);
   if (result.is_err()) [[unlikely]] {

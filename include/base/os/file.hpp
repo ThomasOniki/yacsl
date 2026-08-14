@@ -3,7 +3,6 @@
 #include "base/containers/error.hpp"
 #include "base/containers/string.hpp"
 #include "base/os/common.hpp"
-#include "base/os/process.hpp"
 #include "base/ranges/slice.hpp"
 #include "base/ranges/string_view.hpp"
 #include "base/utilities/isize.hpp"
@@ -13,9 +12,18 @@ namespace base {
 
 class File {
 public:
+  enum class Flags : u8 {
+    None            = 0,
+    Read            = 1 << 0,
+    Write           = 1 << 1,
+    Trunc           = 1 << 2,
+    Create          = 1 << 3,
+    SeekEnd         = 1 << 4,
+    DontCloseOnExec = 1 << 5,
+  };
   constexpr File() noexcept = default;
-  explicit File(StringView path, FileOpenFlags flags) { open(path, flags).expect_nil(); }
-  explicit File(const char* path, FileOpenFlags flags) { open(path, flags).expect_nil(); }
+  explicit File(StringView path, Flags flags) { open(path, flags).expect_nil(); }
+  explicit File(const char* path, Flags flags) { open(path, flags).expect_nil(); }
   File(const File&) = delete;
   File(File&& other) noexcept : handle_(other.handle_), cursor_pos_(other.cursor_pos_) {
     other.handle_ = NIL_FILE_HANDLE;
@@ -32,9 +40,9 @@ public:
     FileNotFound = 1,
   };
 
-  [[nodiscard]] Error<OpenError> open(const char* path, FileOpenFlags flags) noexcept;
+  [[nodiscard]] Error<OpenError> open(const char* path, Flags flags) noexcept;
 
-  [[nodiscard]] Error<OpenError> open(StringView path, FileOpenFlags flags) noexcept {
+  [[nodiscard]] Error<OpenError> open(StringView path, Flags flags) noexcept {
     return open(String(path).c_str(), flags);
   }
 
@@ -70,8 +78,16 @@ private:
     NotComputed = 255,
   };
   mutable IsTtyFlag is_tty_ = IsTtyFlag::NotComputed;
-
-  friend class Process;
 };
+
+constexpr File::Flags operator|(File::Flags lhs, File::Flags rhs) noexcept {
+  return File::Flags(static_cast<u8>(static_cast<u8>(lhs) | static_cast<u8>(rhs)));
+}
+constexpr File::Flags operator&(File::Flags lhs, File::Flags rhs) noexcept {
+  return File::Flags(static_cast<u8>(static_cast<u8>(lhs) & static_cast<u8>(rhs)));
+}
+constexpr File::Flags operator~(File::Flags flags) noexcept {
+  return File::Flags(~static_cast<u8>(flags));
+}
 
 } // namespace base

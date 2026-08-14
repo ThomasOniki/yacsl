@@ -17,25 +17,6 @@ using ProcessHandle                        = intmax_t;
 constexpr ProcessHandle NIL_PROCESS_HANDLE = -1;
 #endif
 
-enum class FileOpenFlags : u8 {
-  None            = 0,
-  Read            = 1 << 0,
-  Write           = 1 << 1,
-  Trunc           = 1 << 2,
-  Create          = 1 << 3,
-  SeekEnd         = 1 << 4,
-  DontCloseOnExec = 1 << 5,
-};
-constexpr FileOpenFlags operator|(FileOpenFlags lhs, FileOpenFlags rhs) noexcept {
-  return FileOpenFlags(static_cast<u8>(static_cast<u8>(lhs) | static_cast<u8>(rhs)));
-}
-constexpr FileOpenFlags operator&(FileOpenFlags lhs, FileOpenFlags rhs) noexcept {
-  return FileOpenFlags(static_cast<u8>(static_cast<u8>(lhs) & static_cast<u8>(rhs)));
-}
-constexpr FileOpenFlags operator~(FileOpenFlags flags) noexcept {
-  return FileOpenFlags(~static_cast<u8>(flags));
-}
-
 enum class Signal : u8 {
   SigHup    = 1,  // terminate process    terminal line hangup
   SigInt    = 2,  // terminate process    interrupt program

@@ -6,6 +6,7 @@
 #include "base/containers/string.hpp"
 #include "base/containers/vector.hpp"
 #include "base/os/common.hpp"
+#include "base/os/file.hpp"
 #include "base/ranges/initializer_list.hpp"
 #include "base/ranges/slice.hpp"
 #include "base/ranges/string_view.hpp"
@@ -46,9 +47,9 @@ private:
       pipe.handle_ = NIL_FILE_HANDLE;
     }
 
-    constexpr StdioInit(const char* path, FileOpenFlags flags) noexcept
+    constexpr StdioInit(const char* path, File::Flags flags) noexcept
         : type_(TYPE_FILE), file_info_{.path = path, .flags = flags} {}
-    constexpr StdioInit(StringView path, FileOpenFlags flags) noexcept
+    constexpr StdioInit(StringView path, File::Flags flags) noexcept
         : type_(TYPE_FILE),
           file_info_{.path  = (BasicString<char, 0, MainArenaAllocator>(path).c_str()),
                      .flags = flags} {}
@@ -59,7 +60,7 @@ private:
     StdioType type_ = StdioType::Null;
     struct FileInfo {
       alignas(16) const char* path = nullptr;
-      FileOpenFlags flags          = FileOpenFlags::None;
+      File::Flags flags        = File::Flags::None;
     };
     union {
       FileInfo   file_info_;
