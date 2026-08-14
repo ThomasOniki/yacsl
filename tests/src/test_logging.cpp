@@ -3,7 +3,6 @@
 #include "base/logging/common.hpp"
 #include "base/logging/logger.hpp"
 #include "base/memory/lifetimes.hpp"
-#include "base/os/common.hpp"
 #include "base/os/file.hpp"
 #include "base/ranges/initializer_list.hpp"
 #include "base/ranges/string_view.hpp"
@@ -64,8 +63,8 @@ enum class EnumClass : base::u16 {
 template <typename... Args>
 static void log_to_file(base::LogLevel lvl, const base::FormatString<Args...>& fmt,
                         Args&&... args) {
-  const base::FileOpenFlags flags =
-      base::FileOpenFlags::Write | base::FileOpenFlags::Create | base::FileOpenFlags::Trunc;
+  const base::File::Flags flags =
+      base::File::Flags::Write | base::File::Flags::Create | base::File::Flags::Trunc;
   base::Logger logger(base::File("test_logs.txt", flags), base::File("test_logs.txt", flags),
                       base::LogLevel::Trace3);
   logger.log(lvl, fmt, base::forward<Args>(args)...);

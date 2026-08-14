@@ -14,21 +14,21 @@
 
 namespace base {
 
-int unix_flags(FileOpenFlags flags) noexcept {
+int unix_flags(File::Flags flags) noexcept {
   unsigned int ret = 0;
 
-  if (strip_file_open_flag(&flags, FileOpenFlags::Trunc)) {
+  if (strip_file_open_flag(&flags, File::Flags::Trunc)) {
     ret |= O_TRUNC;
   }
-  if (strip_file_open_flag(&flags, FileOpenFlags::Create)) {
+  if (strip_file_open_flag(&flags, File::Flags::Create)) {
     ret |= O_CREAT;
   }
-  if (!strip_file_open_flag(&flags, FileOpenFlags::DontCloseOnExec)) {
+  if (!strip_file_open_flag(&flags, File::Flags::DontCloseOnExec)) {
     ret |= O_CLOEXEC;
   }
-  if (flags == FileOpenFlags::Read) {
+  if (flags == File::Flags::Read) {
     ret |= O_RDONLY;
-  } else if (flags == FileOpenFlags::Write) {
+  } else if (flags == File::Flags::Write) {
     ret |= O_WRONLY;
   } else {
     ret |= O_RDWR;
@@ -36,9 +36,9 @@ int unix_flags(FileOpenFlags flags) noexcept {
   return static_cast<int>(ret);
 }
 
-Result<OpenedFile, File::OpenError> open_file(const char* path, FileOpenFlags flags) noexcept {
-  const bool seek_end = strip_file_open_flag(&flags, FileOpenFlags::SeekEnd) &&
-                        (flags & FileOpenFlags::Trunc) == FileOpenFlags::None;
+Result<OpenedFile, File::OpenError> open_file(const char* path, File::Flags flags) noexcept {
+  const bool seek_end = strip_file_open_flag(&flags, File::Flags::SeekEnd) &&
+                        (flags & File::Flags::Trunc) == File::Flags::None;
   const int  handle   = ::open(path, unix_flags(flags), 0644);
   if (handle == -1) [[unlikely]] {
     switch (errno) {
