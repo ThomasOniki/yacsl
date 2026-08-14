@@ -58,12 +58,6 @@ Result<OpenedFile, File::OpenError> open_file(const char* path, FileOpenFlags fl
   return OpenedFile{.handle = handle, .cursor_pos = cursor};
 }
 
-void try_syscall(bool success, StringView function_name) noexcept {
-  if (!success) [[unlikely]] {
-    panic("{} failed: {}", function_name, errno_str());
-  }
-}
-
 // NOLINTNEXTLINE(google-readability-function-size, readability-function-cognitive-complexity)
 StringView errno_str(int err) noexcept {
   // clang-format off
