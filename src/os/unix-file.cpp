@@ -1,7 +1,6 @@
 #ifndef _WIN32
 #include "base/containers/error.hpp"
 #include "base/containers/result.hpp"
-#include "base/logging/panic.hpp"
 #include "base/os/common.hpp"
 #include "base/os/file.hpp"
 #include "base/ranges/slice.hpp"
@@ -39,30 +38,25 @@ void File::open_stderr() noexcept { handle_ = STDERR_FILENO; }
 
 // NOLINTBEGIN(readability-make-member-function-const)
 usize File::write(Slice<const uchar> data) noexcept {
-  const isize result = ::write(handle_, data.data(), data.size());
-  panic_if(result == -1, "::write() failed: {}", errno_str());
+  const ssize_t result = BASE_TRY_SYSCALL(::write(handle_, data.data(), data.size()));
   return static_cast<usize>(result);
 }
 usize File::read(Slice<uchar> buffer) noexcept {
-  const isize result = ::read(handle_, buffer.data(), buffer.size());
-  panic_if(result == -1, "::read() failed: {}", errno_str());
+  const ssize_t result = BASE_TRY_SYSCALL(::read(handle_, buffer.data(), buffer.size()));
   return static_cast<usize>(result);
 }
 
 void File::seek_begin(isize offset) noexcept {
-  const off_t result = ::lseek(handle_, static_cast<off_t>(offset), SEEK_SET);
-  panic_if(result == -1, "::lseek() failed: {}", errno_str());
-  cursor_pos_ = static_cast<usize>(result);
+  const off_t result = BASE_TRY_SYSCALL(::lseek(handle_, static_cast<off_t>(offset), SEEK_SET));
+  cursor_pos_        = static_cast<usize>(result);
 }
 void File::seek_end(isize offset) noexcept {
-  const off_t result = ::lseek(handle_, static_cast<off_t>(offset), SEEK_END);
-  panic_if(result == -1, "::lseek() failed: {}", errno_str());
-  cursor_pos_ = static_cast<usize>(result);
+  const off_t result = BASE_TRY_SYSCALL(::lseek(handle_, static_cast<off_t>(offset), SEEK_END));
+  cursor_pos_        = static_cast<usize>(result);
 }
 void File::seek_cursor(isize offset) noexcept {
-  const off_t result = ::lseek(handle_, static_cast<off_t>(offset), SEEK_CUR);
-  panic_if(result == -1, "::lseek() failed: {}", errno_str());
-  cursor_pos_ = static_cast<usize>(result);
+  const off_t result = BASE_TRY_SYSCALL(::lseek(handle_, static_cast<off_t>(offset), SEEK_CUR));
+  cursor_pos_        = static_cast<usize>(result);
 }
 // NOLINTEND(readability-make-member-function-const)
 
