@@ -191,10 +191,18 @@ private:
   void cleanup_before_wait(ExitStatus* status) noexcept;
 
 private:
-  ProcessHandle handle_      = NIL_PROCESS_HANDLE;
-  StdioType     stdin_type_  = Input::Inherit;
-  StdioType     stdout_type_ = Output::Inherit;
-  StdioType     stderr_type_ = Output::Inherit;
+#ifdef _WIN32
+  using Handle                               = void*;
+  static constexpr Handle NIL_PROCESS_HANDLE = nullptr;
+#else
+  using Handle                               = intmax_t;
+  static constexpr Handle NIL_PROCESS_HANDLE = -1;
+#endif
+
+  Handle    handle_      = NIL_PROCESS_HANDLE;
+  StdioType stdin_type_  = Input::Inherit;
+  StdioType stdout_type_ = Output::Inherit;
+  StdioType stderr_type_ = Output::Inherit;
 
   Input  stdin_input_;
   Output stdout_output_;
