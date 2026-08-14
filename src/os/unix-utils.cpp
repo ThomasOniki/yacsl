@@ -50,9 +50,7 @@ Result<OpenedFile, File::OpenError> open_file(const char* path, FileOpenFlags fl
   }
   usize cursor = 0;
   if (seek_end) {
-    const isize result = ::lseek(handle, 0, SEEK_END);
-    panic_if(result == -1, "::lseek() failed: {}", errno_str());
-    cursor = static_cast<usize>(result);
+    cursor = static_cast<usize>(BASE_TRY_SYSCALL(::lseek(handle, 0, SEEK_END)));
   }
   return OpenedFile{.handle = handle, .cursor_pos = cursor};
 }

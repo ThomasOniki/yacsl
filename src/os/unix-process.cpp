@@ -47,9 +47,7 @@ struct State {
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 usize Process::Output::read(Slice<uchar> buffer) noexcept {
-  ssize_t result = ::read(handle_, buffer.data(), buffer.size());
-  panic_if(result == -1, "::read() failed: {}", errno_str());
-  return static_cast<usize>(result);
+  return static_cast<usize>(BASE_TRY_SYSCALL(::read(handle_, buffer.data(), buffer.size())));
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -57,8 +55,7 @@ void Process::Input::write(Slice<const uchar> bytes) noexcept {
   usize written = 0;
   if (bytes.size() >= PIPE_BUF) {
     while (written <= bytes.size() - PIPE_BUF) {
-      ssize_t result = ::write(handle_, &bytes[written], PIPE_BUF);
-      panic_if(result == -1, "::write() failed: {}", errno_str());
+      ssize_t result = BASE_TRY_SYSCALL(::write(handle_, &bytes[written], PIPE_BUF));
       written += static_cast<usize>(result);
     }
   }

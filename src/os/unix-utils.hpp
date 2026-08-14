@@ -32,7 +32,10 @@ inline StringView errno_str() noexcept { return errno_str(errno); }
 } // namespace base
 
 #define BASE_TRY_SYSCALL(syscall)                                                                  \
-  if ((syscall) == -1) [[unlikely]]                                                                \
-  panic(#syscall " failed: {}", errno_str())
+  [&]() {                                                                                          \
+    auto result = syscall;                                                                         \
+    panic_if(result == -1, #syscall " failed: {}", errno_str());                                   \
+    return result;                                                                                 \
+  }()
 
 #endif
