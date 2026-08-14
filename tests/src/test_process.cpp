@@ -1,316 +1,395 @@
 #ifndef __EMSCRIPTEN__
 
 #include "base/containers/stack_array.hpp"
-#include "base/memory/lifetimes.hpp"
+#include "base/containers/stack_storage.hpp"
 #include "base/os/common.hpp"
 #include "base/os/process.hpp"
 #include "base/ranges/string_view.hpp"
 #include "test_utils.hpp"
 #include <assert.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-#ifdef S_IRUSR
-static constexpr int OPEN_PERMISSIONS = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-#else
-static constexpr int OPEN_PERMISSIONS = 0;
-#endif
-
 #define TRY_SYSCALL(syscall)                                                                       \
-  do {                                                                                             \
-    if ((syscall) == -1) [[unlikely]] {                                                            \
+  [&]() {                                                                                          \
+    auto result = syscall;                                                                         \
+    if (result == -1) [[unlikely]] {                                                               \
       perror(#syscall);                                                                            \
       abort();                                                                                     \
     }                                                                                              \
-  } while (false)
+    return result;                                                                                 \
+  }()
 
-static int redirect(int stream, const char* path) {
-  // NOLINTNEXTLINE(android-cloexec-dup)
-  const int old = dup(stream);
-  assert(old != -1);
-  // NOLINTNEXTLINE(android-cloexec-open)
-  const int file = open(path, O_WRONLY | O_CREAT | O_TRUNC, OPEN_PERMISSIONS);
-  assert(file != -1);
-  TRY_SYSCALL(dup2(file, stream));
-  TRY_SYSCALL(close(file));
-  return old;
-}
-
-static constexpr const char* STDOUT_FILE_PATH = "test_process_stdout.txt";
-static constexpr const char* STDERR_FILE_PATH = "test_process_stderr.txt";
+using base::Process;
+using Stdio = Process::Stdio;
 
 namespace {
-
-struct Redirected {
-  Redirected() noexcept
-      : original_stdout(redirect(STDOUT_FILENO, STDOUT_FILE_PATH)),
-        original_stderr(redirect(STDERR_FILENO, STDERR_FILE_PATH)) {}
-
-  ~Redirected() noexcept {
-    TRY_SYSCALL(dup2(original_stdout, STDOUT_FILENO));
-    TRY_SYSCALL(close(original_stdout));
-    (void)fputs("stdout restored\n", stdout);
-
-    TRY_SYSCALL(dup2(original_stderr, STDERR_FILENO));
-    TRY_SYSCALL(close(original_stderr));
-    (void)fputs("stderr restored\n", stderr);
-  }
-
-  Redirected(const Redirected&)            = delete;
-  Redirected(Redirected&&)                 = delete;
-  Redirected& operator=(const Redirected&) = delete;
-  Redirected& operator=(Redirected&&)      = delete;
-
-  [[nodiscard]] static Redirected& get() {
-    static Redirected instance = Redirected();
-    return instance;
-  }
-
-  void restore_original_stderr() {
-    // NOLINTNEXTLINE(android-cloexec-dup)
-    stderr_file = dup(STDERR_FILENO);
-    assert(stderr_file != -1);
-    TRY_SYSCALL(dup2(original_stderr, STDERR_FILENO));
-    TRY_SYSCALL(close(original_stderr));
-    original_stderr = -1;
-  }
-  void restore_file_stderr() {
-    // NOLINTNEXTLINE(android-cloexec-dup)
-    original_stderr = dup(STDERR_FILENO);
-    assert(original_stderr != -1);
-    TRY_SYSCALL(dup2(stderr_file, STDERR_FILENO));
-    TRY_SYSCALL(close(stderr_file));
-    stderr_file = -1;
-  }
-  static void maybe_rewind_stdout_stderr(const char* path) {
-    if (path != nullptr) {
-      if (strcmp(path, STDOUT_FILE_PATH) == 0) {
-        TRY_SYSCALL(lseek(STDOUT_FILENO, 0, SEEK_SET));
-      } else if (strcmp(path, STDERR_FILE_PATH) == 0) {
-        TRY_SYSCALL(lseek(STDERR_FILENO, 0, SEEK_SET));
-      }
-    }
-  }
-
-  alignas(16) int original_stdout;
-  int original_stderr;
-  int stderr_file = -1;
+enum class Type : base::u8 {
+  Null,
+  Inherit,
+  Pipe,
+  File,
+  OtherPipe,
 };
+struct IoTypes {
+  alignas(4) Type input;
+  Type output;
+  Type error;
+};
+struct IoStorage {
+  alignas(128) base::StackStorage<Stdio> input;
+  base::StackStorage<Stdio> output;
+  base::StackStorage<Stdio> error;
+};
+struct Pipes {
+  alignas(64) base::StackArray<int, 3> original;
+  base::StackArray<int, 2> input  = {};
+  base::StackArray<int, 2> output = {};
+  base::StackArray<int, 2> error  = {};
 
+  Pipes()
+      : original({fcntl(STDIN_FILENO, F_DUPFD_CLOEXEC, 0), fcntl(STDOUT_FILENO, F_DUPFD_CLOEXEC, 0),
+                  fcntl(STDERR_FILENO, F_DUPFD_CLOEXEC, 0)}) {
+    // NOLINTNEXTLINE(android-cloexec-pipe)
+    TRY_SYSCALL(::pipe(input.data()));
+    // NOLINTNEXTLINE(android-cloexec-pipe)
+    TRY_SYSCALL(::pipe(output.data()));
+    // NOLINTNEXTLINE(android-cloexec-pipe)
+    TRY_SYSCALL(::pipe(error.data()));
+
+    TRY_SYSCALL(::fcntl(input[1], F_SETFD, FD_CLOEXEC));
+    TRY_SYSCALL(::fcntl(output[0], F_SETFD, FD_CLOEXEC));
+    TRY_SYSCALL(::fcntl(error[0], F_SETFD, FD_CLOEXEC));
+
+    TRY_SYSCALL(::dup2(input[0], STDIN_FILENO));
+    TRY_SYSCALL(::dup2(output[1], STDOUT_FILENO));
+    TRY_SYSCALL(::dup2(error[1], STDERR_FILENO));
+    TRY_SYSCALL(::close(input[0]));
+    TRY_SYSCALL(::close(output[1]));
+    TRY_SYSCALL(::close(error[1]));
+  }
+
+  void restore_original_io() {
+    TRY_SYSCALL(::dup2(original[0], STDIN_FILENO));
+    TRY_SYSCALL(::dup2(original[1], STDOUT_FILENO));
+    TRY_SYSCALL(::dup2(original[2], STDERR_FILENO));
+    TRY_SYSCALL(::close(original[0]));
+    TRY_SYSCALL(::close(original[1]));
+    TRY_SYSCALL(::close(original[2]));
+  }
+};
 } // namespace
+
+template <typename T> static T create_io(Type type, const char* path, auto& pipe) noexcept {
+  if (type == Type::File) {
+    return T(path, base::FileOpenFlags::Create);
+  }
+  if (type == Type::OtherPipe) {
+    return pipe;
+  }
+  return static_cast<Process::StdioType>(type);
+}
+
+static void create_other_pipes(base::StackArray<Process, 3>& processes, IoTypes types) {
+  if (types.input == Type::OtherPipe) {
+    Process::Stdio stdio{
+        .input  = Process::Input::Inherit,
+        .output = Process::Output::Pipe,
+        .error  = Process::Output::Inherit,
+    };
+    processes[0].start({HELLO_WORLD_EXECUTABLE}, stdio).expect_nil();
+  }
+  Process::Stdio stdio{
+      .input  = Process::Input::Pipe,
+      .output = Process::Output::Pipe,
+      .error  = Process::Output::Inherit,
+  };
+  if (types.output == Type::OtherPipe) {
+    processes[1].start({CAT_EXECUTABLE}, stdio).expect_nil();
+  }
+  if (types.error == Type::OtherPipe) {
+    processes[2].start({CAT_EXECUTABLE}, stdio).expect_nil();
+  }
+}
+
+static constexpr const char* CHILD_STDIN_FILE_PATH =
+    BASE_TESTS_DIR "/share/test_process/child_stdin.txt";
+static constexpr const char* CHILD_STDOUT_FILE_PATH =
+    BASE_TESTS_DIR "/share/test_process/child_stdout.txt";
+static constexpr const char* CHILD_STDERR_FILE_PATH =
+    BASE_TESTS_DIR "/share/test_process/child_stderr.txt";
+
+static constexpr base::StringView INPUT = "hello world\n";
+
+static void write_input(Type type, Process* proc, Pipes* pipes, int* filedes) {
+  if (type == Type::Inherit) {
+    assert(::write(pipes->input[1], INPUT.data(), INPUT.size()) == INPUT.size());
+  } else if (type == Type::File) {
+#ifndef O_CLOEXEC
+#define O_CLOEXEC 0
+#endif
+    *filedes = ::open(CHILD_STDIN_FILE_PATH, O_WRONLY | O_CREAT | O_CLOEXEC, 0644);
+    assert(::write(*filedes, INPUT.data(), INPUT.size()) == INPUT.size());
+    assert(*filedes != -1);
+  } else if (type == Type::Pipe) {
+    proc->get_stdin().write(INPUT.bytes());
+  }
+}
+
+static base::String get_pipe_output(Process::Output* output, base::StringView expected) {
+  base::String str;
+  str.resize(expected.size() + 256);
+  base::Slice<base::uchar> bytes      = str.bytes();
+  base::usize              total_read = output->read(bytes);
+  while (total_read < expected.size()) {
+    total_read += output->read({bytes.data() + total_read, bytes.size() - total_read});
+  }
+  str.resize(total_read);
+  return str;
+}
 
 static int check_file(const char* path, base::StringView expected) {
   int ret = 0;
 
-#ifndef O_CLOEXEC
-#define O_CLOEXEC 0
-#endif
-  const int fildes =
-      path == nullptr ? STDIN_FILENO : open(path, O_RDWR | O_CREAT | O_CLOEXEC, OPEN_PERMISSIONS);
-  assert(fildes != -1);
+  const int fildes = TRY_SYSCALL(open(path, O_RDWR | O_CREAT | O_CLOEXEC, 0644));
 
-  base::StackArray<char, 65, size_t> buf            = {};
-  base::StackArray<char, 65, size_t> expected_chunk = {};
+  base::String buf;
 
-  size_t read_sz = 1;
-  size_t size    = 0;
+  ssize_t result = ::read(fildes, buf.grow(64), 64);
 
-  while (read_sz > 0) {
-    read_sz = static_cast<size_t>(read(fildes, buf.data(), 64));
-    assert(read_sz <= 64); // If greater, it overflowed from -1.
-    buf[read_sz] = '\0';
+  while (result != 0) {
+    ASSERT(result != -1);
+    result =
+        ::read(fildes, buf.grow(static_cast<base::usize>(result)), static_cast<size_t>(result));
+  }
+  EXPECT_EQ(result, 0);
 
-    const size_t last_sz = size;
-    size += read_sz;
-    if (size <= expected.size()) {
-      memcpy(expected_chunk.data(), expected.data() + last_sz, read_sz);
-      expected_chunk[read_sz] = '\0';
-    } else if (size - read_sz < expected.size()) {
-      memcpy(expected_chunk.data(), expected.data() + last_sz, expected.size() - last_sz);
+  buf.resize(buf.size() - 64);
+  EXPECT_EQ(buf.view(), expected);
+
+  TRY_SYSCALL(close(fildes));
+  TRY_SYSCALL(remove(path));
+
+  return ret;
+}
+static int check_file_output(IoTypes types) noexcept {
+  int ret = 0;
+  if (types.output == Type::File) {
+    EXPECT(check_file(CHILD_STDOUT_FILE_PATH, "arguments (to stdout):\n"
+                                              "arg1\n"
+                                              "arg2\n"
+                                              "argument with spaces\n"
+                                              "exiting (to stdout)\n") == 0);
+  }
+  if (types.error == Type::File) {
+    if (types.input == Type::Null) {
+      EXPECT(check_file(CHILD_STDERR_FILE_PATH, "stdin (to stderr):\n"
+                                                "exiting (to stderr)\n") == 0);
     } else {
-      expected_chunk[0] = '\0';
+      EXPECT(check_file(CHILD_STDERR_FILE_PATH, "stdin (to stderr):\n"
+                                                "hello world\n"
+                                                "exiting (to stderr)\n") == 0);
     }
-
-    EXPECT_STREQ(buf.data(), expected_chunk.data());
   }
-  EXPECT_EQ(read_sz, 0);
+  return ret;
+}
 
-  EXPECT_EQ(size, expected.size());
+static int check_other_pipe_output(base::StackArray<Process, 3>& processes,
+                                   IoTypes                       types) noexcept {
+  int ret = 0;
+  if (types.output == Type::OtherPipe) {
+    Process::ExitStatus status = processes[1].wait();
+    EXPECT_EQ(status.unread_stdout, "arguments (to stdout):\n"
+                                    "arg1\n"
+                                    "arg2\n"
+                                    "argument with spaces\n"
+                                    "exiting (to stdout)\n");
+  }
+  if (types.error == Type::OtherPipe) {
+    Process::ExitStatus status = processes[2].wait();
+    if (types.input == Type::Null) {
+      EXPECT_EQ(status.unread_stdout, "stdin (to stderr):\n"
+                                      "exiting (to stderr)\n");
+    } else {
+      EXPECT_EQ(status.unread_stdout, "stdin (to stderr):\n"
+                                      "hello world\n"
+                                      "exiting (to stderr)\n");
+    }
+  }
+  return ret;
+}
 
-  if (path != nullptr) {
-    TRY_SYSCALL(ftruncate(fildes, 0));
-    TRY_SYSCALL(close(fildes));
+static int check_fd_output(int file, base::StringView expected) {
+  int          ret = 0;
+  base::String output;
+  ssize_t      result = ::read(file, output.grow(512), 512);
+  while (result > 0) {
+    result = ::read(file, output.grow(static_cast<base::usize>(result)), 512);
+  }
+  ASSERT(result != -1);
+  output.resize(output.size() - 512);
+  EXPECT_EQ(output.view(), expected);
+  return ret;
+}
+
+static int check_inherited_output(IoTypes types, const Pipes& pipes) {
+  int ret = 0;
+  if (types.output == Type::Inherit) {
+    EXPECT(check_fd_output(pipes.output[0], "arguments (to stdout):\n"
+                                            "arg1\n"
+                                            "arg2\n"
+                                            "argument with spaces\n"
+                                            "exiting (to stdout)\n") == 0);
+  }
+  if (types.error == Type::Inherit) {
+    if (types.input == Type::Null) {
+      EXPECT(check_fd_output(pipes.error[0], "stdin (to stderr):\n"
+                                             "exiting (to stderr)\n") == 0);
+    } else {
+      EXPECT(check_fd_output(pipes.error[0], "stdin (to stderr):\n"
+                                             "hello world\n"
+                                             "exiting (to stderr)\n") == 0);
+    }
+  }
+  return ret;
+}
+
+static int check_piped_output(IoTypes types, base::StringView runtime_stdout,
+                              base::StringView runtime_stderr, const Process::ExitStatus& status) {
+  int ret = 0;
+  if (types.output == Type::Pipe) {
+    if (types.input == Type::Pipe || types.input == Type::Inherit) {
+      EXPECT_EQ(runtime_stdout, "arguments (to stdout):\n"
+                                "arg1\n"
+                                "arg2\n"
+                                "argument with spaces\n");
+      EXPECT_EQ(status.unread_stdout, "exiting (to stdout)\n");
+    } else {
+      EXPECT_EQ(runtime_stdout, "arguments (to stdout):\n"
+                                "arg1\n"
+                                "arg2\n"
+                                "argument with spaces\n"
+                                "exiting (to stdout)\n");
+      EXPECT_EQ(status.unread_stdout, "");
+    }
+  } else {
+    EXPECT_EQ(status.unread_stdout, "");
+  }
+  if (types.error == Type::Pipe) {
+    if (types.input == Type::Pipe || types.input == Type::Inherit) {
+      EXPECT_EQ(runtime_stderr, "stdin (to stderr):\n"
+                                "hello world\n");
+      EXPECT_EQ(status.unread_stderr, "exiting (to stderr)\n");
+    } else if (types.input == Type::Null) {
+      EXPECT_EQ(runtime_stderr, "stdin (to stderr):\n"
+                                "exiting (to stderr)\n");
+      EXPECT_EQ(status.unread_stderr, "");
+    } else {
+      EXPECT_EQ(runtime_stderr, "stdin (to stderr):\n"
+                                "hello world\n"
+                                "exiting (to stderr)\n");
+      EXPECT_EQ(status.unread_stderr, "");
+    }
+  } else {
+    EXPECT_EQ(status.unread_stderr, "");
   }
 
   return ret;
 }
 
-static constexpr base::FileOpenFlags FLAGS =
-    base::FileOpenFlags::Write | base::FileOpenFlags::Create | base::FileOpenFlags::Trunc;
-
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define CHECK_FILE(path, contents)                                                                 \
-  do {                                                                                             \
-    Redirected::get().restore_original_stderr();                                                   \
-    EXPECT(check_file(path, contents) == 0);                                                       \
-    Redirected::get().restore_file_stderr();                                                       \
-    Redirected::get().maybe_rewind_stdout_stderr(path);                                            \
-  } while (false)
-
-using base::Process;
-using Stdio = Process::Stdio;
-using enum Stdio::Type;
-
-static int test_redirect_stdout_and_stderr() {
+static int test_run_c(IoTypes types) {
   int ret = 0;
 
-  // Redirects
-  (void)Redirected::get();
+  Pipes pipes;
 
-  (void)fputs("stdout print test1\n", stdout);
-  (void)fflush(stdout);
-  CHECK_FILE(STDOUT_FILE_PATH, "stdout print test1\n");
-  (void)fputs("stdout print test2\n", stdout);
-  (void)fflush(stdout);
-  CHECK_FILE(STDOUT_FILE_PATH, "stdout print test2\n");
+  base::StackArray<Process, 3> other_pipes;
+  create_other_pipes(other_pipes, types);
+  Process::Stdio stdio = {
+      .input  = create_io<Process::Input::Init>(types.input, CHILD_STDIN_FILE_PATH,
+                                                other_pipes[0].get_stdout()),
+      .output = create_io<Process::Output::Init>(types.output, CHILD_STDOUT_FILE_PATH,
+                                                 other_pipes[1].get_stdin()),
+      .error  = create_io<Process::Output::Init>(types.error, CHILD_STDERR_FILE_PATH,
+                                                 other_pipes[2].get_stdin()),
+  };
 
-  (void)fputs("stderr print test1\n", stderr);
-  CHECK_FILE(STDERR_FILE_PATH, "stderr print test1\n");
-  (void)fputs("stderr print test2\n", stderr);
-  CHECK_FILE(STDERR_FILE_PATH, "stderr print test2\n");
-
-  return ret;
-}
-
-static int test_echo() {
-  int ret = 0;
-
-  Process echo;
-  echo.start({"echo", "hello", "world"}, ParentStdin, ParentStdout, ParentStderr);
-  echo.wait();
-  CHECK_FILE(STDOUT_FILE_PATH, "hello world\n");
-
-  return ret;
-}
-
-static int test_compile_c() {
-  int ret = 0;
-
-  static constexpr base::StringView C_CODE = R"(#include <stdio.h>
-
-int main() {
-	fputs("stdout\n", stdout);
-	fflush(stdout);
-	fputs("stderr\n", stderr);
-})";
-
-  Process create;
-  create.start({"echo", "-n", C_CODE}, ParentStdin, Stdio("test_process_hello.c", FLAGS),
-               ParentStderr);
-  create.wait();
-
-  Process compile;
-  compile.start({"gcc", "test_process_hello.c", "-o", "test_process_hello"}, ParentStdin,
-                ParentStdout, ParentStderr);
-  compile.wait();
-
-  // check_file() now so it deletes it after compiling
-  CHECK_FILE("test_process_hello.c", C_CODE);
-
-  return ret;
-}
-
-static int test_run_c(Stdio&& stdout_opts, Stdio&& stderr_opts, const char* out_file,
-                      const char* err_file) {
-  int     ret = 0;
   Process process;
-  process.start({"./test_process_hello"}, ParentStdin, base::move(stdout_opts),
-                base::move(stderr_opts));
+  process.start({STD_STREAMS_EXECUTABLE, "arg1", "arg2", "argument with spaces"}, stdio)
+      .expect_nil();
 
-  if (out_file == nullptr && err_file == nullptr) {
-    CHECK_FILE(out_file, "stdout\nstderr\n");
-  } else {
-    if (out_file == nullptr) {
-      CHECK_FILE(out_file, "stdout\n");
+  int input_fd = 0;
+  write_input(types.input, &process, &pipes, &input_fd);
+
+  base::String piped_output;
+  if (types.output == Type::Pipe) {
+    if (types.input == Type::Pipe || types.input == Type::Inherit) {
+      piped_output = get_pipe_output(&process.get_stdout(), "arguments (to stdout):\n"
+                                                            "arg1\n"
+                                                            "arg2\n"
+                                                            "argument with spaces\n");
+    } else {
+      piped_output = get_pipe_output(&process.get_stdout(), "arguments (to stdout):\n"
+                                                            "arg1\n"
+                                                            "arg2\n"
+                                                            "argument with spaces\n"
+                                                            "exiting (to stdout)\n");
     }
-    if (err_file == nullptr) {
-      CHECK_FILE(err_file, "stderr\n");
+  }
+  base::String piped_error;
+  if (types.error == Type::Pipe) {
+    if (types.input == Type::Pipe || types.input == Type::Inherit) {
+      piped_error = get_pipe_output(&process.get_stderr(), "stdin (to stderr):\n"
+                                                           "hello world\n");
+    } else if (types.input == Type::Null) {
+      piped_error = get_pipe_output(&process.get_stderr(), "stdin (to stderr):\n"
+                                                           "exiting (to stderr)\n");
+    } else {
+      piped_error = get_pipe_output(&process.get_stderr(), "stdin (to stderr):\n"
+                                                           "hello world\n"
+                                                           "exiting (to stderr)\n");
     }
   }
 
-  process.wait();
+  TRY_SYSCALL(::close(pipes.input[1]));
+  Process::ExitStatus status = process.wait();
+  pipes.restore_original_io();
 
-  if (out_file != nullptr && err_file != nullptr && strcmp(out_file, err_file) == 0) {
-    CHECK_FILE(out_file, "stdout\nstderr\n");
-  } else {
-    if (out_file != nullptr) {
-      CHECK_FILE(out_file, "stdout\n");
-    }
-    if (err_file != nullptr) {
-      CHECK_FILE(err_file, "stderr\n");
-    }
-  }
+  EXPECT(check_file_output(types) == 0);
+  EXPECT(check_other_pipe_output(other_pipes, types) == 0);
+  EXPECT(check_inherited_output(types, pipes) == 0);
+  EXPECT(check_piped_output(types, piped_output.view(), piped_error.view(), status) == 0);
 
-  return ret;
-}
+  TRY_SYSCALL(::close(pipes.output[0]));
+  TRY_SYSCALL(::close(pipes.error[0]));
 
-static int test_all_run_c() {
-  int ret = 0;
-  EXPECT(test_run_c(ParentStdout, ParentStderr, STDOUT_FILE_PATH, STDERR_FILE_PATH) == 0);
-  EXPECT(test_run_c(ParentStderr, ParentStdout, STDERR_FILE_PATH, STDOUT_FILE_PATH) == 0);
-  EXPECT(test_run_c(ParentStdout, ParentStdout, STDOUT_FILE_PATH, STDOUT_FILE_PATH) == 0);
-  EXPECT(test_run_c(ParentStderr, ParentStderr, STDERR_FILE_PATH, STDERR_FILE_PATH) == 0);
-  EXPECT(test_run_c(ParentStderr, Stdio("test_process_err", FLAGS), STDERR_FILE_PATH,
-                    "test_process_err") == 0);
-  EXPECT(test_run_c(ParentStderr, ParentStdin, STDERR_FILE_PATH, nullptr) == 0);
-  EXPECT(test_run_c(ParentStdin, ParentStdin, nullptr, nullptr) == 0);
-  EXPECT(test_run_c(ParentStdin, ParentStdout, nullptr, STDOUT_FILE_PATH) == 0);
-  return ret;
-}
-
-static int test_process_pipe() {
-  int     ret = 0;
-  Process echo;
-  echo.start({"echo", "hello", "world"}, ParentStdin, Buffer, ParentStderr);
-  Process cat;
-  cat.start({"cat"}, Stdio(echo.get_stdout()), Buffer, ParentStderr);
-  Process tee;
-  tee.start({"tee", "test_process_echoed.txt"}, Stdio(cat.get_stdout()), ParentStdout,
-            ParentStderr);
-  tee.wait();
-  CHECK_FILE("test_process_echoed.txt", "hello world\n");
-  CHECK_FILE(STDOUT_FILE_PATH, "hello world\n");
-  return ret;
-}
-
-static int test_buffer() {
-  int                        ret = 0;
-  base::StackArray<char, 64> buf{};
-
-  using base::litterals::operator""_sv;
-
-  Process cat1;
-  cat1.start({"cat"}, Buffer, Buffer, ParentStderr);
-  cat1.get_stdin().write("buffer test"_sv.bytes());
-  EXPECT_EQ(cat1.get_stdout().read({buf.bytes().data(), buf.bytes().size()}), 11);
-  EXPECT_STREQ(buf.data(), "buffer test");
-  cat1.wait();
   return ret;
 }
 
 int main() {
   int ret = 0;
 
-  {
-    EXPECT(test_redirect_stdout_and_stderr() == 0);
-    EXPECT(test_echo() == 0);
-    EXPECT(test_compile_c() == 0);
-    EXPECT(test_all_run_c() == 0);
-    EXPECT(test_process_pipe() == 0);
-    EXPECT(test_buffer() == 0);
+  (void)base::Logger::get_default_instance();
+
+  base::StackArray<Type, 5> types = {Type::Null, Type::Inherit, Type::Pipe, Type::File,
+                                     Type::OtherPipe};
+  for (Type stdin_type : types) {
+    for (Type stdout_type : types) {
+      for (Type stderr_type : types) {
+        base::log_info("calling test_run_c() with input type {}, output type {} and error type {}",
+                       stdin_type, stdout_type, stderr_type);
+        base::Logger::get_default_instance().flush();
+        if (test_run_c({.input = stdin_type, .output = stdout_type, .error = stderr_type}) != 0) {
+          base::log_error(
+              "test_run_c() failed with input type {}, output type {} and error type {}",
+              stdin_type, stdout_type, stderr_type);
+          ret = 1;
+        }
+      }
+    }
   }
 
   return ret;
