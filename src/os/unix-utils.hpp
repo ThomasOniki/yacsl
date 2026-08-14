@@ -11,8 +11,8 @@
 
 namespace base {
 
-inline bool strip_file_open_flag(FileOpenFlags* flags, FileOpenFlags flag) noexcept {
-  const FileOpenFlags stripped = *flags & ~flag;
+inline bool strip_file_open_flag(File::Flags* flags, File::Flags flag) noexcept {
+  const File::Flags stripped = *flags & ~flag;
   if (stripped != *flags) {
     *flags = stripped;
     return true;
@@ -24,9 +24,9 @@ struct OpenedFile {
   alignas(16) FileHandle handle;
   usize cursor_pos;
 };
-Result<OpenedFile, File::OpenError> open_file(const char* path, FileOpenFlags flags) noexcept;
+Result<OpenedFile, File::OpenError> open_file(const char* path, File::Flags flags) noexcept;
 
-int               unix_flags(FileOpenFlags flags) noexcept;
+int               unix_flags(File::Flags flags) noexcept;
 StringView        errno_str(int err) noexcept;
 inline StringView errno_str() noexcept { return errno_str(errno); }
 } // namespace base

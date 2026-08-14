@@ -86,7 +86,7 @@ struct Pipes {
 
 template <typename T> static T create_io(Type type, const char* path, auto& pipe) noexcept {
   if (type == Type::File) {
-    return T(path, base::FileOpenFlags::Create);
+    return T(path, base::File::Flags::Create);
   }
   if (type == Type::OtherPipe) {
     return pipe;

@@ -63,11 +63,11 @@ void Process::Input::write(Slice<const uchar> bytes) noexcept {
   BASE_TRY_SYSCALL(::write(handle_, &bytes[written], bytes.size() - written));
 }
 
-static void redirect_child_stdio_to_file(posix_spawn_file_actions_t* actions, FileOpenFlags flags,
+static void redirect_child_stdio_to_file(posix_spawn_file_actions_t* actions, File::Flags flags,
                                          const char* path, int stream) noexcept {
   const int oflag =
-      unix_flags(flags | FileOpenFlags::DontCloseOnExec |
-                 (stream == STDIN_FILENO ? FileOpenFlags::Read : FileOpenFlags::Write));
+      unix_flags(flags | File::Flags::DontCloseOnExec |
+                 (stream == STDIN_FILENO ? File::Flags::Read : File::Flags::Write));
 
   CHECK_RETURN(posix_spawn_file_actions_addopen(actions, stream, path, oflag, 0644));
 }
@@ -80,7 +80,7 @@ void Process::open_files(void* pvoid_state) noexcept {
                                  static_cast<const char*>(state.stdio->input.file_info_.path),
                                  STDIN_FILENO);
   } else if (stdin_type_ == Null) {
-    redirect_child_stdio_to_file(&state.file_actions, FileOpenFlags::None, "/dev/null",
+    redirect_child_stdio_to_file(&state.file_actions, File::Flags::None, "/dev/null",
                                  STDIN_FILENO);
   }
   if (stdout_type_ == TYPE_FILE) {
@@ -88,7 +88,7 @@ void Process::open_files(void* pvoid_state) noexcept {
                                  static_cast<const char*>(state.stdio->output.file_info_.path),
                                  STDOUT_FILENO);
   } else if (stdout_type_ == Null) {
-    redirect_child_stdio_to_file(&state.file_actions, FileOpenFlags::None, "/dev/null",
+    redirect_child_stdio_to_file(&state.file_actions, File::Flags::None, "/dev/null",
                                  STDOUT_FILENO);
   }
   if (stderr_type_ == TYPE_FILE) {
@@ -96,7 +96,7 @@ void Process::open_files(void* pvoid_state) noexcept {
                                  static_cast<const char*>(state.stdio->error.file_info_.path),
                                  STDERR_FILENO);
   } else if (stderr_type_ == Null) {
-    redirect_child_stdio_to_file(&state.file_actions, FileOpenFlags::None, "/dev/null",
+    redirect_child_stdio_to_file(&state.file_actions, File::Flags::None, "/dev/null",
                                  STDERR_FILENO);
   }
   // NOLINTEND(cppcoreguidelines-pro-type-union-access)
