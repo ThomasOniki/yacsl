@@ -2,7 +2,6 @@
 
 #include "base/containers/error.hpp"
 #include "base/containers/string.hpp"
-#include "base/os/common.hpp"
 #include "base/ranges/slice.hpp"
 #include "base/ranges/string_view.hpp"
 #include "base/utilities/isize.hpp"
@@ -26,7 +25,7 @@ public:
   explicit File(const char* path, Flags flags) { open(path, flags).expect_nil(); }
   File(const File&) = delete;
   File(File&& other) noexcept : handle_(other.handle_), cursor_pos_(other.cursor_pos_) {
-    other.handle_ = NIL_FILE_HANDLE;
+    other.handle_ = NIL_HANDLE;
   }
 
   ~File() noexcept { close(); }
@@ -34,7 +33,7 @@ public:
   File& operator=(const File&) = delete;
   File& operator=(File&& other) noexcept;
 
-  [[nodiscard]] bool is_open() const noexcept { return handle_ != NIL_FILE_HANDLE; }
+  [[nodiscard]] bool is_open() const noexcept { return handle_ != NIL_HANDLE; }
 
   enum class OpenError : u8 {
     FileNotFound = 1,
@@ -66,13 +65,19 @@ public:
   void seek_end(isize offset) noexcept;
   void seek_cursor(isize offset) noexcept;
 
-  [[nodiscard]] constexpr FileHandle handle() const noexcept { return handle_; }
+#ifdef _WIN32
+  using Handle                       = void*;
+  static constexpr Handle NIL_HANDLE = nullptr;
+#else
+  using Handle                       = int;
+  static constexpr Handle NIL_HANDLE = -1;
+#endif
+
+  [[nodiscard]] constexpr Handle handle() const noexcept { return handle_; }
 
 private:
-  explicit constexpr File(FileHandle handle) noexcept : handle_(handle) {}
-
-  FileHandle handle_     = NIL_FILE_HANDLE;
-  usize      cursor_pos_ = 0;
+  Handle handle_     = NIL_HANDLE;
+  usize  cursor_pos_ = 0;
 
   enum class IsTtyFlag : u8 {
     False       = 0,

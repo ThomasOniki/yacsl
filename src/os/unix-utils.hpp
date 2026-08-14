@@ -3,7 +3,6 @@
 #ifndef _WIN32
 
 #include "base/containers/result.hpp"
-#include "base/os/common.hpp"
 #include "base/os/file.hpp"
 #include "base/ranges/string_view.hpp"
 #include "base/utilities/type_aliases.hpp"
@@ -21,7 +20,7 @@ inline bool strip_file_open_flag(File::Flags* flags, File::Flags flag) noexcept 
 }
 
 struct OpenedFile {
-  alignas(16) FileHandle handle;
+  alignas(16) File::Handle handle;
   usize cursor_pos;
 };
 Result<OpenedFile, File::OpenError> open_file(const char* path, File::Flags flags) noexcept;
