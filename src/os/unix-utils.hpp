@@ -31,4 +31,8 @@ StringView        errno_str(int err) noexcept;
 inline StringView errno_str() noexcept { return errno_str(errno); }
 } // namespace base
 
+#define BASE_TRY_SYSCALL(syscall)                                                                  \
+  if ((syscall) == -1) [[unlikely]]                                                                \
+  panic(#syscall " failed: {}", errno_str())
+
 #endif
