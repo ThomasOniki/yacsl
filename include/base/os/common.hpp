@@ -1,7 +1,5 @@
 #pragma once
 
-#include "base/containers/stack_array.hpp"
-#include "base/ranges/string_view.hpp"
 #include "base/utilities/type_aliases.hpp"
 #include <stdint.h>
 
@@ -26,8 +24,7 @@ enum class FileOpenFlags : u8 {
   Trunc           = 1 << 2,
   Create          = 1 << 3,
   SeekEnd         = 1 << 4,
-  Append          = 1 << 5,
-  DontCloseOnExec = 1 << 6,
+  DontCloseOnExec = 1 << 5,
 };
 constexpr FileOpenFlags operator|(FileOpenFlags lhs, FileOpenFlags rhs) noexcept {
   return FileOpenFlags(static_cast<u8>(static_cast<u8>(lhs) | static_cast<u8>(rhs)));
