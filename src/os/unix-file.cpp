@@ -8,7 +8,6 @@
 #include "base/utilities/isize.hpp"
 #include "base/utilities/nil.hpp"
 #include "base/utilities/type_aliases.hpp"
-#include "try_syscall.hpp"
 #include "unix-utils.hpp"
 #include <fcntl.h>
 #include <stdio.h>

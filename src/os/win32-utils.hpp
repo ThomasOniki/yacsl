@@ -33,4 +33,8 @@ StringView        win32_err_str(DWORD err) noexcept;
 inline StringView win32_err_str() noexcept { return win32_err_str(GetLastError()); }
 } // namespace base
 
+#define BASE_TRY_SYSCALL(syscall)                                                                  \
+  if ((syscall) == FALSE) [[unlikely]]                                                             \
+  panic(#syscall " failed: {}", win32_err_str())
+
 #endif
