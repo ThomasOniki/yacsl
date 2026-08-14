@@ -1,6 +1,5 @@
 #include "base/containers/stack_array.hpp"
 #include "base/formatting/format_string.hpp"
-#include "base/logging/common.hpp"
 #include "base/logging/logger.hpp"
 #include "base/memory/lifetimes.hpp"
 #include "base/os/file.hpp"
@@ -61,16 +60,16 @@ enum class EnumClass : base::u16 {
 } // namespace test_ns
 
 template <typename... Args>
-static void log_to_file(base::LogLevel lvl, const base::FormatString<Args...>& fmt,
+static void log_to_file(base::Logger::Level lvl, const base::FormatString<Args...>& fmt,
                         Args&&... args) {
   const base::File::Flags flags =
       base::File::Flags::Write | base::File::Flags::Create | base::File::Flags::Trunc;
   base::Logger logger(base::File("test_logs.txt", flags), base::File("test_logs.txt", flags),
-                      base::LogLevel::Trace3);
+                      base::Logger::Level::Trace3);
   logger.log(lvl, fmt, base::forward<Args>(args)...);
 }
 
-using enum base::LogLevel;
+using enum base::Logger::Level;
 
 int main() {
   log_to_file(Trace3, "Hello, {}", "world!");

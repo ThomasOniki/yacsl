@@ -5,7 +5,6 @@
 #include "base/containers/tuple.hpp"
 #include "base/formatting/format_string_parser.hpp"
 #include "base/formatting/formatter.hpp"
-#include "base/logging/common.hpp"
 #include "base/memory/lifetimes.hpp"
 #include "base/metaprogramming/integer_sequence.hpp"
 #include "base/ranges/string_view.hpp"
