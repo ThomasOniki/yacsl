@@ -5,14 +5,6 @@
 
 namespace base {
 
-#ifdef _WIN32
-using ProcessHandle                        = void*;
-constexpr ProcessHandle NIL_PROCESS_HANDLE = nullptr;
-#else
-using ProcessHandle                        = intmax_t;
-constexpr ProcessHandle NIL_PROCESS_HANDLE = -1;
-#endif
-
 enum class Signal : u8 {
   SigHup    = 1,  // terminate process    terminal line hangup
   SigInt    = 2,  // terminate process    interrupt program
