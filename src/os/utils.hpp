@@ -36,7 +36,6 @@ Result<OpenedFile, File::OpenError> open_file(const char* path, FileOpenFlags fl
 
 StringView        win32_err_str(DWORD err) noexcept;
 inline StringView win32_err_str() noexcept { return win32_err_str(GetLastError()); }
-void              try_syscall(BOOL success, StringView function_name) noexcept;
 
 #else
 
