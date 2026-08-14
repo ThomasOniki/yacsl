@@ -140,14 +140,16 @@ public:
     return ret += chr;
   }
 
-  constexpr void reserve(SizeT capacity) noexcept {
+  constexpr BasicString& reserve(SizeT capacity) noexcept {
     if (capacity > this->capacity()) {
       definitely_reserve(capacity);
     }
+    return *this;
   }
-  constexpr void resize(SizeT size) noexcept {
+  constexpr BasicString& resize(SizeT size) noexcept {
     reserve(size);
     end_ = begin_ + size;
+    return *this;
   }
 
   // This doesn't initialize the new memory but adds count to size. It is useful for characters
@@ -161,7 +163,10 @@ public:
     return ret;
   }
 
-  constexpr void clear() noexcept { end_ = begin_; }
+  constexpr BasicString& clear() noexcept {
+    end_ = begin_;
+    return *this;
+  }
 
   [[nodiscard]] constexpr const char* c_str() noexcept {
     if (end_ == allocated_end_) {
