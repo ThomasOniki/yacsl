@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
-project(base LANGUAGES CXX)
+project(base LANGUAGES CXX C)
 
 option(BASE_STATIC_LIB "Build a static library." ON)
 option(BASE_SHARED_LIB "Build a shared library." OFF)
