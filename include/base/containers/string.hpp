@@ -168,7 +168,7 @@ public:
     return *this;
   }
 
-  [[nodiscard]] constexpr const char* c_str() noexcept {
+  [[nodiscard]] constexpr Char* c_str() noexcept {
     if (end_ == allocated_end_) {
       definitely_reserve(capacity() * 2 + 1);
     }
