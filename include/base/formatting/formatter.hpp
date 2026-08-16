@@ -36,10 +36,22 @@ public:
   constexpr const char* parse(const char* fmt) noexcept {
     FormatStringParser parser(fmt);
     fill_  = parser.check_fill();
-    align_ = parser.check_align('>');
+    align_ = parser.check_align(FormatStringParser::Align::Right);
     sign_  = parser.check_sign();
     width_ = parser.check_width();
-    type_  = parser.check_option(Character<T> ? 'c' : 'd', "bodxc?");
+    if (parser.skip('b')) {
+      type_ = Type::Binary;
+    } else if (parser.skip('o')) {
+      type_ = Type::Octal;
+    } else if (parser.skip('d')) {
+      type_ = Type::Decimal;
+    } else if (parser.skip('x')) {
+      type_ = Type::Hex;
+    } else if (parser.skip('c')) {
+      type_ = Type::Char;
+    } else if (parser.skip('?')) {
+      type_ = Type::DebugChar;
+    }
     return parser.end_parse();
   }
 
@@ -51,19 +63,19 @@ public:
     };
 
     switch (type_) {
-    default:
-      [[likely]] call_format_integral<10>(buf, value, opts);
-      break;
-    case 'x':
-      call_format_integral<16>(buf, value, opts);
-      break;
-    case 'b':
+    case Type::Binary:
       call_format_integral<2>(buf, value, opts);
       break;
-    case 'o':
+    case Type::Octal:
       call_format_integral<8>(buf, value, opts);
       break;
-    case 'c':
+    case Type::Decimal:
+      [[likely]] call_format_integral<10>(buf, value, opts);
+      break;
+    case Type::Hex:
+      call_format_integral<16>(buf, value, opts);
+      break;
+    case Type::Char:
       if constexpr (Character<T>) {
         pad_char(buf, value, opts);
       } else if constexpr (sizeof(T) == 1) {
@@ -74,7 +86,7 @@ public:
         pad_char(buf, static_cast<char32_t>(value), opts);
       }
       break;
-    case '?':
+    case Type::DebugChar:
       if constexpr (Character<T>) {
         pad_debug_char(buf, value, opts);
       } else if constexpr (sizeof(T) == 1) {
@@ -85,6 +97,8 @@ public:
         pad_debug_char(buf, static_cast<char32_t>(value), opts);
       }
       break;
+    default:
+      [[unlikely]] break;
     }
   }
 
@@ -92,7 +106,10 @@ private:
   template <u32 Base>
   void call_format_integral(String& buf, T value, PaddingOptions opts) const noexcept {
     switch (sign_) {
-    case ' ':
+    case FormatStringParser::Sign::Normal:
+      [[likely]] pad_integral<Base>(buf, value, opts);
+      break;
+    case FormatStringParser::Sign::Space:
       if constexpr (UnsignedIntegral<T>) {
         pad_integral<Base, " ">(buf, value, opts);
       } else {
@@ -103,7 +120,7 @@ private:
         }
       }
       break;
-    case '+':
+    case FormatStringParser::Sign::Plus:
       if constexpr (UnsignedIntegral<T>) {
         pad_integral<Base, "+">(buf, value, opts);
       } else {
@@ -115,17 +132,25 @@ private:
       }
       break;
     default:
-      pad_integral<Base>(buf, value, opts);
-      break;
+      [[unlikely]] break;
     }
   }
 
 private:
-  u32  width_ = 0;
-  char fill_  = ' ';
-  char align_ = '>';
-  char sign_  = '\0';
-  char type_  = 'd';
+  enum class Type : u8 {
+    Binary,
+    Octal,
+    Decimal,
+    Hex,
+    Char,
+    DebugChar,
+  };
+
+  u32                       width_     = 0;
+  char                      fill_      = ' ';
+  Type                      type_ : 3  = Character<T> ? Type::Char : Type::Decimal;
+  FormatStringParser::Align align_ : 2 = FormatStringParser::Align::Right;
+  FormatStringParser::Sign  sign_ : 2  = FormatStringParser::Sign::Normal;
 };
 
 template <> class Formatter<bool> {
@@ -133,9 +158,12 @@ public:
   constexpr const char* parse(const char* fmt) noexcept {
     FormatStringParser parser(fmt);
     fill_  = parser.check_fill();
-    align_ = parser.check_align('>');
+    align_ = parser.check_align(FormatStringParser::Align::Right);
     width_ = parser.check_width();
-    type_  = parser.check_option('a', "ad");
+    if (parser.skip('d')) {
+      type_ = Type::Decimal;
+    }
+    parser.skip('s');
     return parser.end_parse();
   }
 
@@ -145,7 +173,7 @@ public:
         .fill  = fill_,
         .align = align_,
     };
-    if (type_ == 'a') {
+    if (type_ == Type::String) {
       pad_string<false>(buf, value ? "true"_sv : "false"_sv, opts);
     } else {
       pad_char(buf, static_cast<char>('0' + static_cast<int>(value)), opts);
@@ -153,10 +181,15 @@ public:
   }
 
 private:
-  u32  width_ = 0;
-  char fill_  = ' ';
-  char align_ = '>';
-  char type_  = 'a';
+  enum class Type : u8 {
+    String,
+    Decimal,
+  };
+
+  u32                       width_     = 0;
+  char                      fill_      = ' ';
+  FormatStringParser::Align align_ : 2 = FormatStringParser::Align::Right;
+  Type                      type_ : 1  = Type::String;
 };
 
 template <FloatingPoint T> class Formatter<T> {
@@ -164,22 +197,36 @@ public:
   constexpr const char* parse(const char* fmt) {
     FormatStringParser parser(fmt);
     fill_  = parser.check_fill();
-    align_ = parser.check_align('>');
+    align_ = parser.check_align(FormatStringParser::Align::Right);
     sign_  = parser.check_sign();
     width_ = parser.check_width();
-    type_  = parser.check_option('g', "gfea");
+    if (parser.skip('f')) {
+      type_ = Type::General;
+    } else if (parser.skip('e')) {
+      type_ = Type::Scientific;
+    } else if (parser.skip('a')) {
+      type_ = Type::Hex;
+    }
+    parser.skip('g');
     return parser.end_parse();
   }
 
   void format(String& buf, T value) const noexcept;
 
 private:
-  u32  precision_ = 0;
-  u32  width_     = 0;
-  char fill_      = ' ';
-  char align_     = '>';
-  char sign_      = '\0';
-  char type_      = 'g';
+  enum class Type : u8 {
+    General,
+    Fixed,
+    Scientific,
+    Hex,
+  };
+
+  u32                       precision_ = 2;
+  u32                       width_     = 0;
+  char                      fill_      = ' ';
+  Type                      type_ : 2  = Type::General;
+  FormatStringParser::Align align_ : 2 = FormatStringParser::Align::Right;
+  FormatStringParser::Sign  sign_ : 2  = FormatStringParser::Sign::Normal;
 };
 
 template <typename T> class Formatter<T*> {
@@ -187,7 +234,7 @@ public:
   constexpr const char* parse(const char* fmt) noexcept {
     FormatStringParser parser(fmt);
     fill_  = parser.check_fill();
-    align_ = parser.check_align('>');
+    align_ = parser.check_align(FormatStringParser::Align::Right);
     width_ = parser.check_width();
     return parser.end_parse();
   }
@@ -203,9 +250,9 @@ public:
   }
 
 private:
-  u32  width_ = 0;
-  char fill_  = ' ';
-  char align_ = '<';
+  u32                       width_     = 0;
+  char                      fill_      = ' ';
+  FormatStringParser::Align align_ : 2 = FormatStringParser::Align::Right;
 };
 
 template <Character Char, Integral SizeT> class Formatter<BasicStringView<Char, SizeT>> {
@@ -213,15 +260,18 @@ public:
   constexpr const char* parse(const char* fmt) noexcept {
     FormatStringParser parser(fmt);
     fill_  = parser.check_fill();
-    align_ = parser.check_align('<');
+    align_ = parser.check_align(FormatStringParser::Align::Left);
     width_ = parser.check_width();
-    type_  = parser.check_option('s', "s?");
+    if (parser.skip('?')) {
+      type_ = Type::Debug;
+    }
+    parser.skip('s');
     return parser.end_parse();
   }
 
   void format(String& buf, BasicStringView<Char, SizeT> str) const noexcept {
     const PaddingOptions opts{.width = width_, .fill = fill_, .align = align_};
-    if (type_ == 's') [[likely]] {
+    if (type_ == Type::String) [[likely]] {
       pad_string<false>(buf, BasicStringView<Char>(str.data(), static_cast<usize>(str.size())),
                         opts);
     } else {
@@ -231,10 +281,25 @@ public:
   }
 
 private:
-  u32  width_ = 0;
-  char fill_  = ' ';
-  char align_ = '<';
-  char type_  = 's';
+  enum class Type : u8 {
+    String,
+    Debug,
+  };
+  u32                       width_     = 0;
+  char                      fill_      = ' ';
+  FormatStringParser::Align align_ : 2 = FormatStringParser::Align::Left;
+  Type                      type_ : 1  = Type::String;
+};
+
+template <Character Char, Integral SizeT>
+class Formatter<Slice<Char, SizeT>> : Formatter<BasicStringView<Char, SizeT>> {
+public:
+  constexpr const char* parse(const char* fmt) noexcept {
+    return Formatter<BasicStringView<Char, SizeT>>::parse(fmt);
+  }
+  void format(String& buf, Slice<Char, SizeT> str) const noexcept {
+    return Formatter<BasicStringView<Char, SizeT>>::format(buf, {str.data(), str.size()});
+  }
 };
 
 template <Character Char> class Formatter<Char*> {
@@ -242,17 +307,21 @@ public:
   constexpr const char* parse(const char* fmt) noexcept {
     FormatStringParser parser(fmt);
     fill_  = parser.check_fill();
-    align_ = parser.check_align('<');
+    align_ = parser.check_align(FormatStringParser::Align::Left);
     width_ = parser.check_width();
-    type_  = parser.check_option('s', "s?x");
+    if (parser.skip('?')) {
+      type_ = Type::Debug;
+    } else if (parser.skip('x')) {
+      type_ = Type::Pointer;
+    }
     return parser.end_parse();
   }
 
   void format(String& buf, const Char* str) const noexcept {
     const PaddingOptions opts{.width = width_, .fill = fill_, .align = align_};
-    if (type_ == 's') [[likely]] {
+    if (type_ == Type::String) [[likely]] {
       pad_string<false>(buf, BasicStringView<Char>(str), opts);
-    } else if (type_ == '?') {
+    } else if (type_ == Type::Debug) {
       pad_string<true>(buf, BasicStringView<Char>(str), opts);
     } else {
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
@@ -261,10 +330,16 @@ public:
   }
 
 private:
-  u32  width_ = 0;
-  char fill_  = ' ';
-  char align_ = '<';
-  char type_  = 's';
+  enum class Type : u8 {
+    String,
+    Debug,
+    Pointer,
+  };
+
+  u32                       width_     = 0;
+  char                      fill_      = ' ';
+  Type                      type_ : 2  = 's';
+  FormatStringParser::Align align_ : 2 = FormatStringParser::Align::Left;
 };
 
 template <Character Char, usize N, AllocatorLike Allocator, Integral SizeT>
@@ -334,7 +409,7 @@ public:
   constexpr const char* parse(const char* fmt) noexcept {
     FormatStringParser parser(fmt);
     fill_  = parser.check_fill();
-    align_ = parser.check_align('<');
+    align_ = parser.check_align(FormatStringParser::Align::Left);
     width_ = parser.check_width();
     return parser.end_parse();
   }
@@ -422,9 +497,9 @@ private:
   static constexpr StackArray<StringView, 256> TABLE = make_table(IntegerSequenceToN<u32, 256>{});
 
 private:
-  u32  width_ = 0;
-  char fill_  = ' ';
-  char align_ = '>';
+  u32                       width_     = 0;
+  char                      fill_      = ' ';
+  FormatStringParser::Align align_ : 2 = FormatStringParser::Align::Left;
 };
 
 } // namespace base
