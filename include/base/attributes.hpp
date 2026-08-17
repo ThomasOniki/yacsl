@@ -1,16 +1,15 @@
 #pragma once
 
 #ifdef __clang__
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define BASE_ATTRIBUTE(attr) [[clang::attr]]
+#define BASE_LIFETIMEBOUND [[clang::lifetimebound]]
+#define BASE_NOINLINE [[clang::noinline]]
+#define BASE_ALWAYS_INLINE [[clang::always_inline]]
 #elif defined(__GNUC__)
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define BASE_ATTRIBUTE(attr) [[gnu::attr]]
+#define BASE_LIFETIMEBOUND
+#define BASE_NOINLINE [[gnu::noinline]]
+#define BASE_ALWAYS_INLINE [[gnu::always_inline]]
 #else
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define BASE_ATTRIBUTE(attr)
+#define BASE_LIFETIMEBOUND
+#define BASE_NOINLINE
+#define BASE_ALWAYS_INLINE
 #endif
-
-#define BASE_LIFETIMEBOUND BASE_ATTRIBUTE(lifetimebound)
-#define BASE_NOINLINE BASE_ATTRIBUTE(noinline)
-#define BASE_ALWAYS_INLINE BASE_ATTRIBUTE(always_inline)
