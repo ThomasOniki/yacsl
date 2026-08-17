@@ -123,7 +123,7 @@ void pad_string_middle_aligned(String& buf, BasicStringView<C, usize> str,
   write_maybe_debug_string<IsDebug>(begin + pad / 2, str);
 }
 
-template <bool IsDebug, Character C>
+template <bool IsDebug = false, Character C>
 void pad_string(String& buf, BasicStringView<C, usize> str, PaddingOptions opts) noexcept {
   if constexpr (IsDebug) {
     // + 2 for the 2 quotes
