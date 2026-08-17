@@ -20,7 +20,7 @@ public:
   constexpr BasicStringView(const T* cstr) : data_(cstr) {
     if constexpr (SameAs<char, T>) {
       if (!is_constant_evaluated()) {
-        size_ = strlen(cstr);
+        size_ = static_cast<SizeT>(strlen(cstr));
         return;
       }
     }
