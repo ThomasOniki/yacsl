@@ -175,7 +175,7 @@ public:
     align_ = parser.check_align(FormatStringParser::Align::Right);
     width_ = parser.check_width();
     if (parser.skip('d')) {
-      type_ = Type::Decimal;
+      type_ = Type::Numeric;
     }
     parser.skip('s');
     return parser.end_parse();
@@ -187,7 +187,7 @@ public:
         .fill  = fill_,
         .align = align_,
     };
-    if (type_ == Type::String) {
+    if (type_ == Type::Alpha) {
       pad_string(buf, value ? "true"_sv : "false"_sv, opts);
     } else {
       pad_char(buf, static_cast<char>('0' + static_cast<int>(value)), opts);
@@ -196,14 +196,14 @@ public:
 
 private:
   enum class Type : u8 {
-    String,
-    Decimal,
+    Alpha,
+    Numeric,
   };
 
   u32                       width_     = 0;
   char                      fill_      = ' ';
   FormatStringParser::Align align_ : 2 = FormatStringParser::Align::Right;
-  Type                      type_ : 1  = Type::String;
+  Type                      type_ : 1  = Type::Alpha;
 };
 
 template <FloatingPoint T> class Formatter<T> {
@@ -285,7 +285,7 @@ public:
 
   void format(String& buf, BasicStringView<Char, SizeT> str) const noexcept {
     const PaddingOptions opts{.width = width_, .fill = fill_, .align = align_};
-    if (type_ == Type::String) [[likely]] {
+    if (type_ == Type::Normal) [[likely]] {
       pad_string(buf, BasicStringView<Char>(str.data(), static_cast<usize>(str.size())), opts);
     } else {
       pad_string<true>(buf, BasicStringView<Char>(str.data(), static_cast<usize>(str.size())),
@@ -295,13 +295,13 @@ public:
 
 private:
   enum class Type : u8 {
-    String,
+    Normal,
     Debug,
   };
   u32                       width_     = 0;
   char                      fill_      = ' ';
   FormatStringParser::Align align_ : 2 = FormatStringParser::Align::Left;
-  Type                      type_ : 1  = Type::String;
+  Type                      type_ : 1  = Type::Normal;
 };
 
 template <Character Char, Integral SizeT>
@@ -344,14 +344,14 @@ public:
 
 private:
   enum class Type : u8 {
-    String,
+    CString,
     Debug,
     Pointer,
   };
 
   u32                       width_     = 0;
   char                      fill_      = ' ';
-  Type                      type_ : 2  = 's';
+  Type                      type_ : 2  = Type::CString;
   FormatStringParser::Align align_ : 2 = FormatStringParser::Align::Left;
 };
 
