@@ -5,6 +5,7 @@
 #include "base/containers/string.hpp"
 #include "base/formatting/char_encodings.hpp"
 #include "base/formatting/debug_string.hpp"
+#include "base/formatting/format_string_parser.hpp"
 #include "base/formatting/itoa.hpp"
 #include "base/memory/lifetimes.hpp"
 #include "base/ranges/string_view.hpp"
@@ -18,8 +19,8 @@ namespace base {
 
 struct PaddingOptions {
   alignas(8) u32 width;
-  char fill;
-  char align;
+  char                      fill;
+  FormatStringParser::Align align;
 };
 
 template <Character C> void pad_char(String& buf, C chr, PaddingOptions opts) {
@@ -30,10 +31,10 @@ template <Character C> void pad_char(String& buf, C chr, PaddingOptions opts) {
   }
   char*     begin      = buf.grow(opts.width);
   const u32 pad_amount = opts.width - len;
-  if (opts.align == '>') {
+  if (opts.align == FormatStringParser::Align::Right) {
     write_char(begin + pad_amount, chr);
     memset(begin, opts.fill, pad_amount);
-  } else if (opts.align == '<') {
+  } else if (opts.align == FormatStringParser::Align::Left) {
     write_char(begin, chr);
     memset(begin + len, opts.fill, pad_amount);
   } else {
@@ -54,14 +55,14 @@ template <Character C> void pad_debug_char(String& buf, C chr, PaddingOptions op
     return;
   }
   char* str = buf.grow(opts.width);
-  if (opts.align == '>') {
+  if (opts.align == FormatStringParser::Align::Right) {
     const u32 pad_amount = opts.width - len;
     str[pad_amount]      = '\'';
     ++str;
     str[pad_amount + len] = '\'';
     write_debug_char(str + pad_amount, chr);
     memset(str, opts.fill, pad_amount);
-  } else if (opts.align == '<') {
+  } else if (opts.align == FormatStringParser::Align::Left) {
     const u32 pad_amount = opts.width - len;
     str[0]               = '\'';
     ++str;
@@ -137,9 +138,9 @@ void pad_string(String& buf, BasicStringView<C, usize> str, PaddingOptions opts)
     }
   }
 
-  if (opts.align == '<') {
+  if (opts.align == FormatStringParser::Align::Left) {
     pad_string_left_aligned<IsDebug>(buf, str, opts);
-  } else if (opts.align == '>') {
+  } else if (opts.align == FormatStringParser::Align::Right) {
     pad_string_right_aligned<IsDebug>(buf, str, opts);
   } else {
     pad_string_middle_aligned<IsDebug>(buf, str, opts);
@@ -162,56 +163,57 @@ constexpr StackArray<T, 129 + Offset> gen_powers() noexcept {
   return ret;
 }
 
-template <u32 Base, NTTPString Prefix = "", UnsignedIntegral T>
+template <NTTPString Charset, NTTPString Prefix = "", UnsignedIntegral T>
 void pad_integral(String& buf, T value, PaddingOptions opts) noexcept {
   // Prefix.size() zeroes, 0, Base, Base^2, Base^3... Base^128
-  static constexpr StackArray<T, 129 + Prefix.size()> powers = gen_powers<Base, Prefix.size(), T>();
+  static constexpr StackArray<T, 129 + Prefix.size()> powers =
+      gen_powers<Charset.size(), Prefix.size(), T>();
 
-  constexpr u32 max_len = count_digits_base_x<Base>(Limits<T>::max);
+  constexpr u32 max_len = count_digits(Limits<T>::max, Charset.size());
 
   // If value < powers[width], value has width or less digits. If it does, you should skip padding
   // and just use itoa.
   if (opts.width < max_len && value >= powers[opts.width]) {
-    char* str = buf.grow(count_digits_base_x<Base>(value) + Prefix.size());
+    char* str = buf.grow(count_digits(value, Charset.size()) + Prefix.size());
     copy(Prefix.slice(), str);
-    itoa_from_end_base_x<Base>(buf.end(), value);
+    itoa_from_end(buf.end(), value, Charset.view());
     return;
   }
 
   char* begin = buf.grow(opts.width);
-  if (opts.align == '>') {
-    char* prefix_begin = itoa_from_end_base_x<Base>(buf.end(), value) - Prefix.size();
+  if (opts.align == FormatStringParser::Align::Right) {
+    char* prefix_begin = itoa_from_end(buf.end(), value, Charset.view()) - Prefix.size();
     copy(Prefix.slice(), prefix_begin);
     memset(begin, opts.fill, static_cast<usize>(prefix_begin - begin));
-  } else if (opts.align == '<') {
-    const usize len = count_digits_base_x<Base>(value);
+  } else if (opts.align == FormatStringParser::Align::Left) {
+    const usize len = count_digits(value, Charset.size());
     copy(Prefix.slice(), begin);
     char* num_end = begin + Prefix.size() + len;
-    itoa_from_end_base_x<Base>(num_end, value);
+    itoa_from_end(num_end, value, Charset.view());
     memset(num_end, opts.fill, static_cast<usize>(buf.end() - num_end));
   } else {
     memset(begin, opts.fill, opts.width);
-    const usize len     = count_digits_base_x<Base>(value);
+    const usize len     = count_digits(value, Charset.size());
     usize       padding = opts.width - (len + Prefix.size());
     padding /= 2;
     copy(Prefix.slice(), begin + padding);
-    itoa_from_end_base_x<Base>(begin + padding + Prefix.size() + len, value);
+    itoa_from_end(begin + padding + Prefix.size() + len, value, Charset.view());
   }
 }
 
-template <u32 Base, NTTPString Prefix = "", SignedIntegral T>
+template <NTTPString Charset, NTTPString Prefix = "", SignedIntegral T>
 void pad_integral(String& buf, T value, PaddingOptions opts) noexcept {
-  if (value < 0) {
-    constexpr auto with_minus = []() {
-      NTTPString<Prefix.size() + 1> ret;
-      copy(Prefix.slice(), ret.data());
-      ret[Prefix.size()] = '-';
-      return ret;
-    }();
-    pad_integral<Base, with_minus>(buf, static_cast<MakeUnsigned<T>>(-value), opts);
-  } else {
-    pad_integral<Base, Prefix>(buf, static_cast<MakeUnsigned<T>>(value), opts);
+  if (value >= 0) {
+    pad_integral<Charset, Prefix>(buf, static_cast<MakeUnsigned<T>>(value), opts);
+    return;
   }
+  constexpr auto with_minus = []() {
+    NTTPString<Prefix.size() + 1> ret;
+    copy(Prefix.slice(), ret.data());
+    ret[Prefix.size()] = '-';
+    return ret;
+  }();
+  pad_integral<Charset, with_minus>(buf, static_cast<MakeUnsigned<T>>(-value), opts);
 }
 
 } // namespace base
