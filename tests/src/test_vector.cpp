@@ -190,7 +190,7 @@ private:
       EXPECT_EQ(moved_to[1].name_, "b");
 
       moved_to.push_back(TestClass("c"));
-      // Move order on realloc is implementatoin defined, so the exact order can't be checked.
+      // Move order on realloc is implementation defined, so the exact order can't be checked.
       func(false);
 
       const TestClass copied("d");
@@ -204,7 +204,7 @@ private:
       EXPECT_EQ(moved_to[2].name_, "c (moved)");
       EXPECT_EQ(moved_to[3].name_, "d (copied)");
     }
-    // Destruction order is also implementatoin defined.
+    // Destruction order is also implementation defined.
     func(false);
     return ret;
   }
