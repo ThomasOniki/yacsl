@@ -14,7 +14,7 @@ constexpr char* itoa_from_end(BASE_LIFETIMEBOUND char* buf_end, T value,
   const u32 base = static_cast<u32>(charset.size());
   while (value >= base) {
     *--buf_end = charset[static_cast<u32>(value % base)];
-    value /= base;
+    value      = static_cast<T>(value / base);
   }
   *--buf_end = charset[static_cast<u32>(value)];
   return buf_end;
@@ -31,12 +31,11 @@ constexpr char* itoa_from_end(BASE_LIFETIMEBOUND char* buf_end, T value,
   return buf_end;
 }
 
-template <UnsignedIntegral T> constexpr u32 count_digits(T value, u32 base = 10) {
+template <UnsignedIntegral T> constexpr u32 count_digits(T value, u32 base = 10) noexcept {
   u32 count = 1;
-  value /= base;
-  while (value > 0) {
+  while (value >= base) {
     ++count;
-    value /= base;
+    value = static_cast<T>(value / base);
   }
   return count;
 }
