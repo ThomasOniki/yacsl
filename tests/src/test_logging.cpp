@@ -78,26 +78,31 @@ int main() {
   log_to_file(Trace2, "decimal: {}, hex: {x}, binary: {b}, octal: {o}.", 5, 0x3a, 0b101, 075);
   check("[TRACE 2] decimal: 5, hex: 3a, binary: 101, octal: 75.");
 
-  log_to_file(Trace1, "aligned: {010}, centered: {*^7}, left, hex: {<4x}.", 96, 737, 0xf3a);
-  check("[TRACE 1] aligned: 0000000096, centered: **737**, left, hex: f3a .");
+  log_to_file(Trace1, "Alternate forms: {#x}, {#b}, {#o}", 0x3a, 0b101, 075);
+  check("[TRACE 1] Alternate forms: 0x3a, 0b101, 075");
 
-  log_to_file(Debug, "+ sign: {0+10}.", 386);
-  check("[DEBUG] + sign: 000000+386.");
+  log_to_file(Debug, "aligned: {010}, centered: {*^7}, left, binary: {<#8b}.", 96, 737, 0b1101);
+  check("[DEBUG] aligned: 0000000096, centered: **737**, left, binary: 0b1101  .");
 
-  log_to_file(Info, "int list: {}, hex int list: {08x}", base::InitializerList<int>{0, -1, 20, -35},
+  log_to_file(Info, "explicit + sign: {0+10}. space for plus sign: {*^ #9x}, {*^ #9x}", 386, 0xaf,
+              -0xaf);
+  check("[INFO] explicit + sign: 000000+386. space for plus sign: ** 0xaf**, **-0xaf**");
+
+  log_to_file(Warning, "int list: {}, hex int list: {08x}",
+              base::InitializerList<int>{0, -1, 20, -35},
               base::InitializerList<int>{0xF, -0x1a, 0x1, 0x0});
-  check("[INFO] int list: [0, -1, 20, -35], hex int list: [0000000f, 00000-1a, 00000001, "
+  check("[WARNING] int list: [0, -1, 20, -35], hex int list: [0000000f, 00000-1a, 00000001, "
         "00000000]");
 
-  log_to_file(Warning, "centered wstring: |{^10}|", L"hello");
-  check("[WARNING] centered wstring: |  hello   |");
+  log_to_file(Error, "centered wstring: |{^10}|", L"hello");
+  check("[ERROR] centered wstring: |  hello   |");
 
-  log_to_file(Error, "debug char: {?}, debug string: {?}", '\n', "\x17\0abcde\n\t");
-  check(R"([ERROR] debug char: '\n', debug string: "\x17\0abcde\n\t")");
+  log_to_file(Panic, "debug char: {?}, debug string: {?}", '\n', "\x17\0abcde\n\t");
+  check(R"([PANIC] debug char: '\n', debug string: "\x17\0abcde\n\t")");
 
-  log_to_file(Panic, "unicode char: {}, debug wstring with unicode: {*>3?}", U'😁',
+  log_to_file(Info, "unicode char: {}, debug wstring with unicode: {*>3?}", U'😁',
               L"nerd emoji: 🤓");
-  check("[PANIC] unicode char: 😁, debug wstring with unicode: \"nerd emoji: 🤓\"");
+  check("[INFO] unicode char: 😁, debug wstring with unicode: \"nerd emoji: 🤓\"");
 
   log_to_file(Info, "char16_t string range: {*^10}",
               base::InitializerList<base::BasicStringView<char16_t>>{

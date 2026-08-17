@@ -35,10 +35,11 @@ template <Integral T> class Formatter<T> {
 public:
   constexpr const char* parse(const char* fmt) noexcept {
     FormatStringParser parser(fmt);
-    fill_  = parser.check_fill();
-    align_ = parser.check_align(FormatStringParser::Align::Right);
-    sign_  = parser.check_sign();
-    width_ = parser.check_width();
+    fill_              = parser.check_fill();
+    align_             = parser.check_align(FormatStringParser::Align::Right);
+    sign_              = parser.check_sign();
+    is_alternate_form_ = parser.skip('#');
+    width_             = parser.check_width();
     if (parser.skip('b')) {
       type_ = Type::Binary;
     } else if (parser.skip('o')) {
@@ -64,16 +65,28 @@ public:
 
     switch (type_) {
     case Type::Binary:
-      call_format_integral<"01">(buf, value, opts);
+      if (is_alternate_form_) {
+        format_with_sign<"01", "0b">(buf, value, opts);
+      } else {
+        format_with_sign<"01", "">(buf, value, opts);
+      }
       break;
     case Type::Octal:
-      call_format_integral<"01234567">(buf, value, opts);
+      if (is_alternate_form_) {
+        format_with_sign<"01234567", "0">(buf, value, opts);
+      } else {
+        format_with_sign<"01234567", "">(buf, value, opts);
+      }
       break;
     case Type::Decimal:
-      [[likely]] call_format_integral<"0123456789">(buf, value, opts);
+      [[likely]] format_with_sign<"0123456789", "">(buf, value, opts);
       break;
     case Type::Hex:
-      call_format_integral<"0123456789abcdef">(buf, value, opts);
+      if (is_alternate_form_) {
+        format_with_sign<"0123456789abcdef", "0x">(buf, value, opts);
+      } else {
+        format_with_sign<"0123456789abcdef", "">(buf, value, opts);
+      }
       break;
     case Type::Char:
       if constexpr (Character<T>) {
@@ -103,36 +116,36 @@ public:
   }
 
 private:
-  template <NTTPString Charset>
-  void call_format_integral(String& buf, T value, PaddingOptions opts) const noexcept {
+  template <NTTPString Charset, NTTPString Prefix>
+  void format_with_sign(String& buf, T value, PaddingOptions opts) const noexcept {
     switch (sign_) {
     case FormatStringParser::Sign::Normal:
-      [[likely]] pad_integral<Charset>(buf, value, opts);
+      [[likely]] format_with_prefix_after_sign<Charset, Prefix, "">(buf, value, opts);
       break;
     case FormatStringParser::Sign::Space:
-      if constexpr (UnsignedIntegral<T>) {
-        pad_integral<Charset, " ">(buf, value, opts);
-      } else {
-        if (value < 0) {
-          pad_integral<Charset, "-">(buf, static_cast<MakeUnsigned<T>>(-value), opts);
-        } else {
-          pad_integral<Charset, " ">(buf, static_cast<MakeUnsigned<T>>(value), opts);
-        }
-      }
+      format_with_prefix_after_sign<Charset, Prefix, " ">(buf, value, opts);
       break;
     case FormatStringParser::Sign::Plus:
-      if constexpr (UnsignedIntegral<T>) {
-        pad_integral<Charset, "+">(buf, value, opts);
-      } else {
-        if (value < 0) {
-          pad_integral<Charset, "-">(buf, static_cast<MakeUnsigned<T>>(-value), opts);
-        } else {
-          pad_integral<Charset, "+">(buf, static_cast<MakeUnsigned<T>>(value), opts);
-        }
-      }
+      format_with_prefix_after_sign<Charset, Prefix, "+">(buf, value, opts);
       break;
     default:
       [[unlikely]] break;
+    }
+  }
+
+public:
+  template <NTTPString Charset, NTTPString Prefix, NTTPString Plus = "">
+  static void format_with_prefix_after_sign(String& buf, T value, PaddingOptions opts) noexcept {
+    if constexpr (UnsignedIntegral<T>) {
+      pad_integral<Charset, cat_nttpstrings<Plus, Prefix>>(buf, value, opts);
+    } else {
+      if (value >= 0) {
+        pad_integral<Charset, cat_nttpstrings<Plus, Prefix>>(
+            buf, static_cast<MakeUnsigned<T>>(value), opts);
+      } else {
+        pad_integral<Charset, cat_nttpstrings<"-", Prefix>>(
+            buf, static_cast<MakeUnsigned<T>>(-value), opts);
+      }
     }
   }
 
@@ -146,11 +159,12 @@ private:
     DebugChar,
   };
 
-  u32                       width_     = 0;
-  char                      fill_      = ' ';
-  Type                      type_ : 3  = Character<T> ? Type::Char : Type::Decimal;
-  FormatStringParser::Align align_ : 2 = FormatStringParser::Align::Right;
-  FormatStringParser::Sign  sign_ : 2  = FormatStringParser::Sign::Normal;
+  u32                       width_                 = 0;
+  char                      fill_                  = ' ';
+  Type                      type_ : 3              = Character<T> ? Type::Char : Type::Decimal;
+  FormatStringParser::Align align_ : 2             = FormatStringParser::Align::Right;
+  FormatStringParser::Sign  sign_ : 2              = FormatStringParser::Sign::Normal;
+  bool                      is_alternate_form_ : 1 = false;
 };
 
 template <> class Formatter<bool> {
