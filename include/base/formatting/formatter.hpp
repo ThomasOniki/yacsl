@@ -42,12 +42,16 @@ public:
     width_             = parser.check_width();
     if (parser.skip('b')) {
       type_ = Type::Binary;
+    } else if (parser.skip('B')) {
+      type_ = Type::BinaryUpperCase;
     } else if (parser.skip('o')) {
       type_ = Type::Octal;
     } else if (parser.skip('d')) {
       type_ = Type::Decimal;
     } else if (parser.skip('x')) {
       type_ = Type::Hex;
+    } else if (parser.skip('X')) {
+      type_ = Type::HexUpperCase;
     } else if (parser.skip('c')) {
       type_ = Type::Char;
     } else if (parser.skip('?')) {
@@ -71,6 +75,13 @@ public:
         format_with_sign<"01", "">(buf, value, opts);
       }
       break;
+    case Type::BinaryUpperCase:
+      if (is_alternate_form_) {
+        format_with_sign<"01", "0B">(buf, value, opts);
+      } else {
+        format_with_sign<"01", "">(buf, value, opts);
+      }
+      break;
     case Type::Octal:
       if (is_alternate_form_) {
         format_with_sign<"01234567", "0">(buf, value, opts);
@@ -86,6 +97,13 @@ public:
         format_with_sign<"0123456789abcdef", "0x">(buf, value, opts);
       } else {
         format_with_sign<"0123456789abcdef", "">(buf, value, opts);
+      }
+      break;
+    case Type::HexUpperCase:
+      if (is_alternate_form_) {
+        format_with_sign<"0123456789ABCDEF", "0X">(buf, value, opts);
+      } else {
+        format_with_sign<"0123456789ABCDEF", "">(buf, value, opts);
       }
       break;
     case Type::Char:
@@ -152,9 +170,11 @@ public:
 private:
   enum class Type : u8 {
     Binary,
+    BinaryUpperCase,
     Octal,
     Decimal,
     Hex,
+    HexUpperCase,
     Char,
     DebugChar,
   };
