@@ -27,7 +27,7 @@ public:
     buf += TYPE_STRING<T>;
     buf += " at ";
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-    itoa_hex(buf, reinterpret_cast<uptr>(&value));
+    itoa(buf, reinterpret_cast<uptr>(&value), "0123456789abcdef");
   }
 };
 
@@ -64,16 +64,16 @@ public:
 
     switch (type_) {
     case Type::Binary:
-      call_format_integral<2>(buf, value, opts);
+      call_format_integral<"01">(buf, value, opts);
       break;
     case Type::Octal:
-      call_format_integral<8>(buf, value, opts);
+      call_format_integral<"01234567">(buf, value, opts);
       break;
     case Type::Decimal:
-      [[likely]] call_format_integral<10>(buf, value, opts);
+      [[likely]] call_format_integral<"0123456789">(buf, value, opts);
       break;
     case Type::Hex:
-      call_format_integral<16>(buf, value, opts);
+      call_format_integral<"0123456789abcdef">(buf, value, opts);
       break;
     case Type::Char:
       if constexpr (Character<T>) {
@@ -103,31 +103,31 @@ public:
   }
 
 private:
-  template <u32 Base>
+  template <NTTPString Charset>
   void call_format_integral(String& buf, T value, PaddingOptions opts) const noexcept {
     switch (sign_) {
     case FormatStringParser::Sign::Normal:
-      [[likely]] pad_integral<Base>(buf, value, opts);
+      [[likely]] pad_integral<Charset>(buf, value, opts);
       break;
     case FormatStringParser::Sign::Space:
       if constexpr (UnsignedIntegral<T>) {
-        pad_integral<Base, " ">(buf, value, opts);
+        pad_integral<Charset, " ">(buf, value, opts);
       } else {
         if (value < 0) {
-          pad_integral<Base, "-">(buf, static_cast<MakeUnsigned<T>>(-value), opts);
+          pad_integral<Charset, "-">(buf, static_cast<MakeUnsigned<T>>(-value), opts);
         } else {
-          pad_integral<Base, " ">(buf, static_cast<MakeUnsigned<T>>(value), opts);
+          pad_integral<Charset, " ">(buf, static_cast<MakeUnsigned<T>>(value), opts);
         }
       }
       break;
     case FormatStringParser::Sign::Plus:
       if constexpr (UnsignedIntegral<T>) {
-        pad_integral<Base, "+">(buf, value, opts);
+        pad_integral<Charset, "+">(buf, value, opts);
       } else {
         if (value < 0) {
-          pad_integral<Base, "-">(buf, static_cast<MakeUnsigned<T>>(-value), opts);
+          pad_integral<Charset, "-">(buf, static_cast<MakeUnsigned<T>>(-value), opts);
         } else {
-          pad_integral<Base, "+">(buf, static_cast<MakeUnsigned<T>>(value), opts);
+          pad_integral<Charset, "+">(buf, static_cast<MakeUnsigned<T>>(value), opts);
         }
       }
       break;
@@ -246,7 +246,7 @@ public:
         .align = align_,
     };
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-    pad_integral<16>(buf, reinterpret_cast<uptr>(ptr), opts);
+    pad_integral<"0123456789abcdef">(buf, reinterpret_cast<uptr>(ptr), opts);
   }
 
 private:
@@ -325,7 +325,7 @@ public:
       pad_string<true>(buf, BasicStringView<Char>(str), opts);
     } else {
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-      pad_integral<16>(buf, reinterpret_cast<uptr>(str), opts);
+      pad_integral<"0123456789abcdef">(buf, reinterpret_cast<uptr>(str), opts);
     }
   }
 
@@ -426,7 +426,7 @@ public:
       pad_string<false>(buf, TABLE[u_val], opts);
       return;
     }
-    pad_integral<10, NTTPString<CAST_STRING.size()>(CAST_STRING)>(buf, scalar, opts);
+    pad_integral<"0123456789", NTTPString<CAST_STRING.size()>(CAST_STRING)>(buf, scalar, opts);
   }
 
 private:
