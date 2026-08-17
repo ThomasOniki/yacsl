@@ -260,7 +260,7 @@ public:
         .align = align_,
     };
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-    pad_integral<"0123456789abcdef">(buf, reinterpret_cast<uptr>(ptr), opts);
+    pad_integral<"0123456789abcdef", "0x">(buf, reinterpret_cast<uptr>(ptr), opts);
   }
 
 private:
