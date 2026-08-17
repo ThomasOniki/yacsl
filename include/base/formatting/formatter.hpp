@@ -174,7 +174,7 @@ public:
         .align = align_,
     };
     if (type_ == Type::String) {
-      pad_string<false>(buf, value ? "true"_sv : "false"_sv, opts);
+      pad_string(buf, value ? "true"_sv : "false"_sv, opts);
     } else {
       pad_char(buf, static_cast<char>('0' + static_cast<int>(value)), opts);
     }
@@ -272,8 +272,7 @@ public:
   void format(String& buf, BasicStringView<Char, SizeT> str) const noexcept {
     const PaddingOptions opts{.width = width_, .fill = fill_, .align = align_};
     if (type_ == Type::String) [[likely]] {
-      pad_string<false>(buf, BasicStringView<Char>(str.data(), static_cast<usize>(str.size())),
-                        opts);
+      pad_string(buf, BasicStringView<Char>(str.data(), static_cast<usize>(str.size())), opts);
     } else {
       pad_string<true>(buf, BasicStringView<Char>(str.data(), static_cast<usize>(str.size())),
                        opts);
@@ -320,7 +319,7 @@ public:
   void format(String& buf, const Char* str) const noexcept {
     const PaddingOptions opts{.width = width_, .fill = fill_, .align = align_};
     if (type_ == Type::String) [[likely]] {
-      pad_string<false>(buf, BasicStringView<Char>(str), opts);
+      pad_string(buf, BasicStringView<Char>(str), opts);
     } else if (type_ == Type::Debug) {
       pad_string<true>(buf, BasicStringView<Char>(str), opts);
     } else {
@@ -423,7 +422,7 @@ public:
         .align = align_,
     };
     if (u_val < 256) {
-      pad_string<false>(buf, TABLE[u_val], opts);
+      pad_string(buf, TABLE[u_val], opts);
       return;
     }
     pad_integral<"0123456789", NTTPString<CAST_STRING.size()>(CAST_STRING)>(buf, scalar, opts);
