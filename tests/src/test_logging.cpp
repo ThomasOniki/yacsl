@@ -78,8 +78,9 @@ int main() {
   log_to_file(Trace2, "decimal: {}, hex: {x}, binary: {b}, octal: {o}.", 5, 0x3a, 0b101, 075);
   check("[TRACE 2] decimal: 5, hex: 3a, binary: 101, octal: 75.");
 
-  log_to_file(Trace1, "Alternate forms: {#x}, {#b}, {#o}", 0x3a, 0b101, 075);
-  check("[TRACE 1] Alternate forms: 0x3a, 0b101, 075");
+  log_to_file(Trace1, "Alternate forms: {#x}, {#b}, {#o}. Uppercase: {X}, {B}, {#X}, {#B}", 0x3a,
+              0b101, 075, 0X3A, 0B101, 0X3A, 0B101);
+  check("[TRACE 1] Alternate forms: 0x3a, 0b101, 075. Uppercase: 3A, 101, 0X3A, 0B101");
 
   log_to_file(Debug, "aligned: {010}, centered: {*^7}, left, binary: {<#8b}.", 96, 737, 0b1101);
   check("[DEBUG] aligned: 0000000096, centered: **737**, left, binary: 0b1101  .");
