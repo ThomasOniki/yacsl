@@ -127,7 +127,7 @@ static int test_copied_lambda() {
     CHECK_COUNTS(0);
 
     if (TestAllocator::allocate_call_count != 1) {
-      (void)fprintf(stderr, "Expected 1 allocatoin, got %u", TestAllocator::allocate_call_count);
+      (void)fprintf(stderr, "Expected 1 allocation, got %u", TestAllocator::allocate_call_count);
     }
     if (TestAllocator::free_call_count != 0) {
       (void)fprintf(stderr, "Expected 0 frees, got %u", TestAllocator::free_call_count);
