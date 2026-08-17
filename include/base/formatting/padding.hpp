@@ -207,13 +207,8 @@ void pad_integral(String& buf, T value, PaddingOptions opts) noexcept {
     pad_integral<Charset, Prefix>(buf, static_cast<MakeUnsigned<T>>(value), opts);
     return;
   }
-  constexpr auto with_minus = []() {
-    NTTPString<Prefix.size() + 1> ret;
-    copy(Prefix.slice(), ret.data());
-    ret[Prefix.size()] = '-';
-    return ret;
-  }();
-  pad_integral<Charset, with_minus>(buf, static_cast<MakeUnsigned<T>>(-value), opts);
+  pad_integral<Charset, cat_nttpstrings<Prefix, "-">>(buf, static_cast<MakeUnsigned<T>>(-value),
+                                                      opts);
 }
 
 } // namespace base

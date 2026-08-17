@@ -2,6 +2,7 @@
 
 #include "base/attributes.hpp"
 #include "base/containers/stack_array.hpp"
+#include "base/memory/lifetimes.hpp"
 #include "base/ranges/reverse_iterator.hpp"
 #include "base/ranges/string_view.hpp"
 #include "base/type_traits/categories.hpp"
@@ -158,5 +159,13 @@ public:
 
 template <Character C, usize N> // NOLINTNEXTLINE(modernize-avoid-c-arrays)
 NTTPString(const C (&str)[N]) -> NTTPString<N - 1, C, usize>;
+
+template <NTTPString... Strings>
+constexpr NTTPString cat_nttpstrings = []() {
+  NTTPString<(... + Strings.size())> ret;
+  usize                              offset = 0;
+  (..., (offset += copy(Strings.slice(), ret.data() + offset).size()));
+  return ret;
+}();
 
 } // namespace base
