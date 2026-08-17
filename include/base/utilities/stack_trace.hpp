@@ -49,7 +49,10 @@ struct StackTrace {
   void print(Logger::Level lvl) noexcept {
     compute_entries();
     for (usize i = 0; i < entries_.size(); ++i) {
-      base::log(lvl, "#{} {} in {}", i, entries_[i].address, entries_[i].caller);
+      base::log(lvl, "#{} {} in {} ({}+{#x})", i, entries_[i].address, entries_[i].caller,
+                entries_[i].object,
+                static_cast<uchar*>(entries_[i].address) -
+                    static_cast<uchar*>(entries_[i].base_address));
     }
   }
 
