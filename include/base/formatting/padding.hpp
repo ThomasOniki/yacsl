@@ -171,8 +171,8 @@ void pad_integral(String& buf, T value, PaddingOptions opts) noexcept {
 
   constexpr u32 max_len = count_digits(Limits<T>::max, Charset.size());
 
-  // If value < powers[width], value has width or less digits. If it does, you should skip padding
-  // and just use itoa.
+  // If value >= powers[opts.width], value has width or more digits. If it does, you should skip
+  // padding and just use itoa.
   if (opts.width < max_len && value >= powers[opts.width]) {
     char* str = buf.grow(count_digits(value, Charset.size()) + Prefix.size());
     copy(Prefix.slice(), str);
