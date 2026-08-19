@@ -163,7 +163,7 @@ constexpr StackArray<T, 129 + Offset> gen_powers() noexcept {
   return ret;
 }
 
-template <NTTPString Charset, NTTPString Prefix = "", UnsignedIntegral T>
+template <NTTPString Charset = "0123456789", NTTPString Prefix = "", UnsignedIntegral T>
 void pad_integral(String& buf, T value, PaddingOptions opts) noexcept {
   // Prefix.size() zeroes, 0, Base, Base^2, Base^3... Base^128
   static constexpr StackArray<T, 129 + Prefix.size()> powers =
