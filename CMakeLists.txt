@@ -39,7 +39,7 @@ target_include_directories(
 file(GLOB_RECURSE BASE_SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
 target_sources(base PRIVATE "${BASE_SOURCES}")
 
-target_compile_features(base PUBLIC cxx_std_20)
+target_compile_features(base PUBLIC cxx_std_23)
 
 set_target_properties(base PROPERTIES VISIBILITY_INLINES_HIDDEN YES
                                       CXX_VISIBILITY_PRESET hidden)
