@@ -2,7 +2,18 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#ifdef _WIN32
+#include <fcntl.h>
+#include <io.h>
+#endif
+
 int main(int argc, const char* const* argv) {
+#ifdef _WIN32
+  // no "\n" to "\r\n" conversions
+  _setmode(STDOUT_FILENO, _O_BINARY);
+  _setmode(STDERR_FILENO, _O_BINARY);
+#endif
+
   assert(fputs("arguments (to stdout):\n", stdout) >= 0);
   for (int i = 1; i < argc; ++i) {
     assert(puts(argv[i]) >= 0);

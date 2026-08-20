@@ -1,26 +1,29 @@
 #ifdef _WIN32
+
+#include "base/type_traits/limits.hpp"
+#include "base/utilities/isize.hpp"
+#include "base/utilities/type_aliases.hpp"
+#include "win32-utils.hpp"
 #include <fileapi.h>
 #include <intsafe.h>
 #include <windows.h>
-#endif
-
-#ifdef _WIN32
 
 namespace base {
 
-[[nodiscard]] Error<File::OpenError> File::open(const char* path, FileOpenFlags flags) noexcept {
+[[nodiscard]] Error<File::OpenError> File::open(const char* path, File::Flags flags) noexcept {
   close();
-  const Result<HANDLE, OpenError> result = open_file(path, flags);
+  const Result<OpenedFile, OpenError> result = open_file(path, flags);
   if (result.is_ok()) [[likely]] {
-    handle_ = result.assert_ok();
+    handle_     = result.assert_ok().handle;
+    cursor_pos_ = result.assert_ok().cursor_pos;
     return NIL;
   }
-  handle_ = NIL_FILE_HANDLE;
+  handle_ = NIL_HANDLE;
   return result.assert_err();
 }
 
 void File::close() noexcept {
-  if (handle_ != NIL_FILE_HANDLE) {
+  if (handle_ != NIL_HANDLE) {
     BASE_TRY_SYSCALL(CloseHandle(handle_));
   }
 }
@@ -43,21 +46,49 @@ usize File::read(Slice<uchar> buffer) noexcept {
 }
 
 void File::seek_begin(isize offset) noexcept {
-  auto low  = static_cast<LONG>(offset);
-  auto high = static_cast<LONG>(offset / Limits<LONG>::max);
-  BASE_TRY_SYSCALL(SetFilePointer(handle_, low, high > 0 ? &high : nullptr, FILE_BEGIN));
+  auto  low     = static_cast<LONG>(offset);
+  auto  high    = static_cast<LONG>(offset / Limits<LONG>::max);
+  DWORD pos_low = SetFilePointer(handle_, low, &high, FILE_BEGIN);
+  if (pos_low == INVALID_SET_FILE_POINTER) {
+    const DWORD err = GetLastError();
+    if (err != NO_ERROR) {
+      panic("SetFilePointer failed: {}", win32_err_str(err));
+    }
+  }
+  cursor_pos_ = static_cast<usize>(high) * Limits<LONG>::max + pos_low;
 }
 void File::seek_end(isize offset) noexcept {
-  auto low  = static_cast<LONG>(offset);
-  auto high = static_cast<LONG>(offset / Limits<LONG>::max);
-  BASE_TRY_SYSCALL(SetFilePointer(handle_, low, high > 0 ? &high : nullptr, FILE_END));
+  auto  low     = static_cast<LONG>(offset);
+  auto  high    = static_cast<LONG>(offset / Limits<LONG>::max);
+  DWORD pos_low = SetFilePointer(handle_, low, &high, FILE_END);
+  if (pos_low == INVALID_SET_FILE_POINTER) {
+    const DWORD err = GetLastError();
+    if (err != NO_ERROR) {
+      panic("SetFilePointer failed: {}", win32_err_str(err));
+    }
+  }
+  cursor_pos_ = static_cast<usize>(high) * Limits<LONG>::max + pos_low;
 }
 void File::seek_cursor(isize offset) noexcept {
-  auto low  = static_cast<LONG>(offset);
-  auto high = static_cast<LONG>(offset / Limits<LONG>::max);
-  BASE_TRY_SYSCALL(SetFilePointer(handle_, low, high > 0 ? &high : nullptr, FILE_CURRENT));
+  auto  low     = static_cast<LONG>(offset);
+  auto  high    = static_cast<LONG>(offset / Limits<LONG>::max);
+  DWORD pos_low = SetFilePointer(handle_, low, &high, FILE_CURRENT);
+  if (pos_low == INVALID_SET_FILE_POINTER) {
+    const DWORD err = GetLastError();
+    if (err != NO_ERROR) {
+      panic("SetFilePointer failed: {}", win32_err_str(err));
+    }
+  }
+  cursor_pos_ = static_cast<usize>(high) * Limits<LONG>::max + pos_low;
 }
 // NOLINTEND(readability-make-member-function-const)
+
+bool File::is_tty() const noexcept {
+  if (is_tty_ == IsTtyFlag::NotComputed) {
+    is_tty_ = static_cast<IsTtyFlag>(GetFileType(handle_) == FILE_TYPE_CHAR);
+  }
+  return static_cast<bool>(is_tty_);
+}
 
 } // namespace base
 
