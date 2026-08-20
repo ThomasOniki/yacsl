@@ -2,17 +2,25 @@
 
 #include "base/containers/stack_array.hpp"
 #include "base/containers/stack_storage.hpp"
+#include "base/containers/string.hpp"
+#include "base/os/file.hpp"
 #include "base/os/process.hpp"
+#include "base/ranges/slice.hpp"
 #include "base/ranges/string_view.hpp"
+#include "base/utilities/type_aliases.hpp"
 #include "test_utils.hpp"
 #include <assert.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 #ifdef _WIN32
+#include <fileapi.h>
 #include <windows.h>
+#include <winerror.h>
+#include <winnt.h>
 #endif
 
 #define TRY_SYSCALL(syscall)                                                                       \
@@ -82,7 +90,7 @@ struct Pipes {
     TRY_SYSCALL_WIN32(SetHandleInformation(output[1], HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT));
     TRY_SYSCALL_WIN32(SetHandleInformation(error[1], HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT));
 
-    // NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast, performance-no-int-to-ptr)
+    // NOLINTBEGIN(performance-no-int-to-ptr)
     TRY_SYSCALL_WIN32(
         SetStdHandleEx(STD_INPUT_HANDLE, reinterpret_cast<HANDLE>(input[0]), &original[0]));
     TRY_SYSCALL_WIN32(
@@ -90,7 +98,7 @@ struct Pipes {
     TRY_SYSCALL_WIN32(
         SetStdHandleEx(STD_ERROR_HANDLE, reinterpret_cast<HANDLE>(error[1]), &original[2]));
 
-    //  NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast, performance-no-int-to-ptr)
+    //  NOLINTEND(performance-no-int-to-ptr)
 #else
     // NOLINTNEXTLINE(android-cloexec-pipe)
     TRY_SYSCALL(::pipe(input.data()));
@@ -146,14 +154,14 @@ template <typename T> static T create_io(Type type, const char* path, auto& pipe
 
 static void create_other_pipes(base::StackArray<Process, 3>& processes, IoTypes types) {
   if (types.input == Type::OtherPipe) {
-    Process::Stdio stdio{
+    const Process::Stdio stdio = {
         .input  = Process::Input::Inherit,
         .output = Process::Output::Pipe,
         .error  = Process::Output::Inherit,
     };
     processes[0].start({HELLO_WORLD_EXECUTABLE}, stdio).expect_nil();
   }
-  Process::Stdio stdio{
+  const Process::Stdio stdio = {
       .input  = Process::Input::Pipe,
       .output = Process::Output::Pipe,
       .error  = Process::Output::Inherit,
@@ -189,7 +197,7 @@ static void write_input(Type type, Process* proc, Pipes* pipes) {
 #ifdef _WIN32
 #define O_CLOEXEC _O_NOINHERIT
 #endif
-    int file = ::open(CHILD_STDIN_FILE_PATH, O_WRONLY | O_CREAT | O_CLOEXEC | O_TRUNC, 0644);
+    const int file = ::open(CHILD_STDIN_FILE_PATH, O_WRONLY | O_CREAT | O_CLOEXEC | O_TRUNC, 0644);
     assert(file != -1);
     assert(::write(file, INPUT_DATA.data(), INPUT_DATA.size()) == INPUT_DATA.size());
     assert(close(file) == 0);
@@ -266,7 +274,7 @@ static int check_other_pipe_output(base::StackArray<Process, 3>& processes,
                                    IoTypes                       types) noexcept {
   int ret = 0;
   if (types.output == Type::OtherPipe) {
-    Process::ExitStatus status = processes[1].wait();
+    const Process::ExitStatus status = processes[1].wait();
     EXPECT_SVEQ(status.unread_stdout, "arguments (to stdout):\n"
                                       "arg1\n"
                                       "arg2\n"
@@ -274,7 +282,7 @@ static int check_other_pipe_output(base::StackArray<Process, 3>& processes,
                                       "exiting (to stdout)\n");
   }
   if (types.error == Type::OtherPipe) {
-    Process::ExitStatus status = processes[2].wait();
+    const Process::ExitStatus status = processes[2].wait();
     if (types.input == Type::Null) {
       EXPECT_SVEQ(status.unread_stdout, "stdin (to stderr):\n"
                                         "exiting (to stderr)\n");
@@ -349,22 +357,29 @@ static int check_inherited_output(IoTypes types, const Pipes& pipes) {
   return ret;
 }
 
-static int check_piped_output(IoTypes types, base::StringView runtime_stdout,
-                              base::StringView runtime_stderr, const Process::ExitStatus& status) {
+namespace {
+struct RuntimeOutput {
+  base::StringView out;
+  base::StringView err;
+};
+} // namespace
+
+static int check_piped_output(IoTypes types, RuntimeOutput runtime_out,
+                              const Process::ExitStatus& status) {
   int ret = 0;
   if (types.output == Type::Pipe) {
     if (types.input == Type::Pipe || types.input == Type::Inherit) {
-      EXPECT_SVEQ(runtime_stdout, "arguments (to stdout):\n"
-                                  "arg1\n"
-                                  "arg2\n"
-                                  "argument with spaces\n");
+      EXPECT_SVEQ(runtime_out.out, "arguments (to stdout):\n"
+                                   "arg1\n"
+                                   "arg2\n"
+                                   "argument with spaces\n");
       EXPECT_SVEQ(status.unread_stdout, "exiting (to stdout)\n");
     } else {
-      EXPECT_SVEQ(runtime_stdout, "arguments (to stdout):\n"
-                                  "arg1\n"
-                                  "arg2\n"
-                                  "argument with spaces\n"
-                                  "exiting (to stdout)\n");
+      EXPECT_SVEQ(runtime_out.out, "arguments (to stdout):\n"
+                                   "arg1\n"
+                                   "arg2\n"
+                                   "argument with spaces\n"
+                                   "exiting (to stdout)\n");
       EXPECT_SVEQ(status.unread_stdout, "");
     }
   } else {
@@ -372,17 +387,17 @@ static int check_piped_output(IoTypes types, base::StringView runtime_stdout,
   }
   if (types.error == Type::Pipe) {
     if (types.input == Type::Pipe || types.input == Type::Inherit) {
-      EXPECT_SVEQ(runtime_stderr, "stdin (to stderr):\n"
-                                  "hello world\n");
+      EXPECT_SVEQ(runtime_out.err, "stdin (to stderr):\n"
+                                   "hello world\n");
       EXPECT_SVEQ(status.unread_stderr, "exiting (to stderr)\n");
     } else if (types.input == Type::Null) {
-      EXPECT_SVEQ(runtime_stderr, "stdin (to stderr):\n"
-                                  "exiting (to stderr)\n");
+      EXPECT_SVEQ(runtime_out.err, "stdin (to stderr):\n"
+                                   "exiting (to stderr)\n");
       EXPECT_SVEQ(status.unread_stderr, "");
     } else {
-      EXPECT_SVEQ(runtime_stderr, "stdin (to stderr):\n"
-                                  "hello world\n"
-                                  "exiting (to stderr)\n");
+      EXPECT_SVEQ(runtime_out.err, "stdin (to stderr):\n"
+                                   "hello world\n"
+                                   "exiting (to stderr)\n");
       EXPECT_SVEQ(status.unread_stderr, "");
     }
   } else {
@@ -400,7 +415,7 @@ static int test_run_c(IoTypes types) {
   base::StackArray<Process, 3> other_pipes;
   create_other_pipes(other_pipes, types);
 
-  Process::Stdio stdio = {
+  const Process::Stdio stdio = {
       .input  = create_io<Process::Input::Init>(types.input, CHILD_STDIN_FILE_PATH,
                                                 other_pipes[0].get_stdout()),
       .output = create_io<Process::Output::Init>(types.output, CHILD_STDOUT_FILE_PATH,
@@ -451,13 +466,14 @@ static int test_run_c(IoTypes types) {
 #else
   TRY_SYSCALL(::close(pipes.input[1]));
 #endif
-  Process::ExitStatus status = process.wait();
+  const Process::ExitStatus status = process.wait();
   pipes.restore_original_io();
 
   EXPECT(check_file_output(types) == 0);
   EXPECT(check_other_pipe_output(other_pipes, types) == 0);
   EXPECT(check_inherited_output(types, pipes) == 0);
-  EXPECT(check_piped_output(types, piped_output.view(), piped_error.view(), status) == 0);
+  EXPECT(check_piped_output(types, {.out = piped_output.view(), .err = piped_error.view()},
+                            status) == 0);
 
 #ifdef _WIN32
   TRY_SYSCALL_WIN32(CloseHandle(pipes.output[0]));
@@ -475,8 +491,8 @@ int main() {
 
   (void)base::Logger::get_default_instance();
 
-  base::StackArray<Type, 5> types = {Type::Null, Type::Inherit, Type::Pipe, Type::File,
-                                     Type::OtherPipe};
+  const base::StackArray<Type, 5> types = {Type::Null, Type::Inherit, Type::Pipe, Type::File,
+                                           Type::OtherPipe};
   for (Type stdin_type : types) {
     for (Type stdout_type : types) {
       for (Type stderr_type : types) {

@@ -14,7 +14,6 @@ template <Integral T> using MakeSigned   = __make_signed(T);
 
 namespace base::internal {
 
-// NOLINTBEGIN(google-runtime-int)
 template <typename T> struct MakeUnsignedImpl {
   using Type = FirstOfSize<sizeof(T), unsigned char, unsigned short, unsigned int, unsigned long,
                            unsigned long long, u128>::Type;
@@ -22,7 +21,6 @@ template <typename T> struct MakeUnsignedImpl {
 template <typename T> struct MakeSignedImpl {
   using Type = FirstOfSize<sizeof(T), signed char, short, int, long, long long, i128>::Type;
 };
-// NOLINTEND(google-runtime-int)
 
 template <typename T> struct MakeUnsignedImpl<const T> {
   using Type = const MakeUnsignedImpl<T>::Type;
@@ -31,7 +29,6 @@ template <typename T> struct MakeSignedImpl<const T> {
   using Type = const MakeSignedImpl<T>::Type;
 };
 
-// NOLINTBEGIN(google-runtime-int)
 // if sizeof(int) == sizeof(long), MakeUnsigned<long> will be unsigned int unless you explicitely
 // instantiate.
 template <> struct MakeUnsignedImpl<long> {
@@ -61,7 +58,6 @@ template <> struct MakeSignedImpl<long long> {
 template <> struct MakeSignedImpl<unsigned long long> {
   using Type = long long;
 };
-// NOLINTEND(google-runtime-int)
 
 } // namespace base::internal
 

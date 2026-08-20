@@ -76,26 +76,23 @@ template <TriviallyDestructible T> Slice<T, Arena::SizeT> Arena::push_array(Size
 
 // NOLINTNEXTLINE(misc-no-recursion)
 template <typename T> Slice<T, Arena::SizeT> Arena::allocate(SizeT count) noexcept {
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
   uptr top = reinterpret_cast<uptr>(ptr_);
   top      = (top + alignof(T) - 1) & ~(alignof(T) - 1);
   uptr ret = top;
   top += sizeof(T) * count;
 
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
   if (top > reinterpret_cast<uptr>(end_)) [[unlikely]] {
     reserve(static_cast<usize>(end_ - begin_) * 2 + sizeof(T) * count);
 
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     top = reinterpret_cast<uptr>(ptr_);
     top = (top + alignof(T) - 1) & ~(alignof(T) - 1);
     ret = top;
     top += sizeof(T) * count;
   }
 
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast, performance-no-int-to-ptr)
+  // NOLINTNEXTLINE(performance-no-int-to-ptr)
   ptr_ = reinterpret_cast<uchar*>(top);
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast, performance-no-int-to-ptr)
+  // NOLINTNEXTLINE(performance-no-int-to-ptr)
   return {reinterpret_cast<T*>(ret), count};
 }
 

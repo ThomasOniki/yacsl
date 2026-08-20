@@ -2,7 +2,6 @@
 #include "base/logging/panic.hpp"
 #include "base/memory/lifetimes.hpp"
 #include "base/utilities/type_aliases.hpp"
-#include <stdio.h>
 #include <stdlib.h>
 
 namespace base {
@@ -24,21 +23,19 @@ void Arena::reserve(usize capacity) noexcept {
       .last_begin = begin_,
       .last_end   = end_,
   };
-  // NOLINTNEXTLINE(cppcoreguidelines-no-malloc, hicpp-no-malloc, cppcoreguidelines-owning-memory)
+  // NOLINTNEXTLINE(cppcoreguidelines-no-malloc)
   begin_ = static_cast<uchar*>(malloc(capacity));
   end_   = begin_ + capacity;
   ptr_   = begin_ + sizeof(Metadata);
 
   panic_if(begin_ == nullptr, "[Arena] malloc failed.");
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
   construct_at(reinterpret_cast<Metadata*>(begin_), metadata);
 }
 
 Arena::Scope::~Scope() noexcept {
   while (ptr_ < arena_.begin_ || ptr_ > arena_.end_) {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     const Metadata metadata = *reinterpret_cast<Metadata*>(arena_.begin_);
-    // NOLINTNEXTLINE(cppcoreguidelines-no-malloc, hicpp-no-malloc, cppcoreguidelines-owning-memory)
+    // NOLINTNEXTLINE(cppcoreguidelines-no-malloc)
     ::free(arena_.begin_);
     arena_.begin_ = metadata.last_begin;
     arena_.end_   = metadata.last_end;

@@ -43,7 +43,7 @@ public:
   constexpr TupleImpl() noexcept : Leaf<Indices>()... {}
 
   template <typename... Args>
-  // NOLINTNEXTLINE(google-explicit-constructor)
+
   constexpr TupleImpl(Args&&... args)
     requires(sizeof...(Args) == sizeof...(Ts))
       : TupleLeaf<Indices, Ts>(base::forward<Args>(args))... {}

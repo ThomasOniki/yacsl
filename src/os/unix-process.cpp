@@ -2,8 +2,11 @@
 
 #include "base/containers/error.hpp"
 #include "base/containers/stack_array.hpp"
+#include "base/containers/string.hpp"
 #include "base/logging/panic.hpp"
+#include "base/os/file.hpp"
 #include "base/os/process.hpp"
+#include "base/ranges/slice.hpp"
 #include "base/utilities/nil.hpp"
 #include "base/utilities/type_aliases.hpp"
 #include "unix-utils.hpp"
@@ -14,7 +17,6 @@
 #include <spawn.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -36,8 +38,6 @@ struct State {
   StackArray<int, 2>    stderr_pipe;
 };
 } // namespace
-
-// NOLINTBEGIN(cppcoreguidelines-pro-type-union-access, android-cloexec-pipe)
 
 #define CHECK_RETURN(func)                                                                         \
   do {                                                                                             \
@@ -70,38 +70,32 @@ static void redirect_child_stdio_to_file(posix_spawn_file_actions_t* actions, Fi
 
 void Process::open_files(void* pvoid_state) noexcept {
   State& state = *static_cast<State*>(pvoid_state);
-  // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access)
   if (stdin_type_ == TYPE_FILE) {
     redirect_child_stdio_to_file(&state.file_actions, state.stdio->input.file_info_.flags,
-                                 static_cast<const char*>(state.stdio->input.file_info_.path),
-                                 STDIN_FILENO);
+                                 state.stdio->input.file_info_.path, STDIN_FILENO);
   } else if (stdin_type_ == Null) {
     redirect_child_stdio_to_file(&state.file_actions, File::Flags::None, "/dev/null", STDIN_FILENO);
   }
   if (stdout_type_ == TYPE_FILE) {
     redirect_child_stdio_to_file(&state.file_actions, state.stdio->output.file_info_.flags,
-                                 static_cast<const char*>(state.stdio->output.file_info_.path),
-                                 STDOUT_FILENO);
+                                 state.stdio->output.file_info_.path, STDOUT_FILENO);
   } else if (stdout_type_ == Null) {
     redirect_child_stdio_to_file(&state.file_actions, File::Flags::None, "/dev/null",
                                  STDOUT_FILENO);
   }
   if (stderr_type_ == TYPE_FILE) {
     redirect_child_stdio_to_file(&state.file_actions, state.stdio->error.file_info_.flags,
-                                 static_cast<const char*>(state.stdio->error.file_info_.path),
-                                 STDERR_FILENO);
+                                 state.stdio->error.file_info_.path, STDERR_FILENO);
   } else if (stderr_type_ == Null) {
     redirect_child_stdio_to_file(&state.file_actions, File::Flags::None, "/dev/null",
                                  STDERR_FILENO);
   }
-  // NOLINTEND(cppcoreguidelines-pro-type-union-access)
 }
 
 void Process::create_pipes(void* pvoid_state) noexcept {
+  // NOLINTBEGIN(android-cloexec-pipe)
   State& state = *static_cast<State*>(pvoid_state);
-  // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access)
   if (stdin_type_ == Pipe) {
-    // NOLINTNEXTLINE(android-cloexec-pipe)
     BASE_TRY_SYSCALL(::pipe(state.stdin_pipe.data()));
     stdin_input_.handle_ = state.stdin_pipe[1];
     CHECK_RETURN(
@@ -115,7 +109,6 @@ void Process::create_pipes(void* pvoid_state) noexcept {
                                                    state.stdio->input.other_pipe_handle_));
   }
   if (stdout_type_ == Pipe) {
-    // NOLINTNEXTLINE(android-cloexec-pipe)
     BASE_TRY_SYSCALL(::pipe(state.stdout_pipe.data()));
     stdout_output_.handle_ = state.stdout_pipe[0];
     CHECK_RETURN(
@@ -129,7 +122,6 @@ void Process::create_pipes(void* pvoid_state) noexcept {
                                                    state.stdio->output.other_pipe_handle_));
   }
   if (stderr_type_ == Pipe) {
-    // NOLINTNEXTLINE(android-cloexec-pipe)
     BASE_TRY_SYSCALL(::pipe(state.stderr_pipe.data()));
     stderr_output_.handle_ = state.stderr_pipe[0];
     CHECK_RETURN(
@@ -142,14 +134,13 @@ void Process::create_pipes(void* pvoid_state) noexcept {
     CHECK_RETURN(posix_spawn_file_actions_addclose(&state.file_actions,
                                                    state.stdio->error.other_pipe_handle_));
   }
-  // NOLINTEND(cppcoreguidelines-pro-type-union-access)
+  // NOLINTEND(android-cloexec-pipe)
 }
 
 void Process::cleanup_after_spawn(void* pvoid_state) noexcept {
   State& state = *static_cast<State*>(pvoid_state);
   CHECK_RETURN(posix_spawn_file_actions_destroy(&state.file_actions));
 
-  // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access)
   if (stdin_type_ == Pipe) {
     BASE_TRY_SYSCALL(close(state.stdin_pipe[0]));
   } else if (stdin_type_ == TYPE_OTHER_PIPE) {
@@ -165,7 +156,6 @@ void Process::cleanup_after_spawn(void* pvoid_state) noexcept {
   } else if (stderr_type_ == TYPE_OTHER_PIPE) {
     BASE_TRY_SYSCALL(close(state.stdio->error.other_pipe_handle_));
   }
-  // NOLINTEND(cppcoreguidelines-pro-type-union-access)
 }
 
 extern "C" char** environ;

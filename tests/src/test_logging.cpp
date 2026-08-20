@@ -5,12 +5,12 @@
 #include "base/os/file.hpp"
 #include "base/ranges/initializer_list.hpp"
 #include "base/ranges/string_view.hpp"
-#include "base/utilities/implicit_cast.hpp"
 #include "base/utilities/type_aliases.hpp"
 #include <assert.h>
 #include <inttypes.h>
 #include <stdarg.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -29,17 +29,17 @@ static void check(const char* expected) {
   buf[expected_len] = '\n';
 
   base::StackArray<char, buf_size> logs = {};
-  // NOLINTNEXTLINE(cppcoreguidelines-owning-memory, android-cloexec-fopen)
+  // NOLINTNEXTLINE(android-cloexec-fopen)
   FILE* file = fopen("test_logs.txt", "rb");
   assert(file);
   (void)fread(logs.data(), sizeof(logs), 1, file);
-  // NOLINTNEXTLINE(cppcoreguidelines-owning-memory, android-cloexec-fopen)
+  // NOLINTNEXTLINE(android-cloexec-fopen)
   (void)fclose(file);
 
-  // NOLINTNEXTLINE(cppcoreguidelines-owning-memory, android-cloexec-fopen)
+  // NOLINTNEXTLINE(android-cloexec-fopen)
   FILE* truncated = fopen("test_logs.txt", "w");
   assert(truncated);
-  // NOLINTNEXTLINE(cppcoreguidelines-owning-memory, android-cloexec-fopen)
+  // NOLINTNEXTLINE(android-cloexec-fopen)
   (void)fclose(truncated);
 
   if (memcmp(static_cast<void*>(logs.data()), static_cast<const void*>(buf.data()), buf_size) !=
@@ -50,11 +50,12 @@ static void check(const char* expected) {
 }
 
 namespace test_ns {
-// NOLINTNEXTLINE(cppcoreguidelines-use-enum-class)
+// NOLINTNEXTLINE(cppcoreguidelines-use-enum-class, misc-use-internal-linkage)
 enum Enum1 : base::u16 {
   Zero        = 0,
   FiveHundred = 500,
 };
+// NOLINTNEXTLINE(misc-use-internal-linkage)
 enum class EnumClass : base::u16 {
   Zero        = 0,
   FiveHundred = 500,
