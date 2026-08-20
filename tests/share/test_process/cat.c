@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -24,7 +25,10 @@ int main(void) {
     write(STDOUT_FILENO, buf, (size_t)result);
     result = read(STDIN_FILENO, buf, BUFFER_SIZE);
   }
-  assert(result != -1);
+  if (result < 0) {
+    perror("read");
+    return -1;
+  }
 }
 
 // int main(void) {}
