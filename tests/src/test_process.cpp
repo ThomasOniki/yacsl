@@ -507,6 +507,8 @@ int main() {
 
   EXPECT(remove(CHILD_STDIN_FILE_PATH) == 0);
 
+  base::Logger::get_default_instance().flush();
+
   return ret;
 }
 

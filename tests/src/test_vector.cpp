@@ -349,6 +349,7 @@ int main() {
   EXPECT(test_custom_allocator() == 0);
   EXPECT(test_different_vectors() == 0);
   EXPECT(test_different_allocators() == 0);
+  base::Logger::get_default_instance().flush();
   return ret;
 }
 
