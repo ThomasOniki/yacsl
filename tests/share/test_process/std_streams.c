@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -8,6 +9,15 @@
 #include <io.h>
 #endif
 
+#define CHECK(x)                                                                                   \
+  do {                                                                                             \
+    int _result = x;                                                                               \
+    if (_result < 0) {                                                                             \
+      perror(#x);                                                                                  \
+      abort();                                                                                     \
+    }                                                                                              \
+  } while (0)
+
 int main(int argc, const char* const* argv) {
 #ifdef _WIN32
   // no "\n" to "\r\n" conversions
@@ -15,23 +25,23 @@ int main(int argc, const char* const* argv) {
   _setmode(STDERR_FILENO, _O_BINARY);
 #endif
 
-  assert(fputs("arguments (to stdout):\n", stdout) >= 0);
+  CHECK(fputs("arguments (to stdout):\n", stdout));
   for (int i = 1; i < argc; ++i) {
-    assert(puts(argv[i]) >= 0);
+    CHECK(puts(argv[i]));
   }
-  assert(fflush(stdout) == 0);
+  CHECK(fflush(stdout));
 
-  assert(fputs("stdin (to stderr):\n", stderr) >= 0);
+  CHECK(fputs("stdin (to stderr):\n", stderr));
   enum {
     BUFFER_SIZE = 4096,
   };
   char    buf[BUFFER_SIZE];
   ssize_t result = read(STDIN_FILENO, buf, BUFFER_SIZE);
   while (result > 0) {
-    assert(fwrite(buf, (size_t)result, 1, stderr) == 1);
+    CHECK(fwrite(buf, (size_t)result, 1, stderr));
     result = read(STDIN_FILENO, buf, BUFFER_SIZE);
   }
   assert(result != -1);
-  assert(fputs("exiting (to stdout)\n", stdout) >= 0);
-  assert(fputs("exiting (to stderr)\n", stderr) >= 0);
+  CHECK(fputs("exiting (to stdout)\n", stdout));
+  CHECK(fputs("exiting (to stderr)\n", stderr));
 }
