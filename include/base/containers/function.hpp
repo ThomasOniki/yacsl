@@ -15,7 +15,6 @@ template <typename Ret, typename... Args, usize BufSz, AllocatorLike Allocator>
 class Function<Ret(Args...), BufSz, Allocator> : AllocatorMember<Allocator>,
                                                  FixedBufferMember<char, 16, usize> {
 public:
-  // NOLINTNEXTLINE(google-explicit-constructor)
   Function(auto&& func);
 
   Function(const Function&)     = delete;

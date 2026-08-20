@@ -16,7 +16,6 @@ public:
   constexpr BasicStringView() = default;
   constexpr BasicStringView(const T* data, SizeT size) : data_(data), size_(size) {}
 
-  // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr BasicStringView(const T* cstr) : data_(cstr) {
     if constexpr (SameAs<char, T>) {
       if (!is_constant_evaluated()) {
@@ -36,7 +35,6 @@ public:
 
   [[nodiscard]] constexpr Slice<const T, SizeT> slice() const noexcept { return {data_, size_}; }
   [[nodiscard]] constexpr Slice<const uchar, SizeT> bytes() const noexcept {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     return {reinterpret_cast<const uchar*>(data_), static_cast<SizeT>(size_ * sizeof(T))};
   }
 

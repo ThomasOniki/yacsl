@@ -14,7 +14,7 @@ struct CtorCounter {
   uint32_t i_ = 0;
 };
 
-struct Aligned { // NOLINT(altera-struct-pack-align)
+struct Aligned {
   alignas(64) char data;
 };
 } // namespace
@@ -23,24 +23,20 @@ static int test_ctors() {
   int ret                      = 0;
   CtorCounter::ctor_call_count = 0;
 
-  // NOLINTNEXTLINE(modernize-avoid-c-arrays)
   CtorCounter* ptrs[iteration_count] = {};
   for (uint32_t i = 0; i < iteration_count; ++i) {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
     ptrs[i] = &base::MainArenaAllocator::get().push<CtorCounter>(i);
   }
 
   EXPECT_EQ(CtorCounter::ctor_call_count, iteration_count);
 
   for (uint32_t i = 0; i < iteration_count; ++i) {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
     EXPECT_EQ(ptrs[i]->i_, i);
   }
 
   CtorCounter::ctor_call_count = 0;
 
   for (auto& ptr : ptrs) {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
     ptr = base::MainArenaAllocator::get().push_array<CtorCounter>(10).data();
   }
 
@@ -48,7 +44,6 @@ static int test_ctors() {
 
   for (const auto& ptr : ptrs) {
     for (uint32_t i = 0; i < 10; ++i) {
-      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
       EXPECT_EQ(ptr->i_, 0U);
     }
   }
@@ -56,7 +51,6 @@ static int test_ctors() {
 }
 
 static bool is_aligned(Aligned* ptr) {
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
   auto uptr = reinterpret_cast<uintptr_t>(ptr);
   return uptr % alignof(Aligned) == 0;
 }

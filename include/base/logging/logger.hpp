@@ -227,7 +227,9 @@ inline void log_trace1(const String& formatted) noexcept { log(Logger::Level::Tr
 inline void log_debug(const String& formatted) noexcept { log(Logger::Level::Debug, formatted); }
 inline void log_info(const String& formatted) noexcept { log(Logger::Level::Info, formatted); }
 inline void log_notice(const String& formatted) noexcept { log(Logger::Level::Notice, formatted); }
-inline void log_warning(const String& formatted) noexcept { log(Logger::Level::Warning, formatted); }
+inline void log_warning(const String& formatted) noexcept {
+  log(Logger::Level::Warning, formatted);
+}
 inline void log_error(const String& formatted) noexcept { log(Logger::Level::Error, formatted); }
 
 template <typename... Args>

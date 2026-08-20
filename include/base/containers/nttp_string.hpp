@@ -12,15 +12,12 @@ namespace base {
 
 template <usize N, Character C = char, Integral SizeT = usize> class NTTPString {
 public:
-  // NOLINTNEXTLINE(modernize-avoid-c-arrays, google-explicit-constructor)
   constexpr NTTPString(const C (&str)[N + 1]) noexcept {
     for (usize i = 0; i < N; ++i) {
-      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
       data_[i] = str[i];
     }
   }
 
-  // NOLINTNEXTLINE(modernize-avoid-c-arrays, google-explicit-constructor)
   constexpr NTTPString(StringView view) noexcept {
     for (usize i = 0; i < view.size(); ++i) {
       data_[i] = view[i];
@@ -50,11 +47,9 @@ public:
     return {data_.data(), static_cast<SizeT>(N)};
   }
   [[nodiscard]] constexpr Slice<uchar, SizeT> bytes() noexcept BASE_LIFETIMEBOUND {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     return {reinterpret_cast<uchar*>(data_), static_cast<SizeT>(N * sizeof(char))};
   }
   [[nodiscard]] constexpr Slice<const uchar, SizeT> bytes() const noexcept BASE_LIFETIMEBOUND {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     return {reinterpret_cast<const uchar*>(data_), static_cast<SizeT>(N * sizeof(uchar))};
   }
 
@@ -90,19 +85,17 @@ public:
   }
 
 public:
-  // NOLINTNEXTLINE(modernize-avoid-c-arrays)
   StackArray<C, N, SizeT> data_ = {'\0'};
 };
 
 template <Character C, Integral SizeT> class NTTPString<0, C, SizeT> {
 public:
-  // NOLINTNEXTLINE(modernize-avoid-c-arrays,google-explicit-constructor)
   constexpr NTTPString(const C (& /*str*/)[1]) noexcept {}
   constexpr NTTPString() noexcept = default;
 
-  [[nodiscard]] static constexpr SizeT size() noexcept { return 0; }
-  [[nodiscard]] constexpr C*           data() noexcept BASE_LIFETIMEBOUND { return &char_; }
-  [[nodiscard]] constexpr const C*     data() const noexcept BASE_LIFETIMEBOUND { return &char_; }
+  [[nodiscard]] constexpr SizeT    size() const noexcept { return 0; }
+  [[nodiscard]] constexpr C*       data() noexcept BASE_LIFETIMEBOUND { return &char_; }
+  [[nodiscard]] constexpr const C* data() const noexcept BASE_LIFETIMEBOUND { return &char_; }
 
   [[nodiscard]] constexpr C& operator[](usize /*index*/) noexcept BASE_LIFETIMEBOUND {
     return char_;
@@ -121,11 +114,9 @@ public:
     return {&char_, static_cast<SizeT>(0)};
   }
   [[nodiscard]] constexpr Slice<uchar, SizeT> bytes() noexcept BASE_LIFETIMEBOUND {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     return {reinterpret_cast<uchar*>(&char_), static_cast<SizeT>(0)};
   }
   [[nodiscard]] constexpr Slice<const uchar, SizeT> bytes() const noexcept BASE_LIFETIMEBOUND {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     return {reinterpret_cast<const uchar*>(&char_), static_cast<SizeT>(0)};
   }
 
@@ -157,8 +148,7 @@ public:
   C char_ = '\0';
 };
 
-template <Character C, usize N> // NOLINTNEXTLINE(modernize-avoid-c-arrays)
-NTTPString(const C (&str)[N]) -> NTTPString<N - 1, C, usize>;
+template <Character C, usize N> NTTPString(const C (&str)[N]) -> NTTPString<N - 1, C, usize>;
 
 template <NTTPString... Strings>
 constexpr NTTPString cat_nttpstrings = []() {

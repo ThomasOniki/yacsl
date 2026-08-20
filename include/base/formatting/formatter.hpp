@@ -26,7 +26,6 @@ public:
   void                  format(String& buf, const T& value) const noexcept {
     buf += TYPE_STRING<T>;
     buf += " at ";
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     itoa(buf, reinterpret_cast<uptr>(&value), "0123456789abcdef");
   }
 };
@@ -61,7 +60,7 @@ public:
   }
 
   void format(String& buf, T value) const noexcept {
-    const PaddingOptions opts{
+    const PaddingOptions opts = {
         .width = width_,
         .fill  = fill_,
         .align = align_,
@@ -107,9 +106,7 @@ public:
       }
       break;
     case Type::Char:
-      if constexpr (Character<T>) {
-        pad_char(buf, value, opts);
-      } else if constexpr (sizeof(T) == 1) {
+      if constexpr (sizeof(T) == 1) {
         pad_char(buf, static_cast<char8_t>(value), opts);
       } else if constexpr (sizeof(T) == 2) {
         pad_char(buf, static_cast<char16_t>(value), opts);
@@ -118,9 +115,7 @@ public:
       }
       break;
     case Type::DebugChar:
-      if constexpr (Character<T>) {
-        pad_debug_char(buf, value, opts);
-      } else if constexpr (sizeof(T) == 1) {
+      if constexpr (sizeof(T) == 1) {
         pad_debug_char(buf, static_cast<char8_t>(value), opts);
       } else if constexpr (sizeof(T) == 2) {
         pad_debug_char(buf, static_cast<char16_t>(value), opts);
@@ -279,7 +274,6 @@ public:
         .fill  = fill_,
         .align = align_,
     };
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     pad_integral<"0123456789abcdef", "0x">(buf, reinterpret_cast<uptr>(ptr), opts);
   }
 
@@ -357,7 +351,6 @@ public:
     } else if (type_ == Type::Debug) {
       pad_string<true>(buf, BasicStringView<Char>(str), opts);
     } else {
-      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
       pad_integral<"0123456789abcdef">(buf, reinterpret_cast<uptr>(str), opts);
     }
   }
@@ -386,13 +379,11 @@ public:
   }
 };
 
-// NOLINTNEXTLINE(modernize-avoid-c-arrays)
 template <Character Char, usize N> class Formatter<Char[N]> : Formatter<BasicStringView<Char>> {
 public:
   constexpr const char* parse(const char* fmt) noexcept {
     return Formatter<BasicStringView<Char>>::parse(fmt);
   }
-  // NOLINTNEXTLINE(modernize-avoid-c-arrays)
   void format(String& buf, const Char (&str)[N]) const noexcept {
     return Formatter<BasicStringView<Char>>::format(
         buf, BasicStringView(static_cast<const Char*>(str), N - 1));
@@ -400,13 +391,11 @@ public:
 };
 
 template <Character Char, usize N>
-// NOLINTNEXTLINE(modernize-avoid-c-arrays)
 class Formatter<const Char[N]> : Formatter<BasicStringView<Char>> {
 public:
   constexpr const char* parse(const char* fmt) noexcept {
     return Formatter<BasicStringView<Char>>::parse(fmt);
   }
-  // NOLINTNEXTLINE(modernize-avoid-c-arrays)
   void format(String& buf, const Char (&str)[N]) const noexcept {
     return Formatter<BasicStringView<Char>>::format(buf, BasicStringView(str, N - 1));
   }

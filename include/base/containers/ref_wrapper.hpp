@@ -4,7 +4,6 @@ namespace base {
 
 template <typename T> class RefWrapper {
 public:
-  // NOLINTNEXTLINE(google-explicit-constructor)
   RefWrapper(T& value) noexcept : ptr_(value) {}
 
   T&       get() noexcept { return *ptr_; }

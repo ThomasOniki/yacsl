@@ -24,18 +24,18 @@ class Vector : private FixedBufferMember<T, N, SizeT>, AllocatorMember<Allocator
 public:
   constexpr Vector() noexcept : FixedBufferMember<T, N, SizeT>(), AllocatorMember<Allocator>() {}
   constexpr Vector(const InitializerList<T>& init);
-  // NOLINTNEXTLINE(google-explicit-constructor)
+
   template <RangeOf<T> Range> constexpr Vector(const Range& range);
   constexpr explicit Vector(SizeT count);
 
   constexpr ~Vector() noexcept;
 
   template <usize OtherN, AllocatorLike OtherAllocator, Integral OtherSizeT>
-  // NOLINTNEXTLINE(google-explicit-constructor)
+
   constexpr Vector(const Vector<T, OtherN, OtherAllocator, OtherSizeT>& other);
   constexpr Vector(const Vector& other);
   template <usize OtherN, AllocatorLike OtherAllocator, Integral OtherSizeT>
-  // NOLINTNEXTLINE(google-explicit-constructor)
+
   constexpr Vector(Vector<T, OtherN, OtherAllocator, OtherSizeT>&& other) noexcept;
   constexpr Vector(Vector&& other) noexcept;
 
@@ -81,11 +81,9 @@ public:
     return {data_, size_};
   }
   [[nodiscard]] constexpr Slice<uchar, SizeT> bytes() noexcept BASE_LIFETIMEBOUND {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     return {reinterpret_cast<uchar*>(data_), static_cast<SizeT>(size_ * sizeof(T))};
   }
   [[nodiscard]] constexpr Slice<const uchar, SizeT> bytes() const noexcept BASE_LIFETIMEBOUND {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     return {reinterpret_cast<const uchar*>(data_), static_cast<SizeT>(size_ * sizeof(T))};
   }
 

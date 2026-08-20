@@ -20,11 +20,9 @@ public:
 
   constexpr ~BasicString() noexcept { free(); }
 
-  // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr BasicString(const Char* cstr) noexcept
       : BasicString(BasicStringView<Char, usize>(cstr)) {}
 
-  // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr BasicString(BasicStringView<Char, SizeT> str) noexcept {
     const SizeT size = str.size();
 
@@ -58,7 +56,7 @@ public:
     const SizeT size = other.size();
     if (capacity() < size) {
       free();
-      begin_         = allocator().template allocate<Char>(size);
+      begin_         = allocator().template allocate<Char>(size).data();
       allocated_end_ = end_ = begin_ + size;
     } else {
       end_ = begin_ + size;
@@ -208,11 +206,9 @@ public:
     return {begin_, end_};
   }
   [[nodiscard]] constexpr Slice<uchar, SizeT> bytes() noexcept BASE_LIFETIMEBOUND {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     return {reinterpret_cast<uchar*>(begin_), static_cast<SizeT>(size() * sizeof(Char))};
   }
   [[nodiscard]] constexpr Slice<const uchar, SizeT> bytes() const noexcept BASE_LIFETIMEBOUND {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     return {reinterpret_cast<const uchar*>(begin_), static_cast<SizeT>(size() * sizeof(Char))};
   }
 
