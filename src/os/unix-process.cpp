@@ -52,14 +52,12 @@ usize Process::Output::read(Slice<uchar> buffer) noexcept {
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void Process::Input::write(Slice<const uchar> bytes) noexcept {
-  usize written = 0;
-  if (bytes.size() >= PIPE_BUF) {
-    while (written <= bytes.size() - PIPE_BUF) {
-      ssize_t result = BASE_TRY_SYSCALL(::write(handle_, &bytes[written], PIPE_BUF));
-      written += static_cast<usize>(result);
-    }
+  usize written =
+      static_cast<usize>(BASE_TRY_SYSCALL(::write(handle_, bytes.data(), bytes.size())));
+  while (written < bytes.size()) {
+    written += static_cast<usize>(
+        BASE_TRY_SYSCALL(::write(handle_, &bytes[written], bytes.size() - written)));
   }
-  BASE_TRY_SYSCALL(::write(handle_, &bytes[written], bytes.size() - written));
 }
 
 static void redirect_child_stdio_to_file(posix_spawn_file_actions_t* actions, File::Flags flags,
