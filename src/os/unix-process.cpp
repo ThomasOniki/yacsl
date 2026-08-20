@@ -128,7 +128,6 @@ void Process::create_pipes(void* pvoid_state) noexcept {
     CHECK_RETURN(posix_spawn_file_actions_addclose(&state.file_actions,
                                                    state.stdio->output.other_pipe_handle_));
   }
-
   if (stderr_type_ == Pipe) {
     // NOLINTNEXTLINE(android-cloexec-pipe)
     BASE_TRY_SYSCALL(::pipe(state.stderr_pipe.data()));
@@ -169,35 +168,6 @@ void Process::cleanup_after_spawn(void* pvoid_state) noexcept {
   // NOLINTEND(cppcoreguidelines-pro-type-union-access)
 }
 
-static String drain_pipe(Process::Output* output) noexcept {
-  String       data;
-  Slice<uchar> bytes  = Slice<char>(data.grow(PIPE_BUF), PIPE_BUF).bytes();
-  usize        result = output->read(bytes);
-  while (result != 0) {
-    bytes  = Slice<char>(data.grow(result), PIPE_BUF).bytes();
-    result = output->read(bytes);
-  }
-  return data.resize(data.size() - PIPE_BUF);
-}
-
-void Process::cleanup_before_wait(ExitStatus* status) noexcept {
-  if (stdin_type_ == Pipe && stdin_input_.handle_ != -1) {
-    BASE_TRY_SYSCALL(close(stdin_input_.handle_));
-    stdin_input_.handle_ = -1;
-  } else if (stdin_type_ == TYPE_OTHER_PIPE) {
-  }
-  if (stdout_type_ == Pipe && stdout_output_.handle_ != -1) {
-    status->unread_stdout = drain_pipe(&stdout_output_);
-    BASE_TRY_SYSCALL(close(stdout_output_.handle_));
-    stdout_output_.handle_ = -1;
-  }
-  if (stderr_type_ == Pipe && stderr_output_.handle_ != -1) {
-    status->unread_stderr = drain_pipe(&stderr_output_);
-    BASE_TRY_SYSCALL(close(stderr_output_.handle_));
-    stderr_output_.handle_ = -1;
-  }
-}
-
 extern "C" char** environ;
 
 Error<Process::SpawnError> Process::start(const char* const* argv, const Stdio& stdio) noexcept {
@@ -219,8 +189,8 @@ Error<Process::SpawnError> Process::start(const char* const* argv, const Stdio& 
 
   CHECK_RETURN(posix_spawn_file_actions_init(&state.file_actions));
 
-  create_pipes(&state);
   open_files(&state);
+  create_pipes(&state);
 
   pid_t pid = 0;
 
@@ -236,6 +206,34 @@ Error<Process::SpawnError> Process::start(const char* const* argv, const Stdio& 
   cleanup_after_spawn(&state);
 
   return result == ENOENT ? Error(SpawnError::FileNotFound) : NIL;
+}
+
+static String drain_pipe(Process::Output* output) noexcept {
+  String       data;
+  Slice<uchar> bytes  = Slice<char>(data.grow(PIPE_BUF), PIPE_BUF).bytes();
+  usize        result = output->read(bytes);
+  while (result != 0) {
+    bytes  = Slice<char>(data.grow(result), PIPE_BUF).bytes();
+    result = output->read(bytes);
+  }
+  return data.resize(data.size() - PIPE_BUF);
+}
+
+void Process::cleanup_before_wait(ExitStatus* status) noexcept {
+  if (stdin_type_ == Pipe && stdin_input_.handle_ != -1) {
+    BASE_TRY_SYSCALL(close(stdin_input_.handle_));
+    stdin_input_.handle_ = -1;
+  }
+  if (stdout_type_ == Pipe && stdout_output_.handle_ != -1) {
+    status->unread_stdout = drain_pipe(&stdout_output_);
+    BASE_TRY_SYSCALL(close(stdout_output_.handle_));
+    stdout_output_.handle_ = -1;
+  }
+  if (stderr_type_ == Pipe && stderr_output_.handle_ != -1) {
+    status->unread_stderr = drain_pipe(&stderr_output_);
+    BASE_TRY_SYSCALL(close(stderr_output_.handle_));
+    stderr_output_.handle_ = -1;
+  }
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const, misc-no-recursion)
