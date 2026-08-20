@@ -13,6 +13,15 @@
     }                                                                                              \
   } while (false)
 
+#define EXPECT_SVEQ(lhs, rhs)                                                                      \
+  do {                                                                                             \
+    if ((lhs) != (rhs)) {                                                                          \
+      base::log_error("EXPECT_SVEQ failed. Expected {} == {}, got {?} and {?}.", #lhs, #rhs, lhs,  \
+                      rhs);                                                                        \
+      ret = 1;                                                                                     \
+    }                                                                                              \
+  } while (false)
+
 #define EXPECT_STREQ(lhs, rhs)                                                                     \
   do {                                                                                             \
     const char* _lhs_v = lhs;                                                                      \
