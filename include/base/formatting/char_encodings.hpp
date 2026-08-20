@@ -168,7 +168,6 @@ template <Character C> usize real_string_len(BasicStringView<C, usize> str) {
 
 template <Character C> void write_string(char* buf, BasicStringView<C, usize> str) {
   if constexpr (sizeof(C) == 1) {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     copy(str.bytes(), reinterpret_cast<uchar*>(buf));
     return;
   }
@@ -179,7 +178,6 @@ template <Character C> void write_string(char* buf, BasicStringView<C, usize> st
 
 template <Character C> void write_string(String& buf, BasicStringView<C, usize> str) {
   if constexpr (sizeof(C) == 1) {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     copy(str.bytes(), reinterpret_cast<uchar*>(buf.grow(str.size())));
     return;
   }

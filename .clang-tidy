@@ -1,47 +1,45 @@
 Checks: >
-  *,
+  android-cloexec-*,
+  bugprone-*,
   llvm-*,
-  -llvmlibc*,
-  -modernize-deprecated-headers,
-  -hicpp-deprecated-headers,
-  -portability-avoid-pragma-once,
-  -llvm-header-guard,
-  -hicpp-vararg,
-  -cppcoreguidelines-pro-type-vararg,
-  -readability-magic-numbers,
+  modernize-*,
+  cppcoreguidelines-*,
+  google-*,
+  misc-*,
+  performance-*,
+  readability-*,
+  clang-analyzer-*,
+  fuchsia-virtual-inheritance,
+  -cppcoreguidelines-pro-bounds-avoid-unchecked-container-access,
+  -cppcoreguidelines-pro-bounds-constant-array-index,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -cppcoreguidelines-avoid-c-arrays,
+  -cppcoreguidelines-pro-type-reinterpret-cast,
+  -cppcoreguidelines-pro-type-union-access,
+  -cppcoreguidelines-owning-memory,
   -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-non-private-member-variables-in-classes,
+  -cppcoreguidelines-pro-type-vararg,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -misc-non-private-member-variables-in-classes,
+  -misc-use-anonymous-namespace,
+  -misc-multiple-inheritance,
+  -misc-misplaced-const,
+  -readability-magic-numbers,
   -readability-math-missing-parentheses,
   -readability-redundant-access-specifiers,
-  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
-  -altera-unroll-loops,
+  -readability-container-data-pointer,
+  -modernize-deprecated-headers,
+  -modernize-avoid-c-arrays,
   -modernize-use-trailing-return-type,
-  -fuchsia-overloaded-operator,
-  -misc-non-private-member-variables-in-classes,
-  -cppcoreguidelines-non-private-member-variables-in-classes,
-  -misc-use-anonymous-namespace,
-  -altera-id-dependent-backward-branch,
-  -misc-multiple-inheritance,
-  -fuchsia-multiple-inheritance,
+  -google-explicit-constructor,
+  -google-runtime-int,
+  -google-readability-*,
+  -bugprone-multi-level-implicit-pointer-conversion,
+  -bugprone-bitwise-pointer-cast,
+  -llvm-header-guard,
   -clang-analyzer-optin.core.EnumCastOutOfRange,
-  -cppcoreguidelines-pro-bounds-avoid-unchecked-container-access,
 
-  -hicpp-explicit-conversions,
-  -cppcoreguidelines-avoid-c-arrays,
-  -hicpp-avoid-c-arrays,
-  -cert-dcl58-cpp,
-
-  -cert-dcl37-c,
-  -cert-dcl51-cpp,
-
-# hicpp-explicit-conversions is an alias for google-explicit-constructor, so I removed
-# it so that if you want to ignore it you don't have to write // NOLINT for both 
-# google-explicit-constructor and hicpp-explicit-conversions.
-# Same thing for hicpp-avoid-c-arrays and cppcoreguidelines-avoid-c-arrays, 
-# they are alises for modernize-avoid-c-arrays
-# cert-dcl58-cpp is an alias for bugprone-std-namespace-modification
-# cert-dcl37-c and cert-dcl51-cpp  are the same as bugprone-reserved-identifier
-
- 
 WarningsAsErrors: ""
 FormatStyle: none
 ExtraArgsBefore: ["-DBASE_LSP_ONLY"]
@@ -60,13 +58,13 @@ CheckOptions:
     value: ::base::move
   - key: readability-identifier-length.IgnoredVariableNames
     value: _
-  - key: hicpp-signed-bitwise.IgnorePositiveIntegerLiterals
-    value: true
   - key: cppcoreguidelines-avoid-do-while.IgnoreMacros
     value: true
   - key: readability-function-cognitive-complexity.IgnoreMacros
     value: true
+  - key: readability-function-size.IgnoreMacros
+    value: true
   - key: misc-include-cleaner.IgnoreHeaders
-    value: 'sys/fcntl\.h;sys/_types/.*\.h;_abort.h'
+    value: 'sys/fcntl\.h;sys/types\.h;sys/_types/.*\.h;_abort\.h;sys/syslimits\.h;_stdio\.h;stdio\.h'
   - key: performance-unnecessary-value-param.AllowedTypes
     value: "base::Slice.*"

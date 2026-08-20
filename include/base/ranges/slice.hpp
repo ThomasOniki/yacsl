@@ -1,6 +1,5 @@
 #pragma once
 
-#include "base/ranges/initializer_list.hpp"
 #include "base/ranges/integer_range.hpp"
 #include "base/ranges/reverse_iterator.hpp"
 #include "base/type_traits/categories.hpp"
@@ -19,9 +18,9 @@ public:
 
   constexpr Slice(T* data, SizeT size) noexcept : data_(data), size_(size) {}
 
-  // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr Slice(const Slice<RemoveConst<T>, SizeT>& mutable_slice) noexcept
       : data_(mutable_slice.data_), size_(mutable_slice.size_) {}
+  // NOLINTNEXTLINE(bugprone-unhandled-self-assignment)
   constexpr Slice& operator=(const Slice<RemoveConst<T>, SizeT>& mutable_slice) noexcept {
     data_ = mutable_slice.data_;
     size_ = mutable_slice.size_;
@@ -38,11 +37,9 @@ public:
   [[nodiscard]] constexpr Slice<uchar, SizeT> bytes() noexcept
     requires(!SameAs<T, const T>)
   {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     return {reinterpret_cast<uchar*>(data_), static_cast<SizeT>(size_ * sizeof(T))};
   }
   [[nodiscard]] constexpr Slice<const uchar, SizeT> bytes() const noexcept {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     return {reinterpret_cast<const uchar*>(data_), static_cast<SizeT>(size_ * sizeof(T))};
   }
 

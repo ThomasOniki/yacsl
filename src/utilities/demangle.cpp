@@ -30,10 +30,10 @@ public:
     const bool has_templates = has_templates_;
 
     if (has_templates) {
-      String func = base::move(demangled_);
+      const String func = base::move(demangled_);
       demangle_type();
       return_type = base::move(demangled_);
-      demangled_  = base::move(func);
+      demangled_  = func;
     }
 
     demangled_ += '(';
@@ -52,8 +52,8 @@ public:
     demangled_ += ')';
 
     if (has_templates) {
-      String func = base::move(demangled_);
-      demangled_  = base::move(return_type);
+      const String func = base::move(demangled_);
+      demangled_        = base::move(return_type);
       demangled_ += ' ';
       demangled_ += func;
     }
@@ -65,64 +65,19 @@ private:
   // NOLINTNEXTLINE(misc-no-recursion)
   void demangle_string() noexcept {
     substitute_beginings_.push_back(demangled_.size());
-    bool nested = skip('N');
+    const bool is_nested = skip('N');
 
-    bool is_first = true;
+    for (bool is_first = true;; is_first = false) {
+      const Modules modules        = demangle_modules();
+      const bool    is_substituted = is_substitution();
 
-    for (;;) {
-      String module_string;
-
-      struct Submodule {
-        alignas(16) usize end;
-        bool is_substitution = false;
-      };
-
-      Vector<Submodule> submodules;
-      for (;;) {
-        StringView to_add;
-        bool       is_substituted = !skip('W');
-        if (is_substituted) {
-          if (!is_substitution()) {
-            break;
-          }
-          const char*      before_sub = mangled_;
-          const StringView sub        = substitution();
-          if (sub.data() == demangled_.data() || sub.data()[-1] != '@') {
-            mangled_ = before_sub;
-            break;
-          }
-          to_add = sub;
-        } else {
-          const char* end = num_end(mangled_);
-          const auto  len = atoi<usize>(mangled_, end);
-          mangled_        = end + len;
-          to_add          = StringView(end, mangled_);
-        }
-
-        char* bytes = module_string.grow(to_add.size() + 1);
-
-        if (module_string.size() == to_add.size() + 1) {
-          bytes[0] = '@';
-        } else {
-          bytes[0] = '.';
-        }
-
-        copy(to_add.slice(), bytes + 1);
-        submodules.emplace_back(module_string.size(), is_substituted);
+      if (!is_first) {
+        demangled_ += "::";
       }
 
-      bool is_substituted = is_substitution();
-
       if (is_substituted) {
-        if (!is_first) {
-          demangled_ += "::";
-        }
         demangled_ += substitution();
       } else {
-        if (!is_first) {
-          demangled_ += "::";
-        }
-
         skip('L');
 
         const char* end = num_end(mangled_);
@@ -139,7 +94,7 @@ private:
         mangled_ = chunk.end();
       }
 
-      for (const Submodule submodule : submodules) {
+      for (const Modules::Submodule submodule : modules.submodules) {
         if (submodule.is_substitution) {
           continue;
         }
@@ -149,7 +104,7 @@ private:
         substitutes_.emplace_back(substitute_beginings_[substitute_beginings_.size() - 1],
                                   demangled_.size());
       }
-      demangled_ += module_string;
+      demangled_ += modules.module_string;
 
       if (*mangled_ == 'I') {
         demangle_template_args();
@@ -157,11 +112,9 @@ private:
                                   demangled_.size());
       }
 
-      if (!nested || skip('E')) {
+      if (!is_nested || skip('E')) {
         break;
       }
-
-      is_first = false;
     }
     substitute_beginings_.pop_back();
   }
@@ -434,6 +387,54 @@ private:
             substitutes_[index].end - substitutes_[index].begin};
   }
 
+  struct Modules {
+    struct Submodule {
+      alignas(16) usize end;
+      bool is_substitution = false;
+    };
+    String            module_string;
+    Vector<Submodule> submodules;
+  };
+
+  // NOLINTNEXTLINE(misc-no-recursion)
+  Modules demangle_modules() noexcept {
+    Modules ret;
+    for (;;) {
+      StringView to_add;
+      const bool is_substituted = !skip('W');
+      if (is_substituted) {
+        if (!is_substitution()) {
+          break;
+        }
+        const char*      before_sub = mangled_;
+        const StringView sub        = substitution();
+        if (sub.data() == demangled_.data() || sub.data()[-1] != '@') {
+          mangled_ = before_sub;
+          break;
+        }
+        to_add = sub;
+      } else {
+        const char* end = num_end(mangled_);
+        const auto  len = atoi<usize>(mangled_, end);
+        mangled_        = end + len;
+        to_add          = StringView(end, mangled_);
+      }
+
+      char* bytes = ret.module_string.grow(to_add.size() + 1);
+
+      if (ret.module_string.size() == to_add.size() + 1) {
+        bytes[0] = '@';
+      } else {
+        bytes[0] = '.';
+      }
+
+      copy(to_add.slice(), bytes + 1);
+      ret.submodules.emplace_back(ret.module_string.size(), is_substituted);
+    }
+    return ret;
+  }
+
+  // NOLINTNEXTLINE(google-readability-function-size)
   void demangle_builtin_type_id() noexcept {
     switch (*mangled_) {
     case 'v':

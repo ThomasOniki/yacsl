@@ -10,7 +10,7 @@
 
 namespace std {
 
-// NOLINTNEXTLINE(bugprone-std-namespace-modificatoin, cert-dcl58-cpp)
+// NOLINTNEXTLINE(bugprone-std-namespace-modification)
 template <typename T> class initializer_list {
 public:
   constexpr initializer_list() noexcept : data_(nullptr), size_(0) {}

@@ -40,8 +40,9 @@ template <typename T = void, int I = 0> struct S {
 } // namespace ns1::ns2
 
 namespace {
+// NOLINTNEXTLINE(llvm-prefer-static-over-anonymous-namespace)
 template <ns1::ns2::S<> S = ns1::ns2::S<>{}> BASE_NOINLINE int f4() noexcept {
-  volatile int result = ns1::ns2::S<>::f3();
+  const volatile int result = ns1::ns2::S<>::f3();
   return result;
 }
 } // namespace

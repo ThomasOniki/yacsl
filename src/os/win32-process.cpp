@@ -1,8 +1,10 @@
 #ifdef _WIN32
 
 #include "base/containers/string.hpp"
+#include "base/logging/panic.hpp"
 #include "base/os/process.hpp"
 #include "base/ranges/slice.hpp"
+#include "base/utilities/nil.hpp"
 #include "base/utilities/type_aliases.hpp"
 #include "win32-utils.hpp"
 #include <consoleapi.h>
@@ -12,9 +14,11 @@
 #include <handleapi.h>
 #include <intsafe.h>
 #include <processthreadsapi.h>
+#include <string.h>
 #include <synchapi.h>
 #include <windows.h>
 #include <winerror.h>
+#include <winnt.h>
 
 namespace base {
 
@@ -34,7 +38,7 @@ struct State {
 };
 } // namespace
 
-// NOLINTNEXTLINE(readability-make-member-function-const, cppcoreguidelines-pro-type-union-access)
+// NOLINTNEXTLINE(readability-make-member-function-const)
 usize Process::Output::read(Slice<uchar> buffer) noexcept {
   DWORD   ret = 0;
   WINBOOL result =
@@ -48,7 +52,7 @@ usize Process::Output::read(Slice<uchar> buffer) noexcept {
   }
   return static_cast<usize>(ret);
 }
-// NOLINTNEXTLINE(readability-make-member-function-const, cppcoreguidelines-pro-type-union-access)
+// NOLINTNEXTLINE(readability-make-member-function-const)
 void Process::Input::write(Slice<const uchar> bytes) noexcept {
   usize to_write = bytes.size();
   while (to_write > 0) {
@@ -60,7 +64,6 @@ void Process::Input::write(Slice<const uchar> bytes) noexcept {
 }
 
 void Process::open_files(void* pvoid_state) noexcept {
-  // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access)
   State& state = *static_cast<State*>(pvoid_state);
   if (stdin_type_ == TYPE_FILE) {
     state.info.hStdInput = open_file(state.stdio->input.file_info_.path,
@@ -92,7 +95,6 @@ void Process::open_files(void* pvoid_state) noexcept {
     state.info.hStdError =
         open_file("NUL", File::Flags::Write | File::Flags::DontCloseOnExec).expect_ok().handle;
   }
-  // NOLINTEND(cppcoreguidelines-pro-type-union-access)
 }
 
 static StackArray<HANDLE, 2> create_pipe() {
@@ -108,7 +110,7 @@ static StackArray<HANDLE, 2> create_pipe() {
 
 void Process::create_pipes(void* pvoid_state) noexcept {
   State& state = *static_cast<State*>(pvoid_state);
-  // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access)
+
   if (stdin_type_ == Pipe) {
     state.stdin_pipe = create_pipe();
     BASE_TRY_SYSCALL(SetHandleInformation(state.stdin_pipe[1], HANDLE_FLAG_INHERIT, 0));
@@ -139,13 +141,11 @@ void Process::create_pipes(void* pvoid_state) noexcept {
     BASE_TRY_SYSCALL(
         SetHandleInformation(state.info.hStdError, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT));
   }
-  // NOLINTEND(cppcoreguidelines-pro-type-union-access)
 }
 
 void Process::cleanup_after_spawn(void* pvoid_state) noexcept {
   State& state = *static_cast<State*>(pvoid_state);
 
-  // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access)
   if (stdin_type_ == TYPE_FILE || stdin_type_ == Type::Null) {
     BASE_TRY_SYSCALL(CloseHandle(state.info.hStdInput));
   } else if (stdin_type_ == Pipe) {
@@ -167,7 +167,6 @@ void Process::cleanup_after_spawn(void* pvoid_state) noexcept {
   } else if (stderr_type_ == TYPE_OTHER_PIPE) {
     BASE_TRY_SYSCALL(CloseHandle(state.stdio->error.other_pipe_handle_));
   }
-  // NOLINTEND(cppcoreguidelines-pro-type-union-access)
 }
 
 static String make_command_line_string(const char* const* argv) {

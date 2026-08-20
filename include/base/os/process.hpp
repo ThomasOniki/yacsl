@@ -30,18 +30,16 @@ private:
   public:
     constexpr StdioInit() noexcept = default;
 
-    // NOLINTNEXTLINE(google-explicit-constructor)
     constexpr StdioInit(StdioType type) noexcept : type_(type) {}
 
-    // NOLINTNEXTLINE(google-explicit-constructor)
     constexpr StdioInit(Input& pipe) noexcept
       requires(!IsInput)
         : type_(TYPE_OTHER_PIPE), other_pipe_handle_(pipe.handle_) {
       pipe.handle_ = File::NIL_HANDLE;
     }
-    // NOLINTNEXTLINE(google-explicit-constructor)
+
     constexpr StdioInit(Output& pipe) noexcept
-      requires(IsInput)
+      requires IsInput
         : type_(TYPE_OTHER_PIPE), other_pipe_handle_(pipe.handle_) {
       pipe.handle_ = File::NIL_HANDLE;
     }
@@ -116,8 +114,6 @@ public:
   private:
     File::Handle handle_ = File::NIL_HANDLE;
   };
-
-  // NOLINTEND(cppcoreguidelines-pro-type-union-access)
 
   Process() noexcept = default;
   ~Process() noexcept { wait(); }

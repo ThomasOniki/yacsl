@@ -9,14 +9,11 @@
 
 namespace base {
 
-// NOLINTBEGIN(cppcoreguidelines-pro-type-union-access)
 template <typename T> class Option {
 public:
-  // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr Option(Nil /*nil*/) noexcept : is_value_(false) {}
 
-  template <typename... Args> // NOLINTNEXTLINE(google-explicit-constructor)
-  constexpr Option(Args&&... args) noexcept : is_value_(true) {
+  template <typename... Args> constexpr Option(Args&&... args) noexcept : is_value_(true) {
     value_.construct(base::forward<Args>(args)...);
   }
 
@@ -143,13 +140,11 @@ private:
   StackStorage<T> value_;
   bool            is_value_;
 };
-// NOLINTEND(cppcoreguidelines-pro-type-union-access)
 
 template <typename T> class Option<T&> {
 public:
-  // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr Option(Nil /*nil*/) noexcept {}
-  // NOLINTNEXTLINE(google-explicit-constructor)
+
   constexpr Option(T& value) noexcept : ptr_(&value) {}
 
   constexpr ~Option() noexcept                              = default;

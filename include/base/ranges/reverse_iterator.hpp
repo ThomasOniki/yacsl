@@ -4,7 +4,6 @@ namespace base {
 
 template <typename It> class ReverseIterator {
 public:
-  // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr ReverseIterator(const It& iter) noexcept : it_(iter) {}
 
   [[nodiscard]] constexpr auto operator*() const noexcept {

@@ -20,7 +20,6 @@ template <typename FString> class FormatToImpl;
 template <usize... Indices, typename... Args>
 class FormatStringImpl<IndexSequence<Indices...>, Args...> {
 public:
-  // NOLINTNEXTLINE(google-explicit-constructor)
   consteval FormatStringImpl(const char* fmt) {
     (..., [&]() {
       const char* segment_begin = fmt;

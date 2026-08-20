@@ -16,10 +16,8 @@ template <UnsignedIntegral Ok, Enum Err>
   requires(sizeof(Err) <= sizeof(Ok) && UnsignedIntegral<UnderlyingEnumType<Err>>)
 class UnsignedResult {
 public:
-  // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr UnsignedResult(Ok expected) noexcept : value_(static_cast<Signed>(expected)) {}
 
-  // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr UnsignedResult(Err error) noexcept : value_(-static_cast<Signed>(error)) {}
 
   [[nodiscard]] constexpr Err error() const noexcept {

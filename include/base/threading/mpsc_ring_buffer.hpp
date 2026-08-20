@@ -98,7 +98,6 @@ public:
   }
 
 private:
-  // NOLINTNEXTLINE(altera-struct-pack-align)
   struct Slot {
     StackStorage<T> value;
     Atomic<usize>   epoch;

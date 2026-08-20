@@ -61,12 +61,12 @@ public:
 
   template <typename T> base::Slice<T, SizeT> allocate(SizeT count) {
     ++allocate_call_count;
-    // NOLINTNEXTLINE(cppcoreguidelines-no-malloc, hicpp-no-malloc, cppcoreguidelines-owning-memory)
+    // NOLINTNEXTLINE(cppcoreguidelines-no-malloc)
     return {static_cast<T*>(malloc(sizeof(T) * count)), count};
   }
   template <typename T> void free(base::Slice<T, SizeT> mem) {
     ++free_call_count;
-    // NOLINTNEXTLINE(cppcoreguidelines-no-malloc, hicpp-no-malloc, cppcoreguidelines-owning-memory)
+    // NOLINTNEXTLINE(cppcoreguidelines-no-malloc)
     ::free(mem.data());
   }
 };

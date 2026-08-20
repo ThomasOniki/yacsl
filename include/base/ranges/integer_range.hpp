@@ -19,7 +19,6 @@ public:
 
     [[nodiscard]] constexpr bool operator<=>(const Iterator& other) const noexcept = default;
 
-    // NOLINTNEXTLINE(google-explicit-constructor)
     [[nodiscard]] constexpr   operator T() noexcept { return value_; }
     [[nodiscard]] constexpr T operator-(const Iterator& other) const noexcept {
       return value_ - other.value_;
@@ -41,7 +40,6 @@ public:
 
     [[nodiscard]] constexpr bool operator<=>(const ReverseIterator& other) const = default;
 
-    // NOLINTNEXTLINE(google-explicit-constructor)
     [[nodiscard]] constexpr   operator T() noexcept { return value_; }
     [[nodiscard]] constexpr T operator-(const ReverseIterator& other) const noexcept {
       return value_ - other.value_;

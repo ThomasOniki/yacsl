@@ -19,10 +19,8 @@ public:
   [[nodiscard]] constexpr T&       operator*() noexcept BASE_LIFETIMEBOUND { return get(); }
   [[nodiscard]] constexpr const T& operator*() const noexcept BASE_LIFETIMEBOUND { return get(); }
 
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
   [[nodiscard]] T& get() noexcept BASE_LIFETIMEBOUND { return *reinterpret_cast<T*>(data_.data()); }
   [[nodiscard]] const T& get() const noexcept BASE_LIFETIMEBOUND {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     return *reinterpret_cast<const T*>(data_.data());
   }
 

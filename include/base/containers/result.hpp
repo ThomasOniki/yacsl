@@ -11,15 +11,12 @@
 
 namespace base {
 
-// NOLINTBEGIN(cppcoreguidelines-pro-type-union-access)
 template <typename Ok, Enum Err> class Result {
 public:
-  template <typename... Args> // NOLINTNEXTLINE(google-explicit-constructor)
-  Result(Args&&... args) : ok_(base::forward<Args>(args)...) {}
+  template <typename... Args> Result(Args&&... args) : ok_(base::forward<Args>(args)...) {}
 
-  // NOLINTNEXTLINE(google-explicit-constructor)
   Result(Err&& err) : err_(base::move(err)), is_err_(true) {}
-  // NOLINTNEXTLINE(google-explicit-constructor)
+
   Result(const Err& err) : err_(err), is_err_(true) {}
 
   ~Result() noexcept { destroy(); }
@@ -151,6 +148,5 @@ private:
   };
   bool is_err_ = false;
 };
-// NOLINTEND(cppcoreguidelines-pro-type-union-access)
 
 } // namespace base

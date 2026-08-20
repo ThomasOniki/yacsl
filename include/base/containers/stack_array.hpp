@@ -39,11 +39,9 @@ public:
     return {data_, static_cast<SizeT>(N)};
   }
   [[nodiscard]] constexpr Slice<uchar, SizeT> bytes() noexcept BASE_LIFETIMEBOUND {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     return {reinterpret_cast<uchar*>(data_), static_cast<SizeT>(N * sizeof(T))};
   }
   [[nodiscard]] constexpr Slice<const uchar, SizeT> bytes() const noexcept BASE_LIFETIMEBOUND {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     return {reinterpret_cast<const uchar*>(data_), static_cast<SizeT>(N * sizeof(T))};
   }
 

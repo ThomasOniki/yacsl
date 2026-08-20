@@ -37,9 +37,7 @@ class TestAllocator {
 public:
   using SizeT = size_t;
 
-  // NOLINTNEXTLINE(fuchsia-statically-constructed-objects)
   inline static std::vector<std::string> events;
-  // NOLINTNEXTLINE(fuchsia-statically-constructed-objects)
   inline static std::vector<std::string> events_with_ptrs;
 
   template <typename T> base::Slice<T, SizeT> allocate(SizeT count) noexcept {
@@ -76,9 +74,7 @@ public:
   }
 
 private:
-  // NOLINTNEXTLINE(fuchsia-statically-constructed-objects)
   inline static std::unordered_set<void*> freed;
-  // NOLINTNEXTLINE(fuchsia-statically-constructed-objects)
   inline static std::unordered_set<void*> allocated;
 };
 
@@ -115,7 +111,6 @@ public:
   }
 
 public:
-  // NOLINTNEXTLINE(fuchsia-statically-constructed-objects)
   inline static std::vector<std::string> events = {};
 
   std::string name_;
@@ -232,7 +227,7 @@ static int test_push_after_copy() {
   TestAllocator::events.clear();
   {
     base::Vector<char, 0, TestAllocator, int32_t> foo = {'f', 'o', 'o', '\0'}; // 1 alloc
-    EXPECT_STREQ(foo.data(), static_cast<const char*>("foo"));
+    EXPECT_STREQ(foo.data(), "foo");
 
     base::Vector<char, 2, TestAllocator> foo_bar(foo); // 2 allocs
 

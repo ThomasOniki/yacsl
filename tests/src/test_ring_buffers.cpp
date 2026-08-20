@@ -3,13 +3,20 @@
 
 static constexpr base::usize SLOTS = 64;
 
+namespace {
+struct Counts {
+  base::usize producers;
+  base::usize consumers;
+};
+} // namespace
+
 #ifdef BASE_LSP_ONLY
 using Ring = base::MPSCRingBuffer<base::usize, SLOTS>;
 template <typename _>
 #else
 template <typename Ring>
 #endif
-static int test(base::usize producer_count, base::usize consumer_count) noexcept {
+static int test(Counts counts) noexcept {
   int                        ret   = 0;
   base::Atomic<bool>         start = false;
   base::Vector<base::Thread> producers;
@@ -24,7 +31,7 @@ static int test(base::usize producer_count, base::usize consumer_count) noexcept
   }
   EXPECT(ring.try_pop().is_nil());
 
-  for (base::usize i = 0; i < producer_count; ++i) {
+  for (base::usize i = 0; i < counts.producers; ++i) {
     producers.emplace_back([&ring, &start, i]() {
       while (!start.load(base::MemoryOrder::Acquire)) {
       }
@@ -35,15 +42,15 @@ static int test(base::usize producer_count, base::usize consumer_count) noexcept
   base::Vector<base::Thread> consumers;
 
   base::Vector<bool> did_pop;
-  did_pop.resize(producer_count);
+  did_pop.resize(counts.producers);
 
   base::Atomic<base::usize> pop_count;
 
-  for (base::usize i = 0; i < consumer_count; ++i) {
-    consumers.emplace_back([&ring, &start, &did_pop, &pop_count, producer_count]() {
+  for (base::usize i = 0; i < counts.consumers; ++i) {
+    consumers.emplace_back([&ring, &start, &did_pop, &pop_count, counts]() {
       while (!start.load(base::MemoryOrder::Acquire)) {
       }
-      while (pop_count.fetch_add(1, base::MemoryOrder::Relaxed) < producer_count) {
+      while (pop_count.fetch_add(1, base::MemoryOrder::Relaxed) < counts.producers) {
         did_pop[ring.pop()] = true;
       }
     });
@@ -51,14 +58,14 @@ static int test(base::usize producer_count, base::usize consumer_count) noexcept
 
   start.store(true, base::MemoryOrder::Release);
 
-  for (base::usize i = 0; i < producer_count; ++i) {
+  for (base::usize i = 0; i < counts.producers; ++i) {
     producers[i].join();
   }
-  for (base::usize i = 0; i < consumer_count; ++i) {
+  for (base::usize i = 0; i < counts.consumers; ++i) {
     consumers[i].join();
   }
 
-  for (bool consumed : did_pop) {
+  for (const bool consumed : did_pop) {
     EXPECT(consumed);
   }
 
@@ -67,7 +74,7 @@ static int test(base::usize producer_count, base::usize consumer_count) noexcept
 
 int main() {
   int ret = 0;
-  EXPECT((test<base::MPSCRingBuffer<base::usize, SLOTS>>(50, 1) == 0));
-  EXPECT((test<base::MPMCRingBuffer<base::usize, SLOTS>>(50, 50) == 0));
+  EXPECT((test<base::MPSCRingBuffer<base::usize, SLOTS>>({.producers = 50, .consumers = 1}) == 0));
+  EXPECT((test<base::MPMCRingBuffer<base::usize, SLOTS>>({.producers = 50, .consumers = 50}) == 0));
   return ret;
 }

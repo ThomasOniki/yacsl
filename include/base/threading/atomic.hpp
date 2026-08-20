@@ -20,7 +20,7 @@ template <typename T>
 class Atomic {
 public:
   constexpr Atomic() noexcept = default;
-  // NOLINTNEXTLINE(google-explicit-constructor)
+
   constexpr Atomic(T value) : value_(value) {}
   Atomic(const Atomic&)     = delete;
   Atomic(Atomic&&) noexcept = delete;

@@ -39,8 +39,7 @@ template <typename T>
 }
 
 template <typename T, typename... Args> constexpr T* construct_at(T* location, Args&&... args) {
-  // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
-  return ::new (static_cast<void*>(location)) T(base::forward<Args>(args)...);
+  return ::new (location) T(base::forward<Args>(args)...);
 }
 
 template <typename T> constexpr Slice<T> copy(Slice<const T> src, Slice<T> dst) noexcept {

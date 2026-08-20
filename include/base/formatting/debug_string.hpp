@@ -64,7 +64,7 @@ template <Character C> char* write_debug_char(BASE_LIFETIMEBOUND char* buf, C ch
   // For some reason clang-tidy's warning about casting [signed] char to unsigned types other than
   // uchar also applies to wchar_t, but you can't cast a wchar to uchar like it suggests if you
   // don't want to lose precision.
-  // NOLINTNEXTLINE(bugprone-signed-char-misuse, cert-str34-c)
+  // NOLINTNEXTLINE(bugprone-signed-char-misuse)
   auto uchr = static_cast<MakeUnsigned<C>>(chr);
   if (uchr >= 0x20) {
     if (uchr == 0x7F) {
@@ -128,7 +128,7 @@ template <Character C> void write_debug_char(String& buf, C chr) {
   // For some reason clang-tidy's warning about casting [signed] char to unsigned types other than
   // uchar also applies to wchar_t, but you can't cast a wchar to uchar like it suggests if you
   // don't want to lose precision.
-  // NOLINTNEXTLINE(bugprone-signed-char-misuse, cert-str34-c)
+  // NOLINTNEXTLINE(bugprone-signed-char-misuse)
   auto uchr = static_cast<MakeUnsigned<C>>(chr);
   if (uchr >= 0x20) {
     if (uchr == 0x7F) {

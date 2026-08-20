@@ -11,9 +11,8 @@ namespace base {
 
 template <Enum Err> class Error {
 public:
-  // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr Error(Nil /*nil*/) noexcept {}
-  // NOLINTNEXTLINE(google-explicit-constructor)
+
   constexpr Error(Err error) noexcept : value_(error) {}
 
   [[nodiscard]] constexpr bool operator==(Err error) const noexcept { return value_ == error; }
