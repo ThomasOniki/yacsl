@@ -60,5 +60,6 @@ int main() {
   EXPECT(test_atomic(100) == 0);
   EXPECT(test_mutex(1) == 0);
   EXPECT(test_mutex(100) == 0);
+  base::Logger::get_default_instance().flush();
   return ret;
 }
