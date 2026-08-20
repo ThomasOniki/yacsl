@@ -352,7 +352,7 @@ public:
 
   void format(String& buf, const Char* str) const noexcept {
     const PaddingOptions opts{.width = width_, .fill = fill_, .align = align_};
-    if (type_ == Type::String) [[likely]] {
+    if (type_ == Type::CString) [[likely]] {
       pad_string(buf, BasicStringView<Char>(str), opts);
     } else if (type_ == Type::Debug) {
       pad_string<true>(buf, BasicStringView<Char>(str), opts);
