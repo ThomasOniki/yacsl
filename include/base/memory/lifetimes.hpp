@@ -4,7 +4,6 @@
 #include "base/ranges/slice.hpp"
 #include "base/type_traits/qualifiers.hpp"
 #include "base/type_traits/trivial.hpp"
-#include "base/utilities/is_constant_evaluated.hpp"
 #include "base/utilities/type_aliases.hpp"
 #include <string.h>
 
@@ -44,22 +43,24 @@ template <typename T, typename... Args> constexpr T* construct_at(T* location, A
 
 template <typename T> constexpr Slice<T> copy(Slice<const T> src, Slice<T> dst) noexcept {
   const usize size = dst.size() < src.size() ? dst.size() : src.size();
-  if (is_constant_evaluated() || !TriviallyCopyable<T>) {
-    for (usize i = 0; i < size; ++i) {
-      dst[i] = src[i];
+  if !consteval {
+    if (TriviallyCopyable<T>) {
+      return {static_cast<T*>(::memcpy(dst.data(), src.data(), size)), size};
     }
-  } else {
-    ::memcpy(dst.data(), src.data(), size);
+  }
+  for (usize i = 0; i < size; ++i) {
+    dst[i] = src[i];
   }
   return {dst.data(), size};
 }
 template <typename T> constexpr Slice<T> copy(Slice<const T> src, T* dst) noexcept {
-  if (is_constant_evaluated() || !TriviallyCopyable<T>) {
-    for (usize i = 0; i < src.size(); ++i) {
-      dst[i] = src[i];
+  if !consteval {
+    if (TriviallyCopyable<T>) {
+      return {static_cast<T*>(::memcpy(dst, src.data(), src.size())), src.size()};
     }
-  } else {
-    ::memcpy(dst, src.data(), src.size());
+  }
+  for (usize i = 0; i < src.size(); ++i) {
+    dst[i] = src[i];
   }
   return {dst, src.size()};
 }
