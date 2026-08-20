@@ -1,4 +1,10 @@
 #ifdef _WIN32
+
+#include "base/containers/string.hpp"
+#include "base/os/process.hpp"
+#include "base/ranges/slice.hpp"
+#include "base/utilities/type_aliases.hpp"
+#include "win32-utils.hpp"
 #include <consoleapi.h>
 #include <consoleapi2.h>
 #include <errhandlingapi.h>
@@ -9,208 +15,178 @@
 #include <synchapi.h>
 #include <windows.h>
 #include <winerror.h>
-#endif
-
-#ifdef _WIN32
 
 namespace base {
 
-// NOLINTBEGIN(readability-make-member-function-const, cppcoreguidelines-pro-type-union-access)
-usize Process::Stdio::write(Slice<const uchar> data) noexcept {
-  DWORD ret = 0;
-  BASE_TRY_SYSCALL(
-      WriteFile(buffer_info_.handle, data.data(), static_cast<DWORD>(data.size()), &ret, nullptr));
-  return static_cast<usize>(ret);
-}
-usize Process::Stdio::read(Slice<uchar> buffer) noexcept {
-  DWORD ret = 0;
-  BASE_TRY_SYSCALL(ReadFile(buffer_info_.handle, buffer.data()), static_cast<DWORD>(buffer.size()), &ret, nullptr) ==
-                   FALSE);
-  return static_cast<usize>(ret);
-}
-
-void Process::Stdio::seek_begin(isize offset) noexcept {
-  auto low  = static_cast<LONG>(offset);
-  auto high = static_cast<LONG>(offset / Limits<LONG>::max);
-  BASE_TRY_SYSCALL(
-      SetFilePointer(buffer_info_.handle, low, high > 0 ? &high : nullptr, FILE_BEGIN));
-}
-void Process::Stdio::seek_end(isize offset) noexcept {
-  auto low  = static_cast<LONG>(offset);
-  auto high = static_cast<LONG>(offset / Limits<LONG>::max);
-  BASE_TRY_SYSCALL(SetFilePointer(buffer_info_.handle, low, high > 0 ? &high : nullptr, FILE_END));
-}
-void Process::Stdio::seek_cursor(isize offset) noexcept {
-  auto low  = static_cast<LONG>(offset);
-  auto high = static_cast<LONG>(offset / Limits<LONG>::max);
-  BASE_TRY_SYSCALL(
-      SetFilePointer(buffer_info_.handle, low, high > 0 ? &high : nullptr, FILE_CURRENT));
-}
-// NOLINTEND(readability-make-member-function-const, cppcoreguidelines-pro-type-union-access)
-
-// NOLINTBEGIN(cppcoreguidelines-pro-type-union-access)
-
-using Type = Process::Stdio::Type;
+using Type = Process::StdioType;
 using enum Type;
 
-static void pipe_child_stdin(HANDLE* child_handle, Type type, HANDLE* pipe) {
-  if (type != Buffer && type != ParentStdout && type != ParentStderr) {
-    return;
+static constexpr auto TYPE_FILE       = Type{254};
+static constexpr auto TYPE_OTHER_PIPE = Type{255};
+
+namespace {
+struct State {
+  STARTUPINFOA          info;
+  const Process::Stdio* stdio;
+  StackArray<HANDLE, 2> stdin_pipe;
+  StackArray<HANDLE, 2> stdout_pipe;
+  StackArray<HANDLE, 2> stderr_pipe;
+};
+} // namespace
+
+// NOLINTNEXTLINE(readability-make-member-function-const, cppcoreguidelines-pro-type-union-access)
+usize Process::Output::read(Slice<uchar> buffer) noexcept {
+  DWORD   ret = 0;
+  WINBOOL result =
+      ReadFile(handle_, buffer.data(), static_cast<DWORD>(buffer.size()), &ret, nullptr);
+  if (result == FALSE) [[unlikely]] {
+    DWORD err = GetLastError();
+    if (err == ERROR_BROKEN_PIPE) {
+      return 0;
+    }
+    panic("ReadFile() failed: {}", win32_err_str(err));
   }
-  SECURITY_ATTRIBUTES security_attr{
+  return static_cast<usize>(ret);
+}
+// NOLINTNEXTLINE(readability-make-member-function-const, cppcoreguidelines-pro-type-union-access)
+void Process::Input::write(Slice<const uchar> bytes) noexcept {
+  usize to_write = bytes.size();
+  while (to_write > 0) {
+    DWORD written = 0;
+    BASE_TRY_SYSCALL(
+        WriteFile(handle_, bytes.data(), static_cast<DWORD>(bytes.size()), &written, nullptr));
+    to_write -= static_cast<usize>(written);
+  }
+}
+
+void Process::open_files(void* pvoid_state) noexcept {
+  // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access)
+  State& state = *static_cast<State*>(pvoid_state);
+  if (stdin_type_ == TYPE_FILE) {
+    state.info.hStdInput = open_file(state.stdio->input.file_info_.path,
+                                     state.stdio->input.file_info_.flags | File::Flags::Read |
+                                         File::Flags::DontCloseOnExec)
+                               .expect_ok()
+                               .handle;
+  } else if (stdin_type_ == Null) {
+    state.info.hStdInput =
+        open_file("NUL", File::Flags::Read | File::Flags::DontCloseOnExec).expect_ok().handle;
+  }
+  if (stdout_type_ == TYPE_FILE) {
+    state.info.hStdOutput = open_file(state.stdio->output.file_info_.path,
+                                      state.stdio->output.file_info_.flags | File::Flags::Write |
+                                          File::Flags::DontCloseOnExec)
+                                .expect_ok()
+                                .handle;
+  } else if (stdout_type_ == Null) {
+    state.info.hStdOutput =
+        open_file("NUL", File::Flags::Write | File::Flags::DontCloseOnExec).expect_ok().handle;
+  }
+  if (stderr_type_ == TYPE_FILE) {
+    state.info.hStdError = open_file(state.stdio->error.file_info_.path,
+                                     state.stdio->error.file_info_.flags | File::Flags::Write |
+                                         File::Flags::DontCloseOnExec)
+                               .expect_ok()
+                               .handle;
+  } else if (stderr_type_ == Null) {
+    state.info.hStdError =
+        open_file("NUL", File::Flags::Write | File::Flags::DontCloseOnExec).expect_ok().handle;
+  }
+  // NOLINTEND(cppcoreguidelines-pro-type-union-access)
+}
+
+static StackArray<HANDLE, 2> create_pipe() {
+  StackArray<HANDLE, 2> handles = {};
+  SECURITY_ATTRIBUTES   security_attr{
       .nLength              = sizeof(SECURITY_ATTRIBUTES),
       .lpSecurityDescriptor = nullptr,
       .bInheritHandle       = TRUE,
   };
-  BASE_TRY_SYSCALL(CreatePipe(&pipe[0], &pipe[1], &security_attr, 0));
-  BASE_TRY_SYSCALL(SetHandleInformatoin(pipe[1], HANDLE_FLAG_INHERIT, 0));
-  *child_handle = pipe[0];
+  BASE_TRY_SYSCALL(CreatePipe(handles.data(), &handles[1], &security_attr, 0));
+  return handles;
 }
 
-static void pipe_child_stdout(HANDLE* child_handle, Type type, HANDLE* pipe) {
-  if (type != Buffer && type != ParentStdin) {
-    return;
+void Process::create_pipes(void* pvoid_state) noexcept {
+  State& state = *static_cast<State*>(pvoid_state);
+  // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access)
+  if (stdin_type_ == Pipe) {
+    state.stdin_pipe = create_pipe();
+    BASE_TRY_SYSCALL(SetHandleInformation(state.stdin_pipe[1], HANDLE_FLAG_INHERIT, 0));
+    state.info.hStdInput = state.stdin_pipe[0];
+    stdin_input_.handle_ = state.stdin_pipe[1];
+  } else if (stdin_type_ == TYPE_OTHER_PIPE) {
+    state.info.hStdInput = state.stdio->input.other_pipe_handle_;
+    BASE_TRY_SYSCALL(
+        SetHandleInformation(state.info.hStdInput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT));
   }
-  SECURITY_ATTRIBUTES security_attr{
-      .nLength              = sizeof(SECURITY_ATTRIBUTES),
-      .lpSecurityDescriptor = nullptr,
-      .bInheritHandle       = TRUE,
-  };
-  BASE_TRY_SYSCALL(CreatePipe(&pipe[0], &pipe[1], &security_attr, 0));
-  BASE_TRY_SYSCALL(SetHandleInformatoin(pipe[0], HANDLE_FLAG_INHERIT, 0));
-  *child_handle = pipe[1];
+  if (stdout_type_ == Pipe) {
+    state.stdout_pipe = create_pipe();
+    BASE_TRY_SYSCALL(SetHandleInformation(state.stdout_pipe[0], HANDLE_FLAG_INHERIT, 0));
+    state.info.hStdOutput  = state.stdout_pipe[1];
+    stdout_output_.handle_ = state.stdout_pipe[0];
+  } else if (stdout_type_ == TYPE_OTHER_PIPE) {
+    state.info.hStdOutput = state.stdio->output.other_pipe_handle_;
+    BASE_TRY_SYSCALL(
+        SetHandleInformation(state.info.hStdOutput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT));
+  }
+  if (stderr_type_ == Pipe) {
+    state.stderr_pipe = create_pipe();
+    BASE_TRY_SYSCALL(SetHandleInformation(state.stderr_pipe[0], HANDLE_FLAG_INHERIT, 0));
+    state.info.hStdError   = state.stderr_pipe[1];
+    stderr_output_.handle_ = state.stderr_pipe[0];
+  } else if (stderr_type_ == TYPE_OTHER_PIPE) {
+    state.info.hStdError = state.stdio->error.other_pipe_handle_;
+    BASE_TRY_SYSCALL(
+        SetHandleInformation(state.info.hStdError, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT));
+  }
+  // NOLINTEND(cppcoreguidelines-pro-type-union-access)
 }
 
-static void redirect_child_stdio_to_file(HANDLE* child_handle, const char* path,
-                                         FileOpenFlags flags) noexcept {
-  const Result<HANDLE, File::OpenError> result =
-      open_file(path, flags | FileOpenFlags::DontCloseOnExec);
-  if (result.is_err()) [[unlikely]] {
-    switch (result.assert_err()) {
-    case File::OpenError::FileNotFound:
-      panic("Failed to open file for redirected stdio: FileNotFound.");
-    default:
-      break;
-    }
+void Process::cleanup_after_spawn(void* pvoid_state) noexcept {
+  State& state = *static_cast<State*>(pvoid_state);
+
+  // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access)
+  if (stdin_type_ == TYPE_FILE || stdin_type_ == Type::Null) {
+    BASE_TRY_SYSCALL(CloseHandle(state.info.hStdInput));
+  } else if (stdin_type_ == Pipe) {
+    BASE_TRY_SYSCALL(CloseHandle(state.stdin_pipe[0]));
+  } else if (stdin_type_ == TYPE_OTHER_PIPE) {
+    BASE_TRY_SYSCALL(CloseHandle(state.stdio->input.other_pipe_handle_));
   }
-  *child_handle = result.assert_ok();
+  if (stdout_type_ == TYPE_FILE || stdout_type_ == Type::Null) {
+    BASE_TRY_SYSCALL(CloseHandle(state.info.hStdOutput));
+  } else if (stdout_type_ == Pipe) {
+    BASE_TRY_SYSCALL(CloseHandle(state.stdout_pipe[1]));
+  } else if (stdout_type_ == TYPE_OTHER_PIPE) {
+    BASE_TRY_SYSCALL(CloseHandle(state.stdio->output.other_pipe_handle_));
+  }
+  if (stderr_type_ == TYPE_FILE || stderr_type_ == Type::Null) {
+    BASE_TRY_SYSCALL(CloseHandle(state.info.hStdError));
+  } else if (stderr_type_ == Pipe) {
+    BASE_TRY_SYSCALL(CloseHandle(state.stderr_pipe[1]));
+  } else if (stderr_type_ == TYPE_OTHER_PIPE) {
+    BASE_TRY_SYSCALL(CloseHandle(state.stdio->error.other_pipe_handle_));
+  }
+  // NOLINTEND(cppcoreguidelines-pro-type-union-access)
 }
 
-static void set_parent_stdio(STARTUPINFOA* info, StackArray<FileHandle, 3> parent_io,
-                             Type stdin_type, Type stdout_type, Type stderr_type) {
-  if (stdin_type == ParentStdin) {
-    info->hStdInput = parent_io[0];
-  }
-
-  if (stdout_type == ParentStdout) {
-    info->hStdOutput = parent_io[1];
-  } else if (stdout_type == ParentStderr) {
-    info->hStdOutput = parent_io[2];
-  }
-
-  if (stderr_type == ParentStdout) {
-    info->hStdError = parent_io[1];
-  } else if (stderr_type == ParentStderr) {
-    info->hStdError = parent_io[2];
-  }
-}
-
-void Process::handle_piped_stdio(void* voidp) noexcept {
-  auto* info = static_cast<STARTUPINFOA*>(voidp);
-
-  if (stdin_.type_ == ParentStdin || stdout_.type_ == ParentStdin || stderr_.type_ == ParentStdin) {
-    original_io_[0] = GetStdHandle(STD_INPUT_HANDLE);
-  }
-  if (stdin_.type_ == ParentStdout || stdout_.type_ == ParentStdout ||
-      stderr_.type_ == ParentStdout) {
-    original_io_[1] = GetStdHandle(STD_OUTPUT_HANDLE);
-  }
-  if (stdin_.type_ == ParentStderr || stdout_.type_ == ParentStderr ||
-      stderr_.type_ == ParentStderr) {
-    original_io_[2] = GetStdHandle(STD_ERROR_HANDLE);
-  }
-
-  set_parent_stdio(info, original_io_, stdin_.type_, stdout_.type_, stderr_.type_);
-
-  pipe_child_stdin(&info->hStdInput, stdin_.type_, stdin_pipe_.data());
-  pipe_child_stdout(&info->hStdOutput, stdout_.type_, stdout_pipe_.data());
-
-  if (stdout_.type_ == ParentStdin && stderr_.type_ == ParentStdin) {
-    info->hStdError = info->hStdOutput;
-  } else {
-    pipe_child_stdout(&info->hStdError, stderr_.type_, stderr_pipe_.data());
-  }
-
-  if (stdin_.type_ == Buffer) {
-    stdin_.buffer_info_.process = this;
-    stdin_.buffer_info_.handle  = stdin_pipe_[1];
-  }
-  if (stdout_.type_ == Buffer) {
-    stdout_.buffer_info_.process = this;
-    stdout_.buffer_info_.handle  = stdout_pipe_[0];
-  }
-  if (stderr_.type_ == Buffer) {
-    stderr_.buffer_info_.process = this;
-    stderr_.buffer_info_.handle  = stderr_pipe_[0];
-  }
-
-  if (stdin_.type_ == Pipe) {
-    const Stdio*   pipe          = stdin_.pipe_;
-    const Process* piped_process = pipe->buffer_info_.process;
-    if (pipe == &piped_process->stdout_) {
-      info->hStdInput = piped_process->stdout_pipe_[0];
-    } else {
-      info->hStdInput = piped_process->stderr_pipe_[0];
-    }
-  }
-}
-
-void Process::handle_file_stdio(void* voidp) noexcept {
-  auto* info = static_cast<STARTUPINFOA*>(voidp);
-  if (stdin_.type_ == File) {
-    redirect_child_stdio_to_file(&info->hStdInput, stdin_.file_info_.path,
-                                 stdin_.file_info_.flags | FileOpenFlags::Read);
-  }
-  if (stdout_.type_ == File) {
-    redirect_child_stdio_to_file(&info->hStdOutput, stdout_.file_info_.path,
-                                 stdout_.file_info_.flags | FileOpenFlags::Write);
-  }
-
-  if (stdout_.type_ == File && stderr_.type_ == File) {
-    const bool same_flags =
-        (stdout_.file_info_.flags | FileOpenFlags::Write | FileOpenFlags::DontCloseOnExec) ==
-        (stderr_.file_info_.flags | FileOpenFlags::Write | FileOpenFlags::DontCloseOnExec);
-    const bool same_paths = strcmp(stdout_.file_info_.path, stderr_.file_info_.path) == 0;
-
-    if (same_flags && same_paths) {
-      info->hStdError = info->hStdOutput;
-    } else {
-      redirect_child_stdio_to_file(&info->hStdError, stderr_.file_info_.path,
-                                   stderr_.file_info_.flags | FileOpenFlags::Write);
-    }
-  } else if (stderr_.type_ == File) {
-    redirect_child_stdio_to_file(&info->hStdError, stderr_.file_info_.path,
-                                 stderr_.file_info_.flags | FileOpenFlags::Write);
-  }
-}
-
-static Vector<char, 64> make_command_line_string(const char* const* argv) {
-  Vector<char, 64> str;
+static String make_command_line_string(const char* const* argv) {
+  String str;
 
   for (const char* const* it = argv; *it != nullptr; ++it) {
-    StringView arg = StringView(*it, strlen(*it));
-    str.push_back('"');
+    auto arg = StringView(*it, strlen(*it));
+    str += '"';
     usize backslash_count = 0;
 
     for (char chr : arg) {
       if (chr == '"') {
         for (usize i = 0; i < backslash_count; ++i) {
-          str.push_back('\\');
+          str += '\\';
         }
-        str.push_back('\\');
-        str.push_back('"');
+        str += '\\';
+        str += '"';
       } else {
-        str.push_back(chr);
+        str += chr;
       }
 
       if (chr == '\\') {
@@ -221,61 +197,65 @@ static Vector<char, 64> make_command_line_string(const char* const* argv) {
     }
 
     for (usize i = 0; i < backslash_count; ++i) {
-      str.push_back('\\');
+      str += '\\';
     }
 
-    str.push_back('"');
-    str.push_back(' ');
+    str += "\" ";
   }
-  str.pop_back(); // pop trailing space
-  str.push_back('\0');
+  str[str.size() - 1] = '\0';
 
   return str;
 }
 
-Error<Process::SpawnError> Process::start(const char* const* argv, Stdio&& stdin_opts,
-                                          Stdio&& stdout_opts, Stdio&& stderr_opts) noexcept {
-  debug_panic_if(stdout_opts.type_ == Pipe, "You should pipe stdout to stdin, not the reverse");
-  debug_panic_if(stderr_opts.type_ == Pipe, "You should pipe stderr to stdin, not the reverse");
-
+Error<Process::SpawnError> Process::start(const char* const* argv, const Stdio& stdio) noexcept {
   if (handle_ != nullptr) [[unlikely]] {
     wait();
   }
 
-  stdin_  = base::move(stdin_opts);
-  stdout_ = base::move(stdout_opts);
-  stderr_ = base::move(stderr_opts);
+  stdin_type_  = stdio.input.type_;
+  stdout_type_ = stdio.output.type_;
+  stderr_type_ = stdio.error.type_;
 
-  STARTUPINFOA info{
-      .cb              = sizeof(STARTUPINFOA),
-      .lpReserved      = nullptr,
-      .lpDesktop       = nullptr,
-      .lpTitle         = nullptr,
-      .dwX             = 0,
-      .dwY             = 0,
-      .dwXSize         = 0,
-      .dwYSize         = 0,
-      .dwXCountChars   = 0,
-      .dwYCountChars   = 0,
-      .dwFillAttribute = 0,
-      .dwFlags         = STARTF_USESTDHANDLES,
-      .wShowWindow     = 0,
-      .cbReserved2     = 0,
-      .lpReserved2     = nullptr,
-      .hStdInput       = INVALID_HANDLE_VALUE,
-      .hStdOutput      = INVALID_HANDLE_VALUE,
-      .hStdError       = INVALID_HANDLE_VALUE,
+  State state = {
+      .info =
+          {
+              .cb              = sizeof(STARTUPINFOA),
+              .lpReserved      = nullptr,
+              .lpDesktop       = nullptr,
+              .lpTitle         = nullptr,
+              .dwX             = 0,
+              .dwY             = 0,
+              .dwXSize         = 0,
+              .dwYSize         = 0,
+              .dwXCountChars   = 0,
+              .dwYCountChars   = 0,
+              .dwFillAttribute = 0,
+              .dwFlags         = STARTF_USESTDHANDLES,
+              .wShowWindow     = 0,
+              .cbReserved2     = 0,
+              .lpReserved2     = nullptr,
+              .hStdInput       = stdin_type_ == Inherit ? GetStdHandle(STD_INPUT_HANDLE) : nullptr,
+              .hStdOutput = stdout_type_ == Inherit ? GetStdHandle(STD_OUTPUT_HANDLE) : nullptr,
+              .hStdError  = stderr_type_ == Inherit ? GetStdHandle(STD_ERROR_HANDLE) : nullptr,
+          },
+      .stdio       = &stdio,
+      .stdin_pipe  = {},
+      .stdout_pipe = {},
+      .stderr_pipe = {},
   };
 
-  handle_piped_stdio(static_cast<void*>(&info));
-  handle_file_stdio(static_cast<void*>(&info));
+  open_files(&state);
+  create_pipes(&state);
 
   PROCESS_INFORMATION proc_info{};
 
   Error<SpawnError> ret = NIL;
 
-  if (CreateProcessA(nullptr, make_command_line_string(argv).data(), nullptr, nullptr, FALSE,
-                     CREATE_NEW_PROCESS_GROUP, nullptr, nullptr, &info, &proc_info) == TRUE) {
+  String cmdline = make_command_line_string(argv);
+
+  if (CreateProcessA(nullptr, cmdline.c_str(), nullptr, nullptr, TRUE, CREATE_NEW_PROCESS_GROUP,
+                     nullptr, nullptr, &state.info, &proc_info) == TRUE) [[likely]] {
+    BASE_TRY_SYSCALL(CloseHandle(proc_info.hThread));
     handle_ = proc_info.hProcess;
     group_  = proc_info.dwProcessId;
   } else {
@@ -290,73 +270,63 @@ Error<Process::SpawnError> Process::start(const char* const* argv, Stdio&& stdin
     }
   }
 
-  if (stdin_.type_ == ParentStdout) {
-    BASE_TRY_SYSCALL(SetStdHandle(STD_OUTPUT_HANDLE, stdin_pipe_[1]));
-  } else if (stdin_.type_ == ParentStderr) {
-    BASE_TRY_SYSCALL(SetStdHandle(STD_ERROR_HANDLE, stdin_pipe_[1]));
-  }
-  if (stdout_.type_ == ParentStdin) {
-    BASE_TRY_SYSCALL(SetStdHandle(STD_INPUT_HANDLE, stdout_pipe_[0]));
-  }
-  if (stderr_.type_ == ParentStdin && stdout_.type_ != ParentStdin) {
-    BASE_TRY_SYSCALL(SetStdHandle(STD_INPUT_HANDLE, stderr_pipe_[0]));
-  }
-
-  if (stdin_.type_ == Buffer || stdin_.type_ == ParentStdout || stdin_.type_ == ParentStderr) {
-    BASE_TRY_SYSCALL(CloseHandle(stdin_pipe_[0]));
-  }
-  if (stdout_.type_ == Buffer || stdout_.type_ == ParentStdin) {
-    BASE_TRY_SYSCALL(CloseHandle(stdout_pipe_[1]));
-  }
-  if (stderr_.type_ == Buffer || (stderr_.type_ == ParentStdin && stdout_.type_ != ParentStdin)) {
-    BASE_TRY_SYSCALL(CloseHandle(stderr_pipe_[1]));
-  }
+  cleanup_after_spawn(&state);
 
   return ret;
+}
+
+static String drain_pipe(Process::Output* output) noexcept {
+  static constexpr usize read_size = 1024;
+  String                 data;
+  Slice<uchar>           bytes  = Slice<char>(data.grow(read_size), read_size).bytes();
+  usize                  result = output->read(bytes);
+  while (result != 0) {
+    bytes  = Slice<char>(data.grow(result), read_size).bytes();
+    result = output->read(bytes);
+  }
+  return data.resize(data.size() - read_size);
+}
+
+void Process::cleanup_before_wait(ExitStatus* status) noexcept {
+  if (stdin_type_ == Pipe && stdin_input_.handle_ != File::NIL_HANDLE) {
+    BASE_TRY_SYSCALL(CloseHandle(stdin_input_.handle_));
+    stdin_input_.handle_ = File::NIL_HANDLE;
+  }
+  if (stdout_type_ == Pipe && stdout_output_.handle_ != File::NIL_HANDLE) {
+    status->unread_stdout = drain_pipe(&stdout_output_);
+    BASE_TRY_SYSCALL(CloseHandle(stdout_output_.handle_));
+    stdout_output_.handle_ = File::NIL_HANDLE;
+  }
+  if (stderr_type_ == Pipe && stderr_output_.handle_ != File::NIL_HANDLE) {
+    status->unread_stderr = drain_pipe(&stderr_output_);
+    BASE_TRY_SYSCALL(CloseHandle(stderr_output_.handle_));
+    stderr_output_.handle_ = File::NIL_HANDLE;
+  }
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const, misc-no-recursion)
 Process::ExitStatus Process::wait() noexcept {
   ExitStatus status = {
-      .exit_code = 0,
-      .signal    = Signal{0},
-      .stopped   = Signal{0},
+      .unread_stdout = "",
+      .unread_stderr = "",
+      .exit_code     = 0,
+      .signal        = Signal{0},
+      .stopped       = Signal{0},
   };
   if (handle_ == nullptr) {
     return status;
   }
-  if (stdin_.type_ == Pipe) {
-    stdin_.pipe_->buffer_info_.process->wait();
-  }
 
-  if (stdin_.type_ == Buffer) {
-    BASE_TRY_SYSCALL(CloseHandle(stdin_pipe_[1]));
-  } else if (stdin_.type_ == ParentStdout) {
-    BASE_TRY_SYSCALL(SetStdHandle(STD_OUTPUT_HANDLE, original_io_[0]));
-  } else if (stdin_.type_ == ParentStderr) {
-    BASE_TRY_SYSCALL(SetStdHandle(STD_ERROR_HANDLE, original_io_[0]));
-  }
+  cleanup_before_wait(&status);
 
-  if (stdout_.type_ == Buffer) {
-    BASE_TRY_SYSCALL(CloseHandle(stdout_pipe_[0]));
-  } else if (stdout_.type_ == ParentStdin) {
-    BASE_TRY_SYSCALL(SetStdHandle(STD_INPUT_HANDLE, original_io_[1]));
-  }
-
-  if (stderr_.type_ == Buffer || (stderr_.type_ == ParentStdin && stdout_.type_ != ParentStdin)) {
-    BASE_TRY_SYSCALL(CloseHandle(stderr_pipe_[0]));
-  } else if (stderr_.type_ == ParentStdin) {
-    BASE_TRY_SYSCALL(SetStdHandle(STD_INPUT_HANDLE, original_io_[2]));
-  }
-
-  BASE_TRY_SYSCALL(WaitForSingleObject(handle_, INFINITE));
+  panic_if(WaitForSingleObject(handle_, INFINITE) != WAIT_OBJECT_0,
+           "WaitForSingleObject failed: {}", win32_err_str());
 
   DWORD code = 0;
   BASE_TRY_SYSCALL(GetExitCodeProcess(handle_, &code));
   status.exit_code = static_cast<u32>(code);
 
   BASE_TRY_SYSCALL(CloseHandle(handle_));
-
   handle_ = NIL_PROCESS_HANDLE;
 
   return status;
@@ -371,8 +341,6 @@ void Process::send_signal(Signal signal) noexcept {
   }
   handle_ = nullptr;
 }
-
-// NOLINTEND(cppcoreguidelines-pro-type-union-access)
 
 } // namespace base
 

@@ -1,18 +1,26 @@
 #pragma once
 
-#include "base/attributes.hpp"
-#include <dlfcn.h>
+#ifdef _WIN32
+#include "base/threading/mutex.hpp"
+#include <assert.h>
+#include <libloaderapi.h>
+#include <windows.h>
+#else
 
+#include <dlfcn.h>
 #ifndef __EMSCRIPTEN__
 #include <execinfo.h>
 #endif
 
+#include "base/utilities/demangle.hpp"
+
+#endif
+
+#include "base/attributes.hpp"
 #include "base/containers/string.hpp"
 #include "base/containers/vector.hpp"
 #include "base/logging/logger.hpp"
-#include "base/memory/lifetimes.hpp"
 #include "base/ranges/string_view.hpp"
-#include "base/utilities/demangle.hpp"
 #include "base/utilities/type_aliases.hpp"
 
 namespace base {
@@ -33,6 +41,16 @@ struct StackTrace {
       return entries_;
     }
     entries_.resize(addresses_.size());
+#ifdef _WIN32
+    for (usize i = 0; i < addresses_.size(); ++i) {
+      entries_[i] = {
+          .caller       = String(""),
+          .object       = ""_sv,
+          .base_address = nullptr,
+          .address      = addresses_[i],
+      };
+    }
+#else
     for (usize i = 0; i < addresses_.size(); ++i) {
       Dl_info info;
       dladdr(addresses_[i], &info);
@@ -43,6 +61,7 @@ struct StackTrace {
           .address      = addresses_[i],
       };
     }
+#endif
     return entries_;
   }
 
@@ -57,15 +76,27 @@ struct StackTrace {
   }
 
 #ifdef __EMSCRIPTEN__
-  static StackTrace current() noexcept {
+  BASE_NOINLINE static StackTrace current() noexcept { return StackTrace(); }
+#elif defined(_WIN32)
+  BASE_NOINLINE static StackTrace current() noexcept {
     StackTrace ret;
+    ret.addresses_.resize(ret.addresses_.capacity());
+    DWORD size = RtlCaptureStackBackTrace(0, static_cast<DWORD>(ret.addresses_.size()),
+                                          ret.addresses_.data(), nullptr);
+    while (size == ret.addresses_.size()) {
+      ret.addresses_.resize(ret.addresses_.capacity() * 2);
+      size = RtlCaptureStackBackTrace(size, static_cast<DWORD>(ret.addresses_.size()) - size,
+                                      ret.addresses_.data(), nullptr);
+    }
+    ret.addresses_.resize(size);
     return ret;
   }
 #else
   BASE_NOINLINE static StackTrace current() noexcept {
     StackTrace ret;
     ret.addresses_.resize(ret.addresses_.capacity());
-    usize size = ret.addresses_.size();
+    auto size = static_cast<usize>(
+        backtrace(ret.addresses_.data(), static_cast<int>(ret.addresses_.size())));
     while (size == ret.addresses_.size()) {
       ret.addresses_.resize(ret.addresses_.capacity() * 2);
       size = static_cast<usize>(
@@ -78,6 +109,12 @@ struct StackTrace {
 
   alignas(128) Vector<StackTraceEntry, 16> entries_;
   Vector<void*, 21> addresses_;
+
+#ifdef _WIN32
+private:
+  inline static Mutex  dbghelp_mutex_;
+  inline static HANDLE dbghelp_process_ = nullptr;
+#endif
 };
 
 } // namespace base

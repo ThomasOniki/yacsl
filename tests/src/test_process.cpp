@@ -9,19 +9,30 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 #define TRY_SYSCALL(syscall)                                                                       \
   [&]() {                                                                                          \
-    auto result = syscall;                                                                         \
-    if (result == -1) [[unlikely]] {                                                               \
+    auto _result = syscall;                                                                        \
+    if (_result == -1) [[unlikely]] {                                                              \
       perror(#syscall);                                                                            \
       abort();                                                                                     \
     }                                                                                              \
-    return result;                                                                                 \
+    return _result;                                                                                \
   }()
+
+#ifdef _WIN32
+#define TRY_SYSCALL_WIN32(syscall)                                                                 \
+  do {                                                                                             \
+    if ((syscall) == FALSE) [[unlikely]] {                                                         \
+      base::panic(#syscall " failed: {}", GetLastError());                                         \
+    }                                                                                              \
+  } while (false)
+#endif
 
 using base::Process;
 using Stdio = Process::Stdio;
@@ -45,14 +56,42 @@ struct IoStorage {
   base::StackStorage<Stdio> error;
 };
 struct Pipes {
+#ifdef _WIN32
+  alignas(128) base::StackArray<HANDLE, 3> original = {};
+  base::StackArray<HANDLE, 2> input                 = {};
+  base::StackArray<HANDLE, 2> output                = {};
+  base::StackArray<HANDLE, 2> error                 = {};
+#else
   alignas(64) base::StackArray<int, 3> original;
   base::StackArray<int, 2> input  = {};
   base::StackArray<int, 2> output = {};
   base::StackArray<int, 2> error  = {};
+#endif
 
   Pipes()
-      : original({fcntl(STDIN_FILENO, F_DUPFD_CLOEXEC, 0), fcntl(STDOUT_FILENO, F_DUPFD_CLOEXEC, 0),
-                  fcntl(STDERR_FILENO, F_DUPFD_CLOEXEC, 0)}) {
+#ifndef _WIN32
+      : original{fcntl(STDIN_FILENO, F_DUPFD_CLOEXEC, 0), fcntl(STDOUT_FILENO, F_DUPFD_CLOEXEC, 0),
+                 fcntl(STDERR_FILENO, F_DUPFD_CLOEXEC, 0)}
+#endif
+  {
+#ifdef _WIN32
+    TRY_SYSCALL_WIN32(CreatePipe(&input[0], &input[1], nullptr, 0));
+    TRY_SYSCALL_WIN32(CreatePipe(&output[0], &output[1], nullptr, 0));
+    TRY_SYSCALL_WIN32(CreatePipe(&error[0], &error[1], nullptr, 0));
+    TRY_SYSCALL_WIN32(SetHandleInformation(input[0], HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT));
+    TRY_SYSCALL_WIN32(SetHandleInformation(output[1], HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT));
+    TRY_SYSCALL_WIN32(SetHandleInformation(error[1], HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT));
+
+    // NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast, performance-no-int-to-ptr)
+    TRY_SYSCALL_WIN32(
+        SetStdHandleEx(STD_INPUT_HANDLE, reinterpret_cast<HANDLE>(input[0]), &original[0]));
+    TRY_SYSCALL_WIN32(
+        SetStdHandleEx(STD_OUTPUT_HANDLE, reinterpret_cast<HANDLE>(output[1]), &original[1]));
+    TRY_SYSCALL_WIN32(
+        SetStdHandleEx(STD_ERROR_HANDLE, reinterpret_cast<HANDLE>(error[1]), &original[2]));
+
+    //  NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast, performance-no-int-to-ptr)
+#else
     // NOLINTNEXTLINE(android-cloexec-pipe)
     TRY_SYSCALL(::pipe(input.data()));
     // NOLINTNEXTLINE(android-cloexec-pipe)
@@ -67,18 +106,30 @@ struct Pipes {
     TRY_SYSCALL(::dup2(input[0], STDIN_FILENO));
     TRY_SYSCALL(::dup2(output[1], STDOUT_FILENO));
     TRY_SYSCALL(::dup2(error[1], STDERR_FILENO));
+
     TRY_SYSCALL(::close(input[0]));
     TRY_SYSCALL(::close(output[1]));
     TRY_SYSCALL(::close(error[1]));
+#endif
   }
 
   void restore_original_io() {
+#ifdef _WIN32
+    TRY_SYSCALL_WIN32(SetStdHandle(STD_INPUT_HANDLE, original[0]));
+    TRY_SYSCALL_WIN32(SetStdHandle(STD_OUTPUT_HANDLE, original[1]));
+    TRY_SYSCALL_WIN32(SetStdHandle(STD_ERROR_HANDLE, original[2]));
+
+    TRY_SYSCALL_WIN32(CloseHandle(input[0]));
+    TRY_SYSCALL_WIN32(CloseHandle(output[1]));
+    TRY_SYSCALL_WIN32(CloseHandle(error[1]));
+#else
     TRY_SYSCALL(::dup2(original[0], STDIN_FILENO));
     TRY_SYSCALL(::dup2(original[1], STDOUT_FILENO));
     TRY_SYSCALL(::dup2(original[2], STDERR_FILENO));
     TRY_SYSCALL(::close(original[0]));
     TRY_SYSCALL(::close(original[1]));
     TRY_SYSCALL(::close(original[2]));
+#endif
   }
 };
 } // namespace
@@ -122,20 +173,28 @@ static constexpr const char* CHILD_STDOUT_FILE_PATH =
 static constexpr const char* CHILD_STDERR_FILE_PATH =
     BASE_TESTS_DIR "/share/test_process/child_stderr.txt";
 
-static constexpr base::StringView INPUT = "hello world\n";
+static constexpr base::StringView INPUT_DATA = "hello world\n";
 
-static void write_input(Type type, Process* proc, Pipes* pipes, int* filedes) {
+static void write_input(Type type, Process* proc, Pipes* pipes) {
   if (type == Type::Inherit) {
-    assert(::write(pipes->input[1], INPUT.data(), INPUT.size()) == INPUT.size());
-  } else if (type == Type::File) {
-#ifndef O_CLOEXEC
-#define O_CLOEXEC 0
+#ifdef _WIN32
+    DWORD written = 0;
+    TRY_SYSCALL_WIN32(
+        WriteFile(pipes->input[1], INPUT_DATA.data(), INPUT_DATA.size(), &written, nullptr));
+    assert(written == INPUT_DATA.size());
+#else
+    assert(::write(pipes->input[1], INPUT_DATA.data(), INPUT_DATA.size()) == INPUT_DATA.size());
 #endif
-    *filedes = ::open(CHILD_STDIN_FILE_PATH, O_WRONLY | O_CREAT | O_CLOEXEC, 0644);
-    assert(::write(*filedes, INPUT.data(), INPUT.size()) == INPUT.size());
-    assert(*filedes != -1);
+  } else if (type == Type::File) {
+#ifdef _WIN32
+#define O_CLOEXEC _O_NOINHERIT
+#endif
+    int file = ::open(CHILD_STDIN_FILE_PATH, O_WRONLY | O_CREAT | O_CLOEXEC | O_TRUNC, 0644);
+    assert(file != -1);
+    assert(::write(file, INPUT_DATA.data(), INPUT_DATA.size()) == INPUT_DATA.size());
+    assert(close(file) == 0);
   } else if (type == Type::Pipe) {
-    proc->get_stdin().write(INPUT.bytes());
+    proc->get_stdin().write(INPUT_DATA.bytes());
   }
 }
 
@@ -162,19 +221,25 @@ static int check_file(const char* path, base::StringView expected) {
 
   while (result != 0) {
     ASSERT(result != -1);
+#ifdef _WIN32
+    result = ::read(fildes, buf.grow(static_cast<base::usize>(result)),
+                    static_cast<unsigned int>(result));
+#else
     result =
         ::read(fildes, buf.grow(static_cast<base::usize>(result)), static_cast<size_t>(result));
+#endif
   }
   EXPECT_EQ(result, 0);
 
   buf.resize(buf.size() - 64);
-  EXPECT_EQ(buf.view(), expected);
+  EXPECT_SVEQ(buf.view(), expected);
 
   TRY_SYSCALL(close(fildes));
   TRY_SYSCALL(remove(path));
 
   return ret;
 }
+
 static int check_file_output(IoTypes types) noexcept {
   int ret = 0;
   if (types.output == Type::File) {
@@ -202,36 +267,63 @@ static int check_other_pipe_output(base::StackArray<Process, 3>& processes,
   int ret = 0;
   if (types.output == Type::OtherPipe) {
     Process::ExitStatus status = processes[1].wait();
-    EXPECT_EQ(status.unread_stdout, "arguments (to stdout):\n"
-                                    "arg1\n"
-                                    "arg2\n"
-                                    "argument with spaces\n"
-                                    "exiting (to stdout)\n");
+    EXPECT_SVEQ(status.unread_stdout, "arguments (to stdout):\n"
+                                      "arg1\n"
+                                      "arg2\n"
+                                      "argument with spaces\n"
+                                      "exiting (to stdout)\n");
   }
   if (types.error == Type::OtherPipe) {
     Process::ExitStatus status = processes[2].wait();
     if (types.input == Type::Null) {
-      EXPECT_EQ(status.unread_stdout, "stdin (to stderr):\n"
-                                      "exiting (to stderr)\n");
+      EXPECT_SVEQ(status.unread_stdout, "stdin (to stderr):\n"
+                                        "exiting (to stderr)\n");
     } else {
-      EXPECT_EQ(status.unread_stdout, "stdin (to stderr):\n"
-                                      "hello world\n"
-                                      "exiting (to stderr)\n");
+      EXPECT_SVEQ(status.unread_stdout, "stdin (to stderr):\n"
+                                        "hello world\n"
+                                        "exiting (to stderr)\n");
     }
   }
   return ret;
 }
 
+#ifdef _WIN32
+static int check_fd_output(HANDLE file, base::StringView expected) {
+#else
 static int check_fd_output(int file, base::StringView expected) {
+#endif
   int          ret = 0;
   base::String output;
-  ssize_t      result = ::read(file, output.grow(512), 512);
+#ifdef _WIN32
+  DWORD   result  = 0;
+  WINBOOL success = ReadFile(file, output.grow(512), 512, &result, nullptr);
+  if (success == FALSE) [[unlikely]] {
+    DWORD err = GetLastError();
+    if (err != ERROR_BROKEN_PIPE) {
+      base::panic("ReadFile() failed: {}", err);
+    }
+  }
+#else
+  ssize_t result = ::read(file, output.grow(512), 512);
+#endif
+#ifdef _WIN32
+  while (result > 0) {
+    success = ReadFile(file, output.grow(static_cast<base::usize>(result)), 512, &result, nullptr);
+    if (success == FALSE) [[unlikely]] {
+      DWORD err = GetLastError();
+      if (err != ERROR_BROKEN_PIPE) {
+        base::panic("ReadFile() failed: {}", err);
+      }
+    }
+  }
+#else
   while (result > 0) {
     result = ::read(file, output.grow(static_cast<base::usize>(result)), 512);
   }
   ASSERT(result != -1);
+#endif
   output.resize(output.size() - 512);
-  EXPECT_EQ(output.view(), expected);
+  EXPECT_SVEQ(output.view(), expected);
   return ret;
 }
 
@@ -262,39 +354,39 @@ static int check_piped_output(IoTypes types, base::StringView runtime_stdout,
   int ret = 0;
   if (types.output == Type::Pipe) {
     if (types.input == Type::Pipe || types.input == Type::Inherit) {
-      EXPECT_EQ(runtime_stdout, "arguments (to stdout):\n"
-                                "arg1\n"
-                                "arg2\n"
-                                "argument with spaces\n");
-      EXPECT_EQ(status.unread_stdout, "exiting (to stdout)\n");
+      EXPECT_SVEQ(runtime_stdout, "arguments (to stdout):\n"
+                                  "arg1\n"
+                                  "arg2\n"
+                                  "argument with spaces\n");
+      EXPECT_SVEQ(status.unread_stdout, "exiting (to stdout)\n");
     } else {
-      EXPECT_EQ(runtime_stdout, "arguments (to stdout):\n"
-                                "arg1\n"
-                                "arg2\n"
-                                "argument with spaces\n"
-                                "exiting (to stdout)\n");
-      EXPECT_EQ(status.unread_stdout, "");
+      EXPECT_SVEQ(runtime_stdout, "arguments (to stdout):\n"
+                                  "arg1\n"
+                                  "arg2\n"
+                                  "argument with spaces\n"
+                                  "exiting (to stdout)\n");
+      EXPECT_SVEQ(status.unread_stdout, "");
     }
   } else {
-    EXPECT_EQ(status.unread_stdout, "");
+    EXPECT_SVEQ(status.unread_stdout, "");
   }
   if (types.error == Type::Pipe) {
     if (types.input == Type::Pipe || types.input == Type::Inherit) {
-      EXPECT_EQ(runtime_stderr, "stdin (to stderr):\n"
-                                "hello world\n");
-      EXPECT_EQ(status.unread_stderr, "exiting (to stderr)\n");
+      EXPECT_SVEQ(runtime_stderr, "stdin (to stderr):\n"
+                                  "hello world\n");
+      EXPECT_SVEQ(status.unread_stderr, "exiting (to stderr)\n");
     } else if (types.input == Type::Null) {
-      EXPECT_EQ(runtime_stderr, "stdin (to stderr):\n"
-                                "exiting (to stderr)\n");
-      EXPECT_EQ(status.unread_stderr, "");
+      EXPECT_SVEQ(runtime_stderr, "stdin (to stderr):\n"
+                                  "exiting (to stderr)\n");
+      EXPECT_SVEQ(status.unread_stderr, "");
     } else {
-      EXPECT_EQ(runtime_stderr, "stdin (to stderr):\n"
-                                "hello world\n"
-                                "exiting (to stderr)\n");
-      EXPECT_EQ(status.unread_stderr, "");
+      EXPECT_SVEQ(runtime_stderr, "stdin (to stderr):\n"
+                                  "hello world\n"
+                                  "exiting (to stderr)\n");
+      EXPECT_SVEQ(status.unread_stderr, "");
     }
   } else {
-    EXPECT_EQ(status.unread_stderr, "");
+    EXPECT_SVEQ(status.unread_stderr, "");
   }
 
   return ret;
@@ -307,6 +399,7 @@ static int test_run_c(IoTypes types) {
 
   base::StackArray<Process, 3> other_pipes;
   create_other_pipes(other_pipes, types);
+
   Process::Stdio stdio = {
       .input  = create_io<Process::Input::Init>(types.input, CHILD_STDIN_FILE_PATH,
                                                 other_pipes[0].get_stdout()),
@@ -320,8 +413,7 @@ static int test_run_c(IoTypes types) {
   process.start({STD_STREAMS_EXECUTABLE, "arg1", "arg2", "argument with spaces"}, stdio)
       .expect_nil();
 
-  int input_fd = 0;
-  write_input(types.input, &process, &pipes, &input_fd);
+  write_input(types.input, &process, &pipes);
 
   base::String piped_output;
   if (types.output == Type::Pipe) {
@@ -338,6 +430,7 @@ static int test_run_c(IoTypes types) {
                                                             "exiting (to stdout)\n");
     }
   }
+
   base::String piped_error;
   if (types.error == Type::Pipe) {
     if (types.input == Type::Pipe || types.input == Type::Inherit) {
@@ -353,7 +446,11 @@ static int test_run_c(IoTypes types) {
     }
   }
 
+#ifdef _WIN32
+  TRY_SYSCALL_WIN32(CloseHandle(pipes.input[1]));
+#else
   TRY_SYSCALL(::close(pipes.input[1]));
+#endif
   Process::ExitStatus status = process.wait();
   pipes.restore_original_io();
 
@@ -362,8 +459,13 @@ static int test_run_c(IoTypes types) {
   EXPECT(check_inherited_output(types, pipes) == 0);
   EXPECT(check_piped_output(types, piped_output.view(), piped_error.view(), status) == 0);
 
+#ifdef _WIN32
+  TRY_SYSCALL_WIN32(CloseHandle(pipes.output[0]));
+  TRY_SYSCALL_WIN32(CloseHandle(pipes.error[0]));
+#else
   TRY_SYSCALL(::close(pipes.output[0]));
   TRY_SYSCALL(::close(pipes.error[0]));
+#endif
 
   return ret;
 }
