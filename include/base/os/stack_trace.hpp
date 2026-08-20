@@ -4,16 +4,15 @@
 #include "base/containers/string.hpp"
 #include "base/containers/vector.hpp"
 #include "base/logging/logger.hpp"
-#include "base/ranges/string_view.hpp"
 #include "base/utilities/type_aliases.hpp"
 
 namespace base {
 
 struct StackTraceEntry {
   alignas(64) String caller;
-  StringView object;
-  void*      base_address = nullptr;
-  void*      address      = nullptr;
+  String object;
+  void*  base_address = nullptr;
+  void*  address      = nullptr;
 };
 
 struct StackTrace {
