@@ -5,8 +5,10 @@
 #include "base/os/file.hpp"
 #include "base/ranges/initializer_list.hpp"
 #include "base/ranges/string_view.hpp"
+#include "base/utilities/implicit_cast.hpp"
 #include "base/utilities/type_aliases.hpp"
 #include <assert.h>
+#include <inttypes.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -100,6 +102,16 @@ int main() {
 
   log_to_file(Panic, "debug char: {?}, debug string: {?}", '\n', "\x17\0abcde\n\t");
   check(R"([PANIC] debug char: '\n', debug string: "\x17\0abcde\n\t")");
+
+  {
+    int var = 0;
+    log_to_file(Info, "pointer: {}", &var);
+    base::StackArray<char, 256> buf = {};
+    // the %p format is implementation defined
+    assert(snprintf(buf.data(), 256, "[INFO] pointer: %#" PRIxPTR,
+                    reinterpret_cast<uintptr_t>(&var)) > 0);
+    check(buf.data());
+  }
 
   log_to_file(Info, "unicode char: {}, debug wstring with unicode: {*>3?}", U'😁',
               L"nerd emoji: 🤓");
