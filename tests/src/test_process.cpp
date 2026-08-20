@@ -21,6 +21,15 @@
 #include <windows.h>
 #include <winerror.h>
 #include <winnt.h>
+
+#define TRY_SYSCALL_WIN32(syscall)                                                                 \
+  do {                                                                                             \
+    if ((syscall) == FALSE) [[unlikely]] {                                                         \
+      base::panic(#syscall " failed: {}", GetLastError());                                         \
+    }                                                                                              \
+  } while (false)
+
+#define O_CLOEXEC _O_NOINHERIT
 #endif
 
 #define TRY_SYSCALL(syscall)                                                                       \
@@ -32,15 +41,6 @@
     }                                                                                              \
     return _result;                                                                                \
   }()
-
-#ifdef _WIN32
-#define TRY_SYSCALL_WIN32(syscall)                                                                 \
-  do {                                                                                             \
-    if ((syscall) == FALSE) [[unlikely]] {                                                         \
-      base::panic(#syscall " failed: {}", GetLastError());                                         \
-    }                                                                                              \
-  } while (false)
-#endif
 
 using base::Process;
 using Stdio = Process::Stdio;
@@ -193,14 +193,6 @@ static void write_input(Type type, Process* proc, Pipes* pipes) {
 #else
     assert(::write(pipes->input[1], INPUT_DATA.data(), INPUT_DATA.size()) == INPUT_DATA.size());
 #endif
-  } else if (type == Type::File) {
-#ifdef _WIN32
-#define O_CLOEXEC _O_NOINHERIT
-#endif
-    const int file = ::open(CHILD_STDIN_FILE_PATH, O_WRONLY | O_CREAT | O_CLOEXEC | O_TRUNC, 0644);
-    assert(file != -1);
-    assert(::write(file, INPUT_DATA.data(), INPUT_DATA.size()) == INPUT_DATA.size());
-    assert(close(file) == 0);
   } else if (type == Type::Pipe) {
     proc->get_stdin().write(INPUT_DATA.bytes());
   }
@@ -489,6 +481,11 @@ static int test_run_c(IoTypes types) {
 int main() {
   int ret = 0;
 
+  const int file = ::open(CHILD_STDIN_FILE_PATH, O_WRONLY | O_CREAT | O_CLOEXEC | O_TRUNC, 0644);
+  assert(file != -1);
+  assert(::write(file, INPUT_DATA.data(), INPUT_DATA.size()) == INPUT_DATA.size());
+  assert(close(file) == 0);
+
   (void)base::Logger::get_default_instance();
 
   const base::StackArray<Type, 5> types = {Type::Null, Type::Inherit, Type::Pipe, Type::File,
@@ -508,6 +505,8 @@ int main() {
       }
     }
   }
+
+  assert(remove(CHILD_STDIN_FILE_PATH) == 0);
 
   return ret;
 }
