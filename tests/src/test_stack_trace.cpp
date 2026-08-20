@@ -50,5 +50,6 @@ template <ns1::ns2::S<> S = ns1::ns2::S<>{}> BASE_NOINLINE int f4() noexcept {
 int main() {
   int ret = 0;
   EXPECT(f4() == 0);
+  base::Logger::get_default_instance().flush();
   return ret;
 }
