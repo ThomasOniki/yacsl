@@ -1,6 +1,6 @@
 #include "base/containers/string.hpp"
 #include "base/logging/logger.hpp"
-#include "base/utilities/stack_trace.hpp"
+#include "base/os/stack_trace.hpp"
 #include <stdlib.h>
 
 namespace base {
