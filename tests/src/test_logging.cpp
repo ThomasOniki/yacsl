@@ -109,8 +109,9 @@ int main() {
     log_to_file(Info, "pointer: {}", &var);
     base::StackArray<char, 256> buf = {};
     // the %p format is implementation defined
-    assert(snprintf(buf.data(), 256, "[INFO] pointer: %#" PRIxPTR,
-                    reinterpret_cast<uintptr_t>(&var)) > 0);
+    [[maybe_unused]] const int printed =
+        snprintf(buf.data(), 256, "[INFO] pointer: %#" PRIxPTR, reinterpret_cast<uintptr_t>(&var));
+    assert(printed > 0);
     check(buf.data());
   }
 

@@ -9,7 +9,6 @@
 #include "base/ranges/string_view.hpp"
 #include "base/utilities/type_aliases.hpp"
 #include "test_utils.hpp"
-#include <assert.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <stdio.h>
@@ -189,9 +188,8 @@ static void write_input(Type type, Process* proc, Pipes* pipes) {
     DWORD written = 0;
     TRY_SYSCALL_WIN32(
         WriteFile(pipes->input[1], INPUT_DATA.data(), INPUT_DATA.size(), &written, nullptr));
-    assert(written == INPUT_DATA.size());
 #else
-    assert(::write(pipes->input[1], INPUT_DATA.data(), INPUT_DATA.size()) == INPUT_DATA.size());
+    ::write(pipes->input[1], INPUT_DATA.data(), INPUT_DATA.size());
 #endif
   } else if (type == Type::Pipe) {
     proc->get_stdin().write(INPUT_DATA.bytes());
@@ -482,9 +480,10 @@ int main() {
   int ret = 0;
 
   const int file = ::open(CHILD_STDIN_FILE_PATH, O_WRONLY | O_CREAT | O_CLOEXEC | O_TRUNC, 0644);
-  assert(file != -1);
-  assert(::write(file, INPUT_DATA.data(), INPUT_DATA.size()) == INPUT_DATA.size());
-  assert(close(file) == 0);
+  EXPECT(file != -1);
+  [[maybe_unused]] const ssize_t written = ::write(file, INPUT_DATA.data(), INPUT_DATA.size());
+  EXPECT(written == INPUT_DATA.size());
+  EXPECT(close(file) == 0);
 
   (void)base::Logger::get_default_instance();
 
@@ -506,7 +505,7 @@ int main() {
     }
   }
 
-  assert(remove(CHILD_STDIN_FILE_PATH) == 0);
+  EXPECT(remove(CHILD_STDIN_FILE_PATH) == 0);
 
   return ret;
 }
