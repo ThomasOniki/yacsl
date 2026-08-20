@@ -6,7 +6,6 @@
 #include "base/ranges/slice.hpp"
 #include "base/type_traits/categories.hpp"
 #include "base/type_traits/comparaison.hpp"
-#include "base/utilities/is_constant_evaluated.hpp"
 #include "base/utilities/type_aliases.hpp"
 
 namespace base {
@@ -18,7 +17,7 @@ public:
 
   constexpr BasicStringView(const T* cstr) : data_(cstr) {
     if constexpr (SameAs<char, T>) {
-      if (!is_constant_evaluated()) {
+      if !consteval {
         size_ = static_cast<SizeT>(strlen(cstr));
         return;
       }
@@ -64,7 +63,7 @@ public:
     if (size_ != other.size_) {
       return false;
     }
-    if (is_constant_evaluated()) {
+    if consteval {
       for (size_t i = 0; i < size_; ++i) {
         if (other[i] != data_[i]) {
           return false;
