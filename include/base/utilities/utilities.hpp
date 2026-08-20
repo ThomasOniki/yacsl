@@ -8,6 +8,5 @@
 #include "base/utilities/is_constant_evaluated.hpp"
 #include "base/utilities/isize.hpp"
 #include "base/utilities/nil.hpp"
-#include "base/utilities/stack_trace.hpp"
 #include "base/utilities/type_aliases.hpp"
 // IWYU pragma: end_exports

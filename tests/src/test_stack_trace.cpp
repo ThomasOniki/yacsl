@@ -1,6 +1,6 @@
 #include "base/attributes.hpp"
+#include "base/os/stack_trace.hpp"
 #include "base/ranges/string_view.hpp"
-#include "base/utilities/stack_trace.hpp"
 #include "test_utils.hpp"
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
