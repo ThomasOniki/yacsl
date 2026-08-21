@@ -22,12 +22,12 @@ public:
   explicit constexpr Arena(usize capacity) : initial_capacity_((capacity + 4095) / 4096 * 4096) {}
   explicit constexpr Arena() = default;
 
-  Arena(const Arena&)     = delete;
+  Arena(Arena const&)     = delete;
   Arena(Arena&&) noexcept = delete;
 
   constexpr ~Arena() noexcept = default;
 
-  Arena& operator=(const Arena&)     = delete;
+  Arena& operator=(Arena const&)     = delete;
   Arena& operator=(Arena&&) noexcept = delete;
 
   template <TriviallyDestructible T, typename... Args> [[nodiscard]] T& push(Args&&... args);
@@ -40,10 +40,10 @@ public:
   class Scope {
   public:
     explicit Scope(BASE_LIFETIMEBOUND Arena& arena) : arena_(arena), ptr_(arena.ptr_) {}
-    Scope(const Scope&)     = delete;
+    Scope(Scope const&)     = delete;
     Scope(Scope&&) noexcept = delete;
     ~Scope() noexcept;
-    Scope& operator=(const Scope&)     = delete;
+    Scope& operator=(Scope const&)     = delete;
     Scope& operator=(Scope&&) noexcept = delete;
 
   private:

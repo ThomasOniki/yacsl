@@ -22,14 +22,14 @@ public:
 
   ~MPSCRingBuffer() noexcept = default;
 
-  MPSCRingBuffer(const MPSCRingBuffer&)            = delete;
+  MPSCRingBuffer(MPSCRingBuffer const&)            = delete;
   MPSCRingBuffer(MPSCRingBuffer&&)                 = delete;
-  MPSCRingBuffer& operator=(const MPSCRingBuffer&) = delete;
+  MPSCRingBuffer& operator=(MPSCRingBuffer const&) = delete;
   MPSCRingBuffer& operator=(MPSCRingBuffer&&)      = delete;
 
   template <typename... Args> T& emplace(Args&&... args) {
-    const usize write = write_.fetch_add(1, MemoryOrder::Relaxed);
-    const usize index = write % N;
+    usize const write = write_.fetch_add(1, MemoryOrder::Relaxed);
+    usize const index = write % N;
     while (slots_[index].epoch.load(MemoryOrder::Acquire) != write) {
       sched_yield();
     }
@@ -39,10 +39,10 @@ public:
   }
 
   T& push(T&& value) { return emplace(base::move(value)); }
-  T& push(const T& value) { return emplace(value); }
+  T& push(T const& value) { return emplace(value); }
 
   T pop() noexcept {
-    const usize index = read_ % N;
+    usize const index = read_ % N;
     while (slots_[index].epoch.load(MemoryOrder::Acquire) != read_ + 1) {
       sched_yield();
     }
@@ -56,8 +56,8 @@ public:
   template <typename... Args> bool try_emplace(Args&&... args) {
     for (;;) {
       usize       write = write_.load(MemoryOrder::Relaxed);
-      const usize index = write % N;
-      const usize diff  = slots_[index].epoch.load(MemoryOrder::Acquire) - write;
+      usize const index = write % N;
+      usize const diff  = slots_[index].epoch.load(MemoryOrder::Acquire) - write;
       if (diff == 0) {
         if (write_.compare_exchange_weak(write, write + 1, MemoryOrder::Relaxed,
                                          MemoryOrder::Relaxed)) {
@@ -83,10 +83,10 @@ public:
   }
 
   bool try_push(T&& value) { return try_emplace(base::move(value)); }
-  bool try_push(const T& value) { return try_emplace(value); }
+  bool try_push(T const& value) { return try_emplace(value); }
 
   Option<T> try_pop() noexcept {
-    const usize index = read_ % N;
+    usize const index = read_ % N;
     if (slots_[index].epoch.load(MemoryOrder::Acquire) != read_ + 1) {
       return NIL;
     }

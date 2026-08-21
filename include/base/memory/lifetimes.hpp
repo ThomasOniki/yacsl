@@ -41,8 +41,8 @@ template <typename T, typename... Args> constexpr T* construct_at(T* location, A
   return ::new (location) T(base::forward<Args>(args)...);
 }
 
-template <typename T> constexpr Slice<T> copy(Slice<const T> src, Slice<T> dst) noexcept {
-  const usize size = dst.size() < src.size() ? dst.size() : src.size();
+template <typename T> constexpr Slice<T> copy(Slice<T const> src, Slice<T> dst) noexcept {
+  usize const size = dst.size() < src.size() ? dst.size() : src.size();
   if !consteval {
     if (TriviallyCopyable<T>) {
       return {static_cast<T*>(::memcpy(dst.data(), src.data(), size)), size};
@@ -53,7 +53,7 @@ template <typename T> constexpr Slice<T> copy(Slice<const T> src, Slice<T> dst) 
   }
   return {dst.data(), size};
 }
-template <typename T> constexpr Slice<T> copy(Slice<const T> src, T* dst) noexcept {
+template <typename T> constexpr Slice<T> copy(Slice<T const> src, T* dst) noexcept {
   if !consteval {
     if (TriviallyCopyable<T>) {
       return {static_cast<T*>(::memcpy(dst, src.data(), src.size())), src.size()};

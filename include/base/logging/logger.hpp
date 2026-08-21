@@ -48,8 +48,8 @@ public:
   static constexpr Level DEFAULT_LOG_LEVEL = Level::Info;
 #endif
   struct LevelStrings {
-    alignas(32) Slice<const StringView, u32> output;
-    Slice<const StringView, u32> error;
+    alignas(32) Slice<StringView const, u32> output;
+    Slice<StringView const, u32> error;
   };
 
   Logger(File&& output, File&& error, Level lvl, LevelStrings log_level_strings) noexcept
@@ -86,9 +86,9 @@ public:
 
   ~Logger() noexcept { work_.store(Work::Stop, MemoryOrder::Release); }
 
-  Logger(const Logger&)            = delete;
+  Logger(Logger const&)            = delete;
   Logger(Logger&&)                 = delete;
-  Logger& operator=(const Logger&) = delete;
+  Logger& operator=(Logger const&) = delete;
   Logger& operator=(Logger&&)      = delete;
 
   [[nodiscard]] static Logger& get_default_instance() noexcept;
@@ -103,35 +103,35 @@ public:
     }
   }
 
-  template <typename... Args> void trace3(const FormatString<Args...>& fmt, Args&&... args) {
+  template <typename... Args> void trace3(FormatString<Args...> const& fmt, Args&&... args) {
     log(Level::Trace3, fmt, base::forward<Args>(args)...);
   }
-  template <typename... Args> void trace2(const FormatString<Args...>& fmt, Args&&... args) {
+  template <typename... Args> void trace2(FormatString<Args...> const& fmt, Args&&... args) {
     log(Level::Trace2, fmt, base::forward<Args>(args)...);
   }
-  template <typename... Args> void trace1(const FormatString<Args...>& fmt, Args&&... args) {
+  template <typename... Args> void trace1(FormatString<Args...> const& fmt, Args&&... args) {
     log(Level::Trace1, fmt, base::forward<Args>(args)...);
   }
-  template <typename... Args> void debug(const FormatString<Args...>& fmt, Args&&... args) {
+  template <typename... Args> void debug(FormatString<Args...> const& fmt, Args&&... args) {
     log(Level::Debug, fmt, base::forward<Args>(args)...);
   }
-  template <typename... Args> void info(const FormatString<Args...>& fmt, Args&&... args) {
+  template <typename... Args> void info(FormatString<Args...> const& fmt, Args&&... args) {
     log(Level::Info, fmt, base::forward<Args>(args)...);
   }
-  template <typename... Args> void notice(const FormatString<Args...>& fmt, Args&&... args) {
+  template <typename... Args> void notice(FormatString<Args...> const& fmt, Args&&... args) {
     log(Level::Notice, fmt, base::forward<Args>(args)...);
   }
-  template <typename... Args> void warn(const FormatString<Args...>& fmt, Args&&... args) {
+  template <typename... Args> void warn(FormatString<Args...> const& fmt, Args&&... args) {
     log(Level::Warning, fmt, base::forward<Args>(args)...);
   }
-  template <typename... Args> void error(const FormatString<Args...>& fmt, Args&&... args) {
+  template <typename... Args> void error(FormatString<Args...> const& fmt, Args&&... args) {
     log(Level::Error, fmt, base::forward<Args>(args)...);
   }
-  template <typename... Args> void panic(const FormatString<Args...>& fmt, Args&&... args) {
+  template <typename... Args> void panic(FormatString<Args...> const& fmt, Args&&... args) {
     log(Level::Panic, fmt, base::forward<Args>(args)...);
   }
 
-  void log(Level lvl, const String& formatted) noexcept {
+  void log(Level lvl, String const& formatted) noexcept {
     if (lvl < level_) {
       return;
     }
@@ -139,7 +139,7 @@ public:
   }
 
   template <typename... Args>
-  void log(Level lvl, const FormatString<Args...>& fmt, Args&&... args) {
+  void log(Level lvl, FormatString<Args...> const& fmt, Args&&... args) {
     if (lvl < level_) {
       return;
     }
@@ -154,10 +154,10 @@ private:
     Level level;
   };
 
-  void write_message(const Message& msg) {
+  void write_message(Message const& msg) {
     if (msg.level >= Level::Error) {
       String           buf;
-      const StringView lvl_str = log_lvl_strings_.error[static_cast<u8>(msg.level)];
+      StringView const lvl_str = log_lvl_strings_.error[static_cast<u8>(msg.level)];
       char*            data    = buf.grow(lvl_str.size() + msg.formatted.size() + 1);
       copy(lvl_str.slice(), data);
       copy(msg.formatted.slice(), data + lvl_str.size());
@@ -165,7 +165,7 @@ private:
       error_.write(buf.bytes());
     } else {
       String           buf;
-      const StringView lvl_str = log_lvl_strings_.output[static_cast<u8>(msg.level)];
+      StringView const lvl_str = log_lvl_strings_.output[static_cast<u8>(msg.level)];
       char*            data    = buf.grow(lvl_str.size() + msg.formatted.size() + 1);
       copy(lvl_str.slice(), data);
       copy(msg.formatted.slice(), data + lvl_str.size());
@@ -177,7 +177,7 @@ private:
   static void* work(void* pvoid) noexcept {
     Logger& self = *static_cast<Logger*>(pvoid);
     for (;;) {
-      const Work work = self.work_.load(MemoryOrder::Acquire);
+      Work const work = self.work_.load(MemoryOrder::Acquire);
       if (work != Work::Spin) {
         for (Option<Message> option = self.ring_.try_pop(); option.is_value();
              option                 = self.ring_.try_pop()) {
@@ -213,55 +213,55 @@ private:
 };
 
 // lvl is used to determine if it needs to output to the output file or error file.
-inline void log(Logger::Level lvl, const String& formatted) noexcept {
+inline void log(Logger::Level lvl, String const& formatted) noexcept {
   Logger::get_default_instance().log(lvl, formatted);
 }
 template <typename... Args>
-void log(Logger::Level lvl, const FormatString<Args...>& fmt, Args&&... args) noexcept {
+void log(Logger::Level lvl, FormatString<Args...> const& fmt, Args&&... args) noexcept {
   Logger::get_default_instance().log(lvl, fmt, base::forward<Args>(args)...);
 }
 
-inline void log_trace3(const String& formatted) noexcept { log(Logger::Level::Trace3, formatted); }
-inline void log_trace2(const String& formatted) noexcept { log(Logger::Level::Trace2, formatted); }
-inline void log_trace1(const String& formatted) noexcept { log(Logger::Level::Trace1, formatted); }
-inline void log_debug(const String& formatted) noexcept { log(Logger::Level::Debug, formatted); }
-inline void log_info(const String& formatted) noexcept { log(Logger::Level::Info, formatted); }
-inline void log_notice(const String& formatted) noexcept { log(Logger::Level::Notice, formatted); }
-inline void log_warning(const String& formatted) noexcept {
+inline void log_trace3(String const& formatted) noexcept { log(Logger::Level::Trace3, formatted); }
+inline void log_trace2(String const& formatted) noexcept { log(Logger::Level::Trace2, formatted); }
+inline void log_trace1(String const& formatted) noexcept { log(Logger::Level::Trace1, formatted); }
+inline void log_debug(String const& formatted) noexcept { log(Logger::Level::Debug, formatted); }
+inline void log_info(String const& formatted) noexcept { log(Logger::Level::Info, formatted); }
+inline void log_notice(String const& formatted) noexcept { log(Logger::Level::Notice, formatted); }
+inline void log_warning(String const& formatted) noexcept {
   log(Logger::Level::Warning, formatted);
 }
-inline void log_error(const String& formatted) noexcept { log(Logger::Level::Error, formatted); }
+inline void log_error(String const& formatted) noexcept { log(Logger::Level::Error, formatted); }
 
 template <typename... Args>
-void log_trace3(const FormatString<Args...>& fmt, Args&&... args) noexcept {
+void log_trace3(FormatString<Args...> const& fmt, Args&&... args) noexcept {
   log(Logger::Level::Trace3, fmt, base::forward<Args>(args)...);
 }
 template <typename... Args>
-void log_trace2(const FormatString<Args...>& fmt, Args&&... args) noexcept {
+void log_trace2(FormatString<Args...> const& fmt, Args&&... args) noexcept {
   log(Logger::Level::Trace2, fmt, base::forward<Args>(args)...);
 }
 template <typename... Args>
-void log_trace1(const FormatString<Args...>& fmt, Args&&... args) noexcept {
+void log_trace1(FormatString<Args...> const& fmt, Args&&... args) noexcept {
   log(Logger::Level::Trace1, fmt, base::forward<Args>(args)...);
 }
 template <typename... Args>
-void log_debug(const FormatString<Args...>& fmt, Args&&... args) noexcept {
+void log_debug(FormatString<Args...> const& fmt, Args&&... args) noexcept {
   log(Logger::Level::Debug, fmt, base::forward<Args>(args)...);
 }
 template <typename... Args>
-void log_info(const FormatString<Args...>& fmt, Args&&... args) noexcept {
+void log_info(FormatString<Args...> const& fmt, Args&&... args) noexcept {
   log(Logger::Level::Info, fmt, base::forward<Args>(args)...);
 }
 template <typename... Args>
-void log_notice(const FormatString<Args...>& fmt, Args&&... args) noexcept {
+void log_notice(FormatString<Args...> const& fmt, Args&&... args) noexcept {
   log(Logger::Level::Notice, fmt, base::forward<Args>(args)...);
 }
 template <typename... Args>
-void log_warning(const FormatString<Args...>& fmt, Args&&... args) noexcept {
+void log_warning(FormatString<Args...> const& fmt, Args&&... args) noexcept {
   log(Logger::Level::Warning, fmt, base::forward<Args>(args)...);
 }
 template <typename... Args>
-void log_error(const FormatString<Args...>& fmt, Args&&... args) noexcept {
+void log_error(FormatString<Args...> const& fmt, Args&&... args) noexcept {
   log(Logger::Level::Error, fmt, base::forward<Args>(args)...);
 }
 

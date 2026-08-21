@@ -8,12 +8,12 @@ namespace base {
 class Mutex {
 public:
   constexpr Mutex() noexcept = default;
-  Mutex(const Mutex&)        = delete;
+  Mutex(Mutex const&)        = delete;
   Mutex(Mutex&&) noexcept    = delete;
 
   ~Mutex() noexcept = default;
 
-  Mutex& operator=(const Mutex&)     = delete;
+  Mutex& operator=(Mutex const&)     = delete;
   Mutex& operator=(Mutex&&) noexcept = delete;
 
   void lock() { pthread_mutex_lock(&handle_); }
@@ -34,12 +34,12 @@ private:
 class MutexLock {
 public:
   explicit MutexLock(BASE_LIFETIMEBOUND Mutex& mutex) : mutex_(&mutex) { mutex_->lock(); }
-  MutexLock(const MutexLock&)     = delete;
+  MutexLock(MutexLock const&)     = delete;
   MutexLock(MutexLock&&) noexcept = delete;
 
   ~MutexLock() noexcept { mutex_->unlock(); }
 
-  MutexLock& operator=(const MutexLock&)     = delete;
+  MutexLock& operator=(MutexLock const&)     = delete;
   MutexLock& operator=(MutexLock&&) noexcept = delete;
 
 private:

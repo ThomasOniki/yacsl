@@ -19,9 +19,9 @@ static int& status() {
   return status;
 }
 
-static void check(const char* expected) {
+static void check(char const* expected) {
   static constexpr size_t buf_size     = 4096;
-  const size_t            expected_len = strlen(expected);
+  size_t const            expected_len = strlen(expected);
 
   assert(expected_len - 2 < buf_size);
   base::StackArray<char, buf_size, size_t> buf = {};
@@ -42,7 +42,7 @@ static void check(const char* expected) {
   // NOLINTNEXTLINE(android-cloexec-fopen)
   (void)fclose(truncated);
 
-  if (memcmp(static_cast<void*>(logs.data()), static_cast<const void*>(buf.data()), buf_size) !=
+  if (memcmp(static_cast<void*>(logs.data()), static_cast<void const*>(buf.data()), buf_size) !=
       0) {
     printf("Logging test failed. Expected\n%s,got\n%s.\n", buf.data(), logs.data());
     status() = 1;
@@ -63,9 +63,9 @@ enum class EnumClass : base::u16 {
 } // namespace test_ns
 
 template <typename... Args>
-static void log_to_file(base::Logger::Level lvl, const base::FormatString<Args...>& fmt,
+static void log_to_file(base::Logger::Level lvl, base::FormatString<Args...> const& fmt,
                         Args&&... args) {
-  const base::File::Flags flags =
+  base::File::Flags const flags =
       base::File::Flags::Write | base::File::Flags::Create | base::File::Flags::Trunc;
   base::Logger logger(base::File("test_logs.txt", flags), base::File("test_logs.txt", flags),
                       base::Logger::Level::Trace3);
@@ -109,7 +109,7 @@ int main() {
     log_to_file(Info, "pointer: {}", &var);
     base::StackArray<char, 256> buf = {};
     // the %p format is implementation defined
-    [[maybe_unused]] const int printed =
+    [[maybe_unused]] int const printed =
         snprintf(buf.data(), 256, "[INFO] pointer: %#" PRIxPTR, reinterpret_cast<uintptr_t>(&var));
     assert(printed > 0);
     check(buf.data());

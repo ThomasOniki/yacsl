@@ -17,17 +17,17 @@ class Function<Ret(Args...), BufSz, Allocator> : AllocatorMember<Allocator>,
 public:
   Function(auto&& func);
 
-  Function(const Function&)     = delete;
+  Function(Function const&)     = delete;
   Function(Function&&) noexcept = delete;
 
   ~Function() noexcept { cleanup_(data_, allocator()); }
 
-  Function& operator=(const Function&) = delete;
+  Function& operator=(Function const&) = delete;
   Function& operator=(Function&&) noexcept;
 
   Ret operator()(Args... args) { return call_(data_, base::forward<Args>(args)...); }
 
-  [[nodiscard]] const auto& get_allocator() const noexcept { return allocator(); }
+  [[nodiscard]] auto const& get_allocator() const noexcept { return allocator(); }
 
 private:
   using AllocatorMember<Allocator>::allocator;

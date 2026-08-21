@@ -22,12 +22,12 @@ public:
   constexpr Atomic() noexcept = default;
 
   constexpr Atomic(T value) : value_(value) {}
-  Atomic(const Atomic&)     = delete;
+  Atomic(Atomic const&)     = delete;
   Atomic(Atomic&&) noexcept = delete;
 
   ~Atomic() noexcept = default;
 
-  Atomic& operator=(const Atomic&)     = delete;
+  Atomic& operator=(Atomic const&)     = delete;
   Atomic& operator=(Atomic&&) noexcept = delete;
 
   [[nodiscard]] T load(MemoryOrder order) const noexcept {

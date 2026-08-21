@@ -19,7 +19,7 @@ void Arena::reserve(usize capacity) noexcept {
     capacity = initial_capacity_;
   }
 
-  const Metadata metadata = {
+  Metadata const metadata = {
       .last_begin = begin_,
       .last_end   = end_,
   };
@@ -34,7 +34,7 @@ void Arena::reserve(usize capacity) noexcept {
 
 Arena::Scope::~Scope() noexcept {
   while (ptr_ < arena_.begin_ || ptr_ > arena_.end_) {
-    const Metadata metadata = *reinterpret_cast<Metadata*>(arena_.begin_);
+    Metadata const metadata = *reinterpret_cast<Metadata*>(arena_.begin_);
     // NOLINTNEXTLINE(cppcoreguidelines-no-malloc)
     ::free(arena_.begin_);
     arena_.begin_ = metadata.last_begin;

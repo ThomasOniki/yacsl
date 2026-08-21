@@ -22,14 +22,14 @@ BASE_NOINLINE static int f1(bool /*unused*/, char /*unused*/) {
 
 namespace ns1::ns2 {
 BASE_NOINLINE static int f2(void* /*unused*/) {
-  const volatile int result = ::f1(true, 'a');
+  volatile const int result = ::f1(true, 'a');
   return result;
 }
 
 namespace {
 template <typename T = void, int I = 0> struct S {
   template <typename U = void, int J = 15> BASE_NOINLINE static int f3() {
-    const volatile int result = f2(nullptr);
+    volatile const int result = f2(nullptr);
     return result;
   }
 
@@ -42,7 +42,7 @@ template <typename T = void, int I = 0> struct S {
 namespace {
 // NOLINTNEXTLINE(llvm-prefer-static-over-anonymous-namespace)
 template <ns1::ns2::S<> S = ns1::ns2::S<>{}> BASE_NOINLINE int f4() noexcept {
-  const volatile int result = ns1::ns2::S<>::f3();
+  volatile const int result = ns1::ns2::S<>::f3();
   return result;
 }
 } // namespace

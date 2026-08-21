@@ -14,7 +14,7 @@
 namespace base {
 
 inline bool strip_file_open_flag(File::Flags* flags, File::Flags flag) noexcept {
-  const File::Flags stripped = *flags & ~flag;
+  File::Flags const stripped = *flags & ~flag;
   if (stripped != *flags) {
     *flags = stripped;
     return true;
@@ -26,7 +26,7 @@ struct OpenedFile {
   alignas(16) File::Handle handle;
   usize cursor_pos;
 };
-Result<OpenedFile, File::OpenError> open_file(const char* path, File::Flags flags) noexcept;
+Result<OpenedFile, File::OpenError> open_file(char const* path, File::Flags flags) noexcept;
 
 StringView        win32_err_str(DWORD err) noexcept;
 inline StringView win32_err_str() noexcept { return win32_err_str(GetLastError()); }
