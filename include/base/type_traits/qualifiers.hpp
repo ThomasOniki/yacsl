@@ -2,6 +2,13 @@
 
 namespace base {
 template <typename T> using UnderlyingEnumType = __underlying_type(T);
+
+template <typename T>
+concept ConstType = __is_const(T);
+template <typename T>
+concept MutableType = !__is_const(T);
+template <typename T>
+concept VolatileType = __is_volatile(T);
 } // namespace base
 
 #ifdef __clang__
