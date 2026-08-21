@@ -31,7 +31,7 @@ static constexpr auto TYPE_OTHER_PIPE = Type{255};
 namespace {
 struct State {
   STARTUPINFOA          info;
-  const Process::Stdio* stdio;
+  Process::Stdio const* stdio;
   StackArray<HANDLE, 2> stdin_pipe;
   StackArray<HANDLE, 2> stdout_pipe;
   StackArray<HANDLE, 2> stderr_pipe;
@@ -53,7 +53,7 @@ usize Process::Output::read(Slice<uchar> buffer) noexcept {
   return static_cast<usize>(ret);
 }
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void Process::Input::write(Slice<const uchar> bytes) noexcept {
+void Process::Input::write(Slice<uchar const> bytes) noexcept {
   usize to_write = bytes.size();
   while (to_write > 0) {
     DWORD written = 0;
@@ -169,10 +169,10 @@ void Process::cleanup_after_spawn(void* pvoid_state) noexcept {
   }
 }
 
-static String make_command_line_string(const char* const* argv) {
+static String make_command_line_string(char const* const* argv) {
   String str;
 
-  for (const char* const* it = argv; *it != nullptr; ++it) {
+  for (char const* const* it = argv; *it != nullptr; ++it) {
     auto arg = StringView(*it, strlen(*it));
     str += '"';
     usize backslash_count = 0;
@@ -206,7 +206,7 @@ static String make_command_line_string(const char* const* argv) {
   return str;
 }
 
-Error<Process::SpawnError> Process::start(const char* const* argv, const Stdio& stdio) noexcept {
+Error<Process::SpawnError> Process::start(char const* const* argv, Stdio const& stdio) noexcept {
   if (handle_ != nullptr) [[unlikely]] {
     wait();
   }
@@ -259,7 +259,7 @@ Error<Process::SpawnError> Process::start(const char* const* argv, const Stdio& 
     group_  = proc_info.dwProcessId;
   } else {
     handle_         = NIL_PROCESS_HANDLE;
-    const DWORD err = GetLastError();
+    DWORD const err = GetLastError();
     switch (err) {
     case ERROR_FILE_NOT_FOUND:
       ret = SpawnError::FileNotFound;

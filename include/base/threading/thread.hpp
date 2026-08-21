@@ -55,14 +55,14 @@ public:
   }
 
   Thread(Thread&& other) noexcept : handle_(other.handle_) { other.handle_ = NIL_PTHREAD; }
-  Thread(const Thread&) = delete;
+  Thread(Thread const&) = delete;
 
   Thread& operator=(Thread&& other) noexcept {
     handle_       = other.handle_;
     other.handle_ = NIL_PTHREAD;
     return *this;
   }
-  Thread& operator=(const Thread&) = delete;
+  Thread& operator=(Thread const&) = delete;
 
   ~Thread() noexcept { join(); }
 

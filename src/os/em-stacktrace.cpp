@@ -6,7 +6,7 @@
 namespace base {
 
 StackTrace                         StackTrace::current() noexcept { return StackTrace(); }
-const Vector<StackTraceEntry, 16>& StackTrace::compute_entries() noexcept {
+Vector<StackTraceEntry, 16> const& StackTrace::compute_entries() noexcept {
   entries_ = {};
   return entries_;
 }

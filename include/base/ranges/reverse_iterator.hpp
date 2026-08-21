@@ -4,7 +4,7 @@ namespace base {
 
 template <typename It> class ReverseIterator {
 public:
-  constexpr ReverseIterator(const It& iter) noexcept : it_(iter) {}
+  constexpr ReverseIterator(It const& iter) noexcept : it_(iter) {}
 
   [[nodiscard]] constexpr auto operator*() const noexcept {
     It tmp = it_;
@@ -22,10 +22,10 @@ public:
   }
   constexpr ReverseIterator    operator++(int) noexcept { return it_--; }
   constexpr ReverseIterator    operator--(int) noexcept { return it_++; }
-  [[nodiscard]] constexpr bool operator==(const ReverseIterator& other) const noexcept {
+  [[nodiscard]] constexpr bool operator==(ReverseIterator const& other) const noexcept {
     return it_ == other.it_;
   }
-  [[nodiscard]] constexpr bool operator!=(const ReverseIterator& other) const noexcept {
+  [[nodiscard]] constexpr bool operator!=(ReverseIterator const& other) const noexcept {
     return it_ != other.it_;
   }
 

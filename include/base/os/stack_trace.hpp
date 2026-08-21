@@ -21,7 +21,7 @@ struct StackTrace {
 
   // Only call this when you actually need it. Computing the entries is non trivial and can be done
   // at any time as long as this->ptrs_ was gotten at the right time.
-  const Vector<StackTraceEntry, 16>& compute_entries() noexcept;
+  Vector<StackTraceEntry, 16> const& compute_entries() noexcept;
 
   void print(Logger::Level lvl) noexcept {
     compute_entries();

@@ -39,7 +39,7 @@ static int test_mutex(uint32_t thread_count) {
     for (uint32_t i = 0; i < thread_count; ++i) {
       threads.emplace_back(
           [&mutex](uint32_t& lambda_count) {
-            const base::MutexLock lock(mutex);
+            base::MutexLock const lock(mutex);
             ++lambda_count;
           },
           count);

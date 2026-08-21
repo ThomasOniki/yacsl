@@ -141,7 +141,7 @@ struct Pipes {
 };
 } // namespace
 
-template <typename T> static T create_io(Type type, const char* path, auto& pipe) noexcept {
+template <typename T> static T create_io(Type type, char const* path, auto& pipe) noexcept {
   if (type == Type::File) {
     return T(path, base::File::Flags::Create);
   }
@@ -153,14 +153,14 @@ template <typename T> static T create_io(Type type, const char* path, auto& pipe
 
 static void create_other_pipes(base::StackArray<Process, 3>& processes, IoTypes types) {
   if (types.input == Type::OtherPipe) {
-    const Process::Stdio stdio = {
+    Process::Stdio const stdio = {
         .input  = Process::Input::Inherit,
         .output = Process::Output::Pipe,
         .error  = Process::Output::Inherit,
     };
     processes[0].start({HELLO_WORLD_EXECUTABLE}, stdio).expect_nil();
   }
-  const Process::Stdio stdio = {
+  Process::Stdio const stdio = {
       .input  = Process::Input::Pipe,
       .output = Process::Output::Pipe,
       .error  = Process::Output::Inherit,
@@ -173,11 +173,11 @@ static void create_other_pipes(base::StackArray<Process, 3>& processes, IoTypes 
   }
 }
 
-static constexpr const char* CHILD_STDIN_FILE_PATH =
+static constexpr char const* CHILD_STDIN_FILE_PATH =
     BASE_TESTS_DIR "/share/test_process/child_stdin.txt";
-static constexpr const char* CHILD_STDOUT_FILE_PATH =
+static constexpr char const* CHILD_STDOUT_FILE_PATH =
     BASE_TESTS_DIR "/share/test_process/child_stdout.txt";
-static constexpr const char* CHILD_STDERR_FILE_PATH =
+static constexpr char const* CHILD_STDERR_FILE_PATH =
     BASE_TESTS_DIR "/share/test_process/child_stderr.txt";
 
 static constexpr base::StringView INPUT_DATA = "hello world\n";
@@ -208,10 +208,10 @@ static base::String get_pipe_output(Process::Output* output, base::StringView ex
   return str;
 }
 
-static int check_file(const char* path, base::StringView expected) {
+static int check_file(char const* path, base::StringView expected) {
   int ret = 0;
 
-  const int fildes = TRY_SYSCALL(open(path, O_RDWR | O_CREAT | O_CLOEXEC, 0644));
+  int const fildes = TRY_SYSCALL(open(path, O_RDWR | O_CREAT | O_CLOEXEC, 0644));
 
   base::String buf;
 
@@ -264,7 +264,7 @@ static int check_other_pipe_output(base::StackArray<Process, 3>& processes,
                                    IoTypes                       types) noexcept {
   int ret = 0;
   if (types.output == Type::OtherPipe) {
-    const Process::ExitStatus status = processes[1].wait();
+    Process::ExitStatus const status = processes[1].wait();
     EXPECT_SVEQ(status.unread_stdout, "arguments (to stdout):\n"
                                       "arg1\n"
                                       "arg2\n"
@@ -272,7 +272,7 @@ static int check_other_pipe_output(base::StackArray<Process, 3>& processes,
                                       "exiting (to stdout)\n");
   }
   if (types.error == Type::OtherPipe) {
-    const Process::ExitStatus status = processes[2].wait();
+    Process::ExitStatus const status = processes[2].wait();
     if (types.input == Type::Null) {
       EXPECT_SVEQ(status.unread_stdout, "stdin (to stderr):\n"
                                         "exiting (to stderr)\n");
@@ -325,7 +325,7 @@ static int check_fd_output(int file, base::StringView expected) {
   return ret;
 }
 
-static int check_inherited_output(IoTypes types, const Pipes& pipes) {
+static int check_inherited_output(IoTypes types, Pipes const& pipes) {
   int ret = 0;
   if (types.output == Type::Inherit) {
     EXPECT(check_fd_output(pipes.output[0], "arguments (to stdout):\n"
@@ -355,7 +355,7 @@ struct RuntimeOutput {
 } // namespace
 
 static int check_piped_output(IoTypes types, RuntimeOutput runtime_out,
-                              const Process::ExitStatus& status) {
+                              Process::ExitStatus const& status) {
   int ret = 0;
   if (types.output == Type::Pipe) {
     if (types.input == Type::Pipe || types.input == Type::Inherit) {
@@ -405,7 +405,7 @@ static int test_run_c(IoTypes types) {
   base::StackArray<Process, 3> other_pipes;
   create_other_pipes(other_pipes, types);
 
-  const Process::Stdio stdio = {
+  Process::Stdio const stdio = {
       .input  = create_io<Process::Input::Init>(types.input, CHILD_STDIN_FILE_PATH,
                                                 other_pipes[0].get_stdout()),
       .output = create_io<Process::Output::Init>(types.output, CHILD_STDOUT_FILE_PATH,
@@ -456,7 +456,7 @@ static int test_run_c(IoTypes types) {
 #else
   TRY_SYSCALL(::close(pipes.input[1]));
 #endif
-  const Process::ExitStatus status = process.wait();
+  Process::ExitStatus const status = process.wait();
   pipes.restore_original_io();
 
   EXPECT(check_file_output(types) == 0);
@@ -479,15 +479,15 @@ static int test_run_c(IoTypes types) {
 int main() {
   int ret = 0;
 
-  const int file = ::open(CHILD_STDIN_FILE_PATH, O_WRONLY | O_CREAT | O_CLOEXEC | O_TRUNC, 0644);
+  int const file = ::open(CHILD_STDIN_FILE_PATH, O_WRONLY | O_CREAT | O_CLOEXEC | O_TRUNC, 0644);
   EXPECT(file != -1);
-  [[maybe_unused]] const ssize_t written = ::write(file, INPUT_DATA.data(), INPUT_DATA.size());
+  [[maybe_unused]] ssize_t const written = ::write(file, INPUT_DATA.data(), INPUT_DATA.size());
   EXPECT(written == INPUT_DATA.size());
   EXPECT(close(file) == 0);
 
   (void)base::Logger::get_default_instance();
 
-  const base::StackArray<Type, 5> types = {Type::Null, Type::Inherit, Type::Pipe, Type::File,
+  base::StackArray<Type, 5> const types = {Type::Null, Type::Inherit, Type::Pipe, Type::File,
                                            Type::OtherPipe};
   for (Type stdin_type : types) {
     for (Type stdout_type : types) {

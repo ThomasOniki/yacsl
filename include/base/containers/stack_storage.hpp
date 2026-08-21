@@ -15,13 +15,13 @@ public:
   constexpr void destruct() { get().~T(); }
 
   [[nodiscard]] constexpr T*       operator->() noexcept BASE_LIFETIMEBOUND { return &get(); }
-  [[nodiscard]] constexpr const T* operator->() const noexcept BASE_LIFETIMEBOUND { return &get(); }
+  [[nodiscard]] constexpr T const* operator->() const noexcept BASE_LIFETIMEBOUND { return &get(); }
   [[nodiscard]] constexpr T&       operator*() noexcept BASE_LIFETIMEBOUND { return get(); }
-  [[nodiscard]] constexpr const T& operator*() const noexcept BASE_LIFETIMEBOUND { return get(); }
+  [[nodiscard]] constexpr T const& operator*() const noexcept BASE_LIFETIMEBOUND { return get(); }
 
   [[nodiscard]] T& get() noexcept BASE_LIFETIMEBOUND { return *reinterpret_cast<T*>(data_.data()); }
-  [[nodiscard]] const T& get() const noexcept BASE_LIFETIMEBOUND {
-    return *reinterpret_cast<const T*>(data_.data());
+  [[nodiscard]] T const& get() const noexcept BASE_LIFETIMEBOUND {
+    return *reinterpret_cast<T const*>(data_.data());
   }
 
 private:

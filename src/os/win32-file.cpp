@@ -10,9 +10,9 @@
 
 namespace base {
 
-[[nodiscard]] Error<File::OpenError> File::open(const char* path, File::Flags flags) noexcept {
+[[nodiscard]] Error<File::OpenError> File::open(char const* path, File::Flags flags) noexcept {
   close();
-  const Result<OpenedFile, OpenError> result = open_file(path, flags);
+  Result<OpenedFile, OpenError> const result = open_file(path, flags);
   if (result.is_ok()) [[likely]] {
     handle_     = result.assert_ok().handle;
     cursor_pos_ = result.assert_ok().cursor_pos;
@@ -33,7 +33,7 @@ void File::open_stdout() noexcept { handle_ = GetStdHandle(STD_OUTPUT_HANDLE); }
 void File::open_stderr() noexcept { handle_ = GetStdHandle(STD_ERROR_HANDLE); }
 
 // NOLINTBEGIN(readability-make-member-function-const)
-usize File::write(Slice<const uchar> data) noexcept {
+usize File::write(Slice<uchar const> data) noexcept {
   DWORD ret = 0;
   BASE_TRY_SYSCALL(WriteFile(handle_, data.data(), static_cast<DWORD>(data.size()), &ret, nullptr));
   return static_cast<usize>(ret);
@@ -50,7 +50,7 @@ void File::seek_begin(isize offset) noexcept {
   auto  high    = static_cast<LONG>(offset / Limits<LONG>::max);
   DWORD pos_low = SetFilePointer(handle_, low, &high, FILE_BEGIN);
   if (pos_low == INVALID_SET_FILE_POINTER) {
-    const DWORD err = GetLastError();
+    DWORD const err = GetLastError();
     if (err != NO_ERROR) {
       panic("SetFilePointer failed: {}", win32_err_str(err));
     }
@@ -62,7 +62,7 @@ void File::seek_end(isize offset) noexcept {
   auto  high    = static_cast<LONG>(offset / Limits<LONG>::max);
   DWORD pos_low = SetFilePointer(handle_, low, &high, FILE_END);
   if (pos_low == INVALID_SET_FILE_POINTER) {
-    const DWORD err = GetLastError();
+    DWORD const err = GetLastError();
     if (err != NO_ERROR) {
       panic("SetFilePointer failed: {}", win32_err_str(err));
     }
@@ -74,7 +74,7 @@ void File::seek_cursor(isize offset) noexcept {
   auto  high    = static_cast<LONG>(offset / Limits<LONG>::max);
   DWORD pos_low = SetFilePointer(handle_, low, &high, FILE_CURRENT);
   if (pos_low == INVALID_SET_FILE_POINTER) {
-    const DWORD err = GetLastError();
+    DWORD const err = GetLastError();
     if (err != NO_ERROR) {
       panic("SetFilePointer failed: {}", win32_err_str(err));
     }

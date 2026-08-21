@@ -18,7 +18,7 @@
     }                                                                                              \
   } while (0)
 
-int main(int argc, const char* const* argv) {
+int main(int argc, char const* const* argv) {
 #ifdef _WIN32
   // no "\n" to "\r\n" conversions
   _setmode(STDOUT_FILENO, _O_BINARY);

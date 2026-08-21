@@ -65,7 +65,7 @@ static int test(Counts counts) noexcept {
     consumers[i].join();
   }
 
-  for (const bool consumed : did_pop) {
+  for (bool const consumed : did_pop) {
     EXPECT(consumed);
   }
 

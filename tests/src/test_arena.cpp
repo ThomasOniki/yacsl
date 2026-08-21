@@ -42,7 +42,7 @@ static int test_ctors() {
 
   EXPECT_EQ(CtorCounter::ctor_call_count, iteration_count * 10);
 
-  for (const auto& ptr : ptrs) {
+  for (auto const& ptr : ptrs) {
     for (uint32_t i = 0; i < 10; ++i) {
       EXPECT_EQ(ptr->i_, 0U);
     }
@@ -75,13 +75,13 @@ static int test_align() {
 static int test_rewind() {
   int ret = 0;
   {
-    const base::Arena::Scope scope(base::MainArenaAllocator::get()); // test scope with ptr_ = 0
+    base::Arena::Scope const scope(base::MainArenaAllocator::get()); // test scope with ptr_ = 0
   }
   // Calls malloc so that the rewind test uses the same memory in and outside of the scope.
   (void)base::MainArenaAllocator::get().push<int>();
-  const char* ptr = nullptr;
+  char const* ptr = nullptr;
   {
-    const base::Arena::Scope scope(base::MainArenaAllocator::get());
+    base::Arena::Scope const scope(base::MainArenaAllocator::get());
 
     ptr = base::MainArenaAllocator::get().push_array<char>(10).data();
 

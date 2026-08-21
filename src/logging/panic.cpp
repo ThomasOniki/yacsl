@@ -5,7 +5,7 @@
 
 namespace base {
 
-[[noreturn]] void panic(const String& formatted) noexcept {
+[[noreturn]] void panic(String const& formatted) noexcept {
   Logger::get_default_instance().log(Logger::Level::Panic, formatted);
   StackTrace::current().print(Logger::Level::Panic);
   Logger::get_default_instance().flush();

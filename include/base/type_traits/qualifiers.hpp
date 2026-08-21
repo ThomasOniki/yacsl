@@ -27,7 +27,7 @@ template <typename T> struct RemoveReferenceImpl {
 template <typename T> struct RemoveConstImpl {
   using Type = T;
 };
-template <typename T> struct RemoveConstImpl<const T> {
+template <typename T> struct RemoveConstImpl<T const> {
   using Type = T;
 };
 template <typename T> struct RemoveVolatileImpl {

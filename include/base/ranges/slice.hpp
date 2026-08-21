@@ -11,41 +11,41 @@ namespace base {
 
 template <typename T, Integral SizeT = usize> class Slice {
 public:
-  friend class Slice<const T, SizeT>;
+  friend class Slice<T const, SizeT>;
 
   constexpr Slice(T* begin, T* end) noexcept
       : data_(begin), size_(static_cast<SizeT>(end - begin)) {}
 
   constexpr Slice(T* data, SizeT size) noexcept : data_(data), size_(size) {}
 
-  constexpr Slice(const Slice<RemoveConst<T>, SizeT>& mutable_slice) noexcept
+  constexpr Slice(Slice<RemoveConst<T>, SizeT> const& mutable_slice) noexcept
       : data_(mutable_slice.data_), size_(mutable_slice.size_) {}
   // NOLINTNEXTLINE(bugprone-unhandled-self-assignment)
-  constexpr Slice& operator=(const Slice<RemoveConst<T>, SizeT>& mutable_slice) noexcept {
+  constexpr Slice& operator=(Slice<RemoveConst<T>, SizeT> const& mutable_slice) noexcept {
     data_ = mutable_slice.data_;
     size_ = mutable_slice.size_;
     return *this;
   }
 
   [[nodiscard]] constexpr T*       data() noexcept { return data_; }
-  [[nodiscard]] constexpr const T* data() const noexcept { return data_; }
+  [[nodiscard]] constexpr T const* data() const noexcept { return data_; }
   [[nodiscard]] constexpr SizeT    size() const noexcept { return size_; }
 
   [[nodiscard]] constexpr T&       operator[](SizeT index) noexcept { return data_[index]; }
-  [[nodiscard]] constexpr const T& operator[](SizeT index) const noexcept { return data_[index]; }
+  [[nodiscard]] constexpr T const& operator[](SizeT index) const noexcept { return data_[index]; }
 
   [[nodiscard]] constexpr Slice<uchar, SizeT> bytes() noexcept
-    requires(!SameAs<T, const T>)
+    requires(!SameAs<T, T const>)
   {
     return {reinterpret_cast<uchar*>(data_), static_cast<SizeT>(size_ * sizeof(T))};
   }
-  [[nodiscard]] constexpr Slice<const uchar, SizeT> bytes() const noexcept {
-    return {reinterpret_cast<const uchar*>(data_), static_cast<SizeT>(size_ * sizeof(T))};
+  [[nodiscard]] constexpr Slice<uchar const, SizeT> bytes() const noexcept {
+    return {reinterpret_cast<uchar const*>(data_), static_cast<SizeT>(size_ * sizeof(T))};
   }
 
   [[nodiscard]] constexpr IntegerRange<SizeT> indices() const noexcept { return {0, size_}; }
 
-  [[nodiscard]] constexpr bool operator==(const Slice& other) const noexcept {
+  [[nodiscard]] constexpr bool operator==(Slice const& other) const noexcept {
     if (other.size_ != size_) {
       return false;
     }
@@ -59,21 +59,21 @@ public:
 
   [[nodiscard]] constexpr T*       begin() noexcept { return data_; }
   [[nodiscard]] constexpr T*       end() noexcept { return data_ + size_; }
-  [[nodiscard]] constexpr const T* begin() const noexcept { return data_; }
-  [[nodiscard]] constexpr const T* end() const noexcept { return data_ + size_; }
-  [[nodiscard]] constexpr const T* cbegin() const noexcept { return data_; }
-  [[nodiscard]] constexpr const T* cend() const noexcept { return data_ + size_; }
+  [[nodiscard]] constexpr T const* begin() const noexcept { return data_; }
+  [[nodiscard]] constexpr T const* end() const noexcept { return data_ + size_; }
+  [[nodiscard]] constexpr T const* cbegin() const noexcept { return data_; }
+  [[nodiscard]] constexpr T const* cend() const noexcept { return data_ + size_; }
 
   [[nodiscard]] constexpr ReverseIterator<T*>       rbegin() noexcept { return data_ + size_; }
   [[nodiscard]] constexpr ReverseIterator<T*>       rend() noexcept { return data_; }
-  [[nodiscard]] constexpr ReverseIterator<const T*> rbegin() const noexcept {
+  [[nodiscard]] constexpr ReverseIterator<T const*> rbegin() const noexcept {
     return data_ + size_;
   }
-  [[nodiscard]] constexpr ReverseIterator<const T*> rend() const noexcept { return data_; }
-  [[nodiscard]] constexpr ReverseIterator<const T*> crbegin() const noexcept {
+  [[nodiscard]] constexpr ReverseIterator<T const*> rend() const noexcept { return data_; }
+  [[nodiscard]] constexpr ReverseIterator<T const*> crbegin() const noexcept {
     return data_ + size_;
   }
-  [[nodiscard]] constexpr ReverseIterator<const T*> crend() const noexcept { return data_; }
+  [[nodiscard]] constexpr ReverseIterator<T const*> crend() const noexcept { return data_; }
 
 private:
   T*    data_;

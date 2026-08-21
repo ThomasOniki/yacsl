@@ -28,7 +28,7 @@ StackTrace StackTrace::current() noexcept {
   return ret;
 }
 
-const Vector<StackTraceEntry, 16>& StackTrace::compute_entries() noexcept {
+Vector<StackTraceEntry, 16> const& StackTrace::compute_entries() noexcept {
   if (entries_.size() == addresses_.size()) {
     return entries_;
   }

@@ -22,15 +22,15 @@ public:
   };
   constexpr File() noexcept = default;
   explicit File(StringView path, Flags flags) { open(path, flags).expect_nil(); }
-  explicit File(const char* path, Flags flags) { open(path, flags).expect_nil(); }
-  File(const File&) = delete;
+  explicit File(char const* path, Flags flags) { open(path, flags).expect_nil(); }
+  File(File const&) = delete;
   File(File&& other) noexcept : handle_(other.handle_), cursor_pos_(other.cursor_pos_) {
     other.handle_ = NIL_HANDLE;
   }
 
   ~File() noexcept { close(); }
 
-  File& operator=(const File&) = delete;
+  File& operator=(File const&) = delete;
   File& operator=(File&& other) noexcept;
 
   [[nodiscard]] bool is_open() const noexcept { return handle_ != NIL_HANDLE; }
@@ -39,7 +39,7 @@ public:
     FileNotFound = 1,
   };
 
-  [[nodiscard]] Error<OpenError> open(const char* path, Flags flags) noexcept;
+  [[nodiscard]] Error<OpenError> open(char const* path, Flags flags) noexcept;
 
   [[nodiscard]] Error<OpenError> open(StringView path, Flags flags) noexcept {
     return open(String(path).c_str(), flags);
@@ -53,7 +53,7 @@ public:
   void open_stdout() noexcept;
   void open_stderr() noexcept;
 
-  usize write(Slice<const uchar> data) noexcept;
+  usize write(Slice<uchar const> data) noexcept;
   usize read(Slice<uchar> buffer) noexcept;
 
   [[nodiscard]] usize get_cursor() const noexcept { return cursor_pos_; }

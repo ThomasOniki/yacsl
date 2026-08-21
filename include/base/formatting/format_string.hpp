@@ -20,9 +20,9 @@ template <typename FString> class FormatToImpl;
 template <usize... Indices, typename... Args>
 class FormatStringImpl<IndexSequence<Indices...>, Args...> {
 public:
-  consteval FormatStringImpl(const char* fmt) {
+  consteval FormatStringImpl(char const* fmt) {
     (..., [&]() {
-      const char* segment_begin = fmt;
+      char const* segment_begin = fmt;
       for (; *fmt != '{'; ++fmt) {
         if (*fmt == '\0') {
           FormatStringParser::log_error_no_deps(
@@ -33,7 +33,7 @@ public:
       fmt                = formatters_.template get<Indices>().parse(fmt);
     }());
 
-    const char* segment_begin = fmt;
+    char const* segment_begin = fmt;
     for (; *fmt != '\0'; ++fmt) {
       if (*fmt == '{') {
         FormatStringParser::log_error_no_deps(
@@ -57,7 +57,7 @@ private:
 template <> class FormatStringImpl<IndexSequence<>> {
 public:
   // NOLINTNEXTLINE
-  template <usize N> consteval FormatStringImpl(const char (&msg)[N]) : msg_{msg} {}
+  template <usize N> consteval FormatStringImpl(char const (&msg)[N]) : msg_{msg} {}
 
   friend class FormatToImpl<FormatStringImpl>;
 
@@ -73,7 +73,7 @@ class FormatToImpl<FormatStringImpl<IndexSequence<Indices...>, Args...>> {
 public:
   // NOLINTNEXTLINE(misc-no-recursion)
   static void format_to_impl(String&                                                     buf,
-                             const FormatStringImpl<IndexSequence<Indices...>, Args...>& fmt,
+                             FormatStringImpl<IndexSequence<Indices...>, Args...> const& fmt,
                              Args&&... args) {
     (..., [&]() {
       buf += fmt.segments_[Indices];
@@ -86,7 +86,7 @@ public:
 template <> class FormatToImpl<FormatStringImpl<IndexSequence<>>> {
 public:
   // NOLINTNEXTLINE(misc-no-recursion)
-  static void format_to_impl(String& buf, const FormatStringImpl<IndexSequence<>>& msg) {
+  static void format_to_impl(String& buf, FormatStringImpl<IndexSequence<>> const& msg) {
     buf += msg.msg_;
   }
 };
@@ -100,7 +100,7 @@ using FormatString =
     internal::FormatStringImpl<IndexSequenceToN<sizeof...(Args)>, Args...>::TypeIdentity;
 
 template <typename... Args> // NOLINTNEXTLINE(misc-no-recursion)
-void format_to(String& buf, const FormatString<Args...>& fmt, Args&&... args) {
+void format_to(String& buf, FormatString<Args...> const& fmt, Args&&... args) {
   internal::FormatToImpl<FormatString<Args...>>::format_to_impl(buf, fmt,
                                                                 base::forward<Args>(args)...);
 }

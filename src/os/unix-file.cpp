@@ -14,9 +14,9 @@
 
 namespace base {
 
-Error<File::OpenError> File::open(const char* path, File::Flags flags) noexcept {
+Error<File::OpenError> File::open(char const* path, File::Flags flags) noexcept {
   close();
-  const Result<OpenedFile, OpenError> result = open_file(path, flags);
+  Result<OpenedFile, OpenError> const result = open_file(path, flags);
   if (result.is_err()) [[unlikely]] {
     return result.assert_err();
   }
@@ -37,25 +37,25 @@ void File::open_stdout() noexcept { handle_ = STDOUT_FILENO; }
 void File::open_stderr() noexcept { handle_ = STDERR_FILENO; }
 
 // NOLINTBEGIN(readability-make-member-function-const)
-usize File::write(Slice<const uchar> data) noexcept {
-  const ssize_t result = BASE_TRY_SYSCALL(::write(handle_, data.data(), data.size()));
+usize File::write(Slice<uchar const> data) noexcept {
+  ssize_t const result = BASE_TRY_SYSCALL(::write(handle_, data.data(), data.size()));
   return static_cast<usize>(result);
 }
 usize File::read(Slice<uchar> buffer) noexcept {
-  const ssize_t result = BASE_TRY_SYSCALL(::read(handle_, buffer.data(), buffer.size()));
+  ssize_t const result = BASE_TRY_SYSCALL(::read(handle_, buffer.data(), buffer.size()));
   return static_cast<usize>(result);
 }
 
 void File::seek_begin(isize offset) noexcept {
-  const off_t result = BASE_TRY_SYSCALL(::lseek(handle_, static_cast<off_t>(offset), SEEK_SET));
+  off_t const result = BASE_TRY_SYSCALL(::lseek(handle_, static_cast<off_t>(offset), SEEK_SET));
   cursor_pos_        = static_cast<usize>(result);
 }
 void File::seek_end(isize offset) noexcept {
-  const off_t result = BASE_TRY_SYSCALL(::lseek(handle_, static_cast<off_t>(offset), SEEK_END));
+  off_t const result = BASE_TRY_SYSCALL(::lseek(handle_, static_cast<off_t>(offset), SEEK_END));
   cursor_pos_        = static_cast<usize>(result);
 }
 void File::seek_cursor(isize offset) noexcept {
-  const off_t result = BASE_TRY_SYSCALL(::lseek(handle_, static_cast<off_t>(offset), SEEK_CUR));
+  off_t const result = BASE_TRY_SYSCALL(::lseek(handle_, static_cast<off_t>(offset), SEEK_CUR));
   cursor_pos_        = static_cast<usize>(result);
 }
 // NOLINTEND(readability-make-member-function-const)

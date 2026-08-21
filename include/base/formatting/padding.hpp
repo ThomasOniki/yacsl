@@ -24,13 +24,13 @@ struct PaddingOptions {
 };
 
 template <Character C> void pad_char(String& buf, C chr, PaddingOptions opts) {
-  const u32 len = char_len(chr);
+  u32 const len = char_len(chr);
   if (len >= opts.width) {
     write_char(buf.grow(len), chr);
     return;
   }
   char*     begin      = buf.grow(opts.width);
-  const u32 pad_amount = opts.width - len;
+  u32 const pad_amount = opts.width - len;
   if (opts.align == FormatStringParser::Align::Right) {
     write_char(begin + pad_amount, chr);
     memset(begin, opts.fill, pad_amount);
@@ -44,7 +44,7 @@ template <Character C> void pad_char(String& buf, C chr, PaddingOptions opts) {
 }
 
 template <Character C> void pad_debug_char(String& buf, C chr, PaddingOptions opts) {
-  const u32 len = debug_char_len(chr);
+  u32 const len = debug_char_len(chr);
   // +2 for the quotes
   if (len + 2 >= opts.width) {
     char* str = buf.grow(len + 2);
@@ -56,21 +56,21 @@ template <Character C> void pad_debug_char(String& buf, C chr, PaddingOptions op
   }
   char* str = buf.grow(opts.width);
   if (opts.align == FormatStringParser::Align::Right) {
-    const u32 pad_amount = opts.width - len;
+    u32 const pad_amount = opts.width - len;
     str[pad_amount]      = '\'';
     ++str;
     str[pad_amount + len] = '\'';
     write_debug_char(str + pad_amount, chr);
     memset(str, opts.fill, pad_amount);
   } else if (opts.align == FormatStringParser::Align::Left) {
-    const u32 pad_amount = opts.width - len;
+    u32 const pad_amount = opts.width - len;
     str[0]               = '\'';
     ++str;
     str[len] = '\'';
     write_debug_char(str, chr);
     memset(str + len, opts.fill, pad_amount);
   } else {
-    const u32 pad_amount = (opts.width - len) / 2;
+    u32 const pad_amount = (opts.width - len) / 2;
     str[pad_amount]      = '\'';
     ++str;
     str[pad_amount + len] = '\'';
@@ -82,29 +82,29 @@ template <Character C> void pad_debug_char(String& buf, C chr, PaddingOptions op
 template <bool IsDebug, Character C>
 void pad_string_left_aligned(String& buf, BasicStringView<C, usize> str,
                              PaddingOptions opts) noexcept {
-  const usize original_size = buf.size();
+  usize const original_size = buf.size();
   write_maybe_debug_string<IsDebug>(buf, str);
 
-  const usize real_len = buf.size() - original_size;
+  usize const real_len = buf.size() - original_size;
 
   if (real_len >= opts.width) {
     return;
   }
 
-  const u32 pad_amount = opts.width - static_cast<u32>(real_len);
+  u32 const pad_amount = opts.width - static_cast<u32>(real_len);
   memset(buf.grow(pad_amount), opts.fill, pad_amount);
 }
 
 template <bool IsDebug, Character C>
 void pad_string_right_aligned(String& buf, BasicStringView<C, usize> str,
                               PaddingOptions opts) noexcept {
-  const usize real_len = maybe_debug_string_len<IsDebug>(str);
+  usize const real_len = maybe_debug_string_len<IsDebug>(str);
   if (opts.width <= real_len) {
     write_maybe_debug_string<IsDebug>(buf, str);
     return;
   }
   char*     begin = buf.grow(opts.width);
-  const u32 pad   = static_cast<u32>(opts.width - real_len);
+  u32 const pad   = static_cast<u32>(opts.width - real_len);
   memset(begin, opts.fill, pad);
   write_maybe_debug_string<IsDebug>(begin + pad, str);
 }
@@ -112,13 +112,13 @@ void pad_string_right_aligned(String& buf, BasicStringView<C, usize> str,
 template <bool IsDebug, Character C>
 void pad_string_middle_aligned(String& buf, BasicStringView<C, usize> str,
                                PaddingOptions opts) noexcept {
-  const usize real_len = maybe_debug_string_len<IsDebug>(str);
+  usize const real_len = maybe_debug_string_len<IsDebug>(str);
   if (opts.width <= real_len) {
     write_maybe_debug_string<IsDebug>(buf, str);
     return;
   }
   char*     begin = buf.grow(opts.width);
-  const u32 pad   = static_cast<u32>(opts.width - real_len);
+  u32 const pad   = static_cast<u32>(opts.width - real_len);
   memset(begin, opts.fill, opts.width);
   write_maybe_debug_string<IsDebug>(begin + pad / 2, str);
 }
@@ -186,14 +186,14 @@ void pad_integral(String& buf, T value, PaddingOptions opts) noexcept {
     copy(Prefix.slice(), prefix_begin);
     memset(begin, opts.fill, static_cast<usize>(prefix_begin - begin));
   } else if (opts.align == FormatStringParser::Align::Left) {
-    const usize len = count_digits(value, Charset.size());
+    usize const len = count_digits(value, Charset.size());
     copy(Prefix.slice(), begin);
     char* num_end = begin + Prefix.size() + len;
     itoa_from_end(num_end, value, Charset.view());
     memset(num_end, opts.fill, static_cast<usize>(buf.end() - num_end));
   } else {
     memset(begin, opts.fill, opts.width);
-    const usize len     = count_digits(value, Charset.size());
+    usize const len     = count_digits(value, Charset.size());
     usize       padding = opts.width - (len + Prefix.size());
     padding /= 2;
     copy(Prefix.slice(), begin + padding);

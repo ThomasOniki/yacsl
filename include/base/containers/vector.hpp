@@ -23,32 +23,32 @@ template <typename T, usize N = 0, AllocatorLike Allocator = MainArenaAllocator,
 class Vector : private FixedBufferMember<T, N, SizeT>, AllocatorMember<Allocator> {
 public:
   constexpr Vector() noexcept : FixedBufferMember<T, N, SizeT>(), AllocatorMember<Allocator>() {}
-  constexpr Vector(const InitializerList<T>& init);
+  constexpr Vector(InitializerList<T> const& init);
 
-  template <RangeOf<T> Range> constexpr Vector(const Range& range);
+  template <RangeOf<T> Range> constexpr Vector(Range const& range);
   constexpr explicit Vector(SizeT count);
 
   constexpr ~Vector() noexcept;
 
   template <usize OtherN, AllocatorLike OtherAllocator, Integral OtherSizeT>
 
-  constexpr Vector(const Vector<T, OtherN, OtherAllocator, OtherSizeT>& other);
-  constexpr Vector(const Vector& other);
+  constexpr Vector(Vector<T, OtherN, OtherAllocator, OtherSizeT> const& other);
+  constexpr Vector(Vector const& other);
   template <usize OtherN, AllocatorLike OtherAllocator, Integral OtherSizeT>
 
   constexpr Vector(Vector<T, OtherN, OtherAllocator, OtherSizeT>&& other) noexcept;
   constexpr Vector(Vector&& other) noexcept;
 
   template <usize OtherN, AllocatorLike OtherAllocator, Integral OtherSizeT>
-  constexpr Vector& operator=(const Vector<T, OtherN, OtherAllocator, OtherSizeT>& other);
-  constexpr Vector& operator=(const Vector& other);
+  constexpr Vector& operator=(Vector<T, OtherN, OtherAllocator, OtherSizeT> const& other);
+  constexpr Vector& operator=(Vector const& other);
   template <usize OtherN, AllocatorLike OtherAllocator, Integral OtherSizeT>
   constexpr Vector& operator=(Vector<T, OtherN, OtherAllocator, OtherSizeT>&& other) noexcept;
   constexpr Vector& operator=(Vector&& other) noexcept;
 
-  constexpr Vector& operator=(const InitializerList<T>& init);
+  constexpr Vector& operator=(InitializerList<T> const& init);
 
-  constexpr T& push_back(const T& value) { return emplace_back(value); }
+  constexpr T& push_back(T const& value) { return emplace_back(value); }
   constexpr T& push_back(T&& value) { return emplace_back(base::move(value)); }
 
   template <typename... Args> constexpr T& emplace_back(Args&&... args);
@@ -65,7 +65,7 @@ public:
   [[nodiscard]] constexpr SizeT capacity() const noexcept { return capacity_; }
 
   [[nodiscard]] constexpr T*       data() noexcept BASE_LIFETIMEBOUND { return data_; }
-  [[nodiscard]] constexpr const T* data() const noexcept BASE_LIFETIMEBOUND { return data_; }
+  [[nodiscard]] constexpr T const* data() const noexcept BASE_LIFETIMEBOUND { return data_; }
 
   [[nodiscard]] constexpr T& operator[](SizeT index) noexcept BASE_LIFETIMEBOUND {
     return data_[static_cast<usize>(index)];
@@ -77,50 +77,50 @@ public:
   [[nodiscard]] constexpr Slice<T, SizeT> slice() noexcept BASE_LIFETIMEBOUND {
     return {data_, size_};
   }
-  [[nodiscard]] constexpr Slice<const T, SizeT> slice() const noexcept BASE_LIFETIMEBOUND {
+  [[nodiscard]] constexpr Slice<T const, SizeT> slice() const noexcept BASE_LIFETIMEBOUND {
     return {data_, size_};
   }
   [[nodiscard]] constexpr Slice<uchar, SizeT> bytes() noexcept BASE_LIFETIMEBOUND {
     return {reinterpret_cast<uchar*>(data_), static_cast<SizeT>(size_ * sizeof(T))};
   }
-  [[nodiscard]] constexpr Slice<const uchar, SizeT> bytes() const noexcept BASE_LIFETIMEBOUND {
-    return {reinterpret_cast<const uchar*>(data_), static_cast<SizeT>(size_ * sizeof(T))};
+  [[nodiscard]] constexpr Slice<uchar const, SizeT> bytes() const noexcept BASE_LIFETIMEBOUND {
+    return {reinterpret_cast<uchar const*>(data_), static_cast<SizeT>(size_ * sizeof(T))};
   }
 
   [[nodiscard]] constexpr IntegerRange<SizeT> indices() const noexcept { return {0, size_}; }
 
   [[nodiscard]] constexpr T&       front() noexcept BASE_LIFETIMEBOUND { return data_[0]; }
-  [[nodiscard]] constexpr const T& front() const noexcept BASE_LIFETIMEBOUND { return data_[0]; }
+  [[nodiscard]] constexpr T const& front() const noexcept BASE_LIFETIMEBOUND { return data_[0]; }
   [[nodiscard]] constexpr T&       back() noexcept BASE_LIFETIMEBOUND { return data_[size_ - 1]; }
-  [[nodiscard]] constexpr const T& back() const noexcept BASE_LIFETIMEBOUND {
+  [[nodiscard]] constexpr T const& back() const noexcept BASE_LIFETIMEBOUND {
     return data_[size_ - 1];
   }
 
   [[nodiscard]] constexpr T*       begin() noexcept BASE_LIFETIMEBOUND { return data_; }
-  [[nodiscard]] constexpr const T* begin() const noexcept BASE_LIFETIMEBOUND { return data_; }
+  [[nodiscard]] constexpr T const* begin() const noexcept BASE_LIFETIMEBOUND { return data_; }
   [[nodiscard]] constexpr T*       end() noexcept BASE_LIFETIMEBOUND { return data_ + size_; }
-  [[nodiscard]] constexpr const T* end() const noexcept BASE_LIFETIMEBOUND { return data_ + size_; }
+  [[nodiscard]] constexpr T const* end() const noexcept BASE_LIFETIMEBOUND { return data_ + size_; }
 
   [[nodiscard]] constexpr ReverseIterator<T*> rbegin() noexcept BASE_LIFETIMEBOUND {
     return data_ + size_;
   }
-  [[nodiscard]] constexpr ReverseIterator<const T*> rbegin() const noexcept BASE_LIFETIMEBOUND {
+  [[nodiscard]] constexpr ReverseIterator<T const*> rbegin() const noexcept BASE_LIFETIMEBOUND {
     return data_ + size_;
   }
   [[nodiscard]] constexpr ReverseIterator<T*> rend() noexcept BASE_LIFETIMEBOUND { return data_; }
-  [[nodiscard]] constexpr ReverseIterator<const T*> rend() const noexcept BASE_LIFETIMEBOUND {
+  [[nodiscard]] constexpr ReverseIterator<T const*> rend() const noexcept BASE_LIFETIMEBOUND {
     return data_;
   }
 
-  [[nodiscard]] constexpr const T* cbegin() const noexcept BASE_LIFETIMEBOUND { return data_; }
-  [[nodiscard]] constexpr const T* cend() const noexcept BASE_LIFETIMEBOUND {
+  [[nodiscard]] constexpr T const* cbegin() const noexcept BASE_LIFETIMEBOUND { return data_; }
+  [[nodiscard]] constexpr T const* cend() const noexcept BASE_LIFETIMEBOUND {
     return data_ + size_;
   }
 
-  [[nodiscard]] constexpr ReverseIterator<const T*> crbegin() const noexcept BASE_LIFETIMEBOUND {
+  [[nodiscard]] constexpr ReverseIterator<T const*> crbegin() const noexcept BASE_LIFETIMEBOUND {
     return data_ + size_;
   }
-  [[nodiscard]] constexpr ReverseIterator<const T*> crend() const noexcept BASE_LIFETIMEBOUND {
+  [[nodiscard]] constexpr ReverseIterator<T const*> crend() const noexcept BASE_LIFETIMEBOUND {
     return data_;
   }
 
@@ -131,7 +131,7 @@ private:
   void alloc(SizeT capacity);
   void free();
 
-  template <typename Copied> void copy(const Copied* data);
+  template <typename Copied> void copy(Copied const* data);
   void                            move(T* data);
 
   void definitely_reserve(SizeT capacity);
@@ -152,25 +152,25 @@ private:
 };
 
 template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
-constexpr Vector<T, N, Allocator, SizeT>::Vector(const InitializerList<T>& init)
+constexpr Vector<T, N, Allocator, SizeT>::Vector(InitializerList<T> const& init)
     : size_(static_cast<SizeT>(init.size())) {
   maybe_alloc_size();
   copy(init.begin());
 }
 template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 template <RangeOf<T> Range>
-constexpr Vector<T, N, Allocator, SizeT>::Vector(const Range& range) {
+constexpr Vector<T, N, Allocator, SizeT>::Vector(Range const& range) {
   if constexpr (requires(Range with_size) {
                   { with_size.size() } -> Integral;
                 }) {
     size_ = range.size();
     maybe_alloc_size();
     if constexpr (requires(Range with_ptr) {
-                    { with_ptr.data() } -> OneOf<T*, const T*>;
+                    { with_ptr.data() } -> OneOf<T*, T const*>;
                   }) {
       copy(range.data());
     } else if constexpr (requires(Range with_ptr) {
-                           { with_ptr.begin() } -> OneOf<T*, const T*>;
+                           { with_ptr.begin() } -> OneOf<T*, T const*>;
                          }) {
       copy(range.begin());
     } else if constexpr (requires(Range indexable) {
@@ -209,14 +209,14 @@ constexpr Vector<T, N, Allocator, SizeT>::~Vector() noexcept {
 template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 template <usize OtherN, AllocatorLike OtherAllocator, Integral OtherSizeT>
 constexpr Vector<T, N, Allocator, SizeT>::Vector(
-    const Vector<T, OtherN, OtherAllocator, OtherSizeT>& other)
+    Vector<T, OtherN, OtherAllocator, OtherSizeT> const& other)
     : size_(static_cast<SizeT>(other.size_)) {
   maybe_alloc_size();
   copy(other.data_);
 }
 
 template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
-constexpr Vector<T, N, Allocator, SizeT>::Vector(const Vector& other)
+constexpr Vector<T, N, Allocator, SizeT>::Vector(Vector const& other)
     : size_(static_cast<SizeT>(other.size_)) {
   maybe_alloc_size();
   copy(other.data_);
@@ -260,7 +260,7 @@ constexpr Vector<T, N, Allocator, SizeT>::Vector(Vector&& other) noexcept
 template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 template <usize OtherN, AllocatorLike OtherAllocator, Integral OtherSizeT>
 constexpr Vector<T, N, Allocator, SizeT>& Vector<T, N, Allocator, SizeT>::operator=(
-    const Vector<T, OtherN, OtherAllocator, OtherSizeT>& other) {
+    Vector<T, OtherN, OtherAllocator, OtherSizeT> const& other) {
   clear();
   size_ = static_cast<SizeT>(other.size_);
   reserve(size_);
@@ -270,7 +270,7 @@ constexpr Vector<T, N, Allocator, SizeT>& Vector<T, N, Allocator, SizeT>::operat
 
 template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 constexpr Vector<T, N, Allocator, SizeT>&
-Vector<T, N, Allocator, SizeT>::operator=(const Vector& other) {
+Vector<T, N, Allocator, SizeT>::operator=(Vector const& other) {
   if (&other == this) [[unlikely]] {
     return *this;
   }
@@ -327,7 +327,7 @@ Vector<T, N, Allocator, SizeT>::operator=(Vector&& other) noexcept {
 
 template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 constexpr Vector<T, N, Allocator, SizeT>&
-Vector<T, N, Allocator, SizeT>::operator=(const InitializerList<T>& init) {
+Vector<T, N, Allocator, SizeT>::operator=(InitializerList<T> const& init) {
   clear();
   size_ = static_cast<SizeT>(init.size());
   reserve(size_);
@@ -436,7 +436,7 @@ void Vector<T, N, Allocator, SizeT>::definitely_reserve(SizeT capacity) {
 
 template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 template <typename Copied>
-void Vector<T, N, Allocator, SizeT>::copy(const Copied* data) {
+void Vector<T, N, Allocator, SizeT>::copy(Copied const* data) {
   if constexpr (TriviallyCopyable<T> && SameAs<T, Copied>) {
     base::copy({data, static_cast<usize>(size_) * sizeof(T)}, data_);
   } else {

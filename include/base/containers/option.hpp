@@ -23,7 +23,7 @@ public:
     }
   }
 
-  constexpr Option(const Option& other) noexcept : is_value_(other.is_value_) {
+  constexpr Option(Option const& other) noexcept : is_value_(other.is_value_) {
     if (is_value_) {
       value_.construct(*other.value_);
     }
@@ -33,7 +33,7 @@ public:
       value_.construct(base::move(*other.value_));
     }
   }
-  constexpr Option& operator=(const Option& other) noexcept {
+  constexpr Option& operator=(Option const& other) noexcept {
     if (&other == this) [[unlikely]] {
       return *this;
     }
@@ -64,7 +64,7 @@ public:
     }
     return *this;
   }
-  constexpr Option& operator=(const T& value) noexcept {
+  constexpr Option& operator=(T const& value) noexcept {
     if (is_value_) {
       value_.destruct();
     }
@@ -91,7 +91,7 @@ public:
   [[nodiscard]] constexpr bool operator==(Nil /*nil*/) const noexcept { return !is_value_; }
   [[nodiscard]] constexpr bool operator!=(Nil /*nil*/) const noexcept { return is_value_; }
 
-  [[nodiscard]] constexpr bool operator==(const T& value) const noexcept {
+  [[nodiscard]] constexpr bool operator==(T const& value) const noexcept {
     return is_value_ && *value_ == value;
   }
 
@@ -99,7 +99,7 @@ public:
   [[nodiscard]] constexpr bool is_value() const noexcept { return is_value_; }
 
   template <typename... Args>
-  [[nodiscard]] constexpr T& expect_value(const FormatString<Args...>& fmt,
+  [[nodiscard]] constexpr T& expect_value(FormatString<Args...> const& fmt,
                                           Args&&... args) noexcept {
     panic_if(!is_value_, fmt, base::forward<Args>(args)...);
     return *value_;
@@ -108,17 +108,17 @@ public:
     return expect_value("Option<{}> is nil.", TYPE_STRING<T>);
   }
   template <typename... Args>
-  [[nodiscard]] constexpr const T& expect_value(const FormatString<Args...>& fmt,
+  [[nodiscard]] constexpr T const& expect_value(FormatString<Args...> const& fmt,
                                                 Args&&... args) const noexcept {
     panic_if(!is_value_, fmt, base::forward<Args>(args)...);
     return *value_;
   }
-  [[nodiscard]] constexpr const T& expect_value() const noexcept {
+  [[nodiscard]] constexpr T const& expect_value() const noexcept {
     return expect_value("Option<{}> is nil.", TYPE_STRING<T>);
   }
 
   template <typename... Args>
-  [[nodiscard]] constexpr T& assert_value(const FormatString<Args...>& fmt,
+  [[nodiscard]] constexpr T& assert_value(FormatString<Args...> const& fmt,
                                           Args&&... args) noexcept {
     debug_panic_if(!is_value_, fmt, base::forward<Args>(args)...);
     return *value_;
@@ -127,12 +127,12 @@ public:
     return assert_value("Option<{}> is nil.", TYPE_STRING<T>);
   }
   template <typename... Args>
-  [[nodiscard]] constexpr const T& assert_value(const FormatString<Args...>& fmt,
+  [[nodiscard]] constexpr T const& assert_value(FormatString<Args...> const& fmt,
                                                 Args&&... args) const noexcept {
     debug_panic_if(!is_value_, fmt, base::forward<Args>(args)...);
     return *value_;
   }
-  [[nodiscard]] constexpr const T& assert_value() const noexcept {
+  [[nodiscard]] constexpr T const& assert_value() const noexcept {
     return assert_value("Option<{}> is nil.", TYPE_STRING<T>);
   }
 
@@ -148,9 +148,9 @@ public:
   constexpr Option(T& value) noexcept : ptr_(&value) {}
 
   constexpr ~Option() noexcept                              = default;
-  constexpr Option(const Option& other) noexcept            = default;
+  constexpr Option(Option const& other) noexcept            = default;
   constexpr Option(Option&& other) noexcept                 = default;
-  constexpr Option& operator=(const Option& other) noexcept = default;
+  constexpr Option& operator=(Option const& other) noexcept = default;
   constexpr Option& operator=(Option&& other) noexcept      = default;
 
   constexpr Option& operator=(Nil /*nil*/) noexcept {
@@ -173,7 +173,7 @@ public:
   [[nodiscard]] constexpr bool operator==(Nil /*nil*/) const noexcept { return ptr_ == nullptr; }
   [[nodiscard]] constexpr bool operator!=(Nil /*nil*/) const noexcept { return ptr_ != nullptr; }
 
-  [[nodiscard]] constexpr bool operator==(const T& value) const noexcept {
+  [[nodiscard]] constexpr bool operator==(T const& value) const noexcept {
     return ptr_ != nullptr && *ptr_ == value;
   }
 
@@ -186,12 +186,12 @@ public:
     return expect_value("Option<{}> is nil.", TYPE_STRING<T>);
   }
   template <typename... Args>
-  [[nodiscard]] constexpr const T& expect_value(FormatString<Args...> fmt,
+  [[nodiscard]] constexpr T const& expect_value(FormatString<Args...> fmt,
                                                 Args&&... args) const noexcept {
     panic_if(ptr_ == nullptr, fmt, base::forward<Args>(args)...);
     return *ptr_;
   }
-  [[nodiscard]] constexpr const T& expect_value() const noexcept {
+  [[nodiscard]] constexpr T const& expect_value() const noexcept {
     return expect_value("Option<{}> is nil.", TYPE_STRING<T>);
   }
 
@@ -204,12 +204,12 @@ public:
     return assert_value("Option<{}> is nil.", TYPE_STRING<T>);
   }
   template <typename... Args>
-  [[nodiscard]] constexpr const T& assert_value(FormatString<Args...> fmt,
+  [[nodiscard]] constexpr T const& assert_value(FormatString<Args...> fmt,
                                                 Args&&... args) const noexcept {
     debug_panic_if(ptr_ == nullptr, fmt, base::forward<Args>(args)...);
     return *ptr_;
   }
-  [[nodiscard]] constexpr const T& assert_value() const noexcept {
+  [[nodiscard]] constexpr T const& assert_value() const noexcept {
     return assert_value("Option<{}> is nil.", TYPE_STRING<T>);
   }
 

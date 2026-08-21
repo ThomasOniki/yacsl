@@ -23,7 +23,7 @@ template <Character C> u32 debug_char_len(C chr) {
 
 template <Character C> usize debug_string_len(BasicStringView<C, usize> str) noexcept {
   usize len = 0;
-  for (const C chr : str) {
+  for (C const chr : str) {
     len += debug_char_len(chr);
   }
   return len;
@@ -144,14 +144,14 @@ template <Character C> void write_debug_char(String& buf, C chr) {
 template <Character C> void write_debug_string(char* buf, BasicStringView<C, usize> str) {
   *buf = '"';
   ++buf;
-  for (const C chr : str) {
+  for (C const chr : str) {
     buf = write_debug_char(buf, chr);
   }
   *buf = '"';
 }
 template <Character C> void write_debug_string(String& buf, BasicStringView<C, usize> str) {
   buf += '"';
-  for (const C chr : str) {
+  for (C const chr : str) {
     write_debug_char(buf, chr);
   }
   buf += '"';

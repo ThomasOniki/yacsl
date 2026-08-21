@@ -12,7 +12,7 @@
 
 namespace base {
 
-Result<OpenedFile, File::OpenError> open_file(const char* path, File::Flags flags) noexcept {
+Result<OpenedFile, File::OpenError> open_file(char const* path, File::Flags flags) noexcept {
   DWORD access = 0;
   if (strip_file_open_flag(&flags, File::Flags::Read)) {
     access |= GENERIC_READ;
@@ -26,8 +26,8 @@ Result<OpenedFile, File::OpenError> open_file(const char* path, File::Flags flag
       .bInheritHandle = strip_file_open_flag(&flags, File::Flags::DontCloseOnExec) ? TRUE : FALSE,
   };
 
-  const bool trunc                = strip_file_open_flag(&flags, File::Flags::Trunc);
-  const bool create               = strip_file_open_flag(&flags, File::Flags::Create);
+  bool const trunc                = strip_file_open_flag(&flags, File::Flags::Trunc);
+  bool const create               = strip_file_open_flag(&flags, File::Flags::Create);
   DWORD      creation_disposition = 0;
 
   if (create) {
@@ -44,7 +44,7 @@ Result<OpenedFile, File::OpenError> open_file(const char* path, File::Flags flag
     }
   }
 
-  const HANDLE handle =
+  HANDLE const handle =
       CreateFileA(path, access, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
                   &security_attr, creation_disposition, FILE_ATTRIBUTE_NORMAL, nullptr);
 
@@ -52,7 +52,7 @@ Result<OpenedFile, File::OpenError> open_file(const char* path, File::Flags flag
   //  log_info("inheritable: {}", security_attr.bInheritHandle);
 
   if (handle == INVALID_HANDLE_VALUE) {
-    const DWORD err = GetLastError();
+    DWORD const err = GetLastError();
     switch (err) {
     case ERROR_FILE_NOT_FOUND:
       return File::OpenError::FileNotFound;
@@ -67,7 +67,7 @@ Result<OpenedFile, File::OpenError> open_file(const char* path, File::Flags flag
     pos       = static_cast<usize>(SetFilePointer(handle, 0, &high, FILE_END));
     pos += static_cast<usize>(high) * Limits<LONG>::max;
     if (pos == static_cast<usize>(INVALID_SET_FILE_POINTER)) {
-      const DWORD err = GetLastError();
+      DWORD const err = GetLastError();
       if (err != NO_ERROR) {
         panic("SetFilePointer failed: {}", win32_err_str(err));
       }

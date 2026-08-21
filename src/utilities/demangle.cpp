@@ -11,7 +11,7 @@ namespace base {
 namespace {
 class Demangler {
 public:
-  const String& demangle(StringView mangled_func) noexcept {
+  String const& demangle(StringView mangled_func) noexcept {
     mangled_       = mangled_func.begin();
     has_templates_ = false;
     demangled_.clear();
@@ -27,10 +27,10 @@ public:
 
     String return_type;
 
-    const bool has_templates = has_templates_;
+    bool const has_templates = has_templates_;
 
     if (has_templates) {
-      const String func = base::move(demangled_);
+      String const func = base::move(demangled_);
       demangle_type();
       return_type = base::move(demangled_);
       demangled_  = func;
@@ -52,7 +52,7 @@ public:
     demangled_ += ')';
 
     if (has_templates) {
-      const String func = base::move(demangled_);
+      String const func = base::move(demangled_);
       demangled_        = base::move(return_type);
       demangled_ += ' ';
       demangled_ += func;
@@ -65,11 +65,11 @@ private:
   // NOLINTNEXTLINE(misc-no-recursion)
   void demangle_string() noexcept {
     substitute_beginings_.push_back(demangled_.size());
-    const bool is_nested = skip('N');
+    bool const is_nested = skip('N');
 
     for (bool is_first = true;; is_first = false) {
-      const Modules modules        = demangle_modules();
-      const bool    is_substituted = is_substitution();
+      Modules const modules        = demangle_modules();
+      bool const    is_substituted = is_substitution();
 
       if (!is_first) {
         demangled_ += "::";
@@ -80,10 +80,10 @@ private:
       } else {
         skip('L');
 
-        const char* end = num_end(mangled_);
-        const auto  len = atoi<usize>(mangled_, end);
+        char const* end = num_end(mangled_);
+        auto const  len = atoi<usize>(mangled_, end);
 
-        const StringView     chunk(end, len);
+        StringView const     chunk(end, len);
         constexpr StringView anonymous_ns = "_GLOBAL__N_";
         if (chunk.size() >= anonymous_ns.size() &&
             StringView(chunk.data(), anonymous_ns.size()) == anonymous_ns) {
@@ -94,7 +94,7 @@ private:
         mangled_ = chunk.end();
       }
 
-      for (const Modules::Submodule submodule : modules.submodules) {
+      for (Modules::Submodule const submodule : modules.submodules) {
         if (submodule.is_substitution) {
           continue;
         }
@@ -121,7 +121,7 @@ private:
 
   // NOLINTNEXTLINE(misc-no-recursion)
   void demangle_type() noexcept {
-    const StringView qualifiers = get_mangled_qualifiers();
+    StringView const qualifiers = get_mangled_qualifiers();
 
     if (mangled_[0] == 'D' && mangled_[1] == 'p') {
       demangle_template_parameter_pack(qualifiers);
@@ -134,7 +134,7 @@ private:
     }
     if (skip('T')) {
       usize       index = 0;
-      const char* end   = mangled_;
+      char const* end   = mangled_;
       if (*mangled_ != '_') {
         end   = num_end(mangled_);
         index = atoi<usize>(mangled_, end) + 1;
@@ -169,8 +169,8 @@ private:
   // NOLINTNEXTLINE(misc-no-recursion)
   void demangle_array_type(StringView qualifiers) noexcept {
     ++mangled_;
-    const char*      end = num_end(mangled_);
-    const StringView arr_len(mangled_, end);
+    char const*      end = num_end(mangled_);
+    StringView const arr_len(mangled_, end);
     mangled_ = end + 1;
     demangle_type();
     StringView prefix = " [";
@@ -186,7 +186,7 @@ private:
   }
 
   void demangle_type_qualifiers(StringView mangled) noexcept {
-    for (const char* it = mangled.end() - 1; it != mangled.begin() - 1; --it) {
+    for (char const* it = mangled.end() - 1; it != mangled.begin() - 1; --it) {
       switch (*it) {
       case 'K':
         demangled_ += " const";
@@ -210,7 +210,7 @@ private:
   }
 
   StringView get_mangled_qualifiers() noexcept {
-    const char* begin = mangled_;
+    char const* begin = mangled_;
     while (*mangled_ == 'K' || *mangled_ == 'V' || *mangled_ == 'P' || *mangled_ == 'R' ||
            *mangled_ == 'O') {
       ++mangled_;
@@ -316,7 +316,7 @@ private:
   }
 
   void demangle_until_E() noexcept {
-    const char* begin = mangled_;
+    char const* begin = mangled_;
     while (*mangled_ != 'E') {
       ++mangled_;
     }
@@ -401,21 +401,21 @@ private:
     Modules ret;
     for (;;) {
       StringView to_add;
-      const bool is_substituted = !skip('W');
+      bool const is_substituted = !skip('W');
       if (is_substituted) {
         if (!is_substitution()) {
           break;
         }
-        const char*      before_sub = mangled_;
-        const StringView sub        = substitution();
+        char const*      before_sub = mangled_;
+        StringView const sub        = substitution();
         if (sub.data() == demangled_.data() || sub.data()[-1] != '@') {
           mangled_ = before_sub;
           break;
         }
         to_add = sub;
       } else {
-        const char* end = num_end(mangled_);
-        const auto  len = atoi<usize>(mangled_, end);
+        char const* end = num_end(mangled_);
+        auto const  len = atoi<usize>(mangled_, end);
         mangled_        = end + len;
         to_add          = StringView(end, mangled_);
       }
@@ -569,7 +569,7 @@ private:
   Vector<Range> substitutes_;
   Vector<usize> substitute_beginings_;
   Vector<Range> template_args_;
-  const char*   mangled_ = nullptr;
+  char const*   mangled_ = nullptr;
 
   usize template_nesting_level_ = 0;
 
