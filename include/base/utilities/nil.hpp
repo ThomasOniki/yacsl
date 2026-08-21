@@ -3,7 +3,7 @@
 namespace base {
 
 struct Nil {
-  template <typename T> constexpr bool operator==(const T& /*non nil*/) const noexcept {
+  template <typename T> constexpr bool operator==(T const& /*non nil*/) const noexcept {
     return false;
   }
 

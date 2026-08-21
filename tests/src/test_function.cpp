@@ -16,7 +16,7 @@ struct Counts {
   uint32_t move_constructor_call_count        = 0;
   uint32_t destructor_call_count              = 0;
 
-  [[nodiscard]] constexpr bool operator==(const Counts&) const noexcept = default;
+  [[nodiscard]] constexpr bool operator==(Counts const&) const noexcept = default;
 };
 struct TestStruct {
   inline static Counts counts;
@@ -25,25 +25,25 @@ struct TestStruct {
 
   TestStruct() { ++counts.constructor_call_count; }
 
-  TestStruct(const TestStruct& /*other*/) { ++counts.copy_constructor_call_count; }
+  TestStruct(TestStruct const& /*other*/) { ++counts.copy_constructor_call_count; }
   [[maybe_unused]] TestStruct(TestStruct&& /*other*/) noexcept {
     ++counts.move_constructor_call_count;
   }
 
   ~TestStruct() noexcept { ++counts.destructor_call_count; }
 
-  TestStruct& operator=(const TestStruct&) = delete;
+  TestStruct& operator=(TestStruct const&) = delete;
   TestStruct& operator=(TestStruct&&)      = delete;
 };
 } // namespace
 
 template <> class base::Formatter<Counts> {
 public:
-  static constexpr const char* parse(const char* fmt) {
+  static constexpr char const* parse(char const* fmt) {
     base::FormatStringParser parser(fmt);
     return parser.end_parse();
   }
-  [[maybe_unused]] static void format(base::String& buf, const Counts& counts) {
+  [[maybe_unused]] static void format(base::String& buf, Counts const& counts) {
     base::format_to(
         buf, "constructors: {}, copy_constructors: {}, move_contructors: {}, destructors: {}",
         counts.constructor_call_count, counts.copy_constructor_call_count,
@@ -75,7 +75,7 @@ public:
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define CHECK_COUNTS(...)                                                                          \
   do {                                                                                             \
-    const Counts expected = Counts{__VA_ARGS__};                                                   \
+    Counts const expected = Counts{__VA_ARGS__};                                                   \
     EXPECT_EQ(TestStruct::counts, expected);                                                       \
     TestStruct::reset_counts();                                                                    \
   } while (false)
@@ -96,7 +96,7 @@ static int test_moved_lambda() {
   {
     CHECK_COUNTS(0);
 
-    // test must be non-const to be moved.
+    // test must be non-to const be moved.
     // NOLINTNEXTLINE(misc-const-correctness)
     TestStruct test;
 
@@ -107,7 +107,7 @@ static int test_moved_lambda() {
     CHECK_COUNTS(.copy_constructor_call_count = 1, .move_constructor_call_count = 1,
                  .destructor_call_count = 1);
 
-    const int result = func(10);
+    int const result = func(10);
     if (result != 20) {
       (void)fprintf(stderr, "function returned %d, not 20", result);
     }
@@ -119,10 +119,10 @@ static int test_moved_lambda() {
 static int test_copied_lambda() {
   int ret = 0;
   {
-    const TestStruct test;
+    TestStruct const test;
     CHECK_COUNTS(.constructor_call_count = 1);
 
-    const base::Function<void(), 0, TestAllocator> func([&test]() { (void)test; });
+    base::Function<void(), 0, TestAllocator> const func([&test]() { (void)test; });
 
     CHECK_COUNTS(0);
 
@@ -140,13 +140,13 @@ static int test_copied_lambda() {
 static int test_ref_capture_lamdba() {
   int ret = 0;
   {
-    const TestStruct test;
+    TestStruct const test;
     CHECK_COUNTS(.constructor_call_count = 1);
 
     auto lambda = [test]() {};
     CHECK_COUNTS(.copy_constructor_call_count = 1);
 
-    const base::Function<void()> func(lambda);
+    base::Function<void()> const func(lambda);
     CHECK_COUNTS(.copy_constructor_call_count = 1);
   }
   CHECK_COUNTS(.destructor_call_count = 3);

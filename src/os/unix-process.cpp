@@ -32,7 +32,7 @@ static constexpr auto TYPE_OTHER_PIPE = Type{255};
 namespace {
 struct State {
   alignas(64) posix_spawn_file_actions_t file_actions;
-  const Process::Stdio* stdio;
+  Process::Stdio const* stdio;
   StackArray<int, 2>    stdin_pipe;
   StackArray<int, 2>    stdout_pipe;
   StackArray<int, 2>    stderr_pipe;
@@ -41,7 +41,7 @@ struct State {
 
 #define CHECK_RETURN(func)                                                                         \
   do {                                                                                             \
-    const int _result = func;                                                                      \
+    int const _result = func;                                                                      \
     panic_if(_result != 0, #func " failed: {}", errno_str(_result));                               \
   } while (false)
 
@@ -51,7 +51,7 @@ usize Process::Output::read(Slice<uchar> buffer) noexcept {
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void Process::Input::write(Slice<const uchar> bytes) noexcept {
+void Process::Input::write(Slice<uchar const> bytes) noexcept {
   usize written =
       static_cast<usize>(BASE_TRY_SYSCALL(::write(handle_, bytes.data(), bytes.size())));
   while (written < bytes.size()) {
@@ -61,8 +61,8 @@ void Process::Input::write(Slice<const uchar> bytes) noexcept {
 }
 
 static void redirect_child_stdio_to_file(posix_spawn_file_actions_t* actions, File::Flags flags,
-                                         const char* path, int stream) noexcept {
-  const int oflag = unix_flags(flags | File::Flags::DontCloseOnExec |
+                                         char const* path, int stream) noexcept {
+  int const oflag = unix_flags(flags | File::Flags::DontCloseOnExec |
                                (stream == STDIN_FILENO ? File::Flags::Read : File::Flags::Write));
 
   CHECK_RETURN(posix_spawn_file_actions_addopen(actions, stream, path, oflag, 0644));
@@ -160,7 +160,7 @@ void Process::cleanup_after_spawn(void* pvoid_state) noexcept {
 
 extern "C" char** environ;
 
-Error<Process::SpawnError> Process::start(const char* const* argv, const Stdio& stdio) noexcept {
+Error<Process::SpawnError> Process::start(char const* const* argv, Stdio const& stdio) noexcept {
   if (handle_ != -1) [[unlikely]] {
     wait();
   }
@@ -185,9 +185,9 @@ Error<Process::SpawnError> Process::start(const char* const* argv, const Stdio& 
   pid_t pid = 0;
 
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
-  const auto* argv_mut = const_cast<char* const*>(argv);
+  auto const* argv_mut = const_cast<char* const*>(argv);
 
-  const int result = posix_spawnp(&pid, argv[0], &state.file_actions, nullptr, argv_mut, environ);
+  int const result = posix_spawnp(&pid, argv[0], &state.file_actions, nullptr, argv_mut, environ);
   if (result != 0 && result != ENOENT) {
     panic("posix_spawnp failed: {}", errno_str(result));
   }

@@ -11,7 +11,7 @@ namespace base {
 template <UnsignedIntegral T>
 constexpr char* itoa_from_end(BASE_LIFETIMEBOUND char* buf_end, T value,
                               StringView charset = "0123456789") noexcept {
-  const u32 base = static_cast<u32>(charset.size());
+  u32 const base = static_cast<u32>(charset.size());
   while (value >= base) {
     *--buf_end = charset[static_cast<u32>(value % base)];
     value      = static_cast<T>(value / base);
@@ -42,12 +42,12 @@ template <UnsignedIntegral T> constexpr u32 count_digits(T value, u32 base = 10)
 
 template <Integral T>
 constexpr void itoa(char* buf, T value, StringView charset = "0123456789") noexcept {
-  const u32 len = count_digits(value, static_cast<u32>(charset.size()));
+  u32 const len = count_digits(value, static_cast<u32>(charset.size()));
   itoa_from_end(buf + len, value, charset);
 }
 template <Integral T>
 constexpr void itoa(String buf, T value, StringView charset = "0123456789") noexcept {
-  const u32 len = count_digits(value, static_cast<u32>(charset.size()));
+  u32 const len = count_digits(value, static_cast<u32>(charset.size()));
   buf.grow(len);
   itoa_from_end(buf.end(), value, charset);
 }

@@ -20,11 +20,11 @@ public:
 
   constexpr ~BasicString() noexcept { free(); }
 
-  constexpr BasicString(const Char* cstr) noexcept
+  constexpr BasicString(Char const* cstr) noexcept
       : BasicString(BasicStringView<Char, usize>(cstr)) {}
 
   constexpr BasicString(BasicStringView<Char, SizeT> str) noexcept {
-    const SizeT size = str.size();
+    SizeT const size = str.size();
 
     if constexpr (N > 0) {
       if (size > fixed_buffer_.size()) {
@@ -41,7 +41,7 @@ public:
     copy(str.slice(), begin_);
   }
 
-  constexpr BasicString(const BasicString& other) noexcept : BasicString(other.view()) {}
+  constexpr BasicString(BasicString const& other) noexcept : BasicString(other.view()) {}
 
   constexpr BasicString(BasicString&& other) noexcept
       : begin_(other.begin_), end_(other.end_), allocated_end_(other.allocated_end_) {
@@ -49,11 +49,11 @@ public:
     other.allocated_end_      = other.fixed_buffer_.end();
   }
 
-  constexpr BasicString& operator=(const BasicString& other) noexcept {
+  constexpr BasicString& operator=(BasicString const& other) noexcept {
     if (this == &other) {
       return *this;
     }
-    const SizeT size = other.size();
+    SizeT const size = other.size();
     if (capacity() < size) {
       free();
       begin_         = allocator().template allocate<Char>(size).data();
@@ -68,7 +68,7 @@ public:
   constexpr BasicString& operator=(BasicString&& other) noexcept {
     if constexpr (N > 0) {
       if (other.begin_ == other.fixed_buffer_.begin()) {
-        const SizeT size = other.size();
+        SizeT const size = other.size();
         copy({other.fixed_buffer_.begin(), size}, fixed_buffer_.begin());
         end_ = begin_ + size;
         return *this;
@@ -84,7 +84,7 @@ public:
   }
 
   // NOLINTNEXTLINE(misc-no-recursion)
-  constexpr BasicString& append(const Char* ptr, SizeT len) noexcept {
+  constexpr BasicString& append(Char const* ptr, SizeT len) noexcept {
     if (static_cast<SizeT>(allocated_end_ - end_) < len) {
       definitely_reserve(capacity() * 2 + len);
     }
@@ -92,17 +92,17 @@ public:
     end_ += len;
     return *this;
   }
-  constexpr BasicString& append(const Char* begin, const Char* end) noexcept {
+  constexpr BasicString& append(Char const* begin, Char const* end) noexcept {
     return append(begin, static_cast<SizeT>(end - begin));
   }
   // NOLINTNEXTLINE(misc-no-recursion)
   constexpr BasicString& append(BasicStringView<Char, SizeT> str) noexcept {
     return append(str.data(), str.size());
   }
-  constexpr BasicString& append(const Char* cstr) noexcept {
+  constexpr BasicString& append(Char const* cstr) noexcept {
     return append(BasicStringView<Char, usize>(cstr));
   }
-  constexpr BasicString& append(const BasicString& other) noexcept {
+  constexpr BasicString& append(BasicString const& other) noexcept {
     return append(other.begin(), other.size());
   }
 
@@ -117,11 +117,11 @@ public:
 
   // NOLINTNEXTLINE(misc-no-recursion)
   constexpr BasicString& operator+=(BasicStringView<Char, SizeT> str) { return append(str); }
-  constexpr BasicString& operator+=(const BasicString& str) { return append(str); }
-  constexpr BasicString& operator+=(const Char* cstr) { return append(cstr); }
+  constexpr BasicString& operator+=(BasicString const& str) { return append(str); }
+  constexpr BasicString& operator+=(Char const* cstr) { return append(cstr); }
   constexpr BasicString& operator+=(Char chr) { return append(chr); }
 
-  constexpr BasicString operator+(const BasicString& rhs) {
+  constexpr BasicString operator+(BasicString const& rhs) {
     BasicString ret(*this);
     return ret += rhs;
   }
@@ -129,7 +129,7 @@ public:
     BasicString ret(*this);
     return ret += rhs;
   }
-  constexpr BasicString operator+(const Char* cstr) {
+  constexpr BasicString operator+(Char const* cstr) {
     BasicString ret(*this);
     return ret += cstr;
   }
@@ -182,17 +182,17 @@ public:
   [[nodiscard]] constexpr Char& operator[](SizeT index) noexcept BASE_LIFETIMEBOUND {
     return begin_[index];
   }
-  [[nodiscard]] constexpr const Char& operator[](SizeT index) const noexcept BASE_LIFETIMEBOUND {
+  [[nodiscard]] constexpr Char const& operator[](SizeT index) const noexcept BASE_LIFETIMEBOUND {
     return begin_[index];
   }
 
-  [[nodiscard]] constexpr bool operator==(const BasicString& other) const noexcept {
+  [[nodiscard]] constexpr bool operator==(BasicString const& other) const noexcept {
     return view() == other.view();
   }
-  [[nodiscard]] constexpr bool operator==(const BasicStringView<Char, SizeT>& rhs) const noexcept {
+  [[nodiscard]] constexpr bool operator==(BasicStringView<Char, SizeT> const& rhs) const noexcept {
     return view() == rhs;
   }
-  [[nodiscard]] constexpr bool operator==(const Char* cstr) const noexcept {
+  [[nodiscard]] constexpr bool operator==(Char const* cstr) const noexcept {
     return view() == BasicStringView(cstr);
   }
 
@@ -202,25 +202,25 @@ public:
   [[nodiscard]] constexpr Slice<Char, SizeT> slice() noexcept BASE_LIFETIMEBOUND {
     return {begin_, end_};
   }
-  [[nodiscard]] constexpr Slice<const Char, SizeT> slice() const noexcept BASE_LIFETIMEBOUND {
+  [[nodiscard]] constexpr Slice<Char const, SizeT> slice() const noexcept BASE_LIFETIMEBOUND {
     return {begin_, end_};
   }
   [[nodiscard]] constexpr Slice<uchar, SizeT> bytes() noexcept BASE_LIFETIMEBOUND {
     return {reinterpret_cast<uchar*>(begin_), static_cast<SizeT>(size() * sizeof(Char))};
   }
-  [[nodiscard]] constexpr Slice<const uchar, SizeT> bytes() const noexcept BASE_LIFETIMEBOUND {
-    return {reinterpret_cast<const uchar*>(begin_), static_cast<SizeT>(size() * sizeof(Char))};
+  [[nodiscard]] constexpr Slice<uchar const, SizeT> bytes() const noexcept BASE_LIFETIMEBOUND {
+    return {reinterpret_cast<uchar const*>(begin_), static_cast<SizeT>(size() * sizeof(Char))};
   }
 
   [[nodiscard]] constexpr Char*       data() noexcept BASE_LIFETIMEBOUND { return begin_; }
-  [[nodiscard]] constexpr const Char* data() const noexcept BASE_LIFETIMEBOUND { return begin_; }
+  [[nodiscard]] constexpr Char const* data() const noexcept BASE_LIFETIMEBOUND { return begin_; }
 
   [[nodiscard]] constexpr Char*       begin() noexcept BASE_LIFETIMEBOUND { return begin_; }
   [[nodiscard]] constexpr Char*       end() noexcept BASE_LIFETIMEBOUND { return end_; }
-  [[nodiscard]] constexpr const Char* begin() const noexcept BASE_LIFETIMEBOUND { return begin_; }
-  [[nodiscard]] constexpr const Char* end() const noexcept BASE_LIFETIMEBOUND { return end_; }
-  [[nodiscard]] constexpr const Char* cbegin() const noexcept BASE_LIFETIMEBOUND { return begin_; }
-  [[nodiscard]] constexpr const Char* cend() const noexcept BASE_LIFETIMEBOUND { return end_; }
+  [[nodiscard]] constexpr Char const* begin() const noexcept BASE_LIFETIMEBOUND { return begin_; }
+  [[nodiscard]] constexpr Char const* end() const noexcept BASE_LIFETIMEBOUND { return end_; }
+  [[nodiscard]] constexpr Char const* cbegin() const noexcept BASE_LIFETIMEBOUND { return begin_; }
+  [[nodiscard]] constexpr Char const* cend() const noexcept BASE_LIFETIMEBOUND { return end_; }
 
 private:
   using FixedBufferMember<Char, N, SizeT>::fixed_buffer_;
@@ -230,7 +230,7 @@ private:
   // NOLINTNEXTLINE(misc-no-recursion)
   void definitely_reserve(SizeT capacity) noexcept {
     Char*       data = allocator().template allocate<Char>(capacity).data();
-    const SizeT size = this->size();
+    SizeT const size = this->size();
     copy({begin_, size}, data);
     free();
     begin_         = data;

@@ -16,23 +16,23 @@ public:
   constexpr initializer_list() noexcept : data_(nullptr), size_(0) {}
 
   [[nodiscard]] constexpr base::usize size() const noexcept { return size_; }
-  [[nodiscard]] constexpr const T*    begin() const noexcept { return data_; }
-  [[nodiscard]] constexpr const T*    end() const noexcept { return data_ + size_; }
+  [[nodiscard]] constexpr T const*    begin() const noexcept { return data_; }
+  [[nodiscard]] constexpr T const*    end() const noexcept { return data_ + size_; }
 
 public:
   using value_type      = T;
-  using reference       = const T&;
-  using const_reference = const T&;
+  using reference       = T const&;
+  using const_reference = T const&;
   using usizeype        = base::usize;
 
-  using iterator       = const T*;
-  using const_iterator = const T*;
+  using iterator       = T const*;
+  using const_iterator = T const*;
 
 private:
-  initializer_list(const T* data, base::usize size) : data_(data), size_(size) {}
+  initializer_list(T const* data, base::usize size) : data_(data), size_(size) {}
 
 private:
-  const T*    data_;
+  T const*    data_;
   base::usize size_;
 };
 

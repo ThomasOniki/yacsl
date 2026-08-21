@@ -24,10 +24,10 @@
 
 template <> class base::Formatter<std::string> : base::Formatter<base::StringView> {
 public:
-  constexpr const char* parse(const char* fmt) noexcept {
+  constexpr char const* parse(char const* fmt) noexcept {
     return base::Formatter<base::StringView>::parse(fmt);
   }
-  void format(base::String& buf, const std::string_view& str) const noexcept {
+  void format(base::String& buf, std::string_view const& str) const noexcept {
     base::Formatter<base::StringView>::format(buf, base::StringView(str.data(), str.size()));
   }
 };
@@ -82,11 +82,11 @@ using TestAllocatorSingleton = base::SingletonAllocator<TestAllocator, "main", t
 
 class TestClass {
 public:
-  explicit TestClass(const std::string_view& name) : name_(name) {
+  explicit TestClass(std::string_view const& name) : name_(name) {
 
     events.push_back("default constructed " + name_);
   }
-  TestClass(const TestClass& other) : name_(other.name_ + " (copied)") {
+  TestClass(TestClass const& other) : name_(other.name_ + " (copied)") {
 
     events.push_back("copy constructed " + name_);
   }
@@ -95,7 +95,7 @@ public:
     events.push_back("move constructed " + name_);
   }
   ~TestClass() noexcept { events.push_back("destructed " + name_); }
-  TestClass& operator=(const TestClass& other) {
+  TestClass& operator=(TestClass const& other) {
     if (&other == this) {
       return *this;
     }
@@ -127,7 +127,7 @@ public:
     auto test = [this, &ret]() {
       return test_events<Vector0, Vector1, Vector2, Vector3, Vector4>([this,
                                                                        &ret](bool strict_ordering) {
-        const auto& expected = expected_snapshots_[snapshot_index_];
+        auto const& expected = expected_snapshots_[snapshot_index_];
         ++snapshot_index_;
         if (strict_ordering) {
           EXPECT_EQ(TestClass::events, expected);
@@ -188,7 +188,7 @@ private:
       // Move order on realloc is implementation defined, so the exact order can't be checked.
       func(false);
 
-      const TestClass copied("d");
+      TestClass const copied("d");
       func(true);
       moved_to.push_back(copied);
       func(true);
@@ -233,11 +233,11 @@ static int test_push_after_copy() {
 
     foo_bar.pop_back(); // pop '\0'
 
-    for (const char chr : " bar") { // 3 allocs
+    for (char const chr : " bar") { // 3 allocs
       foo_bar.push_back(chr);
     }
 
-    EXPECT_STREQ(foo_bar.data(), static_cast<const char*>("foo bar"));
+    EXPECT_STREQ(foo_bar.data(), static_cast<char const*>("foo bar"));
   }
 
   std::vector<std::string> expected = {
@@ -267,7 +267,7 @@ static int test_different_vectors() {
 
 static int test_different_allocators() {
   int  ret    = 0;
-  auto expect = [&ret](const std::vector<std::string>& expected) {
+  auto expect = [&ret](std::vector<std::string> const& expected) {
     EXPECT_EQ(TestClass::events, expected);
     TestClass::events.clear();
   };

@@ -17,10 +17,10 @@ public:
     constexpr T operator++(int) noexcept { return value_++; }
     constexpr T operator--(int) noexcept { return value_--; }
 
-    [[nodiscard]] constexpr bool operator<=>(const Iterator& other) const noexcept = default;
+    [[nodiscard]] constexpr bool operator<=>(Iterator const& other) const noexcept = default;
 
     [[nodiscard]] constexpr   operator T() noexcept { return value_; }
-    [[nodiscard]] constexpr T operator-(const Iterator& other) const noexcept {
+    [[nodiscard]] constexpr T operator-(Iterator const& other) const noexcept {
       return value_ - other.value_;
     }
 
@@ -38,10 +38,10 @@ public:
     constexpr T operator++(int) noexcept { return value_--; }
     constexpr T operator--(int) noexcept { return value_++; }
 
-    [[nodiscard]] constexpr bool operator<=>(const ReverseIterator& other) const = default;
+    [[nodiscard]] constexpr bool operator<=>(ReverseIterator const& other) const = default;
 
     [[nodiscard]] constexpr   operator T() noexcept { return value_; }
-    [[nodiscard]] constexpr T operator-(const ReverseIterator& other) const noexcept {
+    [[nodiscard]] constexpr T operator-(ReverseIterator const& other) const noexcept {
       return value_ - other.value_;
     }
 

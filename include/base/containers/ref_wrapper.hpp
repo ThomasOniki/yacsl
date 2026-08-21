@@ -7,11 +7,11 @@ public:
   RefWrapper(T& value) noexcept : ptr_(value) {}
 
   T&       get() noexcept { return *ptr_; }
-  const T& get() const noexcept { return *ptr_; }
+  T const& get() const noexcept { return *ptr_; }
   T*       operator->() noexcept { return ptr_; }
-  const T* operator->() const noexcept { return ptr_; }
+  T const* operator->() const noexcept { return ptr_; }
   T&       operator*() noexcept { return *ptr_; }
-  const T& operator*() const noexcept { return *ptr_; }
+  T const& operator*() const noexcept { return *ptr_; }
 
 private:
   T* ptr_;

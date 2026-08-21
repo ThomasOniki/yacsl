@@ -35,10 +35,10 @@ int unix_flags(File::Flags flags) noexcept {
   return static_cast<int>(ret);
 }
 
-Result<OpenedFile, File::OpenError> open_file(const char* path, File::Flags flags) noexcept {
-  const bool seek_end = strip_file_open_flag(&flags, File::Flags::SeekEnd) &&
+Result<OpenedFile, File::OpenError> open_file(char const* path, File::Flags flags) noexcept {
+  bool const seek_end = strip_file_open_flag(&flags, File::Flags::SeekEnd) &&
                         (flags & File::Flags::Trunc) == File::Flags::None;
-  const int  handle   = ::open(path, unix_flags(flags), 0644);
+  int const  handle   = ::open(path, unix_flags(flags), 0644);
   if (handle == -1) [[unlikely]] {
     switch (errno) {
     case ENOENT:

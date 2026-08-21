@@ -44,7 +44,7 @@ private:
       pipe.handle_ = File::NIL_HANDLE;
     }
 
-    constexpr StdioInit(const char* path, File::Flags flags) noexcept
+    constexpr StdioInit(char const* path, File::Flags flags) noexcept
         : type_(TYPE_FILE), file_info_{.path = path, .flags = flags} {}
     constexpr StdioInit(StringView path, File::Flags flags) noexcept
         : type_(TYPE_FILE),
@@ -56,7 +56,7 @@ private:
 
     StdioType type_ = StdioType::Null;
     struct FileInfo {
-      alignas(16) const char* path = nullptr;
+      alignas(16) char const* path = nullptr;
       File::Flags flags            = File::Flags::None;
     };
     union {
@@ -72,11 +72,11 @@ private:
 public:
   class Input {
   public:
-    void write(Slice<const uchar> bytes) noexcept;
+    void write(Slice<uchar const> bytes) noexcept;
 
-    Input(const Input&)            = delete;
+    Input(Input const&)            = delete;
     Input(Input&&)                 = delete;
-    Input& operator=(const Input&) = delete;
+    Input& operator=(Input const&) = delete;
     Input& operator=(Input&&)      = delete;
     ~Input() noexcept              = default;
 
@@ -94,9 +94,9 @@ public:
 
   class Output {
   public:
-    Output(const Output&)            = delete;
+    Output(Output const&)            = delete;
     Output(Output&&)                 = delete;
-    Output& operator=(const Output&) = delete;
+    Output& operator=(Output const&) = delete;
     Output& operator=(Output&&)      = delete;
     ~Output() noexcept               = default;
 
@@ -118,9 +118,9 @@ public:
   Process() noexcept = default;
   ~Process() noexcept { wait(); }
 
-  Process(const Process&)            = delete;
+  Process(Process const&)            = delete;
   Process(Process&&)                 = delete;
-  Process& operator=(const Process&) = delete;
+  Process& operator=(Process const&) = delete;
   Process& operator=(Process&&)      = delete;
 
   enum class SpawnError : u8 {
@@ -133,13 +133,13 @@ public:
     Output::Init error;
   };
 
-  [[nodiscard]] Error<SpawnError> start(const char* const* argv, const Stdio& stdio) noexcept;
+  [[nodiscard]] Error<SpawnError> start(char const* const* argv, Stdio const& stdio) noexcept;
 
-  [[nodiscard]] Error<SpawnError> start(InitializerList<const char*> argv,
-                                        const Stdio&                 stdio) noexcept {
-    Vector<const char*, 6> cstrs;
+  [[nodiscard]] Error<SpawnError> start(InitializerList<char const*> argv,
+                                        Stdio const&                 stdio) noexcept {
+    Vector<char const*, 6> cstrs;
     cstrs.reserve(argv.size());
-    for (const char* str : argv) {
+    for (char const* str : argv) {
       cstrs.push_back(str);
     }
     cstrs.push_back(nullptr);
@@ -147,14 +147,14 @@ public:
   }
 
   [[nodiscard]] Error<SpawnError> start(InitializerList<StringView> argv,
-                                        const Stdio&                stdio) noexcept {
+                                        Stdio const&                stdio) noexcept {
     return start<InitializerList<StringView>>(argv, stdio);
   }
 
   template <RangeOf<StringView> Range>
-  [[nodiscard]] Error<SpawnError> start(const Range& argv, const Stdio& stdio) noexcept {
+  [[nodiscard]] Error<SpawnError> start(Range const& argv, Stdio const& stdio) noexcept {
     Vector<BasicString<char, 16>, 6> cstrs(argv);
-    Vector<const char*, 6>           cstr_ptrs;
+    Vector<char const*, 6>           cstr_ptrs;
     cstr_ptrs.reserve(cstrs.size() + 1);
     for (auto& cstr : cstrs) {
       cstr_ptrs.push_back(cstr.c_str());

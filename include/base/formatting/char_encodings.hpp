@@ -67,7 +67,7 @@ inline char* write_low_surrogate(BASE_LIFETIMEBOUND char* buf, char32_t high, ch
   static constexpr char32_t mask = 0b11'1111'1111;
   high &= mask;
   low &= mask;
-  const char32_t unicode = 0x10000 + ((high << 10) | low);
+  char32_t const unicode = 0x10000 + ((high << 10) | low);
   return write_char4(buf, unicode);
 }
 
@@ -160,7 +160,7 @@ template <Character C> usize real_string_len(BasicStringView<C, usize> str) {
     return str.size();
   }
   usize ret = 0;
-  for (const C chr : str) {
+  for (C const chr : str) {
     ret += char_len(chr);
   }
   return ret;
@@ -171,7 +171,7 @@ template <Character C> void write_string(char* buf, BasicStringView<C, usize> st
     copy(str.bytes(), reinterpret_cast<uchar*>(buf));
     return;
   }
-  for (const C chr : str) {
+  for (C const chr : str) {
     buf = write_char(buf, chr);
   }
 }
@@ -181,7 +181,7 @@ template <Character C> void write_string(String& buf, BasicStringView<C, usize> 
     copy(str.bytes(), reinterpret_cast<uchar*>(buf.grow(str.size())));
     return;
   }
-  for (const C chr : str) {
+  for (C const chr : str) {
     write_char(buf, chr);
   }
 }

@@ -27,7 +27,7 @@ public:
       : value_(base::forward<Arg>(other)) {}
 
   [[nodiscard]] constexpr T&       get() noexcept BASE_LIFETIMEBOUND { return value_; }
-  [[nodiscard]] constexpr const T& get() const noexcept BASE_LIFETIMEBOUND { return value_; }
+  [[nodiscard]] constexpr T const& get() const noexcept BASE_LIFETIMEBOUND { return value_; }
 
 private:
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
@@ -54,7 +54,7 @@ public:
     return Leaf<I>::get();
   }
   template <usize I>
-  [[nodiscard]] constexpr const NthType<I, Ts...>& get() const noexcept BASE_LIFETIMEBOUND {
+  [[nodiscard]] constexpr NthType<I, Ts...> const& get() const noexcept BASE_LIFETIMEBOUND {
     return Leaf<I>::get();
   }
 };

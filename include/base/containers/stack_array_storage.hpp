@@ -27,7 +27,7 @@ public:
       base::construct_at(data() + i);
     }
   }
-  constexpr void construct_all(const T& value) {
+  constexpr void construct_all(T const& value) {
     for (usize i = 0; i < N; ++i) {
       base::construct_at(data() + i, value);
     }
@@ -42,53 +42,53 @@ public:
   [[nodiscard]] constexpr T* data() noexcept BASE_LIFETIMEBOUND {
     return reinterpret_cast<T*>(data_.data());
   }
-  [[nodiscard]] constexpr const T* data() const noexcept BASE_LIFETIMEBOUND { return data(); }
+  [[nodiscard]] constexpr T const* data() const noexcept BASE_LIFETIMEBOUND { return data(); }
 
   [[nodiscard]] constexpr SizeT size() const noexcept { return static_cast<SizeT>(N); }
 
   [[nodiscard]] constexpr T& operator[](SizeT index) noexcept BASE_LIFETIMEBOUND {
     return data()[static_cast<usize>(index)];
   }
-  [[nodiscard]] constexpr const T& operator[](SizeT index) const noexcept BASE_LIFETIMEBOUND {
+  [[nodiscard]] constexpr T const& operator[](SizeT index) const noexcept BASE_LIFETIMEBOUND {
     return data()[static_cast<usize>(index)];
   }
 
   [[nodiscard]] constexpr Slice<T, SizeT> slice() noexcept BASE_LIFETIMEBOUND {
     return {data_, static_cast<SizeT>(N)};
   }
-  [[nodiscard]] constexpr Slice<const T, SizeT> slice() const noexcept BASE_LIFETIMEBOUND {
+  [[nodiscard]] constexpr Slice<T const, SizeT> slice() const noexcept BASE_LIFETIMEBOUND {
     return {data_, static_cast<SizeT>(N)};
   }
   [[nodiscard]] constexpr Slice<uchar, SizeT> bytes() noexcept BASE_LIFETIMEBOUND {
     return {reinterpret_cast<uchar*>(data_), static_cast<SizeT>(N * sizeof(T))};
   }
-  [[nodiscard]] constexpr Slice<const uchar, SizeT> bytes() const noexcept BASE_LIFETIMEBOUND {
-    return {reinterpret_cast<const uchar*>(data_), static_cast<SizeT>(N * sizeof(T))};
+  [[nodiscard]] constexpr Slice<uchar const, SizeT> bytes() const noexcept BASE_LIFETIMEBOUND {
+    return {reinterpret_cast<uchar const*>(data_), static_cast<SizeT>(N * sizeof(T))};
   }
 
   [[nodiscard]] constexpr IntegerRange<SizeT> indices() const noexcept { return {0, N}; }
 
   [[nodiscard]] constexpr T*       begin() noexcept BASE_LIFETIMEBOUND { return data(); }
   [[nodiscard]] constexpr T*       end() noexcept BASE_LIFETIMEBOUND { return data() + N; }
-  [[nodiscard]] constexpr const T* begin() const noexcept BASE_LIFETIMEBOUND { return data(); }
-  [[nodiscard]] constexpr const T* end() const noexcept BASE_LIFETIMEBOUND { return data() + N; }
-  [[nodiscard]] constexpr const T* cbegin() const noexcept BASE_LIFETIMEBOUND { return data(); }
-  [[nodiscard]] constexpr const T* cend() const noexcept BASE_LIFETIMEBOUND { return data() + N; }
+  [[nodiscard]] constexpr T const* begin() const noexcept BASE_LIFETIMEBOUND { return data(); }
+  [[nodiscard]] constexpr T const* end() const noexcept BASE_LIFETIMEBOUND { return data() + N; }
+  [[nodiscard]] constexpr T const* cbegin() const noexcept BASE_LIFETIMEBOUND { return data(); }
+  [[nodiscard]] constexpr T const* cend() const noexcept BASE_LIFETIMEBOUND { return data() + N; }
 
   [[nodiscard]] constexpr ReverseIterator<T*> rbegin() noexcept BASE_LIFETIMEBOUND {
     return data() + N;
   }
   [[nodiscard]] constexpr ReverseIterator<T*> rend() noexcept BASE_LIFETIMEBOUND { return data(); }
-  [[nodiscard]] constexpr ReverseIterator<const T*> rbegin() const noexcept BASE_LIFETIMEBOUND {
+  [[nodiscard]] constexpr ReverseIterator<T const*> rbegin() const noexcept BASE_LIFETIMEBOUND {
     return data() + N;
   }
-  [[nodiscard]] constexpr ReverseIterator<const T*> rend() const noexcept BASE_LIFETIMEBOUND {
+  [[nodiscard]] constexpr ReverseIterator<T const*> rend() const noexcept BASE_LIFETIMEBOUND {
     return data();
   }
-  [[nodiscard]] constexpr ReverseIterator<const T*> crbegin() const noexcept BASE_LIFETIMEBOUND {
+  [[nodiscard]] constexpr ReverseIterator<T const*> crbegin() const noexcept BASE_LIFETIMEBOUND {
     return data() + N;
   }
-  [[nodiscard]] constexpr ReverseIterator<const T*> crend() const noexcept BASE_LIFETIMEBOUND {
+  [[nodiscard]] constexpr ReverseIterator<T const*> crend() const noexcept BASE_LIFETIMEBOUND {
     return data();
   }
 

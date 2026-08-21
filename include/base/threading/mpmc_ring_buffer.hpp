@@ -22,9 +22,9 @@ public:
 
   ~MPMCRingBuffer() noexcept = default;
 
-  MPMCRingBuffer(const MPMCRingBuffer&)            = delete;
+  MPMCRingBuffer(MPMCRingBuffer const&)            = delete;
   MPMCRingBuffer(MPMCRingBuffer&&)                 = delete;
-  MPMCRingBuffer& operator=(const MPMCRingBuffer&) = delete;
+  MPMCRingBuffer& operator=(MPMCRingBuffer const&) = delete;
   MPMCRingBuffer& operator=(MPMCRingBuffer&&)      = delete;
 
   template <typename... Args> T& emplace(Args&&... args) {
@@ -39,7 +39,7 @@ public:
   }
 
   T& push(T&& value) { return emplace(base::move(value)); }
-  T& push(const T& value) { return emplace(value); }
+  T& push(T const& value) { return emplace(value); }
 
   T pop() noexcept {
     usize read  = read_.fetch_add(1, MemoryOrder::Relaxed);
@@ -83,13 +83,13 @@ public:
   }
 
   bool try_push(T&& value) { return try_emplace(base::move(value)); }
-  bool try_push(const T& value) { return try_emplace(value); }
+  bool try_push(T const& value) { return try_emplace(value); }
 
   Option<T> try_pop() noexcept {
     for (;;) {
       usize       read  = read_.load(MemoryOrder::Relaxed);
-      const usize index = read % N;
-      const usize diff  = slots_[index].epoch.load(MemoryOrder::Acquire) - (read + 1);
+      usize const index = read % N;
+      usize const diff  = slots_[index].epoch.load(MemoryOrder::Acquire) - (read + 1);
       if (diff == 0) {
         if (read_.compare_exchange_weak(read, read + 1, MemoryOrder::Relaxed,
                                         MemoryOrder::Relaxed)) {

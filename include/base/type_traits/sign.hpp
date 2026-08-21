@@ -22,11 +22,11 @@ template <typename T> struct MakeSignedImpl {
   using Type = FirstOfSize<sizeof(T), signed char, short, int, long, long long, i128>::Type;
 };
 
-template <typename T> struct MakeUnsignedImpl<const T> {
-  using Type = const MakeUnsignedImpl<T>::Type;
+template <typename T> struct MakeUnsignedImpl<T const> {
+  using Type = MakeUnsignedImpl<T>::Type const;
 };
-template <typename T> struct MakeSignedImpl<const T> {
-  using Type = const MakeSignedImpl<T>::Type;
+template <typename T> struct MakeSignedImpl<T const> {
+  using Type = MakeSignedImpl<T>::Type const;
 };
 
 // if sizeof(int) == sizeof(long), MakeUnsigned<long> will be unsigned int unless you explicitely

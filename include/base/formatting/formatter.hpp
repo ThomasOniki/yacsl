@@ -22,8 +22,8 @@ namespace base {
 
 template <typename T> class Formatter {
 public:
-  constexpr const char* parse(const char* fmt) noexcept { return fmt + 2; }
-  void                  format(String& buf, const T& value) const noexcept {
+  constexpr char const* parse(char const* fmt) noexcept { return fmt + 2; }
+  void                  format(String& buf, T const& value) const noexcept {
     buf += TYPE_STRING<T>;
     buf += " at ";
     itoa(buf, reinterpret_cast<uptr>(&value), "0123456789abcdef");
@@ -32,7 +32,7 @@ public:
 
 template <Integral T> class Formatter<T> {
 public:
-  constexpr const char* parse(const char* fmt) noexcept {
+  constexpr char const* parse(char const* fmt) noexcept {
     FormatStringParser parser(fmt);
     fill_              = parser.check_fill();
     align_             = parser.check_align(FormatStringParser::Align::Right);
@@ -60,7 +60,7 @@ public:
   }
 
   void format(String& buf, T value) const noexcept {
-    const PaddingOptions opts = {
+    PaddingOptions const opts = {
         .width = width_,
         .fill  = fill_,
         .align = align_,
@@ -184,7 +184,7 @@ private:
 
 template <> class Formatter<bool> {
 public:
-  constexpr const char* parse(const char* fmt) noexcept {
+  constexpr char const* parse(char const* fmt) noexcept {
     FormatStringParser parser(fmt);
     fill_  = parser.check_fill();
     align_ = parser.check_align(FormatStringParser::Align::Right);
@@ -197,7 +197,7 @@ public:
   }
 
   void format(String& buf, bool value) const noexcept {
-    const PaddingOptions opts{
+    PaddingOptions const opts{
         .width = width_,
         .fill  = fill_,
         .align = align_,
@@ -223,7 +223,7 @@ private:
 
 template <FloatingPoint T> class Formatter<T> {
 public:
-  constexpr const char* parse(const char* fmt) {
+  constexpr char const* parse(char const* fmt) {
     FormatStringParser parser(fmt);
     fill_  = parser.check_fill();
     align_ = parser.check_align(FormatStringParser::Align::Right);
@@ -260,7 +260,7 @@ private:
 
 template <typename T> class Formatter<T*> {
 public:
-  constexpr const char* parse(const char* fmt) noexcept {
+  constexpr char const* parse(char const* fmt) noexcept {
     FormatStringParser parser(fmt);
     fill_  = parser.check_fill();
     align_ = parser.check_align(FormatStringParser::Align::Right);
@@ -268,8 +268,8 @@ public:
     return parser.end_parse();
   }
 
-  void format(String& buf, const T* ptr) const noexcept {
-    const PaddingOptions opts{
+  void format(String& buf, T const* ptr) const noexcept {
+    PaddingOptions const opts{
         .width = width_,
         .fill  = fill_,
         .align = align_,
@@ -285,7 +285,7 @@ private:
 
 template <Character Char, Integral SizeT> class Formatter<BasicStringView<Char, SizeT>> {
 public:
-  constexpr const char* parse(const char* fmt) noexcept {
+  constexpr char const* parse(char const* fmt) noexcept {
     FormatStringParser parser(fmt);
     fill_  = parser.check_fill();
     align_ = parser.check_align(FormatStringParser::Align::Left);
@@ -298,7 +298,7 @@ public:
   }
 
   void format(String& buf, BasicStringView<Char, SizeT> str) const noexcept {
-    const PaddingOptions opts{.width = width_, .fill = fill_, .align = align_};
+    PaddingOptions const opts{.width = width_, .fill = fill_, .align = align_};
     if (type_ == Type::Normal) [[likely]] {
       pad_string(buf, BasicStringView<Char>(str.data(), static_cast<usize>(str.size())), opts);
     } else {
@@ -321,7 +321,7 @@ private:
 template <Character Char, Integral SizeT>
 class Formatter<Slice<Char, SizeT>> : Formatter<BasicStringView<Char, SizeT>> {
 public:
-  constexpr const char* parse(const char* fmt) noexcept {
+  constexpr char const* parse(char const* fmt) noexcept {
     return Formatter<BasicStringView<Char, SizeT>>::parse(fmt);
   }
   void format(String& buf, Slice<Char, SizeT> str) const noexcept {
@@ -331,7 +331,7 @@ public:
 
 template <Character Char> class Formatter<Char*> {
 public:
-  constexpr const char* parse(const char* fmt) noexcept {
+  constexpr char const* parse(char const* fmt) noexcept {
     FormatStringParser parser(fmt);
     fill_  = parser.check_fill();
     align_ = parser.check_align(FormatStringParser::Align::Left);
@@ -344,8 +344,8 @@ public:
     return parser.end_parse();
   }
 
-  void format(String& buf, const Char* str) const noexcept {
-    const PaddingOptions opts{.width = width_, .fill = fill_, .align = align_};
+  void format(String& buf, Char const* str) const noexcept {
+    PaddingOptions const opts{.width = width_, .fill = fill_, .align = align_};
     if (type_ == Type::CString) [[likely]] {
       pad_string(buf, BasicStringView<Char>(str), opts);
     } else if (type_ == Type::Debug) {
@@ -371,32 +371,32 @@ private:
 template <Character Char, usize N, AllocatorLike Allocator, Integral SizeT>
 class Formatter<BasicString<Char, N, Allocator, SizeT>> : Formatter<BasicStringView<Char>> {
 public:
-  constexpr const char* parse(const char* fmt) noexcept {
+  constexpr char const* parse(char const* fmt) noexcept {
     return Formatter<BasicStringView<Char>>::parse(fmt);
   }
-  void format(String& buf, const BasicString<Char, N, Allocator, SizeT>& str) const noexcept {
+  void format(String& buf, BasicString<Char, N, Allocator, SizeT> const& str) const noexcept {
     return Formatter<BasicStringView<Char>>::format(buf, str.view());
   }
 };
 
 template <Character Char, usize N> class Formatter<Char[N]> : Formatter<BasicStringView<Char>> {
 public:
-  constexpr const char* parse(const char* fmt) noexcept {
+  constexpr char const* parse(char const* fmt) noexcept {
     return Formatter<BasicStringView<Char>>::parse(fmt);
   }
-  void format(String& buf, const Char (&str)[N]) const noexcept {
+  void format(String& buf, Char const (&str)[N]) const noexcept {
     return Formatter<BasicStringView<Char>>::format(
-        buf, BasicStringView(static_cast<const Char*>(str), N - 1));
+        buf, BasicStringView(static_cast<Char const*>(str), N - 1));
   }
 };
 
 template <Character Char, usize N>
-class Formatter<const Char[N]> : Formatter<BasicStringView<Char>> {
+class Formatter<Char const[N]> : Formatter<BasicStringView<Char>> {
 public:
-  constexpr const char* parse(const char* fmt) noexcept {
+  constexpr char const* parse(char const* fmt) noexcept {
     return Formatter<BasicStringView<Char>>::parse(fmt);
   }
-  void format(String& buf, const Char (&str)[N]) const noexcept {
+  void format(String& buf, Char const (&str)[N]) const noexcept {
     return Formatter<BasicStringView<Char>>::format(buf, BasicStringView(str, N - 1));
   }
 };
@@ -404,9 +404,9 @@ public:
 template <RangeLike T>
 class Formatter<T> : Formatter<RemoveCVRef<decltype(*declval<T>().begin())>> {
 public:
-  constexpr const char* parse(const char* fmt) noexcept { return Base::parse(fmt); }
+  constexpr char const* parse(char const* fmt) noexcept { return Base::parse(fmt); }
 
-  void format(String& buf, const T& range) const noexcept {
+  void format(String& buf, T const& range) const noexcept {
     buf += '[';
     auto iter = range.begin();
     auto end  = range.end();
@@ -428,7 +428,7 @@ private:
 
 template <Enum T> class Formatter<T> {
 public:
-  constexpr const char* parse(const char* fmt) noexcept {
+  constexpr char const* parse(char const* fmt) noexcept {
     FormatStringParser parser(fmt);
     fill_  = parser.check_fill();
     align_ = parser.check_align(FormatStringParser::Align::Left);
@@ -437,9 +437,9 @@ public:
   }
 
   void format(String& buf, T value) const noexcept {
-    const auto           scalar = static_cast<UnderlyingType>(value);
-    const auto           u_val  = static_cast<MakeUnsigned<UnderlyingType>>(value);
-    const PaddingOptions opts   = {
+    auto const           scalar = static_cast<UnderlyingType>(value);
+    auto const           u_val  = static_cast<MakeUnsigned<UnderlyingType>>(value);
+    PaddingOptions const opts   = {
         .width = width_,
         .fill  = fill_,
         .align = align_,
@@ -478,7 +478,7 @@ private:
   static constexpr usize TABLE_ENTRY_OFFSET_FROM_BEGIN = []() -> usize {
     constexpr StringView pretty  = table_entry_pretty<static_cast<T>(0)>();
     constexpr StringView to_find = "Value = ";
-    for (const char* it = pretty.begin(); it < pretty.end() - to_find.size(); ++it) {
+    for (char const* it = pretty.begin(); it < pretty.end() - to_find.size(); ++it) {
       for (usize i = 0;; ++i) {
         if (i == to_find.size()) {
           return static_cast<usize>(it - pretty.begin()) + i - "_pretty"_sv.size();

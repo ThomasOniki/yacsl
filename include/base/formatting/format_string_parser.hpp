@@ -20,7 +20,7 @@ public:
     Plus,
     Space,
   };
-  explicit constexpr FormatStringParser(BASE_LIFETIMEBOUND const char* fmt);
+  explicit constexpr FormatStringParser(BASE_LIFETIMEBOUND char const* fmt);
   constexpr bool                skip(char chr) noexcept;
   [[nodiscard]] constexpr char  check_fill();
   [[nodiscard]] constexpr Align check_align(Align default_align);
@@ -31,15 +31,15 @@ public:
 
   [[nodiscard]] constexpr char check_option(char default_option, StringView possibilities);
 
-  [[nodiscard]] constexpr const char* end_parse();
+  [[nodiscard]] constexpr char const* end_parse();
 
   static void log_error_no_deps(StringView msg) noexcept;
 
 private:
-  alignas(16) const char* fmt_ = nullptr;
+  alignas(16) char const* fmt_ = nullptr;
 };
 
-constexpr FormatStringParser::FormatStringParser(const char* fmt) : fmt_(fmt) {
+constexpr FormatStringParser::FormatStringParser(char const* fmt) : fmt_(fmt) {
   if (*fmt_ != '{') {
     log_error_no_deps("FormatStringParser called on a string that doesn't start with '{'.");
   }
@@ -98,7 +98,7 @@ constexpr FormatStringParser::Sign FormatStringParser::check_sign() {
 }
 
 constexpr u32 FormatStringParser::check_width() {
-  const char* begin = fmt_;
+  char const* begin = fmt_;
   fmt_              = num_end(fmt_);
   return atoi<u32>(begin, fmt_);
 }
@@ -112,7 +112,7 @@ constexpr u32 FormatStringParser::check_precision() {
 }
 
 constexpr char FormatStringParser::check_option(char default_option, StringView possibilities) {
-  for (const char possibility : possibilities) {
+  for (char const possibility : possibilities) {
     if (skip(possibility)) {
       return possibility;
     }
@@ -120,7 +120,7 @@ constexpr char FormatStringParser::check_option(char default_option, StringView 
   return default_option;
 }
 
-constexpr const char* FormatStringParser::end_parse() {
+constexpr char const* FormatStringParser::end_parse() {
   if (*fmt_ == '\0') {
     log_error_no_deps("Expected '}' before '\\0' in format string.");
   }
