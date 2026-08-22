@@ -205,6 +205,13 @@ public:
   [[nodiscard]] constexpr Slice<Char const, SizeT> slice() const noexcept BASE_LIFETIMEBOUND {
     return {begin_, end_};
   }
+  [[nodiscard]] constexpr ReversedSlice<Char, SizeT> reversed_slice() noexcept BASE_LIFETIMEBOUND {
+    return {begin_, end_};
+  }
+  [[nodiscard]] constexpr ReversedSlice<Char const, SizeT>
+  reversed_slice() const noexcept BASE_LIFETIMEBOUND {
+    return {begin_, end_};
+  }
   [[nodiscard]] constexpr Slice<uchar, SizeT> bytes() noexcept BASE_LIFETIMEBOUND {
     return {reinterpret_cast<uchar*>(begin_), static_cast<SizeT>(size() * sizeof(Char))};
   }
@@ -219,8 +226,6 @@ public:
   [[nodiscard]] constexpr Char*       end() noexcept BASE_LIFETIMEBOUND { return end_; }
   [[nodiscard]] constexpr Char const* begin() const noexcept BASE_LIFETIMEBOUND { return begin_; }
   [[nodiscard]] constexpr Char const* end() const noexcept BASE_LIFETIMEBOUND { return end_; }
-  [[nodiscard]] constexpr Char const* cbegin() const noexcept BASE_LIFETIMEBOUND { return begin_; }
-  [[nodiscard]] constexpr Char const* cend() const noexcept BASE_LIFETIMEBOUND { return end_; }
 
 private:
   using FixedBufferMember<Char, N, SizeT>::fixed_buffer_;

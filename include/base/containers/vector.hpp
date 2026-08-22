@@ -6,7 +6,6 @@
 #include "base/memory/lifetimes.hpp"
 #include "base/ranges/initializer_list.hpp"
 #include "base/ranges/integer_range.hpp"
-#include "base/ranges/reverse_iterator.hpp"
 #include "base/ranges/slice.hpp"
 #include "base/type_traits/allocator.hpp"
 #include "base/type_traits/categories.hpp"
@@ -80,6 +79,13 @@ public:
   [[nodiscard]] constexpr Slice<T const, SizeT> slice() const noexcept BASE_LIFETIMEBOUND {
     return {data_, size_};
   }
+  [[nodiscard]] constexpr ReversedSlice<T, SizeT> reversed_slice() noexcept BASE_LIFETIMEBOUND {
+    return {data_, size_};
+  }
+  [[nodiscard]] constexpr ReversedSlice<T const, SizeT>
+  reversed_slice() const noexcept BASE_LIFETIMEBOUND {
+    return {data_, size_};
+  }
   [[nodiscard]] constexpr Slice<uchar, SizeT> bytes() noexcept BASE_LIFETIMEBOUND {
     return {reinterpret_cast<uchar*>(data_), static_cast<SizeT>(size_ * sizeof(T))};
   }
@@ -100,29 +106,6 @@ public:
   [[nodiscard]] constexpr T const* begin() const noexcept BASE_LIFETIMEBOUND { return data_; }
   [[nodiscard]] constexpr T*       end() noexcept BASE_LIFETIMEBOUND { return data_ + size_; }
   [[nodiscard]] constexpr T const* end() const noexcept BASE_LIFETIMEBOUND { return data_ + size_; }
-
-  [[nodiscard]] constexpr ReverseIterator<T*> rbegin() noexcept BASE_LIFETIMEBOUND {
-    return data_ + size_;
-  }
-  [[nodiscard]] constexpr ReverseIterator<T const*> rbegin() const noexcept BASE_LIFETIMEBOUND {
-    return data_ + size_;
-  }
-  [[nodiscard]] constexpr ReverseIterator<T*> rend() noexcept BASE_LIFETIMEBOUND { return data_; }
-  [[nodiscard]] constexpr ReverseIterator<T const*> rend() const noexcept BASE_LIFETIMEBOUND {
-    return data_;
-  }
-
-  [[nodiscard]] constexpr T const* cbegin() const noexcept BASE_LIFETIMEBOUND { return data_; }
-  [[nodiscard]] constexpr T const* cend() const noexcept BASE_LIFETIMEBOUND {
-    return data_ + size_;
-  }
-
-  [[nodiscard]] constexpr ReverseIterator<T const*> crbegin() const noexcept BASE_LIFETIMEBOUND {
-    return data_ + size_;
-  }
-  [[nodiscard]] constexpr ReverseIterator<T const*> crend() const noexcept BASE_LIFETIMEBOUND {
-    return data_;
-  }
 
 private:
   void maybe_alloc_size();          // if size_ > N
