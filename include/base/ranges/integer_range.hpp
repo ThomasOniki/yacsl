@@ -4,7 +4,7 @@
 
 namespace base {
 
-template <Integral T> class IntegerRange {
+template <Integral T, bool Reversed = false> class IntegerRange {
 public:
   class Iterator {
   public:
@@ -12,10 +12,10 @@ public:
 
     [[nodiscard]] constexpr T operator*() const noexcept { return value_; }
 
-    constexpr T operator++() noexcept { return ++value_; }
-    constexpr T operator--() noexcept { return --value_; }
-    constexpr T operator++(int) noexcept { return value_++; }
-    constexpr T operator--(int) noexcept { return value_--; }
+    constexpr T operator++() noexcept { return Reversed ? --value_ : ++value_; }
+    constexpr T operator--() noexcept { return Reversed ? ++value_ : --value_; }
+    constexpr T operator++(int) noexcept { return Reversed ? value_-- : value_++; }
+    constexpr T operator--(int) noexcept { return Reversed ? value_++ : value_--; }
 
     [[nodiscard]] constexpr bool operator<=>(Iterator const& other) const noexcept = default;
 
@@ -27,41 +27,19 @@ public:
   private:
     T value_;
   };
-  class ReverseIterator {
-  public:
-    explicit constexpr ReverseIterator(T value) noexcept : value_(value) {}
-
-    [[nodiscard]] constexpr T operator*() const noexcept { return value_; }
-
-    constexpr T operator++() noexcept { return --value_; }
-    constexpr T operator--() noexcept { return ++value_; }
-    constexpr T operator++(int) noexcept { return value_--; }
-    constexpr T operator--(int) noexcept { return value_++; }
-
-    [[nodiscard]] constexpr bool operator<=>(ReverseIterator const& other) const = default;
-
-    [[nodiscard]] constexpr   operator T() noexcept { return value_; }
-    [[nodiscard]] constexpr T operator-(ReverseIterator const& other) const noexcept {
-      return value_ - other.value_;
-    }
-
-  private:
-    T value_;
-  };
 
   constexpr IntegerRange() noexcept = default;
   constexpr IntegerRange(T begin, T end) noexcept : begin_(begin), end_(end) {}
 
-  [[nodiscard]] constexpr auto begin() const noexcept { return Iterator(begin_); }
-  [[nodiscard]] constexpr auto end() const noexcept { return Iterator(end_); }
-  [[nodiscard]] constexpr auto cbegin() const noexcept { return Iterator(begin_); }
-  [[nodiscard]] constexpr auto cend() const noexcept { return Iterator(end_); }
-  [[nodiscard]] constexpr auto rbegin() const noexcept { return ReverseIterator(end_); }
-  [[nodiscard]] constexpr auto rend() const noexcept { return ReverseIterator(begin_); }
-  [[nodiscard]] constexpr auto crbegin() const noexcept { return ReverseIterator(end_); }
-  [[nodiscard]] constexpr auto crend() const noexcept { return ReverseIterator(begin_); }
+  [[nodiscard]] constexpr Iterator begin() const noexcept { return begin_; }
+  [[nodiscard]] constexpr Iterator end() const noexcept { return end_; }
 
-  [[nodiscard]] constexpr IntegerRange reversed_range() const noexcept { return {end_, begin_}; }
+  [[nodiscard]] constexpr IntegerRange<T, true> range() const noexcept {
+    return Reversed ? IntegerRange<T, false>{end_ - 1, begin_ + 1} : *this;
+  }
+  [[nodiscard]] constexpr IntegerRange<T, true> reversed_range() const noexcept {
+    return Reversed ? *this : IntegerRange<T, true>{end_ - 1, begin_ + 1};
+  }
 
 private:
   T begin_ = 0;

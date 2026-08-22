@@ -2,7 +2,6 @@
 
 #include <string.h>
 
-#include "base/ranges/reverse_iterator.hpp"
 #include "base/ranges/slice.hpp"
 #include "base/type_traits/categories.hpp"
 #include "base/type_traits/comparaison.hpp"
@@ -33,6 +32,9 @@ public:
       : data_(begin), size_(static_cast<SizeT>(end - begin)) {}
 
   [[nodiscard]] constexpr Slice<T const, SizeT> slice() const noexcept { return {data_, size_}; }
+  [[nodiscard]] constexpr ReversedSlice<T const, SizeT> reversed_slice() const noexcept {
+    return {data_, size_};
+  }
   [[nodiscard]] constexpr Slice<uchar const, SizeT> bytes() const noexcept {
     return {reinterpret_cast<uchar const*>(data_), static_cast<SizeT>(size_ * sizeof(T))};
   }
@@ -47,17 +49,6 @@ public:
 
   [[nodiscard]] constexpr T const* begin() const noexcept { return data_; }
   [[nodiscard]] constexpr T const* end() const noexcept { return data_ + size_; }
-  [[nodiscard]] constexpr T const* cbegin() const noexcept { return data_; }
-  [[nodiscard]] constexpr T const* cend() const noexcept { return data_ + size_; }
-
-  [[nodiscard]] constexpr ReverseIterator<T const*> rbegin() const noexcept {
-    return data_ + size_;
-  }
-  [[nodiscard]] constexpr ReverseIterator<T const*> rend() const noexcept { return data_; }
-  [[nodiscard]] constexpr ReverseIterator<T const*> crbegin() const noexcept {
-    return data_ + size_;
-  }
-  [[nodiscard]] constexpr ReverseIterator<T const*> crend() const noexcept { return data_; }
 
   [[nodiscard]] constexpr bool operator==(BasicStringView other) const noexcept {
     if (size_ != other.size_) {

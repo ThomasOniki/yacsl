@@ -3,7 +3,6 @@
 #include "base/attributes.hpp"
 #include "base/containers/stack_array.hpp"
 #include "base/memory/lifetimes.hpp"
-#include "base/ranges/reverse_iterator.hpp"
 #include "base/ranges/string_view.hpp"
 #include "base/type_traits/categories.hpp"
 #include "base/utilities/type_aliases.hpp"
@@ -46,6 +45,13 @@ public:
   [[nodiscard]] constexpr Slice<C const, SizeT> slice() const noexcept BASE_LIFETIMEBOUND {
     return {data_.data(), static_cast<SizeT>(N)};
   }
+  [[nodiscard]] constexpr ReversedSlice<C, SizeT> reversed_slice() noexcept BASE_LIFETIMEBOUND {
+    return {data_.data(), static_cast<SizeT>(N)};
+  }
+  [[nodiscard]] constexpr ReversedSlice<C const, SizeT>
+  reversed_slice() const noexcept BASE_LIFETIMEBOUND {
+    return {data_.data(), static_cast<SizeT>(N)};
+  }
   [[nodiscard]] constexpr Slice<uchar, SizeT> bytes() noexcept BASE_LIFETIMEBOUND {
     return {reinterpret_cast<uchar*>(data_), static_cast<SizeT>(N * sizeof(char))};
   }
@@ -59,30 +65,6 @@ public:
     return data_.begin();
   }
   [[nodiscard]] constexpr C const* end() const noexcept BASE_LIFETIMEBOUND { return data_.end(); }
-  [[nodiscard]] constexpr C const* cbegin() const noexcept BASE_LIFETIMEBOUND {
-    return data_.begin();
-  }
-  [[nodiscard]] constexpr C const* cend() const noexcept BASE_LIFETIMEBOUND { return data_.end(); }
-
-  [[nodiscard]] constexpr ReverseIterator<C*> rbegin() noexcept BASE_LIFETIMEBOUND {
-    return data_.end();
-  }
-  [[nodiscard]] constexpr ReverseIterator<C*> rend() noexcept BASE_LIFETIMEBOUND {
-    return data_.begin();
-  }
-  [[nodiscard]] constexpr ReverseIterator<C const*> rbegin() const noexcept BASE_LIFETIMEBOUND {
-    return data_.end();
-  }
-  [[nodiscard]] constexpr ReverseIterator<C const*> rend() const noexcept BASE_LIFETIMEBOUND {
-    return data_.begin();
-  }
-
-  [[nodiscard]] constexpr ReverseIterator<C const*> crbegin() const noexcept BASE_LIFETIMEBOUND {
-    return data_.end();
-  }
-  [[nodiscard]] constexpr ReverseIterator<C const*> crend() const noexcept BASE_LIFETIMEBOUND {
-    return data_.begin();
-  }
 
 public:
   StackArray<C, N, SizeT> data_ = {'\0'};
@@ -124,26 +106,6 @@ public:
   [[nodiscard]] constexpr C*       end() noexcept BASE_LIFETIMEBOUND { return &char_; }
   [[nodiscard]] constexpr C const* begin() const noexcept BASE_LIFETIMEBOUND { return &char_; }
   [[nodiscard]] constexpr C const* end() const noexcept BASE_LIFETIMEBOUND { return &char_; }
-  [[nodiscard]] constexpr C const* cbegin() const noexcept BASE_LIFETIMEBOUND { return &char_; }
-  [[nodiscard]] constexpr C const* cend() const noexcept BASE_LIFETIMEBOUND { return &char_; }
-
-  [[nodiscard]] constexpr ReverseIterator<C*> rbegin() noexcept BASE_LIFETIMEBOUND {
-    return &char_;
-  }
-  [[nodiscard]] constexpr ReverseIterator<C*> rend() noexcept BASE_LIFETIMEBOUND { return &char_; }
-  [[nodiscard]] constexpr ReverseIterator<C const*> rbegin() const noexcept BASE_LIFETIMEBOUND {
-    return &char_;
-  }
-  [[nodiscard]] constexpr ReverseIterator<C const*> rend() const noexcept BASE_LIFETIMEBOUND {
-    return &char_;
-  }
-
-  [[nodiscard]] constexpr ReverseIterator<C const*> crbegin() const noexcept BASE_LIFETIMEBOUND {
-    return &char_;
-  }
-  [[nodiscard]] constexpr ReverseIterator<C const*> crend() const noexcept BASE_LIFETIMEBOUND {
-    return &char_;
-  }
 
   C char_ = '\0';
 };

@@ -4,7 +4,6 @@
 #include "base/containers/structured_bindings.hpp"
 #include "base/metaprogramming/type_manip.hpp"
 #include "base/ranges/integer_range.hpp"
-#include "base/ranges/reverse_iterator.hpp"
 #include "base/ranges/slice.hpp"
 #include "base/type_traits/categories.hpp"
 #include "base/type_traits/limits.hpp"
@@ -38,6 +37,13 @@ public:
   [[nodiscard]] constexpr Slice<T const, SizeT> slice() const noexcept BASE_LIFETIMEBOUND {
     return {data_, static_cast<SizeT>(N)};
   }
+  [[nodiscard]] constexpr ReversedSlice<T, SizeT> reversed_slice() noexcept BASE_LIFETIMEBOUND {
+    return {data_, static_cast<SizeT>(N)};
+  }
+  [[nodiscard]] constexpr ReversedSlice<T const, SizeT>
+  reversed_slice() const noexcept BASE_LIFETIMEBOUND {
+    return {data_, static_cast<SizeT>(N)};
+  }
   [[nodiscard]] constexpr Slice<uchar, SizeT> bytes() noexcept BASE_LIFETIMEBOUND {
     return {reinterpret_cast<uchar*>(data_), static_cast<SizeT>(N * sizeof(T))};
   }
@@ -56,23 +62,6 @@ public:
   [[nodiscard]] constexpr T*       end() noexcept BASE_LIFETIMEBOUND { return data_ + N; }
   [[nodiscard]] constexpr T const* begin() const noexcept BASE_LIFETIMEBOUND { return data_; }
   [[nodiscard]] constexpr T const* end() const noexcept BASE_LIFETIMEBOUND { return data_ + N; }
-  [[nodiscard]] constexpr T const* cbegin() const noexcept BASE_LIFETIMEBOUND { return data_; }
-  [[nodiscard]] constexpr T const* cend() const noexcept BASE_LIFETIMEBOUND { return data_ + N; }
-
-  [[nodiscard]] constexpr ReverseIterator<T*> rbegin() noexcept BASE_LIFETIMEBOUND { data_ + N; }
-  [[nodiscard]] constexpr ReverseIterator<T*> rend() noexcept BASE_LIFETIMEBOUND { return data_; }
-  [[nodiscard]] constexpr ReverseIterator<T const*> rbegin() const noexcept BASE_LIFETIMEBOUND {
-    return data_ + N;
-  }
-  [[nodiscard]] constexpr ReverseIterator<T const*> rend() const noexcept BASE_LIFETIMEBOUND {
-    return data_;
-  }
-  [[nodiscard]] constexpr ReverseIterator<T const*> crbegin() const noexcept BASE_LIFETIMEBOUND {
-    return data_ + N;
-  }
-  [[nodiscard]] constexpr ReverseIterator<T const*> crend() const noexcept BASE_LIFETIMEBOUND {
-    return data_;
-  }
 
   template <usize I> [[nodiscard]] constexpr T& get() noexcept BASE_LIFETIMEBOUND {
     return data_[I];
