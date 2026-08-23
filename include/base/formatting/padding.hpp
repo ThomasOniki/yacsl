@@ -154,10 +154,10 @@ constexpr StackArray<T, 129 + Offset> gen_powers() noexcept {
 
   for (u32 i = Offset + 1; i < ret.size(); ++i) {
     ret[i] = pow;
-    if (pow <= Limits<T>::max / Base) {
+    if (pow <= Limits<T>::MAX / Base) {
       pow = static_cast<T>(pow * Base);
     } else {
-      pow = Limits<T>::max;
+      pow = Limits<T>::MAX;
     }
   }
   return ret;
@@ -169,7 +169,7 @@ void pad_integral(String& buf, T value, PaddingOptions opts) noexcept {
   static constexpr StackArray<T, 129 + Prefix.size()> powers =
       gen_powers<Charset.size(), Prefix.size(), T>();
 
-  constexpr u32 max_len = count_digits(Limits<T>::max, Charset.size());
+  constexpr u32 max_len = count_digits(Limits<T>::MAX, Charset.size());
 
   // If value >= powers[opts.width], value has width or more digits. If it does, you should skip
   // padding and just use itoa.
