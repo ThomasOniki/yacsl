@@ -78,6 +78,6 @@ private:
   SizeT size_;
 };
 
-template <typename T, Integral SizeT> using ReversedSlice = Slice<T, SizeT, true>;
+template <typename T, Integral SizeT = usize> using ReversedSlice = Slice<T, SizeT, true>;
 
 } // namespace base
