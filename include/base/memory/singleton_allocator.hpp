@@ -8,7 +8,7 @@ template <typename T, NTTPString Name, bool ThreadLocal = true> class SingletonA
 public:
   using SizeT = T::SizeT;
 
-  static T& get() {
+  static constexpr T& get() {
     static thread_local T instance;
     return instance;
   }
@@ -18,7 +18,7 @@ template <typename T, NTTPString Name> class SingletonAllocator<T, Name, false> 
 public:
   using SizeT = T::SizeT;
 
-  static T& get() {
+  static constexpr T& get() {
     static T instance;
     return instance;
   }
