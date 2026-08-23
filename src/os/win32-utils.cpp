@@ -65,7 +65,7 @@ Result<OpenedFile, File::OpenError> open_file(char const* path, File::Flags flag
   if (strip_file_open_flag(&flags, File::Flags::SeekEnd)) {
     LONG high = 0;
     pos       = static_cast<usize>(SetFilePointer(handle, 0, &high, FILE_END));
-    pos += static_cast<usize>(high) * Limits<LONG>::max;
+    pos += static_cast<usize>(high) * Limits<LONG>::MAX;
     if (pos == static_cast<usize>(INVALID_SET_FILE_POINTER)) {
       DWORD const err = GetLastError();
       if (err != NO_ERROR) {

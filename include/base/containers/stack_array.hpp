@@ -14,7 +14,7 @@
 namespace base {
 
 // NOLINTBEGIN(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
-template <typename T, usize N, Integral SizeT = ConditionalT<(N > Limits<u32>::max), usize, u32>>
+template <typename T, usize N, Integral SizeT = ConditionalT<(N > Limits<u32>::MAX), usize, u32>>
 class StackArray {
 public:
   [[nodiscard]] constexpr SizeT size(this StackArray const& /*self*/) noexcept {
