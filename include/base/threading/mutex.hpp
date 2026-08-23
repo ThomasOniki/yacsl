@@ -16,9 +16,11 @@ public:
   Mutex& operator=(Mutex const&)     = delete;
   Mutex& operator=(Mutex&&) noexcept = delete;
 
-  void lock() { pthread_mutex_lock(&handle_); }
-  bool try_lock() { return static_cast<bool>(pthread_mutex_trylock(&handle_)); }
-  void unlock() { pthread_mutex_unlock(&handle_); }
+  void lock(this Mutex& self) noexcept { pthread_mutex_lock(&self.handle_); }
+  bool try_lock(this Mutex& self) noexcept {
+    return static_cast<bool>(pthread_mutex_trylock(&self.handle_));
+  }
+  void unlock(this Mutex& self) noexcept { pthread_mutex_unlock(&self.handle_); }
 
 private:
 #ifdef BASE_COMPILER_GCC
@@ -33,7 +35,7 @@ private:
 
 class MutexLock {
 public:
-  explicit MutexLock(BASE_LIFETIMEBOUND Mutex& mutex) : mutex_(&mutex) { mutex_->lock(); }
+  explicit MutexLock(BASE_LIFETIMEBOUND Mutex& mutex) noexcept : mutex_(&mutex) { mutex_->lock(); }
   MutexLock(MutexLock const&)     = delete;
   MutexLock(MutexLock&&) noexcept = delete;
 

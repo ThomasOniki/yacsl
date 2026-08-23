@@ -35,108 +35,119 @@ public:
     }
   }
 
-  constexpr Result& operator=(Result const& other) noexcept {
-    if (&other == this) [[unlikely]] {
-      return *this;
+  constexpr Result& operator=(this Result& self, Result const& other) noexcept {
+    if (&other == &self) [[unlikely]] {
+      return self;
     }
-    destroy();
-    is_err_ = other.is_err_;
+    self.destroy();
+    self.is_err_ = other.is_err_;
     if (other.is_err_) [[unlikely]] {
-      base::construct_at(&err_, other.err_);
+      base::construct_at(&self.err_, other.err_);
     } else {
-      base::construct_at(&ok_, other.ok_);
+      base::construct_at(&self.ok_, other.ok_);
     }
-    return *this;
+    return self;
   }
 
-  constexpr Result& operator=(Result&& other) noexcept {
-    destroy();
-    is_err_ = other.is_err_;
+  constexpr Result& operator=(this Result& self, Result&& other) noexcept {
+    self.destroy();
+    self.is_err_ = other.is_err_;
     if (other.is_err_) [[unlikely]] {
-      base::construct_at(&err_, base::move(other.err_));
+      base::construct_at(&self.err_, base::move(other.err_));
     } else {
-      base::construct_at(&ok_, base::move(other.ok_));
+      base::construct_at(&self.ok_, base::move(other.ok_));
     }
-    return *this;
+    return self;
   }
 
-  [[nodiscard]] constexpr bool is_ok() const noexcept { return !is_err_; }
-  [[nodiscard]] constexpr bool is_err() const noexcept { return is_err_; }
+  [[nodiscard]] constexpr bool is_ok(this Result const& self) noexcept { return !self.is_err_; }
+  [[nodiscard]] constexpr bool is_err(this Result const& self) noexcept { return self.is_err_; }
 
-  template <typename... Args>
-  [[nodiscard]] constexpr Ok const&
-  expect_ok(FormatString<Args...> const& error_fmt,
-            Args&&... error_fmt_args) const noexcept BASE_LIFETIMEBOUND {
-    if (is_err_) [[unlikely]] {
-      panic("Result<{}, {}> is error {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>, err_);
+  template <typename Self, typename... Args>
+  [[nodiscard]] constexpr auto&& expect_ok(this Self&& self             BASE_LIFETIMEBOUND,
+                                           FormatString<Args...> const& error_fmt,
+                                           Args&&... error_fmt_args) noexcept {
+    if (self.is_err_) [[unlikely]] {
+      panic("Result<{}, {}> is error {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>, self.err_);
       panic(error_fmt, base::forward<Args>(error_fmt_args)...);
     }
-    return ok_;
+    return base::forward<Self>(self).ok_;
   }
-  [[nodiscard]] constexpr Ok const& expect_ok() const noexcept BASE_LIFETIMEBOUND {
-    if (is_err_) [[unlikely]] {
-      panic("Result<{}, {}> is error {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>, err_);
+  template <typename Self>
+  [[nodiscard]] constexpr auto&& expect_ok(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+    if (self.is_err_) [[unlikely]] {
+      panic("Result<{}, {}> is error {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>, self.err_);
     }
-    return ok_;
+    return base::forward<Self>(self).ok_;
   }
 
-  template <typename... Args>
-  [[nodiscard]] constexpr Ok const&
-  assert_ok(FormatString<Args...> const& error_fmt,
-            Args&&... error_fmt_args) const noexcept BASE_LIFETIMEBOUND {
-    if (is_err_) [[unlikely]] {
-      debug_panic("Result<{}, {}> is error {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>, err_);
+  template <typename Self, typename... Args>
+  [[nodiscard]] constexpr auto&& assert_ok(this Self&& self             BASE_LIFETIMEBOUND,
+                                           FormatString<Args...> const& error_fmt,
+                                           Args&&... error_fmt_args) noexcept {
+    if (self.is_err_) [[unlikely]] {
+      debug_panic("Result<{}, {}> is error {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>, self.err_);
       debug_panic(error_fmt, base::forward<Args>(error_fmt_args)...);
     }
-    return ok_;
+    return base::forward<Self>(self).ok_;
   }
-  [[nodiscard]] constexpr Ok const& assert_ok() const noexcept BASE_LIFETIMEBOUND {
-    if (is_err_) [[unlikely]] {
-      debug_panic("Result<{}, {}> is error {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>, err_);
+  template <typename Self>
+  [[nodiscard]] constexpr auto&& assert_ok(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+    if (self.is_err_) [[unlikely]] {
+      debug_panic("Result<{}, {}> is error {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>, self.err_);
     }
-    return ok_;
+    return base::forward<Self>(self).ok_;
   }
 
-  template <typename... Args>
-  [[nodiscard]] constexpr Err const&
-  expect_err(FormatString<Args...> const& error_fmt,
-             Args&&... error_fmt_args) const noexcept BASE_LIFETIMEBOUND {
-    if (!is_err_) [[unlikely]] {
-      panic("Result<{}, {}> is ok {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>, ok_);
+  template <typename Self, typename... Args>
+  [[nodiscard]] constexpr auto&& expect_err(this Self&& self             BASE_LIFETIMEBOUND,
+                                            FormatString<Args...> const& error_fmt,
+                                            Args&&... error_fmt_args) noexcept {
+    if (!self.is_err_) [[unlikely]] {
+      panic("Result<{}, {}> is ok {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>, self.ok_);
       panic(error_fmt, base::forward<Args>(error_fmt_args)...);
     }
-    return err_;
+    return base::forward<Self>(self).err_;
   }
-  [[nodiscard]] constexpr Err const& expect_err() const noexcept BASE_LIFETIMEBOUND {
-    if (!is_err_) [[unlikely]] {
-      panic("Result<{}, {}> is ok {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>, ok_);
+  template <typename Self>
+  [[nodiscard]] constexpr auto&& expect_err(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+    if (!self.is_err_) [[unlikely]] {
+      panic("Result<{}, {}> is ok {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>, self.ok_);
     }
-    return err_;
+    return base::forward<Self>(self).err_;
   }
 
-  template <typename... Args>
-  [[nodiscard]] constexpr Err const&
-  assert_err(FormatString<Args...> const& error_fmt,
-             Args&&... error_fmt_args) const noexcept BASE_LIFETIMEBOUND {
-    if (!is_err_) [[unlikely]] {
-      debug_panic("Result<{}, {}> is ok {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>, ok_);
+  template <typename Self, typename... Args>
+  [[nodiscard]] constexpr auto&& assert_err(this Self&& self             BASE_LIFETIMEBOUND,
+                                            FormatString<Args...> const& error_fmt,
+                                            Args&&... error_fmt_args) noexcept {
+    if (!self.is_err_) [[unlikely]] {
+      debug_panic("Result<{}, {}> is ok {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>, self.ok_);
       debug_panic(error_fmt, base::forward<Args>(error_fmt_args)...);
     }
-    return err_;
+    return base::forward<Self>(self).err_;
   }
-  [[nodiscard]] constexpr Err const& assert_err() const noexcept BASE_LIFETIMEBOUND {
-    if (!is_err_) [[unlikely]] {
-      debug_panic("Result<{}, {}> is ok {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>, ok_);
+  template <typename Self>
+  [[nodiscard]] constexpr auto&& assert_err(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+    if (!self.is_err_) [[unlikely]] {
+      debug_panic("Result<{}, {}> is ok {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>, self.ok_);
     }
-    return err_;
+    return base::forward<Self>(self).err_;
   }
 
 private:
-  void destroy() noexcept {
-    if (is_err_) [[unlikely]] {
-      err_.~Err();
+  void destroy(this Result& self) noexcept {
+    if (self.is_err_) [[unlikely]] {
+      self.err_.~Err();
     } else if constexpr (!TriviallyDestructible<Ok>) {
-      ok_.~Ok();
+      self.ok_.~Ok();
+    }
+  }
+  void destroy(this Result&& self) noexcept {
+    if (self.is_err_) [[unlikely]] {
+      base::move(self).err_.~Err();
+    } else if constexpr (!TriviallyDestructible<Ok>) {
+      base::move(self).ok_.~Ok();
     }
   }
 

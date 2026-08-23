@@ -14,26 +14,32 @@ public:
 
   constexpr Error(Err error) noexcept : value_(error) {}
 
-  [[nodiscard]] constexpr bool operator==(Err error) const noexcept { return value_ == error; }
-  [[nodiscard]] constexpr bool operator==(Nil /*nil*/) const noexcept { return value_ == Err(0); }
+  [[nodiscard]] constexpr bool operator==(this Error self, Err error) noexcept {
+    return self.value_ == error;
+  }
+  [[nodiscard]] constexpr bool operator==(this Error self, Nil /*nil*/) noexcept {
+    return self.value_ == Err(0);
+  }
 
-  [[nodiscard]] constexpr Err error() const noexcept { return value_; }
+  [[nodiscard]] constexpr Err error(this Error self) noexcept { return self.value_; }
 
   template <typename... Args>
-  constexpr void expect_nil(FormatString<Args...> const& error_fmt, Args&&... args) {
-    if (value_ != Err(0)) [[unlikely]] {
+  constexpr void expect_nil(this Error self, FormatString<Args...> const& error_fmt,
+                            Args&&... args) {
+    if (self.value_ != Err(0)) [[unlikely]] {
       panic(error_fmt, base::forward<Args>(args)...);
     }
   }
-  constexpr void expect_nil() { expect_nil("Error is not nil."); }
+  constexpr void expect_nil(this Error self) { self.expect_nil("Error is not nil."); }
 
   template <typename... Args>
-  constexpr void assert_nil(FormatString<Args...> const& error_fmt, Args&&... args) {
-    if (value_ != Err(0)) [[unlikely]] {
+  constexpr void assert_nil(this Error self, FormatString<Args...> const& error_fmt,
+                            Args&&... args) {
+    if (self.value_ != Err(0)) [[unlikely]] {
       debug_panic(error_fmt, base::forward<Args>(args)...);
     }
   }
-  constexpr void assert_nil() { assert_nil("Error is not nil."); }
+  constexpr void assert_nil(this Error self) { self.assert_nil("Error is not nil."); }
 
 private:
   Err value_{0};

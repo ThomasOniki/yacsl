@@ -4,7 +4,6 @@
 #include "base/formatting/format_string.hpp"
 #include "base/logging/panic.hpp"
 #include "base/memory/lifetimes.hpp"
-#include "base/ranges/string_view.hpp"
 #include "base/type_traits/categories.hpp"
 #include "base/type_traits/qualifiers.hpp"
 #include "base/type_traits/sign.hpp"
@@ -20,39 +19,41 @@ public:
 
   constexpr UnsignedResult(Err error) noexcept : value_(-static_cast<Signed>(error)) {}
 
-  [[nodiscard]] constexpr Err error() const noexcept {
-    if (value_ >= 0) [[likely]] {
+  [[nodiscard]] constexpr Err error(this UnsignedResult self) noexcept {
+    if (self.value_ >= 0) [[likely]] {
       return Err(0);
     } else {
-      return Err(-value_);
+      return Err(-self.value_);
     }
   }
-  [[nodiscard]] constexpr bool is_ok() const noexcept { return value_ >= 0; }
-  [[nodiscard]] constexpr bool is_error() const noexcept { return value_ < 0; }
+  [[nodiscard]] constexpr bool is_ok(this UnsignedResult self) noexcept { return self.value_ >= 0; }
+  [[nodiscard]] constexpr bool is_error(this UnsignedResult self) noexcept {
+    return self.value_ < 0;
+  }
 
   template <typename... Args>
-  [[nodiscard]] constexpr Ok expect_ok(FormatString<Args...> fmt,
-                                       Args&&... args) const noexcept BASE_LIFETIMEBOUND {
-    if (is_error()) [[unlikely]] {
-      panic("UnsignedResult<{}, {}> is error {}.", Err(-value_));
+  [[nodiscard]] constexpr Ok expect_ok(this UnsignedResult self, FormatString<Args...> fmt,
+                                       Args&&... args) noexcept {
+    if (self.is_error()) [[unlikely]] {
+      panic("UnsignedResult<{}, {}> is error {}.", Err(-self.value_));
       panic(fmt, base::forward<Args>(args)...);
     }
-    return static_cast<Ok>(value_);
+    return static_cast<Ok>(self.value_);
   }
-  [[nodiscard]] constexpr Ok expect_ok() const noexcept BASE_LIFETIMEBOUND {
-    return expect_ok("UnsignedResult<{}, {}> is error {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>,
-                     error());
+  [[nodiscard]] constexpr Ok expect_ok(this UnsignedResult self) noexcept {
+    return self.expect_ok("UnsignedResult<{}, {}> is error {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>,
+                          self.error());
   }
 
   template <typename... Args>
-  [[nodiscard]] constexpr Ok assert_ok(FormatString<Args...> fmt,
-                                       Args&&... args) const noexcept BASE_LIFETIMEBOUND {
-    debug_panic_if(is_error(), fmt, base::forward<Args>(args)...);
-    return static_cast<Ok>(value_);
+  [[nodiscard]] constexpr Ok assert_ok(this UnsignedResult self, FormatString<Args...> fmt,
+                                       Args&&... args) noexcept {
+    debug_panic_if(self.is_error(), fmt, base::forward<Args>(args)...);
+    return static_cast<Ok>(self.value_);
   }
-  [[nodiscard]] constexpr Ok assert_ok() const noexcept BASE_LIFETIMEBOUND {
-    return assert_ok("UnsignedResult<{}, {}> is error {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>,
-                     error());
+  [[nodiscard]] constexpr Ok assert_ok(this UnsignedResult self) noexcept {
+    return self.assert_ok("UnsignedResult<{}, {}> is error {}.", TYPE_STRING<Ok>, TYPE_STRING<Err>,
+                          self.error());
   }
 
 private:
