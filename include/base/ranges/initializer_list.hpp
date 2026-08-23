@@ -15,6 +15,8 @@ template <typename T> class initializer_list {
 public:
   constexpr initializer_list() noexcept : data_(nullptr), size_(0) {}
 
+  // There are no explicit object parameters here because some compilers might rely on implicit
+  // this.
   [[nodiscard]] constexpr base::usize size() const noexcept { return size_; }
   [[nodiscard]] constexpr T const*    begin() const noexcept { return data_; }
   [[nodiscard]] constexpr T const*    end() const noexcept { return data_ + size_; }

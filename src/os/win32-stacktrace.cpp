@@ -28,15 +28,15 @@ StackTrace StackTrace::current() noexcept {
   return ret;
 }
 
-Vector<StackTraceEntry, 16> const& StackTrace::compute_entries() noexcept {
-  if (entries_.size() == addresses_.size()) {
-    return entries_;
+Vector<StackTraceEntry, 16> const& StackTrace::compute_entries(this StackTrace& self) noexcept {
+  if (self.entries_.size() == self.addresses_.size()) {
+    return self.entries_;
   }
-  entries_.resize(addresses_.size());
-  for (usize i = 0; i < addresses_.size(); ++i) {
+  self.entries_.resize(self.addresses_.size());
+  for (usize i = 0; i < self.addresses_.size(); ++i) {
     HMODULE module = nullptr;
     BASE_TRY_SYSCALL(GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
-                                        static_cast<LPCSTR>(addresses_[i]), &module));
+                                        static_cast<LPCSTR>(self.addresses_[i]), &module));
 
     String module_name;
     module_name.resize(128);
@@ -54,14 +54,14 @@ Vector<StackTraceEntry, 16> const& StackTrace::compute_entries() noexcept {
 
     FreeLibrary(module);
 
-    entries_[i] = {
+    self.entries_[i] = {
         .caller       = String(),
         .object       = base::move(module_name),
         .base_address = info.lpBaseOfDll,
-        .address      = addresses_[i],
+        .address      = self.addresses_[i],
     };
   }
-  return entries_;
+  return self.entries_;
 }
 
 } // namespace base

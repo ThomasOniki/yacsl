@@ -1,6 +1,7 @@
 #pragma once
 
 #include "base/attributes.hpp"
+#include "base/metaprogramming/type_identity.hpp"
 #include "base/ranges/slice.hpp"
 #include "base/type_traits/qualifiers.hpp"
 #include "base/type_traits/trivial.hpp"
@@ -41,7 +42,8 @@ template <typename T, typename... Args> constexpr T* construct_at(T* location, A
   return ::new (location) T(base::forward<Args>(args)...);
 }
 
-template <typename T> constexpr Slice<T> copy(Slice<T const> src, Slice<T> dst) noexcept {
+template <MutableType T>
+constexpr Slice<T> copy(Slice<TypeIdentity<T> const> src, Slice<T> dst) noexcept {
   usize const size = dst.size() < src.size() ? dst.size() : src.size();
   if !consteval {
     if (TriviallyCopyable<T>) {
@@ -53,7 +55,8 @@ template <typename T> constexpr Slice<T> copy(Slice<T const> src, Slice<T> dst) 
   }
   return {dst.data(), size};
 }
-template <typename T> constexpr Slice<T> copy(Slice<T const> src, T* dst) noexcept {
+template <MutableType T>
+constexpr Slice<T> copy(Slice<TypeIdentity<T> const> src, T* dst) noexcept {
   if !consteval {
     if (TriviallyCopyable<T>) {
       return {static_cast<T*>(::memcpy(dst, src.data(), src.size())), src.size()};
