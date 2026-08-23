@@ -27,45 +27,46 @@ public:
   MPSCRingBuffer& operator=(MPSCRingBuffer const&) = delete;
   MPSCRingBuffer& operator=(MPSCRingBuffer&&)      = delete;
 
-  template <typename... Args> T& emplace(Args&&... args) {
-    usize const write = write_.fetch_add(1, MemoryOrder::Relaxed);
+  template <typename... Args> T& emplace(this MPSCRingBuffer& self, Args&&... args) {
+    usize const write = self.write_.fetch_add(1, MemoryOrder::Relaxed);
     usize const index = write % N;
-    while (slots_[index].epoch.load(MemoryOrder::Acquire) != write) {
+    while (self.slots_[index].epoch.load(MemoryOrder::Acquire) != write) {
       sched_yield();
     }
-    slots_[index].value.construct(base::forward<Args>(args)...);
-    slots_[index].epoch.store(write + 1, MemoryOrder::Release);
-    return *slots_[index].value;
+    self.slots_[index].value.construct(base::forward<Args>(args)...);
+    self.slots_[index].epoch.store(write + 1, MemoryOrder::Release);
+    return *self.slots_[index].value;
   }
 
-  T& push(T&& value) { return emplace(base::move(value)); }
-  T& push(T const& value) { return emplace(value); }
+  T& push(this MPSCRingBuffer& self, T&& value) { return self.emplace(base::move(value)); }
+  T& push(this MPSCRingBuffer& self, T const& value) { return self.emplace(value); }
 
-  T pop() noexcept {
-    usize const index = read_ % N;
-    while (slots_[index].epoch.load(MemoryOrder::Acquire) != read_ + 1) {
+  T pop(this MPSCRingBuffer& self) noexcept {
+    usize const index = self.read_ % N;
+    while (self.slots_[index].epoch.load(MemoryOrder::Acquire) != self.read_ + 1) {
       sched_yield();
     }
-    T ret(base::move(*slots_[index].value));
-    slots_[index].value.destruct();
-    slots_[index].epoch.store(read_ + N, MemoryOrder::Release);
-    ++read_;
+    T ret(base::move(*self.slots_[index].value));
+    self.slots_[index].value.destruct();
+    self.slots_[index].epoch.store(self.read_ + N, MemoryOrder::Release);
+    ++self.read_;
     return ret;
   }
 
-  template <typename... Args> bool try_emplace(Args&&... args) {
+  template <typename... Args> bool try_emplace(this MPSCRingBuffer& self, Args&&... args) {
     for (;;) {
-      usize       write = write_.load(MemoryOrder::Relaxed);
+      usize       write = self.write_.load(MemoryOrder::Relaxed);
       usize const index = write % N;
-      usize const diff  = slots_[index].epoch.load(MemoryOrder::Acquire) - write;
+      usize const diff  = self.slots_[index].epoch.load(MemoryOrder::Acquire) - write;
       if (diff == 0) {
-        if (write_.compare_exchange_weak(write, write + 1, MemoryOrder::Relaxed,
-                                         MemoryOrder::Relaxed)) {
-          slots_[index].value.construct(base::forward<Args>(args)...);
-          slots_[index].epoch.store(write + 1, MemoryOrder::Release);
+        if (self.write_.compare_exchange_weak(write, write + 1, MemoryOrder::Relaxed,
+                                              MemoryOrder::Relaxed)) {
+          self.slots_[index].value.construct(base::forward<Args>(args)...);
+          self.slots_[index].epoch.store(write + 1, MemoryOrder::Release);
           return true;
         }
-        // If CAS fails, another producer wrote it between write_.load and write_.CAS so we retry.
+        // If CAS fails, another producer wrote it between self.write_.load and self.write_.CAS so
+        // we retry.
         continue;
       }
       // Since usize has a finite precision and wraps to 0 on overflow and max on underflow, there
@@ -77,23 +78,25 @@ public:
       if (diff > Limits<usize>::max / 2) {
         return false;
       }
-      // If epoch > write, another producer changed the epoch between write_.load and epoch.load so
-      // we retry.
+      // If epoch > write, another producer changed the epoch between self.write_.load and
+      // epoch.load so we retry.
     }
   }
 
-  bool try_push(T&& value) { return try_emplace(base::move(value)); }
-  bool try_push(T const& value) { return try_emplace(value); }
+  bool try_push(this MPSCRingBuffer& self, T&& value) {
+    return self.try_emplace(base::move(value));
+  }
+  bool try_push(this MPSCRingBuffer& self, T const& value) { return self.try_emplace(value); }
 
-  Option<T> try_pop() noexcept {
-    usize const index = read_ % N;
-    if (slots_[index].epoch.load(MemoryOrder::Acquire) != read_ + 1) {
+  Option<T> try_pop(this MPSCRingBuffer& self) noexcept {
+    usize const index = self.read_ % N;
+    if (self.slots_[index].epoch.load(MemoryOrder::Acquire) != self.read_ + 1) {
       return NIL;
     }
-    T ret(*slots_[index].value);
-    slots_[index].value.destruct();
-    slots_[index].epoch.store(read_ + N, MemoryOrder::Release);
-    ++read_;
+    T ret(*self.slots_[index].value);
+    self.slots_[index].value.destruct();
+    self.slots_[index].epoch.store(self.read_ + N, MemoryOrder::Release);
+    ++self.read_;
     return ret;
   }
 

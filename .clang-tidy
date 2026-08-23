@@ -21,6 +21,8 @@ Checks: >
   -cppcoreguidelines-non-private-member-variables-in-classes,
   -cppcoreguidelines-pro-type-vararg,
   -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -cppcoreguidelines-c-copy-assignment-signature,
+  -misc-unconventional-assign-operator,
   -misc-non-private-member-variables-in-classes,
   -misc-use-anonymous-namespace,
   -misc-multiple-inheritance,
@@ -37,8 +39,10 @@ Checks: >
   -google-readability-*,
   -bugprone-multi-level-implicit-pointer-conversion,
   -bugprone-bitwise-pointer-cast,
+  -bugprone-copy-constructor-mutates-argument,
   -llvm-header-guard,
   -clang-analyzer-optin.core.EnumCastOutOfRange,
+
 
 WarningsAsErrors: ""
 FormatStyle: none

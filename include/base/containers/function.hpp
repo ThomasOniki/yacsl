@@ -22,10 +22,12 @@ public:
 
   ~Function() noexcept { cleanup_(data_, allocator()); }
 
-  Function& operator=(Function const&) = delete;
-  Function& operator=(Function&&) noexcept;
+  Function& operator=(this Function&, Function const&) = delete;
+  Function& operator=(this Function&, Function&&)      = delete;
 
-  Ret operator()(Args... args) { return call_(data_, base::forward<Args>(args)...); }
+  template <typename Self> Ret operator()(this Self&& self, Args... args) {
+    return base::forward<Self>(self).call_(self.data_, base::forward<Args>(args)...);
+  }
 
   [[nodiscard]] auto const& get_allocator() const noexcept { return allocator(); }
 

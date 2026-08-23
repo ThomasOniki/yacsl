@@ -14,22 +14,22 @@ struct Metadata {
 } // namespace
 
 // NOLINTNEXTLINE(misc-no-recursion)
-void Arena::reserve(usize capacity) noexcept {
-  if (begin_ == nullptr && capacity < initial_capacity_) {
-    capacity = initial_capacity_;
+void Arena::reserve(this Arena& self, usize capacity) noexcept {
+  if (self.begin_ == nullptr && capacity < self.initial_capacity_) {
+    capacity = self.initial_capacity_;
   }
 
   Metadata const metadata = {
-      .last_begin = begin_,
-      .last_end   = end_,
+      .last_begin = self.begin_,
+      .last_end   = self.end_,
   };
   // NOLINTNEXTLINE(cppcoreguidelines-no-malloc)
-  begin_ = static_cast<uchar*>(malloc(capacity));
-  end_   = begin_ + capacity;
-  ptr_   = begin_ + sizeof(Metadata);
+  self.begin_ = static_cast<uchar*>(malloc(capacity));
+  self.end_   = self.begin_ + capacity;
+  self.ptr_   = self.begin_ + sizeof(Metadata);
 
-  panic_if(begin_ == nullptr, "[Arena] malloc failed.");
-  construct_at(reinterpret_cast<Metadata*>(begin_), metadata);
+  panic_if(self.begin_ == nullptr, "[Arena] malloc failed.");
+  construct_at(reinterpret_cast<Metadata*>(self.begin_), metadata);
 }
 
 Arena::Scope::~Scope() noexcept {

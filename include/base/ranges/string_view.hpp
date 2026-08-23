@@ -12,9 +12,10 @@ namespace base {
 template <Character T, Integral SizeT = usize> class BasicStringView {
 public:
   constexpr BasicStringView() = default;
-  constexpr BasicStringView(T const* data, SizeT size) : data_(data), size_(size) {}
+  constexpr BasicStringView(T const* data BASE_LIFETIMEBOUND, SizeT size)
+      : data_(data), size_(size) {}
 
-  constexpr BasicStringView(T const* cstr) : data_(cstr) {
+  constexpr BasicStringView(T const* cstr BASE_LIFETIMEBOUND) : data_(cstr) {
     if constexpr (SameAs<char, T>) {
       if !consteval {
         size_ = static_cast<SizeT>(strlen(cstr));
@@ -28,41 +29,54 @@ public:
     size_ = len;
   }
 
-  constexpr BasicStringView(T const* begin, T const* end)
+  constexpr BasicStringView(T const* begin BASE_LIFETIMEBOUND, T const* end BASE_LIFETIMEBOUND)
       : data_(begin), size_(static_cast<SizeT>(end - begin)) {}
 
-  [[nodiscard]] constexpr Slice<T const, SizeT> slice() const noexcept { return {data_, size_}; }
-  [[nodiscard]] constexpr ReversedSlice<T const, SizeT> reversed_slice() const noexcept {
-    return {data_, size_};
+  [[nodiscard]] constexpr T const* data(this BasicStringView self) noexcept { return self.data_; }
+  [[nodiscard]] constexpr SizeT    size(this BasicStringView self) noexcept { return self.size_; }
+
+  [[nodiscard]] constexpr T const& operator[](this BasicStringView const& self,
+                                              SizeT                       index) noexcept {
+    return self.data_[index];
   }
-  [[nodiscard]] constexpr Slice<uchar const, SizeT> bytes() const noexcept {
-    return {reinterpret_cast<uchar const*>(data_), static_cast<SizeT>(size_ * sizeof(T))};
+
+  [[nodiscard]] constexpr Slice<T const, SizeT> slice(this BasicStringView self) noexcept {
+    return {self.data_, self.size_};
+  }
+  [[nodiscard]] constexpr ReversedSlice<T const, SizeT>
+  reversed_slice(this BasicStringView self) noexcept {
+    return {self.data_, self.size_};
+  }
+  [[nodiscard]] constexpr Slice<uchar const, SizeT> bytes(this BasicStringView self) noexcept {
+    return {reinterpret_cast<uchar const*>(self.data_), static_cast<SizeT>(self.size_ * sizeof(T))};
   }
 
-  [[nodiscard]] constexpr T const* data() const noexcept { return data_; }
-  [[nodiscard]] constexpr SizeT    size() const noexcept { return size_; }
+  [[nodiscard]] constexpr T const& front(this BasicStringView const& self) noexcept {
+    return self.data_[0];
+  }
+  [[nodiscard]] constexpr T const& back(this BasicStringView const& self) noexcept {
+    return self.data_[self.size_ - 1];
+  }
 
-  [[nodiscard]] constexpr T const& front() const noexcept { return data_[0]; }
-  [[nodiscard]] constexpr T const& back() const noexcept { return data_[size_ - 1]; }
+  [[nodiscard]] constexpr T const* begin(this BasicStringView self) noexcept { return self.data_; }
+  [[nodiscard]] constexpr T const* end(this BasicStringView self) noexcept {
+    return self.data_ + self.size_;
+  }
 
-  [[nodiscard]] constexpr T const& operator[](SizeT index) const noexcept { return data_[index]; }
-
-  [[nodiscard]] constexpr T const* begin() const noexcept { return data_; }
-  [[nodiscard]] constexpr T const* end() const noexcept { return data_ + size_; }
-
-  [[nodiscard]] constexpr bool operator==(BasicStringView other) const noexcept {
-    if (size_ != other.size_) {
+  [[nodiscard]] constexpr bool operator==(this BasicStringView self,
+                                          BasicStringView      other) noexcept {
+    if (self.size_ != other.size_) {
       return false;
     }
     if consteval {
-      for (size_t i = 0; i < size_; ++i) {
-        if (other[i] != data_[i]) {
+      for (size_t i = 0; i < self.size_; ++i) {
+        if (other[i] != self.data_[i]) {
           return false;
         }
       }
       return true;
     }
-    return memcmp(data_, other.data_, size_) == 0;
+    return memcmp(self.data_, other.data_, self.size_) == 0;
   }
 
 private:

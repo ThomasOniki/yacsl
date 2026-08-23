@@ -27,42 +27,42 @@ public:
   MPMCRingBuffer& operator=(MPMCRingBuffer const&) = delete;
   MPMCRingBuffer& operator=(MPMCRingBuffer&&)      = delete;
 
-  template <typename... Args> T& emplace(Args&&... args) {
-    usize write = write_.fetch_add(1, MemoryOrder::Relaxed);
+  template <typename... Args> T& emplace(this MPMCRingBuffer& self, Args&&... args) {
+    usize write = self.write_.fetch_add(1, MemoryOrder::Relaxed);
     usize index = write % N;
-    while (slots_[index].epoch.load(MemoryOrder::Acquire) != write) {
+    while (self.slots_[index].epoch.load(MemoryOrder::Acquire) != write) {
       sched_yield();
     }
-    slots_[index].value.construct(base::forward<Args>(args)...);
-    slots_[index].epoch.store(write + 1, MemoryOrder::Release);
-    return *slots_[index].value;
+    self.slots_[index].value.construct(base::forward<Args>(args)...);
+    self.slots_[index].epoch.store(write + 1, MemoryOrder::Release);
+    return *self.slots_[index].value;
   }
 
-  T& push(T&& value) { return emplace(base::move(value)); }
-  T& push(T const& value) { return emplace(value); }
+  T& push(this MPMCRingBuffer& self, T&& value) { return self.emplace(base::move(value)); }
+  T& push(this MPMCRingBuffer& self, T const& value) { return self.emplace(value); }
 
-  T pop() noexcept {
-    usize read  = read_.fetch_add(1, MemoryOrder::Relaxed);
+  T pop(this MPMCRingBuffer& self) noexcept {
+    usize read  = self.read_.fetch_add(1, MemoryOrder::Relaxed);
     usize index = read % N;
-    while (slots_[index].epoch.load(MemoryOrder::Acquire) != read + 1) {
+    while (self.slots_[index].epoch.load(MemoryOrder::Acquire) != read + 1) {
       sched_yield();
     }
-    T ret(base::move(*slots_[index].value));
-    slots_[index].value.destruct();
-    slots_[index].epoch.store(read + N, MemoryOrder::Release);
+    T ret(base::move(*self.slots_[index].value));
+    self.slots_[index].value.destruct();
+    self.slots_[index].epoch.store(read + N, MemoryOrder::Release);
     return ret;
   }
 
-  template <typename... Args> bool try_emplace(Args&&... args) {
+  template <typename... Args> bool try_emplace(this MPMCRingBuffer& self, Args&&... args) {
     for (;;) {
-      usize write = write_.load(MemoryOrder::Relaxed);
+      usize write = self.write_.load(MemoryOrder::Relaxed);
       usize index = write % N;
-      usize diff  = slots_[index].epoch.load(MemoryOrder::Acquire) - write;
+      usize diff  = self.slots_[index].epoch.load(MemoryOrder::Acquire) - write;
       if (diff == 0) {
-        if (write_.compare_exchange_weak(write, write + 1, MemoryOrder::Relaxed,
-                                         MemoryOrder::Relaxed)) {
-          slots_[index].value.construct(base::forward<Args>(args)...);
-          slots_[index].epoch.store(write + 1, MemoryOrder::Release);
+        if (self.write_.compare_exchange_weak(write, write + 1, MemoryOrder::Relaxed,
+                                              MemoryOrder::Relaxed)) {
+          self.slots_[index].value.construct(base::forward<Args>(args)...);
+          self.slots_[index].epoch.store(write + 1, MemoryOrder::Release);
           return true;
         }
         // If CAS fails, another producer wrote it between write_.load and write_.CAS so we retry.
@@ -82,20 +82,22 @@ public:
     }
   }
 
-  bool try_push(T&& value) { return try_emplace(base::move(value)); }
-  bool try_push(T const& value) { return try_emplace(value); }
+  bool try_push(this MPMCRingBuffer& self, T&& value) {
+    return self.try_emplace(base::move(value));
+  }
+  bool try_push(this MPMCRingBuffer& self, T const& value) { return self.try_emplace(value); }
 
-  Option<T> try_pop() noexcept {
+  Option<T> try_pop(this MPMCRingBuffer& self) noexcept {
     for (;;) {
-      usize       read  = read_.load(MemoryOrder::Relaxed);
+      usize       read  = self.read_.load(MemoryOrder::Relaxed);
       usize const index = read % N;
-      usize const diff  = slots_[index].epoch.load(MemoryOrder::Acquire) - (read + 1);
+      usize const diff  = self.slots_[index].epoch.load(MemoryOrder::Acquire) - (read + 1);
       if (diff == 0) {
-        if (read_.compare_exchange_weak(read, read + 1, MemoryOrder::Relaxed,
-                                        MemoryOrder::Relaxed)) {
-          T ret(*slots_[index].value);
-          slots_[index].value.destruct();
-          slots_[index].epoch.store(read + N, MemoryOrder::Release);
+        if (self.read_.compare_exchange_weak(read, read + 1, MemoryOrder::Relaxed,
+                                             MemoryOrder::Relaxed)) {
+          T ret(*self.slots_[index].value);
+          self.slots_[index].value.destruct();
+          self.slots_[index].epoch.store(read + N, MemoryOrder::Release);
           return ret;
         }
         continue;

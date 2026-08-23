@@ -10,18 +10,26 @@ public:
   public:
     explicit constexpr Iterator(T value) noexcept : value_(value) {}
 
-    [[nodiscard]] constexpr T operator*() const noexcept { return value_; }
+    [[nodiscard]] constexpr T operator*(this Iterator self) noexcept { return self.value_; }
 
-    constexpr T operator++() noexcept { return Reversed ? --value_ : ++value_; }
-    constexpr T operator--() noexcept { return Reversed ? ++value_ : --value_; }
-    constexpr T operator++(int) noexcept { return Reversed ? value_-- : value_++; }
-    constexpr T operator--(int) noexcept { return Reversed ? value_++ : value_--; }
+    constexpr T operator++(this Iterator& self) noexcept {
+      return Reversed ? --self.value_ : ++self.value_;
+    }
+    constexpr T operator--(this Iterator& self) noexcept {
+      return Reversed ? ++self.value_ : --self.value_;
+    }
+    constexpr T operator++(this Iterator& self, int) noexcept {
+      return Reversed ? self.value_-- : self.value_++;
+    }
+    constexpr T operator--(this Iterator& self, int) noexcept {
+      return Reversed ? self.value_++ : self.value_--;
+    }
 
-    [[nodiscard]] constexpr bool operator<=>(Iterator const& other) const noexcept = default;
+    [[nodiscard]] constexpr bool operator<=>(this Iterator self, Iterator other) noexcept = default;
 
-    [[nodiscard]] constexpr   operator T() noexcept { return value_; }
-    [[nodiscard]] constexpr T operator-(Iterator const& other) const noexcept {
-      return value_ - other.value_;
+    [[nodiscard]] constexpr   operator T(this Iterator self) noexcept { return self.value_; }
+    [[nodiscard]] constexpr T operator-(this Iterator self, Iterator other) noexcept {
+      return self.value_ - other.value_;
     }
 
   private:
@@ -31,14 +39,14 @@ public:
   constexpr IntegerRange() noexcept = default;
   constexpr IntegerRange(T begin, T end) noexcept : begin_(begin), end_(end) {}
 
-  [[nodiscard]] constexpr Iterator begin() const noexcept { return begin_; }
-  [[nodiscard]] constexpr Iterator end() const noexcept { return end_; }
+  [[nodiscard]] constexpr Iterator begin(this IntegerRange self) noexcept { return self.begin_; }
+  [[nodiscard]] constexpr Iterator end(this IntegerRange self) noexcept { return self.end_; }
 
-  [[nodiscard]] constexpr IntegerRange<T, true> range() const noexcept {
-    return Reversed ? IntegerRange<T, false>{end_ - 1, begin_ + 1} : *this;
+  [[nodiscard]] constexpr IntegerRange<T, true> range(this IntegerRange self) noexcept {
+    return Reversed ? IntegerRange<T, false>{self.end_ - 1, self.begin_ + 1} : self;
   }
-  [[nodiscard]] constexpr IntegerRange<T, true> reversed_range() const noexcept {
-    return Reversed ? *this : IntegerRange<T, true>{end_ - 1, begin_ + 1};
+  [[nodiscard]] constexpr IntegerRange<T, true> reversed_range(this IntegerRange self) noexcept {
+    return Reversed ? self : IntegerRange<T, true>{self.end_ - 1, self.begin_ + 1};
   }
 
 private:

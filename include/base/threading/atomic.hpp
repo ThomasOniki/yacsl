@@ -27,46 +27,47 @@ public:
 
   ~Atomic() noexcept = default;
 
-  Atomic& operator=(Atomic const&)     = delete;
-  Atomic& operator=(Atomic&&) noexcept = delete;
+  Atomic& operator=(this Atomic& self, Atomic const&)     = delete;
+  Atomic& operator=(this Atomic& self, Atomic&&) noexcept = delete;
 
-  [[nodiscard]] T load(MemoryOrder order) const noexcept {
+  [[nodiscard]] T load(this Atomic const& self, MemoryOrder order) noexcept {
     StackStorage<T> ret{};
-    __atomic_load(&value_, &*ret, static_cast<int>(order));
+    __atomic_load(&self.value_, &*ret, static_cast<int>(order));
     return *ret;
   }
 
-  void store(T value, MemoryOrder order) noexcept {
-    __atomic_store(&value_, &value, static_cast<int>(order));
+  void store(this Atomic& self, T value, MemoryOrder order) noexcept {
+    __atomic_store(&self.value_, &value, static_cast<int>(order));
   }
 
-  T fetch_add(T value, MemoryOrder order) noexcept {
-    return __atomic_fetch_add(&value_, value, static_cast<int>(order));
+  T fetch_add(this Atomic& self, T value, MemoryOrder order) noexcept {
+    return __atomic_fetch_add(&self.value_, value, static_cast<int>(order));
   }
-  T fetch_sub(T value, MemoryOrder order) noexcept {
-    return __atomic_fetch_sub(&value_, value, static_cast<int>(order));
+  T fetch_sub(this Atomic& self, T value, MemoryOrder order) noexcept {
+    return __atomic_fetch_sub(&self.value_, value, static_cast<int>(order));
   }
 
-  T exchange(T value, MemoryOrder order) noexcept {
+  T exchange(this Atomic& self, T value, MemoryOrder order) noexcept {
     StackStorage<T> ret;
-    __atomic_exchange(&value_, &value, &*ret, static_cast<int>(order));
+    __atomic_exchange(&self.value_, &value, &*ret, static_cast<int>(order));
     return *ret;
   }
 
-  bool compare_exchange(T& expected, T desired, MemoryOrder success, MemoryOrder failure) noexcept {
-    return __atomic_compare_exchange(&value_, &expected, &desired, /*weak:*/ false,
+  bool compare_exchange(this Atomic& self, T& expected, T desired, MemoryOrder success,
+                        MemoryOrder failure) noexcept {
+    return __atomic_compare_exchange(&self.value_, &expected, &desired, /*weak:*/ false,
                                      static_cast<int>(success), static_cast<int>(failure));
   }
-  bool compare_exchange_weak(T& expected, T desired, MemoryOrder success,
+  bool compare_exchange_weak(this Atomic& self, T& expected, T desired, MemoryOrder success,
                              MemoryOrder failure) noexcept {
-    return __atomic_compare_exchange(&value_, &expected, &desired, /*weak:*/ true,
+    return __atomic_compare_exchange(&self.value_, &expected, &desired, /*weak:*/ true,
                                      static_cast<int>(success), static_cast<int>(failure));
   }
 
-  T operator++() noexcept { return fetch_add(1, MemoryOrder::SeqCst) + 1; }
-  T operator++(int) noexcept { return fetch_add(1, MemoryOrder::SeqCst); }
-  T operator--() noexcept { return fetch_sub(1, MemoryOrder::SeqCst) - 1; }
-  T operator--(int) noexcept { return fetch_sub(1, MemoryOrder::SeqCst); }
+  T operator++(this Atomic& self) noexcept { return self.fetch_add(1, MemoryOrder::SeqCst) + 1; }
+  T operator++(this Atomic& self, int) noexcept { return self.fetch_add(1, MemoryOrder::SeqCst); }
+  T operator--(this Atomic& self) noexcept { return self.fetch_sub(1, MemoryOrder::SeqCst) - 1; }
+  T operator--(this Atomic& self, int) noexcept { return self.fetch_sub(1, MemoryOrder::SeqCst); }
 
 private:
   T value_ = T();

@@ -6,9 +6,9 @@
 namespace base {
 
 StackTrace                         StackTrace::current() noexcept { return StackTrace(); }
-Vector<StackTraceEntry, 16> const& StackTrace::compute_entries() noexcept {
-  entries_ = {};
-  return entries_;
+Vector<StackTraceEntry, 16> const& StackTrace::compute_entries(this StackTrace& self) noexcept {
+  self.entries_ = {};
+  return self.entries_;
 }
 
 } // namespace base

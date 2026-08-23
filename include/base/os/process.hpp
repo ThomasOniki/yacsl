@@ -72,7 +72,7 @@ private:
 public:
   class Input {
   public:
-    void write(Slice<uchar const> bytes) noexcept;
+    void write(this Input& self, Slice<uchar const> bytes) noexcept;
 
     Input(Input const&)            = delete;
     Input(Input&&)                 = delete;
@@ -101,7 +101,7 @@ public:
     ~Output() noexcept               = default;
 
     // returns 0 on EOF, between 1 and buffer.size() when sucessful.
-    usize read(Slice<uchar> buffer) noexcept;
+    usize read(this Output& self, Slice<uchar> buffer) noexcept;
 
     using Init = StdioInit<false>;
     using enum StdioType;
@@ -133,26 +133,28 @@ public:
     Output::Init error;
   };
 
-  [[nodiscard]] Error<SpawnError> start(char const* const* argv, Stdio const& stdio) noexcept;
+  [[nodiscard]] Error<SpawnError> start(this Process& self, char const* const* argv,
+                                        Stdio const& stdio) noexcept;
 
-  [[nodiscard]] Error<SpawnError> start(InitializerList<char const*> argv,
-                                        Stdio const&                 stdio) noexcept {
+  [[nodiscard]] Error<SpawnError> start(this Process& self, InitializerList<char const*> argv,
+                                        Stdio const& stdio) noexcept {
     Vector<char const*, 6> cstrs;
     cstrs.reserve(argv.size());
     for (char const* str : argv) {
       cstrs.push_back(str);
     }
     cstrs.push_back(nullptr);
-    return start(cstrs.data(), stdio);
+    return self.start(cstrs.data(), stdio);
   }
 
-  [[nodiscard]] Error<SpawnError> start(InitializerList<StringView> argv,
-                                        Stdio const&                stdio) noexcept {
-    return start<InitializerList<StringView>>(argv, stdio);
+  [[nodiscard]] Error<SpawnError> start(this Process& self, InitializerList<StringView> argv,
+                                        Stdio const& stdio) noexcept {
+    return self.start<InitializerList<StringView>>(argv, stdio);
   }
 
   template <RangeOf<StringView> Range>
-  [[nodiscard]] Error<SpawnError> start(Range const& argv, Stdio const& stdio) noexcept {
+  [[nodiscard]] Error<SpawnError> start(this Process& self, Range const& argv,
+                                        Stdio const& stdio) noexcept {
     Vector<BasicString<char, 16>, 6> cstrs(argv);
     Vector<char const*, 6>           cstr_ptrs;
     cstr_ptrs.reserve(cstrs.size() + 1);
@@ -160,7 +162,7 @@ public:
       cstr_ptrs.push_back(cstr.c_str());
     }
     cstr_ptrs.push_back(nullptr);
-    return start(cstr_ptrs.data(), stdio);
+    return self.start(cstr_ptrs.data(), stdio);
   }
 
   enum class Signal : u8 {
@@ -204,19 +206,25 @@ public:
     Signal stopped;
   };
 
-  ExitStatus wait() noexcept;
+  ExitStatus wait(this Process& self) noexcept;
 
-  void send_signal(Signal signal) noexcept;
+  void send_signal(this Process& self, Signal signal) noexcept;
 
-  Input&  get_stdin() noexcept BASE_LIFETIMEBOUND { return stdin_input_; }
-  Output& get_stdout() noexcept BASE_LIFETIMEBOUND { return stdout_output_; }
-  Output& get_stderr() noexcept BASE_LIFETIMEBOUND { return stderr_output_; }
+  template <typename Self> auto&& get_stdin(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+    return base::forward<Self>(self).stdin_input_;
+  }
+  template <typename Self> auto&& get_stdout(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+    return base::forward<Self>(self).stdout_output_;
+  }
+  template <typename Self> auto&& get_stderr(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+    return base::forward<Self>(self).stderr_output_;
+  }
 
 private:
-  void create_pipes(void* pvoid_state) noexcept;
-  void open_files(void* pvoid_state) noexcept;
-  void cleanup_after_spawn(void* pvoid_state) noexcept;
-  void cleanup_before_wait(ExitStatus* status) noexcept;
+  void create_pipes(this Process& self, void* pvoid_state) noexcept;
+  void open_files(this Process& self, void* pvoid_state) noexcept;
+  void cleanup_after_spawn(this Process& self, void* pvoid_state) noexcept;
+  void cleanup_before_wait(this Process& self, ExitStatus* status) noexcept;
 
 private:
 #ifdef _WIN32

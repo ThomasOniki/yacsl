@@ -11,197 +11,200 @@ namespace base {
 namespace {
 class Demangler {
 public:
-  String const& demangle(StringView mangled_func) noexcept {
-    mangled_       = mangled_func.begin();
-    has_templates_ = false;
-    demangled_.clear();
+  String const& demangle(this Demangler& self, StringView mangled_func) noexcept {
+    self.mangled_       = mangled_func.begin();
+    self.has_templates_ = false;
+    self.demangled_.clear();
 
-    if (!skip("_Z")) {
-      demangled_ += mangled_;
-      return demangled_;
+    if (!self.skip("_Z")) {
+      self.demangled_ += self.mangled_;
+      return self.demangled_;
     }
-    demangle_string();
+    self.demangle_string();
 
     // There is no substitute for the whole function name for some reason.
-    substitutes_.pop_back();
+    self.substitutes_.pop_back();
 
     String return_type;
 
-    bool const has_templates = has_templates_;
+    bool const has_templates = self.has_templates_;
 
     if (has_templates) {
-      String const func = base::move(demangled_);
-      demangle_type();
-      return_type = base::move(demangled_);
-      demangled_  = func;
+      String const func = base::move(self.demangled_);
+      self.demangle_type();
+      return_type     = base::move(self.demangled_);
+      self.demangled_ = func;
     }
 
-    demangled_ += '(';
-    if (*mangled_ == 'v' && mangled_ + 1 == mangled_func.end()) {
-      ++mangled_;
+    self.demangled_ += '(';
+    if (*self.mangled_ == 'v' && self.mangled_ + 1 == mangled_func.end()) {
+      ++self.mangled_;
     }
-    if (mangled_ != mangled_func.end()) {
+    if (self.mangled_ != mangled_func.end()) {
       for (;;) {
-        demangle_type();
-        if (mangled_ == mangled_func.end()) {
+        self.demangle_type();
+        if (self.mangled_ == mangled_func.end()) {
           break;
         }
-        demangled_ += ", ";
+        self.demangled_ += ", ";
       }
     }
-    demangled_ += ')';
+    self.demangled_ += ')';
 
     if (has_templates) {
-      String const func = base::move(demangled_);
-      demangled_        = base::move(return_type);
-      demangled_ += ' ';
-      demangled_ += func;
+      String const func = base::move(self.demangled_);
+      self.demangled_   = base::move(return_type);
+      self.demangled_ += ' ';
+      self.demangled_ += func;
     }
 
-    return demangled_;
+    return self.demangled_;
   }
 
 private:
   // NOLINTNEXTLINE(misc-no-recursion)
-  void demangle_string() noexcept {
-    substitute_beginings_.push_back(demangled_.size());
-    bool const is_nested = skip('N');
+  void demangle_string(this Demangler& self) noexcept {
+    self.substitute_beginings_.push_back(self.demangled_.size());
+    bool const is_nested = self.skip('N');
 
     for (bool is_first = true;; is_first = false) {
-      Modules const modules        = demangle_modules();
-      bool const    is_substituted = is_substitution();
+      Modules const modules        = self.demangle_modules();
+      bool const    is_substituted = self.is_substitution();
 
       if (!is_first) {
-        demangled_ += "::";
+        self.demangled_ += "::";
       }
 
       if (is_substituted) {
-        demangled_ += substitution();
+        self.demangled_ += self.substitution();
       } else {
-        skip('L');
+        self.skip('L');
 
-        char const* end = num_end(mangled_);
-        auto const  len = atoi<usize>(mangled_, end);
+        char const* end = num_end(self.mangled_);
+        auto const  len = atoi<usize>(self.mangled_, end);
 
         StringView const     chunk(end, len);
         constexpr StringView anonymous_ns = "_GLOBAL__N_";
         if (chunk.size() >= anonymous_ns.size() &&
             StringView(chunk.data(), anonymous_ns.size()) == anonymous_ns) {
-          demangled_ += "(anonymous namespace)";
+          self.demangled_ += "(anonymous namespace)";
         } else {
-          demangled_ += chunk;
+          self.demangled_ += chunk;
         }
-        mangled_ = chunk.end();
+        self.mangled_ = chunk.end();
       }
 
       for (Modules::Submodule const submodule : modules.submodules) {
         if (submodule.is_substitution) {
           continue;
         }
-        substitutes_.emplace_back(demangled_.size() + 1, submodule.end + demangled_.size());
+        self.substitutes_.emplace_back(self.demangled_.size() + 1,
+                                       submodule.end + self.demangled_.size());
       }
       if (!is_substituted) {
-        substitutes_.emplace_back(substitute_beginings_[substitute_beginings_.size() - 1],
-                                  demangled_.size());
+        self.substitutes_.emplace_back(
+            self.substitute_beginings_[self.substitute_beginings_.size() - 1],
+            self.demangled_.size());
       }
-      demangled_ += modules.module_string;
+      self.demangled_ += modules.module_string;
 
-      if (*mangled_ == 'I') {
-        demangle_template_args();
-        substitutes_.emplace_back(substitute_beginings_[substitute_beginings_.size() - 1],
-                                  demangled_.size());
+      if (*self.mangled_ == 'I') {
+        self.demangle_template_args();
+        self.substitutes_.emplace_back(
+            self.substitute_beginings_[self.substitute_beginings_.size() - 1],
+            self.demangled_.size());
       }
 
-      if (!is_nested || skip('E')) {
+      if (!is_nested || self.skip('E')) {
         break;
       }
     }
-    substitute_beginings_.pop_back();
+    self.substitute_beginings_.pop_back();
   }
 
   // NOLINTNEXTLINE(misc-no-recursion)
-  void demangle_type() noexcept {
-    StringView const qualifiers = get_mangled_qualifiers();
+  void demangle_type(this Demangler& self) noexcept {
+    StringView const qualifiers = self.get_mangled_qualifiers();
 
-    if (mangled_[0] == 'D' && mangled_[1] == 'p') {
-      demangle_template_parameter_pack(qualifiers);
+    if (self.mangled_[0] == 'D' && self.mangled_[1] == 'p') {
+      self.demangle_template_parameter_pack(qualifiers);
       return;
     }
 
-    if (*mangled_ == 'A') {
-      demangle_array_type(qualifiers);
+    if (*self.mangled_ == 'A') {
+      self.demangle_array_type(qualifiers);
       return;
     }
-    if (skip('T')) {
+    if (self.skip('T')) {
       usize       index = 0;
-      char const* end   = mangled_;
-      if (*mangled_ != '_') {
-        end   = num_end(mangled_);
-        index = atoi<usize>(mangled_, end) + 1;
+      char const* end   = self.mangled_;
+      if (*self.mangled_ != '_') {
+        end   = num_end(self.mangled_);
+        index = atoi<usize>(self.mangled_, end) + 1;
       }
-      if (index < template_args_.size()) {
-        demangled_.append(&demangled_[template_args_[index].begin],
-                          template_args_[index].end - template_args_[index].begin);
+      if (index < self.template_args_.size()) {
+        self.demangled_.append(&self.demangled_[self.template_args_[index].begin],
+                               self.template_args_[index].end - self.template_args_[index].begin);
       }
-      mangled_ = end + 1;
-    } else if ((*mangled_ >= '0' && *mangled_ <= '9') || *mangled_ == 'N' || *mangled_ == 'W' ||
-               is_substitution()) {
-      demangle_string();
+      self.mangled_ = end + 1;
+    } else if ((*self.mangled_ >= '0' && *self.mangled_ <= '9') || *self.mangled_ == 'N' ||
+               *self.mangled_ == 'W' || self.is_substitution()) {
+      self.demangle_string();
     } else {
-      demangle_builtin_type_id();
+      self.demangle_builtin_type_id();
     }
-    demangle_type_qualifiers(qualifiers);
+    self.demangle_type_qualifiers(qualifiers);
   }
 
   // NOLINTNEXTLINE(misc-no-recursion)
-  void demangle_template_parameter_pack(StringView qualifiers) noexcept {
-    mangled_ += "Dp"_sv.size();
-    if (*mangled_ == 'T') {
-      demangle_type();
-      demangle_type_qualifiers(qualifiers);
+  void demangle_template_parameter_pack(this Demangler& self, StringView qualifiers) noexcept {
+    self.mangled_ += "Dp"_sv.size();
+    if (*self.mangled_ == 'T') {
+      self.demangle_type();
+      self.demangle_type_qualifiers(qualifiers);
     } else {
-      demangle_type();
-      demangle_type_qualifiers(qualifiers);
-      demangled_ += "...";
+      self.demangle_type();
+      self.demangle_type_qualifiers(qualifiers);
+      self.demangled_ += "...";
     }
   }
 
   // NOLINTNEXTLINE(misc-no-recursion)
-  void demangle_array_type(StringView qualifiers) noexcept {
-    ++mangled_;
-    char const*      end = num_end(mangled_);
-    StringView const arr_len(mangled_, end);
-    mangled_ = end + 1;
-    demangle_type();
+  void demangle_array_type(this Demangler& self, StringView qualifiers) noexcept {
+    ++self.mangled_;
+    char const*      end = num_end(self.mangled_);
+    StringView const arr_len(self.mangled_, end);
+    self.mangled_ = end + 1;
+    self.demangle_type();
     StringView prefix = " [";
     if (qualifiers.size() > 0) {
-      demangled_ += " (";
-      demangle_type_qualifiers(qualifiers);
+      self.demangled_ += " (";
+      self.demangle_type_qualifiers(qualifiers);
       prefix = ") [";
     }
-    char* data = demangled_.grow(prefix.size() + arr_len.size() + 1);
+    char* data = self.demangled_.grow(prefix.size() + arr_len.size() + 1);
     copy(prefix.slice(), data);
     copy(arr_len.slice(), data + prefix.size());
     data[prefix.size() + arr_len.size()] = ']';
   }
 
-  void demangle_type_qualifiers(StringView mangled) noexcept {
+  void demangle_type_qualifiers(this Demangler& self, StringView mangled) noexcept {
     for (char const* it = mangled.end() - 1; it != mangled.begin() - 1; --it) {
       switch (*it) {
       case 'K':
-        demangled_ += " const";
+        self.demangled_ += " const";
         break;
       case 'V':
-        demangled_ += " volatile";
+        self.demangled_ += " volatile";
         break;
       case 'P':
-        demangled_ += '*';
+        self.demangled_ += '*';
         break;
       case 'R':
-        demangled_ += '&';
+        self.demangled_ += '&';
         break;
       case 'O':
-        demangled_ += "&&";
+        self.demangled_ += "&&";
         break;
       default:
         break;
@@ -209,182 +212,182 @@ private:
     }
   }
 
-  StringView get_mangled_qualifiers() noexcept {
-    char const* begin = mangled_;
-    while (*mangled_ == 'K' || *mangled_ == 'V' || *mangled_ == 'P' || *mangled_ == 'R' ||
-           *mangled_ == 'O') {
-      ++mangled_;
+  StringView get_mangled_qualifiers(this Demangler& self) noexcept {
+    char const* begin = self.mangled_;
+    while (*self.mangled_ == 'K' || *self.mangled_ == 'V' || *self.mangled_ == 'P' ||
+           *self.mangled_ == 'R' || *self.mangled_ == 'O') {
+      ++self.mangled_;
     }
-    return {begin, mangled_};
+    return {begin, self.mangled_};
   }
 
   // NOLINTNEXTLINE(misc-no-recursion)
-  void demangle_template_args() noexcept {
-    has_templates_ = true;
-    ++mangled_;
-    demangled_ += '<';
+  void demangle_template_args(this Demangler& self) noexcept {
+    self.has_templates_ = true;
+    ++self.mangled_;
+    self.demangled_ += '<';
 
-    if (skip('E')) {
-      demangled_ += '>';
+    if (self.skip('E')) {
+      self.demangled_ += '>';
       return;
     }
 
-    ++template_nesting_level_;
+    ++self.template_nesting_level_;
     for (;;) {
-      usize arg_begin = demangled_.size();
-      if (skip('J')) {
-        if (!skip('E')) {
+      usize arg_begin = self.demangled_.size();
+      if (self.skip('J')) {
+        if (!self.skip('E')) {
           for (;;) {
-            demangle_template_arg();
-            if (skip('E')) {
+            self.demangle_template_arg();
+            if (self.skip('E')) {
               break;
             }
-            demangled_ += ", ";
+            self.demangled_ += ", ";
           }
         }
       } else {
-        demangle_template_arg();
+        self.demangle_template_arg();
       }
-      if (template_nesting_level_ == 1) {
-        template_args_.emplace_back(arg_begin, demangled_.size());
+      if (self.template_nesting_level_ == 1) {
+        self.template_args_.emplace_back(arg_begin, self.demangled_.size());
       }
-      if (skip('E')) {
+      if (self.skip('E')) {
         break;
       }
-      if (arg_begin != demangled_.size()) {
-        demangled_ += ", ";
+      if (arg_begin != self.demangled_.size()) {
+        self.demangled_ += ", ";
       }
     }
-    --template_nesting_level_;
-    demangled_ += '>';
+    --self.template_nesting_level_;
+    self.demangled_ += '>';
   }
 
   // NOLINTNEXTLINE(misc-no-recursion)
-  void demangle_template_arg() noexcept {
-    if (*mangled_ == 'L') {
-      demangle_litteral();
-    } else if (skip('X')) {
-      while (*mangled_ != 'E') {
-        demangle_expression();
+  void demangle_template_arg(this Demangler& self) noexcept {
+    if (*self.mangled_ == 'L') {
+      self.demangle_litteral();
+    } else if (self.skip('X')) {
+      while (*self.mangled_ != 'E') {
+        self.demangle_expression();
       }
-      ++mangled_;
+      ++self.mangled_;
     } else {
-      demangle_type();
+      self.demangle_type();
     }
   }
 
   // NOLINTNEXTLINE(misc-no-recursion)
-  void demangle_litteral() noexcept {
-    ++mangled_;
-    switch (*mangled_) {
+  void demangle_litteral(this Demangler& self) noexcept {
+    ++self.mangled_;
+    switch (*self.mangled_) {
     case 'i':
-      ++mangled_;
-      demangle_until_E();
+      ++self.mangled_;
+      self.demangle_until_E();
       break;
     case 'j':
-      ++mangled_;
-      demangle_until_E();
-      demangled_ += 'u';
+      ++self.mangled_;
+      self.demangle_until_E();
+      self.demangled_ += 'u';
       break;
     case 'l':
-      ++mangled_;
-      demangle_until_E();
-      demangled_ += 'l';
+      ++self.mangled_;
+      self.demangle_until_E();
+      self.demangled_ += 'l';
       break;
     case 'm':
-      ++mangled_;
-      demangle_until_E();
-      demangled_ += "ul";
+      ++self.mangled_;
+      self.demangle_until_E();
+      self.demangled_ += "ul";
       break;
     case 'x':
-      ++mangled_;
-      demangle_until_E();
-      demangled_ += "ll";
+      ++self.mangled_;
+      self.demangle_until_E();
+      self.demangled_ += "ll";
       break;
     case 'y':
-      ++mangled_;
-      demangle_until_E();
-      demangled_ += "ull";
+      ++self.mangled_;
+      self.demangle_until_E();
+      self.demangled_ += "ull";
       break;
     default:
-      demangled_ += '(';
-      demangle_type();
-      demangled_ += ')';
-      demangle_until_E();
+      self.demangled_ += '(';
+      self.demangle_type();
+      self.demangled_ += ')';
+      self.demangle_until_E();
       break;
     }
   }
 
-  void demangle_until_E() noexcept {
-    char const* begin = mangled_;
-    while (*mangled_ != 'E') {
-      ++mangled_;
+  void demangle_until_E(this Demangler& self) noexcept {
+    char const* begin = self.mangled_;
+    while (*self.mangled_ != 'E') {
+      ++self.mangled_;
     }
-    demangled_ += {begin, mangled_};
-    ++mangled_;
+    self.demangled_ += {begin, self.mangled_};
+    ++self.mangled_;
   }
 
   // NOLINTNEXTLINE(misc-no-recursion)
-  void demangle_expression() noexcept {
-    if (skip("tl")) {
-      demangle_type_litteral();
-    } else if (skip("sP")) {
-      demangled_ += "sizeof ...(";
-      while (*mangled_ != 'E') {
-        demangle_template_arg();
+  void demangle_expression(this Demangler& self) noexcept {
+    if (self.skip("tl")) {
+      self.demangle_type_litteral();
+    } else if (self.skip("sP")) {
+      self.demangled_ += "sizeof ...(";
+      while (*self.mangled_ != 'E') {
+        self.demangle_template_arg();
       }
-      ++mangled_;
-      demangled_ += ')';
+      ++self.mangled_;
+      self.demangled_ += ')';
     }
   }
 
   // NOLINTNEXTLINE(misc-no-recursion)
-  void demangle_type_litteral() noexcept {
-    demangle_type();
-    demangled_ += '{';
+  void demangle_type_litteral(this Demangler& self) noexcept {
+    self.demangle_type();
+    self.demangled_ += '{';
     for (;;) {
-      if (*mangled_ == 'L') {
-        demangle_litteral();
+      if (*self.mangled_ == 'L') {
+        self.demangle_litteral();
       }
-      demangle_expression();
-      if (skip('E')) {
+      self.demangle_expression();
+      if (self.skip('E')) {
         break;
       }
-      demangled_ += ", ";
+      self.demangled_ += ", ";
     }
-    demangled_ += '}';
+    self.demangled_ += '}';
   }
 
-  [[nodiscard]] bool is_substitution() const noexcept {
-    return mangled_[0] == 'S' &&
-           (mangled_[1] == '_' || (mangled_[1] >= '0' && mangled_[1] <= '9') ||
-            (mangled_[1] >= 'A' && mangled_[1] <= 'Z'));
+  [[nodiscard]] bool is_substitution(this Demangler const& self) noexcept {
+    return self.mangled_[0] == 'S' &&
+           (self.mangled_[1] == '_' || (self.mangled_[1] >= '0' && self.mangled_[1] <= '9') ||
+            (self.mangled_[1] >= 'A' && self.mangled_[1] <= 'Z'));
   }
 
-  [[nodiscard]] StringView substitution() noexcept {
-    skip('S');
+  [[nodiscard]] StringView substitution(this Demangler& self) noexcept {
+    self.skip('S');
 
     usize index = 0;
-    if (!skip('_')) {
+    if (!self.skip('_')) {
       index = 1;
       for (;;) {
-        if (*mangled_ <= '9') {
-          index += static_cast<usize>(*mangled_) - '0';
+        if (*self.mangled_ <= '9') {
+          index += static_cast<usize>(*self.mangled_) - '0';
         } else {
-          index += static_cast<usize>(*mangled_) - 'A' + 10;
+          index += static_cast<usize>(*self.mangled_) - 'A' + 10;
         }
-        ++mangled_;
-        if (skip('_')) {
+        ++self.mangled_;
+        if (self.skip('_')) {
           break;
         }
         index *= 36;
       }
     }
-    if (index >= substitutes_.size()) {
-      return {demangled_.data(), static_cast<usize>(0)};
+    if (index >= self.substitutes_.size()) {
+      return {self.demangled_.data(), static_cast<usize>(0)};
     }
-    return {&demangled_[substitutes_[index].begin],
-            substitutes_[index].end - substitutes_[index].begin};
+    return {&self.demangled_[self.substitutes_[index].begin],
+            self.substitutes_[index].end - self.substitutes_[index].begin};
   }
 
   struct Modules {
@@ -397,27 +400,27 @@ private:
   };
 
   // NOLINTNEXTLINE(misc-no-recursion)
-  Modules demangle_modules() noexcept {
+  Modules demangle_modules(this Demangler& self) noexcept {
     Modules ret;
     for (;;) {
       StringView to_add;
-      bool const is_substituted = !skip('W');
+      bool const is_substituted = !self.skip('W');
       if (is_substituted) {
-        if (!is_substitution()) {
+        if (!self.is_substitution()) {
           break;
         }
-        char const*      before_sub = mangled_;
-        StringView const sub        = substitution();
-        if (sub.data() == demangled_.data() || sub.data()[-1] != '@') {
-          mangled_ = before_sub;
+        char const*      before_sub = self.mangled_;
+        StringView const sub        = self.substitution();
+        if (sub.data() == self.demangled_.data() || sub.data()[-1] != '@') {
+          self.mangled_ = before_sub;
           break;
         }
         to_add = sub;
       } else {
-        char const* end = num_end(mangled_);
-        auto const  len = atoi<usize>(mangled_, end);
-        mangled_        = end + len;
-        to_add          = StringView(end, mangled_);
+        char const* end = num_end(self.mangled_);
+        auto const  len = atoi<usize>(self.mangled_, end);
+        self.mangled_   = end + len;
+        to_add          = StringView(end, self.mangled_);
       }
 
       char* bytes = ret.module_string.grow(to_add.size() + 1);
@@ -435,126 +438,126 @@ private:
   }
 
   // NOLINTNEXTLINE(google-readability-function-size)
-  void demangle_builtin_type_id() noexcept {
-    switch (*mangled_) {
+  void demangle_builtin_type_id(this Demangler& self) noexcept {
+    switch (*self.mangled_) {
     case 'v':
-      demangled_ += "void";
+      self.demangled_ += "void";
       break;
     case 'w':
-      demangled_ += "wchar_t";
+      self.demangled_ += "wchar_t";
       break;
     case 'b':
-      demangled_ += "bool";
+      self.demangled_ += "bool";
       break;
     case 'c':
-      demangled_ += "char";
+      self.demangled_ += "char";
       break;
     case 'a':
-      demangled_ += "signed char";
+      self.demangled_ += "signed char";
       break;
     case 'h':
-      demangled_ += "unsigned char";
+      self.demangled_ += "unsigned char";
       break;
     case 's':
-      demangled_ += "short";
+      self.demangled_ += "short";
       break;
     case 't':
-      demangled_ += "unsigned short";
+      self.demangled_ += "unsigned short";
       break;
     case 'i':
-      demangled_ += "int";
+      self.demangled_ += "int";
       break;
     case 'j':
-      demangled_ += "unsigned int";
+      self.demangled_ += "unsigned int";
       break;
     case 'l':
-      demangled_ += "long";
+      self.demangled_ += "long";
       break;
     case 'm':
-      demangled_ += "unsigned long";
+      self.demangled_ += "unsigned long";
       break;
     case 'x':
-      demangled_ += "long long";
+      self.demangled_ += "long long";
       break;
     case 'y':
-      demangled_ += "unsigned long long";
+      self.demangled_ += "unsigned long long";
       break;
     case 'n':
-      demangled_ += "__int128";
+      self.demangled_ += "__int128";
       break;
     case 'o':
-      demangled_ += "unsigned __int128";
+      self.demangled_ += "unsigned __int128";
       break;
     case 'f':
-      demangled_ += "float";
+      self.demangled_ += "float";
       break;
     case 'd':
-      demangled_ += "double";
+      self.demangled_ += "double";
       break;
     case 'e':
-      demangled_ += "long double";
+      self.demangled_ += "long double";
       break;
     case 'g':
-      demangled_ += "__float128 (ABI extension)";
+      self.demangled_ += "__float128 (ABI extension)";
       break;
     case 'z':
-      demangled_ += "...";
+      self.demangled_ += "...";
       break;
     case 'D':
-      switch (mangled_[1]) {
+      switch (self.mangled_[1]) {
       case 'u':
-        demangled_ += "char8_t";
-        ++mangled_;
+        self.demangled_ += "char8_t";
+        ++self.mangled_;
         break;
       case 's':
-        demangled_ += "char16_t";
-        ++mangled_;
+        self.demangled_ += "char16_t";
+        ++self.mangled_;
         break;
       case 'i':
-        demangled_ += "char32_t";
-        ++mangled_;
+        self.demangled_ += "char32_t";
+        ++self.mangled_;
         break;
       case 'h':
-        demangled_ += "_Float16";
-        ++mangled_;
+        self.demangled_ += "_Float16";
+        ++self.mangled_;
         break;
       default:
-        if (mangled_[3] == '6') {
-          demangled_ += "_Float16";
-          mangled_ += "DF16_"_sv.size() - 1;
-        } else if (mangled_[2] == '3') {
-          demangled_ += "_Float32";
-          mangled_ += "DF32_"_sv.size() - 1;
-        } else if (mangled_[2] == '6') {
-          demangled_ += "_Float64";
-          mangled_ += "DF64_"_sv.size() - 1;
-        } else if (mangled_[2] == '1') {
-          demangled_ += "_Float128";
-          mangled_ += "DF128_"_sv.size() - 1;
+        if (self.mangled_[3] == '6') {
+          self.demangled_ += "_Float16";
+          self.mangled_ += "DF16_"_sv.size() - 1;
+        } else if (self.mangled_[2] == '3') {
+          self.demangled_ += "_Float32";
+          self.mangled_ += "DF32_"_sv.size() - 1;
+        } else if (self.mangled_[2] == '6') {
+          self.demangled_ += "_Float64";
+          self.mangled_ += "DF64_"_sv.size() - 1;
+        } else if (self.mangled_[2] == '1') {
+          self.demangled_ += "_Float128";
+          self.mangled_ += "DF128_"_sv.size() - 1;
         }
-        if (mangled_[4] == 'x') {
-          demangled_ += 'x';
-          ++mangled_;
+        if (self.mangled_[4] == 'x') {
+          self.demangled_ += 'x';
+          ++self.mangled_;
         }
       }
       break;
     default:
       break;
     }
-    ++mangled_;
+    ++self.mangled_;
   }
 
-  bool skip(char chr) noexcept {
-    if (*mangled_ == chr) {
-      ++mangled_;
+  bool skip(this Demangler& self, char chr) noexcept {
+    if (*self.mangled_ == chr) {
+      ++self.mangled_;
       return true;
     }
     return false;
   }
 
-  bool skip(StringView str) noexcept {
-    if (StringView(mangled_, mangled_ + str.size()) == str) {
-      mangled_ += str.size();
+  bool skip(this Demangler& self, StringView str) noexcept {
+    if (StringView(self.mangled_, self.mangled_ + str.size()) == str) {
+      self.mangled_ += str.size();
       return true;
     }
     return false;

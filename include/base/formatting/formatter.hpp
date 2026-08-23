@@ -22,8 +22,10 @@ namespace base {
 
 template <typename T> class Formatter {
 public:
-  constexpr char const* parse(char const* fmt) noexcept { return fmt + 2; }
-  void                  format(String& buf, T const& value) const noexcept {
+  constexpr char const* parse(this Formatter& /*self*/, char const* fmt) noexcept {
+    return fmt + 2;
+  }
+  void format(this Formatter const& /*self*/, String& buf, T const& value) noexcept {
     buf += TYPE_STRING<T>;
     buf += " at ";
     itoa(buf, reinterpret_cast<uptr>(&value), "0123456789abcdef");
@@ -32,77 +34,77 @@ public:
 
 template <Integral T> class Formatter<T> {
 public:
-  constexpr char const* parse(char const* fmt) noexcept {
+  constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
     FormatStringParser parser(fmt);
-    fill_              = parser.check_fill();
-    align_             = parser.check_align(FormatStringParser::Align::Right);
-    sign_              = parser.check_sign();
-    is_alternate_form_ = parser.skip('#');
-    width_             = parser.check_width();
+    self.fill_              = parser.check_fill();
+    self.align_             = parser.check_align(FormatStringParser::Align::Right);
+    self.sign_              = parser.check_sign();
+    self.is_alternate_form_ = parser.skip('#');
+    self.width_             = parser.check_width();
     if (parser.skip('b')) {
-      type_ = Type::Binary;
+      self.type_ = Type::Binary;
     } else if (parser.skip('B')) {
-      type_ = Type::BinaryUpperCase;
+      self.type_ = Type::BinaryUpperCase;
     } else if (parser.skip('o')) {
-      type_ = Type::Octal;
+      self.type_ = Type::Octal;
     } else if (parser.skip('d')) {
-      type_ = Type::Decimal;
+      self.type_ = Type::Decimal;
     } else if (parser.skip('x')) {
-      type_ = Type::Hex;
+      self.type_ = Type::Hex;
     } else if (parser.skip('X')) {
-      type_ = Type::HexUpperCase;
+      self.type_ = Type::HexUpperCase;
     } else if (parser.skip('c')) {
-      type_ = Type::Char;
+      self.type_ = Type::Char;
     } else if (parser.skip('?')) {
-      type_ = Type::DebugChar;
+      self.type_ = Type::DebugChar;
     }
     return parser.end_parse();
   }
 
-  void format(String& buf, T value) const noexcept {
+  void format(this Formatter const& self, String& buf, T value) noexcept {
     PaddingOptions const opts = {
-        .width = width_,
-        .fill  = fill_,
-        .align = align_,
+        .width = self.width_,
+        .fill  = self.fill_,
+        .align = self.align_,
     };
 
-    switch (type_) {
+    switch (self.type_) {
     case Type::Binary:
-      if (is_alternate_form_) {
-        format_with_sign<"01", "0b">(buf, value, opts);
+      if (self.is_alternate_form_) {
+        self.format_with_sign<"01", "0b">(buf, value, opts);
       } else {
-        format_with_sign<"01", "">(buf, value, opts);
+        self.format_with_sign<"01", "">(buf, value, opts);
       }
       break;
     case Type::BinaryUpperCase:
-      if (is_alternate_form_) {
-        format_with_sign<"01", "0B">(buf, value, opts);
+      if (self.is_alternate_form_) {
+        self.format_with_sign<"01", "0B">(buf, value, opts);
       } else {
-        format_with_sign<"01", "">(buf, value, opts);
+        self.format_with_sign<"01", "">(buf, value, opts);
       }
       break;
     case Type::Octal:
-      if (is_alternate_form_) {
-        format_with_sign<"01234567", "0">(buf, value, opts);
+      if (self.is_alternate_form_) {
+        self.format_with_sign<"01234567", "0">(buf, value, opts);
       } else {
-        format_with_sign<"01234567", "">(buf, value, opts);
+        self.format_with_sign<"01234567", "">(buf, value, opts);
       }
       break;
     case Type::Decimal:
-      [[likely]] format_with_sign<"0123456789", "">(buf, value, opts);
+      [[likely]] self.format_with_sign<"0123456789", "">(buf, value, opts);
       break;
     case Type::Hex:
-      if (is_alternate_form_) {
-        format_with_sign<"0123456789abcdef", "0x">(buf, value, opts);
+      if (self.is_alternate_form_) {
+        self.format_with_sign<"0123456789abcdef", "0x">(buf, value, opts);
       } else {
-        format_with_sign<"0123456789abcdef", "">(buf, value, opts);
+        self.format_with_sign<"0123456789abcdef", "">(buf, value, opts);
       }
       break;
     case Type::HexUpperCase:
-      if (is_alternate_form_) {
-        format_with_sign<"0123456789ABCDEF", "0X">(buf, value, opts);
+      if (self.is_alternate_form_) {
+        self.format_with_sign<"0123456789ABCDEF", "0X">(buf, value, opts);
       } else {
-        format_with_sign<"0123456789ABCDEF", "">(buf, value, opts);
+        self.format_with_sign<"0123456789ABCDEF", "">(buf, value, opts);
       }
       break;
     case Type::Char:
@@ -130,8 +132,9 @@ public:
 
 private:
   template <NTTPString Charset, NTTPString Prefix>
-  void format_with_sign(String& buf, T value, PaddingOptions opts) const noexcept {
-    switch (sign_) {
+  void format_with_sign(this Formatter const& self, String& buf, T value,
+                        PaddingOptions opts) noexcept {
+    switch (self.sign_) {
     case FormatStringParser::Sign::Normal:
       [[likely]] format_with_prefix_after_sign<Charset, Prefix, "">(buf, value, opts);
       break;
@@ -184,25 +187,25 @@ private:
 
 template <> class Formatter<bool> {
 public:
-  constexpr char const* parse(char const* fmt) noexcept {
+  constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
     FormatStringParser parser(fmt);
-    fill_  = parser.check_fill();
-    align_ = parser.check_align(FormatStringParser::Align::Right);
-    width_ = parser.check_width();
+    self.fill_  = parser.check_fill();
+    self.align_ = parser.check_align(FormatStringParser::Align::Right);
+    self.width_ = parser.check_width();
     if (parser.skip('d')) {
-      type_ = Type::Numeric;
+      self.type_ = Type::Numeric;
     }
     parser.skip('s');
     return parser.end_parse();
   }
 
-  void format(String& buf, bool value) const noexcept {
+  void format(this Formatter const& self, String& buf, bool value) noexcept {
     PaddingOptions const opts{
-        .width = width_,
-        .fill  = fill_,
-        .align = align_,
+        .width = self.width_,
+        .fill  = self.fill_,
+        .align = self.align_,
     };
-    if (type_ == Type::Alpha) {
+    if (self.type_ == Type::Alpha) {
       pad_string(buf, value ? "true"_sv : "false"_sv, opts);
     } else {
       pad_char(buf, static_cast<char>('0' + static_cast<int>(value)), opts);
@@ -223,24 +226,24 @@ private:
 
 template <FloatingPoint T> class Formatter<T> {
 public:
-  constexpr char const* parse(char const* fmt) {
+  constexpr char const* parse(this Formatter& self, char const* fmt) {
     FormatStringParser parser(fmt);
-    fill_  = parser.check_fill();
-    align_ = parser.check_align(FormatStringParser::Align::Right);
-    sign_  = parser.check_sign();
-    width_ = parser.check_width();
+    self.fill_  = parser.check_fill();
+    self.align_ = parser.check_align(FormatStringParser::Align::Right);
+    self.sign_  = parser.check_sign();
+    self.width_ = parser.check_width();
     if (parser.skip('f')) {
-      type_ = Type::General;
+      self.type_ = Type::General;
     } else if (parser.skip('e')) {
-      type_ = Type::Scientific;
+      self.type_ = Type::Scientific;
     } else if (parser.skip('a')) {
-      type_ = Type::Hex;
+      self.type_ = Type::Hex;
     }
     parser.skip('g');
     return parser.end_parse();
   }
 
-  void format(String& buf, T value) const noexcept;
+  void format(this Formatter const& self, String& buf, T value) noexcept;
 
 private:
   enum class Type : u8 {
@@ -260,19 +263,19 @@ private:
 
 template <typename T> class Formatter<T*> {
 public:
-  constexpr char const* parse(char const* fmt) noexcept {
+  constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
     FormatStringParser parser(fmt);
-    fill_  = parser.check_fill();
-    align_ = parser.check_align(FormatStringParser::Align::Right);
-    width_ = parser.check_width();
+    self.fill_  = parser.check_fill();
+    self.align_ = parser.check_align(FormatStringParser::Align::Right);
+    self.width_ = parser.check_width();
     return parser.end_parse();
   }
 
-  void format(String& buf, T const* ptr) const noexcept {
+  void format(this Formatter const& self, String& buf, T const* ptr) noexcept {
     PaddingOptions const opts{
-        .width = width_,
-        .fill  = fill_,
-        .align = align_,
+        .width = self.width_,
+        .fill  = self.fill_,
+        .align = self.align_,
     };
     pad_integral<"0123456789abcdef", "0x">(buf, reinterpret_cast<uptr>(ptr), opts);
   }
@@ -285,21 +288,21 @@ private:
 
 template <Character Char, Integral SizeT> class Formatter<BasicStringView<Char, SizeT>> {
 public:
-  constexpr char const* parse(char const* fmt) noexcept {
+  constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
     FormatStringParser parser(fmt);
-    fill_  = parser.check_fill();
-    align_ = parser.check_align(FormatStringParser::Align::Left);
-    width_ = parser.check_width();
+    self.fill_  = parser.check_fill();
+    self.align_ = parser.check_align(FormatStringParser::Align::Left);
+    self.width_ = parser.check_width();
     if (parser.skip('?')) {
-      type_ = Type::Debug;
+      self.type_ = Type::Debug;
     }
     parser.skip('s');
     return parser.end_parse();
   }
 
-  void format(String& buf, BasicStringView<Char, SizeT> str) const noexcept {
-    PaddingOptions const opts{.width = width_, .fill = fill_, .align = align_};
-    if (type_ == Type::Normal) [[likely]] {
+  void format(this Formatter const& self, String& buf, BasicStringView<Char, SizeT> str) noexcept {
+    PaddingOptions const opts{.width = self.width_, .fill = self.fill_, .align = self.align_};
+    if (self.type_ == Type::Normal) [[likely]] {
       pad_string(buf, BasicStringView<Char>(str.data(), static_cast<usize>(str.size())), opts);
     } else {
       pad_string<true>(buf, BasicStringView<Char>(str.data(), static_cast<usize>(str.size())),
@@ -321,34 +324,34 @@ private:
 template <Character Char, Integral SizeT>
 class Formatter<Slice<Char, SizeT>> : Formatter<BasicStringView<Char, SizeT>> {
 public:
-  constexpr char const* parse(char const* fmt) noexcept {
-    return Formatter<BasicStringView<Char, SizeT>>::parse(fmt);
+  constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
+    return self.Formatter<BasicStringView<Char, SizeT>>::parse(fmt);
   }
-  void format(String& buf, Slice<Char, SizeT> str) const noexcept {
-    return Formatter<BasicStringView<Char, SizeT>>::format(buf, {str.data(), str.size()});
+  void format(this Formatter const& self, String& buf, Slice<Char, SizeT> str) noexcept {
+    return self.Formatter<BasicStringView<Char, SizeT>>::format(buf, {str.data(), str.size()});
   }
 };
 
 template <Character Char> class Formatter<Char*> {
 public:
-  constexpr char const* parse(char const* fmt) noexcept {
+  constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
     FormatStringParser parser(fmt);
-    fill_  = parser.check_fill();
-    align_ = parser.check_align(FormatStringParser::Align::Left);
-    width_ = parser.check_width();
+    self.fill_  = parser.check_fill();
+    self.align_ = parser.check_align(FormatStringParser::Align::Left);
+    self.width_ = parser.check_width();
     if (parser.skip('?')) {
-      type_ = Type::Debug;
+      self.type_ = Type::Debug;
     } else if (parser.skip('x')) {
-      type_ = Type::Pointer;
+      self.type_ = Type::Pointer;
     }
     return parser.end_parse();
   }
 
-  void format(String& buf, Char const* str) const noexcept {
-    PaddingOptions const opts{.width = width_, .fill = fill_, .align = align_};
-    if (type_ == Type::CString) [[likely]] {
+  void format(this Formatter const& self, String& buf, Char const* str) noexcept {
+    PaddingOptions const opts{.width = self.width_, .fill = self.fill_, .align = self.align_};
+    if (self.type_ == Type::CString) [[likely]] {
       pad_string(buf, BasicStringView<Char>(str), opts);
-    } else if (type_ == Type::Debug) {
+    } else if (self.type_ == Type::Debug) {
       pad_string<true>(buf, BasicStringView<Char>(str), opts);
     } else {
       pad_integral<"0123456789abcdef">(buf, reinterpret_cast<uptr>(str), opts);
@@ -371,21 +374,22 @@ private:
 template <Character Char, usize N, AllocatorLike Allocator, Integral SizeT>
 class Formatter<BasicString<Char, N, Allocator, SizeT>> : Formatter<BasicStringView<Char>> {
 public:
-  constexpr char const* parse(char const* fmt) noexcept {
-    return Formatter<BasicStringView<Char>>::parse(fmt);
+  constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
+    return self.Formatter<BasicStringView<Char>>::parse(fmt);
   }
-  void format(String& buf, BasicString<Char, N, Allocator, SizeT> const& str) const noexcept {
-    return Formatter<BasicStringView<Char>>::format(buf, str.view());
+  void format(this Formatter const& self, String& buf,
+              BasicString<Char, N, Allocator, SizeT> const& str) noexcept {
+    return self.Formatter<BasicStringView<Char>>::format(buf, str.view());
   }
 };
 
 template <Character Char, usize N> class Formatter<Char[N]> : Formatter<BasicStringView<Char>> {
 public:
-  constexpr char const* parse(char const* fmt) noexcept {
-    return Formatter<BasicStringView<Char>>::parse(fmt);
+  constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
+    return self.Formatter<BasicStringView<Char>>::parse(fmt);
   }
-  void format(String& buf, Char const (&str)[N]) const noexcept {
-    return Formatter<BasicStringView<Char>>::format(
+  void format(this Formatter const& self, String& buf, Char const (&str)[N]) noexcept {
+    return self.Formatter<BasicStringView<Char>>::format(
         buf, BasicStringView(static_cast<Char const*>(str), N - 1));
   }
 };
@@ -393,29 +397,31 @@ public:
 template <Character Char, usize N>
 class Formatter<Char const[N]> : Formatter<BasicStringView<Char>> {
 public:
-  constexpr char const* parse(char const* fmt) noexcept {
-    return Formatter<BasicStringView<Char>>::parse(fmt);
+  constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
+    return self.Formatter<BasicStringView<Char>>::parse(fmt);
   }
-  void format(String& buf, Char const (&str)[N]) const noexcept {
-    return Formatter<BasicStringView<Char>>::format(buf, BasicStringView(str, N - 1));
+  void format(this Formatter const& self, String& buf, Char const (&str)[N]) noexcept {
+    return self.Formatter<BasicStringView<Char>>::format(buf, BasicStringView(str, N - 1));
   }
 };
 
 template <RangeLike T>
 class Formatter<T> : Formatter<RemoveCVRef<decltype(*declval<T>().begin())>> {
 public:
-  constexpr char const* parse(char const* fmt) noexcept { return Base::parse(fmt); }
+  constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
+    return self.Base::parse(fmt);
+  }
 
-  void format(String& buf, T const& range) const noexcept {
+  void format(this Formatter const& self, String& buf, T const& range) noexcept {
     buf += '[';
     auto iter = range.begin();
     auto end  = range.end();
     if (iter != end) {
-      Base::format(buf, *iter);
+      self.Base::format(buf, *iter);
       ++iter;
       for (; iter != end; ++iter) {
         buf += ", ";
-        Base::format(buf, *iter);
+        self.Base::format(buf, *iter);
       }
     }
     buf += ']';
@@ -428,21 +434,21 @@ private:
 
 template <Enum T> class Formatter<T> {
 public:
-  constexpr char const* parse(char const* fmt) noexcept {
+  constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
     FormatStringParser parser(fmt);
-    fill_  = parser.check_fill();
-    align_ = parser.check_align(FormatStringParser::Align::Left);
-    width_ = parser.check_width();
+    self.fill_  = parser.check_fill();
+    self.align_ = parser.check_align(FormatStringParser::Align::Left);
+    self.width_ = parser.check_width();
     return parser.end_parse();
   }
 
-  void format(String& buf, T value) const noexcept {
+  void format(this Formatter& self, String& buf, T value) noexcept {
     auto const           scalar = static_cast<UnderlyingType>(value);
     auto const           u_val  = static_cast<MakeUnsigned<UnderlyingType>>(value);
     PaddingOptions const opts   = {
-        .width = width_,
-        .fill  = fill_,
-        .align = align_,
+        .width = self.width_,
+        .fill  = self.fill_,
+        .align = self.align_,
     };
     if (u_val < 256) {
       pad_string(buf, TABLE[u_val], opts);

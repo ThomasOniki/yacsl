@@ -9,19 +9,43 @@ namespace base {
 
 template <typename T> class StackStorage {
 public:
-  template <typename... Args> constexpr T& construct(Args&&... args) {
-    return *base::construct_at(&get(), base::forward<Args>(args)...);
+  template <typename... Args> constexpr T& construct(this StackStorage& self, Args&&... args) {
+    return *base::construct_at(self.ptr(), base::forward<Args>(args)...);
   }
-  constexpr void destruct() { get().~T(); }
+  constexpr void destruct(this StackStorage& self) noexcept { self.ptr()->~T(); }
 
-  [[nodiscard]] constexpr T*       operator->() noexcept BASE_LIFETIMEBOUND { return &get(); }
-  [[nodiscard]] constexpr T const* operator->() const noexcept BASE_LIFETIMEBOUND { return &get(); }
-  [[nodiscard]] constexpr T&       operator*() noexcept BASE_LIFETIMEBOUND { return get(); }
-  [[nodiscard]] constexpr T const& operator*() const noexcept BASE_LIFETIMEBOUND { return get(); }
+  template <typename Self>
+  [[nodiscard]] constexpr auto operator->(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+    return base::forward<Self>(self).ptr();
+  }
+  template <typename Self>
+  [[nodiscard]] constexpr auto&& operator*(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+    return base::forward<Self>(self).get();
+  }
 
-  [[nodiscard]] T& get() noexcept BASE_LIFETIMEBOUND { return *reinterpret_cast<T*>(data_.data()); }
-  [[nodiscard]] T const& get() const noexcept BASE_LIFETIMEBOUND {
-    return *reinterpret_cast<T const*>(data_.data());
+  [[nodiscard]] constexpr T& get(this StackStorage& self BASE_LIFETIMEBOUND) noexcept {
+    return *self.ptr();
+  }
+  [[nodiscard]] constexpr T&& get(this StackStorage&& self BASE_LIFETIMEBOUND) noexcept {
+    return base::move(*base::move(self).ptr());
+  }
+  [[nodiscard]] constexpr T const& get(this StackStorage const& self BASE_LIFETIMEBOUND) noexcept {
+    return *self.ptr();
+  }
+  [[nodiscard]] constexpr T const&&
+  get(this StackStorage const&& self BASE_LIFETIMEBOUND) noexcept {
+    return base::move(*base::move(self).ptr());
+  }
+
+private:
+  [[nodiscard]] constexpr T* ptr(this StackStorage& self BASE_LIFETIMEBOUND) noexcept {
+    return reinterpret_cast<T*>(self.data_.data());
+  }
+  [[nodiscard]] constexpr T* ptr(this StackStorage&& self BASE_LIFETIMEBOUND) noexcept {
+    return reinterpret_cast<T*>(base::move(self).data_.data());
+  }
+  [[nodiscard]] constexpr T const* ptr(this StackStorage const& self BASE_LIFETIMEBOUND) noexcept {
+    return reinterpret_cast<T const*>(base::move(self).data_.data());
   }
 
 private:

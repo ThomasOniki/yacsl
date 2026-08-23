@@ -31,39 +31,39 @@ public:
   ~File() noexcept { close(); }
 
   File& operator=(File const&) = delete;
-  File& operator=(File&& other) noexcept;
+  File& operator=(this File& self, File&& other) noexcept;
 
-  [[nodiscard]] bool is_open() const noexcept { return handle_ != NIL_HANDLE; }
+  [[nodiscard]] bool is_open(this File const& self) noexcept { return self.handle_ != NIL_HANDLE; }
 
   enum class OpenError : u8 {
     FileNotFound = 1,
   };
 
-  [[nodiscard]] Error<OpenError> open(char const* path, Flags flags) noexcept;
+  [[nodiscard]] Error<OpenError> open(this File& self, char const* path, Flags flags) noexcept;
 
-  [[nodiscard]] Error<OpenError> open(StringView path, Flags flags) noexcept {
-    return open(String(path).c_str(), flags);
+  [[nodiscard]] Error<OpenError> open(this File& self, StringView path, Flags flags) noexcept {
+    return self.open(String(path).c_str(), flags);
   }
 
-  void close() noexcept;
+  void close(this File& self) noexcept;
 
   // seek/close don't do anything. This doesn't duplicate the standard streams, it just sets
   // handle_.
-  void open_stdin() noexcept;
-  void open_stdout() noexcept;
-  void open_stderr() noexcept;
+  void open_stdin(this File& self) noexcept;
+  void open_stdout(this File& self) noexcept;
+  void open_stderr(this File& self) noexcept;
 
-  usize write(Slice<uchar const> data) noexcept;
-  usize read(Slice<uchar> buffer) noexcept;
+  usize write(this File& self, Slice<uchar const> data) noexcept;
+  usize read(this File& self, Slice<uchar> buffer) noexcept;
 
-  [[nodiscard]] usize get_cursor() const noexcept { return cursor_pos_; }
+  [[nodiscard]] usize get_cursor(this File const& self) noexcept { return self.cursor_pos_; }
 
-  [[nodiscard]] bool is_tty() const noexcept;
-  void               invalidate_is_tty_cache() noexcept { is_tty_ = IsTtyFlag::NotComputed; }
+  [[nodiscard]] bool is_tty(this File const& self) noexcept;
+  void invalidate_is_tty_cache(this File& self) noexcept { self.is_tty_ = IsTtyFlag::NotComputed; }
 
-  void seek_begin(isize offset) noexcept;
-  void seek_end(isize offset) noexcept;
-  void seek_cursor(isize offset) noexcept;
+  void seek_begin(this File& self, isize offset) noexcept;
+  void seek_end(this File& self, isize offset) noexcept;
+  void seek_cursor(this File& self, isize offset) noexcept;
 
 #ifdef _WIN32
   using Handle                       = void*;
@@ -73,7 +73,7 @@ public:
   static constexpr Handle NIL_HANDLE = -1;
 #endif
 
-  [[nodiscard]] constexpr Handle handle() const noexcept { return handle_; }
+  [[nodiscard]] constexpr Handle handle(this File const& self) noexcept { return self.handle_; }
 
 private:
   Handle handle_     = NIL_HANDLE;

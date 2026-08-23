@@ -30,11 +30,14 @@ public:
   Arena& operator=(Arena const&)     = delete;
   Arena& operator=(Arena&&) noexcept = delete;
 
-  template <TriviallyDestructible T, typename... Args> [[nodiscard]] T& push(Args&&... args);
-  template <TriviallyDestructible T> [[nodiscard]] Slice<T, SizeT>      push_array(SizeT count);
+  template <TriviallyDestructible T, typename... Args>
+  [[nodiscard]] T& push(this Arena& self, Args&&... args);
+  template <TriviallyDestructible T>
+  [[nodiscard]] Slice<T, SizeT> push_array(this Arena& self, SizeT count);
 
-  template <typename T> [[nodiscard]] Slice<T, SizeT> allocate(SizeT count) noexcept;
-  template <typename T> void                          free(Slice<T, SizeT> /*mem*/) noexcept {}
+  template <typename T>
+  [[nodiscard]] Slice<T, SizeT> allocate(this Arena& self, SizeT count) noexcept;
+  template <typename T> void    free(this Arena& /*self*/, Slice<T, SizeT> /*mem*/) noexcept {}
 
 public:
   class Scope {
@@ -52,7 +55,7 @@ public:
   };
 
 private:
-  void reserve(usize capacity) noexcept;
+  void reserve(this Arena& self, usize capacity) noexcept;
 
 private:
   uchar* begin_            = nullptr;
@@ -61,12 +64,14 @@ private:
   usize  initial_capacity_ = 64 * KiB;
 };
 
-template <TriviallyDestructible T, typename... Args> T& Arena::push(Args&&... args) {
-  return *base::construct_at(allocate<T>(1).data(), base::forward<Args>(args)...);
+template <TriviallyDestructible T, typename... Args>
+T& Arena::push(this Arena& self, Args&&... args) {
+  return *base::construct_at(self.allocate<T>(1).data(), base::forward<Args>(args)...);
 }
 
-template <TriviallyDestructible T> Slice<T, Arena::SizeT> Arena::push_array(SizeT count) {
-  Slice allocated = allocate<T>(count);
+template <TriviallyDestructible T>
+Slice<T, Arena::SizeT> Arena::push_array(this Arena& self, SizeT count) {
+  Slice allocated = self.allocate<T>(count);
 
   for (T& elem : allocated) {
     base::construct_at(&elem);
@@ -75,29 +80,31 @@ template <TriviallyDestructible T> Slice<T, Arena::SizeT> Arena::push_array(Size
 }
 
 // NOLINTNEXTLINE(misc-no-recursion)
-template <typename T> Slice<T, Arena::SizeT> Arena::allocate(SizeT count) noexcept {
-  uptr top = reinterpret_cast<uptr>(ptr_);
+template <typename T>
+Slice<T, Arena::SizeT> Arena::allocate(this Arena& self, SizeT count) noexcept {
+  uptr top = reinterpret_cast<uptr>(self.ptr_);
   top      = (top + alignof(T) - 1) & ~(alignof(T) - 1);
   uptr ret = top;
   top += sizeof(T) * count;
 
-  if (top > reinterpret_cast<uptr>(end_)) [[unlikely]] {
-    reserve(static_cast<usize>(end_ - begin_) * 2 + sizeof(T) * count);
+  if (top > reinterpret_cast<uptr>(self.end_)) [[unlikely]] {
+    self.reserve(static_cast<usize>(self.end_ - self.begin_) * 2 + sizeof(T) * count);
 
-    top = reinterpret_cast<uptr>(ptr_);
+    top = reinterpret_cast<uptr>(self.ptr_);
     top = (top + alignof(T) - 1) & ~(alignof(T) - 1);
     ret = top;
     top += sizeof(T) * count;
   }
 
   // NOLINTNEXTLINE(performance-no-int-to-ptr)
-  ptr_ = reinterpret_cast<uchar*>(top);
+  self.ptr_ = reinterpret_cast<uchar*>(top);
   // NOLINTNEXTLINE(performance-no-int-to-ptr)
   return {reinterpret_cast<T*>(ret), count};
 }
 
 #ifdef BASE_LSP_ONLY
-template int& Arena::push<int>(); // Instantiates to avoid 'placement_new.hpp is unsed'.
+template int&
+Arena::push<int>(this Arena& self); // Instantiates to avoid 'placement_new.hpp is unsed'.
 #endif
 
 } // namespace base

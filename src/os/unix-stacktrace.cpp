@@ -24,22 +24,22 @@ StackTrace StackTrace::current() noexcept {
   return ret;
 }
 
-Vector<StackTraceEntry, 16> const& StackTrace::compute_entries() noexcept {
-  if (entries_.size() == addresses_.size()) {
-    return entries_;
+Vector<StackTraceEntry, 16> const& StackTrace::compute_entries(this StackTrace& self) noexcept {
+  if (self.entries_.size() == self.addresses_.size()) {
+    return self.entries_;
   }
-  entries_.resize(addresses_.size());
-  for (usize i = 0; i < addresses_.size(); ++i) {
+  self.entries_.resize(self.addresses_.size());
+  for (usize i = 0; i < self.addresses_.size(); ++i) {
     Dl_info info;
-    dladdr(addresses_[i], &info);
-    entries_[i] = {
+    dladdr(self.addresses_[i], &info);
+    self.entries_[i] = {
         .caller       = demangle(info.dli_sname),
         .object       = StringView(info.dli_fname),
         .base_address = info.dli_fbase,
-        .address      = addresses_[i],
+        .address      = self.addresses_[i],
     };
   }
-  return entries_;
+  return self.entries_;
 }
 
 } // namespace base

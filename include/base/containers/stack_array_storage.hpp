@@ -15,20 +15,21 @@ namespace base {
 
 template <typename T, usize N, Integral SizeT = usize> class StackArrayStorage {
 public:
-  template <typename... Args> constexpr void construct_at(SizeT index, Args&&... args) {
-    base::construct_at(data() + index, base::forward<Args>(args)...);
+  template <typename... Args>
+  constexpr void construct_at(this StackArrayStorage& self, SizeT index, Args&&... args) {
+    base::construct_at(self.data() + index, base::forward<Args>(args)...);
   }
 
-  constexpr void destruct_at(SizeT index) { data()[index].~T(); }
+  constexpr void destruct_at(this StackArrayStorage& self, SizeT index) { self.data()[index].~T(); }
 
-  constexpr void construct_all() {
+  constexpr void construct_all(this StackArrayStorage& self) {
     for (usize i = 0; i < N; ++i) {
-      base::construct_at(data() + i);
+      base::construct_at(self.data() + i);
     }
   }
-  constexpr void construct_all(T const& value) {
+  constexpr void construct_all(this StackArrayStorage& self, T const& value) {
     for (usize i = 0; i < N; ++i) {
-      base::construct_at(data() + i, value);
+      base::construct_at(self.data() + i, value);
     }
   }
 
@@ -38,46 +39,54 @@ public:
     }
   }
 
-  [[nodiscard]] constexpr T* data() noexcept BASE_LIFETIMEBOUND {
-    return reinterpret_cast<T*>(data_.data());
+  [[nodiscard]] constexpr T* data(this StackArrayStorage& self BASE_LIFETIMEBOUND) noexcept {
+    return reinterpret_cast<T*>(self.data_.data());
   }
-  [[nodiscard]] constexpr T const* data() const noexcept BASE_LIFETIMEBOUND { return data(); }
-
-  [[nodiscard]] constexpr SizeT size() const noexcept { return static_cast<SizeT>(N); }
-
-  [[nodiscard]] constexpr T& operator[](SizeT index) noexcept BASE_LIFETIMEBOUND {
-    return data()[static_cast<usize>(index)];
+  [[nodiscard]] constexpr T* data(this StackArrayStorage&& self BASE_LIFETIMEBOUND) noexcept {
+    return reinterpret_cast<T*>(base::move(self).data_.data());
   }
-  [[nodiscard]] constexpr T const& operator[](SizeT index) const noexcept BASE_LIFETIMEBOUND {
-    return data()[static_cast<usize>(index)];
+  [[nodiscard]] constexpr T const*
+  data(this StackArrayStorage const& self BASE_LIFETIMEBOUND) noexcept {
+    return reinterpret_cast<T const*>(base::move(self).data_.data());
   }
 
-  [[nodiscard]] constexpr Slice<T, SizeT> slice() noexcept BASE_LIFETIMEBOUND {
-    return {data_, static_cast<SizeT>(N)};
-  }
-  [[nodiscard]] constexpr Slice<T const, SizeT> slice() const noexcept BASE_LIFETIMEBOUND {
-    return {data_, static_cast<SizeT>(N)};
-  }
-  [[nodiscard]] constexpr ReversedSlice<T, SizeT> reversed_slice() noexcept BASE_LIFETIMEBOUND {
-    return {data_, static_cast<SizeT>(N)};
-  }
-  [[nodiscard]] constexpr ReversedSlice<T const, SizeT>
-  reversed_slice() const noexcept BASE_LIFETIMEBOUND {
-    return {data_, static_cast<SizeT>(N)};
-  }
-  [[nodiscard]] constexpr Slice<uchar, SizeT> bytes() noexcept BASE_LIFETIMEBOUND {
-    return {reinterpret_cast<uchar*>(data_), static_cast<SizeT>(N * sizeof(T))};
-  }
-  [[nodiscard]] constexpr Slice<uchar const, SizeT> bytes() const noexcept BASE_LIFETIMEBOUND {
-    return {reinterpret_cast<uchar const*>(data_), static_cast<SizeT>(N * sizeof(T))};
+  [[nodiscard]] constexpr SizeT size(this StackArrayStorage const& /*self*/) noexcept {
+    return static_cast<SizeT>(N);
   }
 
-  [[nodiscard]] constexpr IntegerRange<SizeT> indices() const noexcept { return {0, N}; }
+  template <typename Self>
+  [[nodiscard]] constexpr auto&& operator[](this Self&& self, SizeT index) noexcept {
+    return base::forward<Self>(self).data()[index];
+  }
 
-  [[nodiscard]] constexpr T*       begin() noexcept BASE_LIFETIMEBOUND { return data(); }
-  [[nodiscard]] constexpr T*       end() noexcept BASE_LIFETIMEBOUND { return data() + N; }
-  [[nodiscard]] constexpr T const* begin() const noexcept BASE_LIFETIMEBOUND { return data(); }
-  [[nodiscard]] constexpr T const* end() const noexcept BASE_LIFETIMEBOUND { return data() + N; }
+  template <typename Self>
+  [[nodiscard]] constexpr auto slice(this Self&& self BASE_LIFETIMEBOUND) noexcept
+      -> Slice<RemoveReference<decltype(*self.begin())>, SizeT> {
+    return {base::forward<Self>(self).data(), static_cast<SizeT>(N)};
+  }
+  template <typename Self>
+  [[nodiscard]] constexpr auto reversed_slice(this Self&& self BASE_LIFETIMEBOUND) noexcept
+      -> ReversedSlice<RemoveReference<decltype(*self.begin())>, SizeT> {
+    return {base::forward<Self>(self).data(), static_cast<SizeT>(N)};
+  }
+  template <typename Self>
+  [[nodiscard]] constexpr auto bytes(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+    return base::forward<Self>(self).slice().bytes();
+  }
+
+  [[nodiscard]] constexpr IntegerRange<SizeT>
+  indices(this StackArrayStorage const& /*self*/) noexcept {
+    return {0, N};
+  }
+
+  template <typename Self>
+  [[nodiscard]] constexpr auto begin(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+    return base::forward<Self>(self).data();
+  }
+  template <typename Self>
+  [[nodiscard]] constexpr auto end(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+    return base::forward<Self>(self).data() + N;
+  }
 
 private:
   alignas(T) StackArray<uchar, N * sizeof(T)> data_;
