@@ -49,7 +49,7 @@ usize File::read(this File& self, Slice<uchar> buffer) noexcept {
 
 void File::seek_begin(this File& self, isize offset) noexcept {
   auto  low     = static_cast<LONG>(offset);
-  auto  high    = static_cast<LONG>(offset / Limits<LONG>::max);
+  auto  high    = static_cast<LONG>(offset / Limits<LONG>::MAX);
   DWORD pos_low = SetFilePointer(self.handle_, low, &high, FILE_BEGIN);
   if (pos_low == INVALID_SET_FILE_POINTER) {
     DWORD const err = GetLastError();
@@ -57,11 +57,11 @@ void File::seek_begin(this File& self, isize offset) noexcept {
       panic("SetFilePointer failed: {}", win32_err_str(err));
     }
   }
-  self.cursor_pos_ = static_cast<usize>(high) * Limits<LONG>::max + pos_low;
+  self.cursor_pos_ = static_cast<usize>(high) * Limits<LONG>::MAX + pos_low;
 }
 void File::seek_end(this File& self, isize offset) noexcept {
   auto  low     = static_cast<LONG>(offset);
-  auto  high    = static_cast<LONG>(offset / Limits<LONG>::max);
+  auto  high    = static_cast<LONG>(offset / Limits<LONG>::MAX);
   DWORD pos_low = SetFilePointer(self.handle_, low, &high, FILE_END);
   if (pos_low == INVALID_SET_FILE_POINTER) {
     DWORD const err = GetLastError();
@@ -69,11 +69,11 @@ void File::seek_end(this File& self, isize offset) noexcept {
       panic("SetFilePointer failed: {}", win32_err_str(err));
     }
   }
-  self.cursor_pos_ = static_cast<usize>(high) * Limits<LONG>::max + pos_low;
+  self.cursor_pos_ = static_cast<usize>(high) * Limits<LONG>::MAX + pos_low;
 }
 void File::seek_cursor(this File& self, isize offset) noexcept {
   auto  low     = static_cast<LONG>(offset);
-  auto  high    = static_cast<LONG>(offset / Limits<LONG>::max);
+  auto  high    = static_cast<LONG>(offset / Limits<LONG>::MAX);
   DWORD pos_low = SetFilePointer(self.handle_, low, &high, FILE_CURRENT);
   if (pos_low == INVALID_SET_FILE_POINTER) {
     DWORD const err = GetLastError();
@@ -81,7 +81,7 @@ void File::seek_cursor(this File& self, isize offset) noexcept {
       panic("SetFilePointer failed: {}", win32_err_str(err));
     }
   }
-  self.cursor_pos_ = static_cast<usize>(high) * Limits<LONG>::max + pos_low;
+  self.cursor_pos_ = static_cast<usize>(high) * Limits<LONG>::MAX + pos_low;
 }
 // NOLINTEND(readability-make-member-function-const)
 

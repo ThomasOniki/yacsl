@@ -71,11 +71,11 @@ public:
       }
       // Since usize has a finite precision and wraps to 0 on overflow and max on underflow, there
       // is no way to truly know if the write pointer is ahead of the epoch. This assumes that there
-      // are less than Limits<usize>::max/2 threads. If the assumption holds and diff > max/2, then
+      // are less than Limits<usize>::MAX/2 threads. If the assumption holds and diff > max/2, then
       // the true signed infinite precision difference must be negative and have wrapped around to
       // become a big number. Otherwise it must be positive. If the true difference is negative,
       // epoch < write. This means that the slot hasn't been poped yet; the queue is full.
-      if (diff > Limits<usize>::max / 2) {
+      if (diff > Limits<usize>::MAX / 2) {
         return false;
       }
       // If epoch > write, another producer changed the epoch between self.write_.load and
