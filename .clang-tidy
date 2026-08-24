@@ -48,7 +48,7 @@ Checks: >
 WarningsAsErrors: ""
 FormatStyle: none
 ExtraArgsBefore: ["-DBASE_LSP_ONLY"]
-RemovedArgs: ["-include-pch"]
+RemovedArgs: ["-include-pch", "-emit-pch", "-Xclang"]
 
 CheckOptions:
   - key: google-readability-function-size.StatementThreshold
