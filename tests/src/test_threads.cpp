@@ -1,4 +1,5 @@
 #include "base/containers/vector.hpp"
+#include "base/logging/logger.hpp"
 #include "base/threading/atomic.hpp"
 #include "base/threading/mutex.hpp"
 #include "base/threading/thread.hpp"

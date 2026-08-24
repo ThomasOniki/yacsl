@@ -80,7 +80,7 @@ Slice<T, Arena::SizeT> Arena::push_array(this Arena& self, SizeT count) {
 }
 
 // NOLINTNEXTLINE(misc-no-recursion)
-template <typename T>
+template <typename T> // NOLINTNEXTLINE(misc-no-recursion)
 Slice<T, Arena::SizeT> Arena::allocate(this Arena& self, SizeT count) noexcept {
   uptr top = reinterpret_cast<uptr>(self.ptr_);
   top      = (top + alignof(T) - 1) & ~(alignof(T) - 1);
