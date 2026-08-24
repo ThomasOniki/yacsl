@@ -40,6 +40,7 @@ Checks: >
   -bugprone-multi-level-implicit-pointer-conversion,
   -bugprone-bitwise-pointer-cast,
   -bugprone-copy-constructor-mutates-argument,
+  -bugprone-unhandled-self-assignment,
   -llvm-header-guard,
   -clang-analyzer-optin.core.EnumCastOutOfRange,
 

@@ -43,7 +43,7 @@ static void check(char const* expected) {
   (void)fclose(truncated);
 
   if (memcmp(static_cast<void*>(logs.data()), static_cast<void const*>(buf.data()), buf_size) !=
-      0) {
+      0) { // NOLINTNEXTLINE(modernize-use-std-print)
     printf("Logging test failed. Expected\n%s,got\n%s.\n", buf.data(), logs.data());
     status() = 1;
   }
