@@ -3,6 +3,7 @@
 #include "base/formatting/format_string.hpp"
 #include "base/formatting/format_string_parser.hpp"
 #include "base/formatting/formatter.hpp"
+#include "base/logging/logger.hpp"
 #include "base/ranges/slice.hpp"
 #include "test_utils.hpp"
 #include <stdint.h>

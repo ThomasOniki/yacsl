@@ -1,3 +1,4 @@
+#include "base/logging/logger.hpp"
 #include "base/memory/arena.hpp"
 #include "test_utils.hpp"
 #include <stddef.h>
