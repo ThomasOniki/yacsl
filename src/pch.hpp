@@ -1,6 +1,6 @@
 #pragma once
 
-#ifndef BASE_LSP_ONLY
+// IWYU pragma: begin_exports
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -14,4 +14,4 @@
 #include <sys/types.h>
 #include <unistd.h>
 #endif
-#endif
+// IWYU pragma: end_exports
