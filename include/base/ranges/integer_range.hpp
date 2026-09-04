@@ -39,8 +39,10 @@ public:
   constexpr IntegerRange() noexcept = default;
   constexpr IntegerRange(T begin, T end) noexcept : begin_(begin), end_(end) {}
 
-  [[nodiscard]] constexpr Iterator begin(this IntegerRange self) noexcept { return self.begin_; }
-  [[nodiscard]] constexpr Iterator end(this IntegerRange self) noexcept { return self.end_; }
+  [[nodiscard]] constexpr auto begin(this IntegerRange self) noexcept {
+    return Iterator(self.begin_);
+  }
+  [[nodiscard]] constexpr auto end(this IntegerRange self) noexcept { return Iterator(self.end_); }
 
   [[nodiscard]] constexpr IntegerRange<T, true> range(this IntegerRange self) noexcept {
     return Reversed ? IntegerRange<T, false>{self.end_ - 1, self.begin_ + 1} : self;
