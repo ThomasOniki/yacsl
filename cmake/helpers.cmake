@@ -77,5 +77,8 @@ else()
       "-Wregister"
       "-Wcatch-value=3"
       "-Wextra-semi"
+      # "-Wno-lifetime-safety-all"
+      # https://github.com/llvm/llvm-project/issues/221466
+      "-Wdangling"
       "-Wno-unknown-warning-option")
 endif()
