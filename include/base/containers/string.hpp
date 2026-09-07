@@ -49,7 +49,8 @@ public:
     other.allocated_end_      = other.fixed_buffer_.end();
   }
 
-  constexpr BasicString& operator=(this BasicString& self, BasicString const& other) noexcept {
+  constexpr BasicString& operator=(this BasicString& self BASE_LIFETIMEBOUND,
+                                   BasicString const&     other) noexcept {
     if (&self == &other) {
       return self;
     }
@@ -65,7 +66,8 @@ public:
     return self;
   }
 
-  constexpr BasicString& operator=(this BasicString& self, BasicString&& other) noexcept {
+  constexpr BasicString& operator=(this BasicString& self BASE_LIFETIMEBOUND,
+                                   BasicString&&          other) noexcept {
     if constexpr (N > 0) {
       if (other.begin_ == other.fixed_buffer_.begin()) {
         SizeT const size = other.size();

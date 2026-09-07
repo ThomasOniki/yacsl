@@ -39,15 +39,15 @@ public:
   constexpr Vector(Vector&& other) noexcept;
 
   template <usize OtherN, AllocatorLike OtherAllocator, Integral OtherSizeT>
-  constexpr Vector& operator=(this Vector&                                         self,
+  constexpr Vector& operator=(this Vector& self BASE_LIFETIMEBOUND,
                               Vector<T, OtherN, OtherAllocator, OtherSizeT> const& other);
-  constexpr Vector& operator=(this Vector& self, Vector const& other);
+  constexpr Vector& operator=(this Vector& self BASE_LIFETIMEBOUND, Vector const& other);
   template <usize OtherN, AllocatorLike OtherAllocator, Integral OtherSizeT>
   constexpr Vector& operator=(this Vector&                                    self,
                               Vector<T, OtherN, OtherAllocator, OtherSizeT>&& other) noexcept;
-  constexpr Vector& operator=(this Vector& self, Vector&& other) noexcept;
+  constexpr Vector& operator=(this Vector& self BASE_LIFETIMEBOUND, Vector&& other) noexcept;
 
-  constexpr Vector& operator=(this Vector& self, InitializerList<T> const& init);
+  constexpr Vector& operator=(this Vector& self BASE_LIFETIMEBOUND, InitializerList<T> const& init);
 
   constexpr T& push_back(this Vector& self, T const& value) { return self.emplace_back(value); }
   constexpr T& push_back(this Vector& self, T&& value) {
@@ -279,7 +279,8 @@ constexpr Vector<T, N, Allocator, SizeT>& Vector<T, N, Allocator, SizeT>::operat
 
 template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 constexpr Vector<T, N, Allocator, SizeT>&
-Vector<T, N, Allocator, SizeT>::operator=(this Vector& self, Vector const& other) {
+Vector<T, N, Allocator, SizeT>::operator=(this Vector& self BASE_LIFETIMEBOUND,
+                                          Vector const&     other) {
   if (&other == &self) [[unlikely]] {
     return self;
   }
@@ -293,7 +294,8 @@ Vector<T, N, Allocator, SizeT>::operator=(this Vector& self, Vector const& other
 template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 template <usize OtherN, AllocatorLike OtherAllocator, Integral OtherSizeT>
 constexpr Vector<T, N, Allocator, SizeT>& Vector<T, N, Allocator, SizeT>::operator=(
-    this Vector& self, Vector<T, OtherN, OtherAllocator, OtherSizeT>&& other) noexcept {
+    this Vector& self                               BASE_LIFETIMEBOUND,
+    Vector<T, OtherN, OtherAllocator, OtherSizeT>&& other) noexcept {
   self.clear();
   self.size_ = static_cast<SizeT>(other.size_);
 
@@ -319,7 +321,8 @@ constexpr Vector<T, N, Allocator, SizeT>& Vector<T, N, Allocator, SizeT>::operat
 
 template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 constexpr Vector<T, N, Allocator, SizeT>&
-Vector<T, N, Allocator, SizeT>::operator=(this Vector& self, Vector&& other) noexcept {
+Vector<T, N, Allocator, SizeT>::operator=(this Vector& self BASE_LIFETIMEBOUND,
+                                          Vector&&          other) noexcept {
   self.clear();
   self.size_ = static_cast<SizeT>(other.size_);
 
@@ -336,7 +339,8 @@ Vector<T, N, Allocator, SizeT>::operator=(this Vector& self, Vector&& other) noe
 
 template <typename T, usize N, AllocatorLike Allocator, Integral SizeT>
 constexpr Vector<T, N, Allocator, SizeT>&
-Vector<T, N, Allocator, SizeT>::operator=(this Vector& self, InitializerList<T> const& init) {
+Vector<T, N, Allocator, SizeT>::operator=(this Vector& self         BASE_LIFETIMEBOUND,
+                                          InitializerList<T> const& init) {
   self.clear();
   self.size_ = static_cast<SizeT>(init.size());
   self.reserve(self.size_);

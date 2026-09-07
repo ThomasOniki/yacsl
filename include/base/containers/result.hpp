@@ -35,7 +35,7 @@ public:
     }
   }
 
-  constexpr Result& operator=(this Result& self, Result const& other) noexcept {
+  constexpr Result& operator=(this Result& self BASE_LIFETIMEBOUND, Result const& other) noexcept {
     if (&other == &self) [[unlikely]] {
       return self;
     }
@@ -49,7 +49,7 @@ public:
     return self;
   }
 
-  constexpr Result& operator=(this Result& self, Result&& other) noexcept {
+  constexpr Result& operator=(this Result& self BASE_LIFETIMEBOUND, Result&& other) noexcept {
     self.destroy();
     self.is_err_ = other.is_err_;
     if (other.is_err_) [[unlikely]] {

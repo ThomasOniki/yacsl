@@ -58,7 +58,7 @@ public:
   Thread(Thread&& other) noexcept : handle_(other.handle_) { other.handle_ = NIL_PTHREAD; }
   Thread(Thread const&) = delete;
 
-  Thread& operator=(this Thread& self, Thread&& other) noexcept {
+  Thread& operator=(this Thread& self BASE_LIFETIMEBOUND, Thread&& other) noexcept {
     self.handle_  = other.handle_;
     other.handle_ = NIL_PTHREAD;
     return self;

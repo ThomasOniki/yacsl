@@ -38,12 +38,14 @@ template <typename T>
   return static_cast<T&&>(value);
 }
 
-template <typename T, typename... Args> constexpr T* construct_at(T* location, Args&&... args) {
+template <typename T, typename... Args>
+constexpr T* construct_at(T* location BASE_LIFETIMEBOUND, Args&&... args) {
   return ::new (location) T(base::forward<Args>(args)...);
 }
 
 template <MutableType T>
-constexpr Slice<T> copy(Slice<TypeIdentity<T> const> src, Slice<T> dst) noexcept {
+constexpr Slice<T> copy(Slice<TypeIdentity<T> const> src,
+                        Slice<T> dst                 BASE_LIFETIMEBOUND) noexcept {
   usize const size = dst.size() < src.size() ? dst.size() : src.size();
   if !consteval {
     if (TriviallyCopyable<T>) {
@@ -56,7 +58,7 @@ constexpr Slice<T> copy(Slice<TypeIdentity<T> const> src, Slice<T> dst) noexcept
   return {dst.data(), size};
 }
 template <MutableType T>
-constexpr Slice<T> copy(Slice<TypeIdentity<T> const> src, T* dst) noexcept {
+constexpr Slice<T> copy(Slice<TypeIdentity<T> const> src, T* dst BASE_LIFETIMEBOUND) noexcept {
   if !consteval {
     if (TriviallyCopyable<T>) {
       return {static_cast<T*>(::memcpy(dst, src.data(), src.size())), src.size()};

@@ -57,7 +57,8 @@ private:
 template <> class FormatStringImpl<IndexSequence<>> {
 public:
   // NOLINTNEXTLINE
-  template <usize N> consteval FormatStringImpl(char const (&msg)[N]) : msg_{msg} {}
+  template <usize N>
+  consteval FormatStringImpl(char const (&msg BASE_LIFETIMEBOUND)[N]) : msg_{msg} {}
 
   friend class FormatToImpl<FormatStringImpl>;
 

@@ -21,9 +21,11 @@ struct StackTrace {
 
   // Only call this when you actually need it. Computing the entries is non trivial and can be done
   // at any time as long as this->ptrs_ was gotten at the right time.
-  Vector<StackTraceEntry, 16> const& compute_entries(this StackTrace& self) noexcept;
+  Vector<StackTraceEntry, 16> const&
+  compute_entries(this StackTrace& self BASE_LIFETIMEBOUND) noexcept;
 
-  Vector<StackTraceEntry, 16> const& compute_entries(this StackTrace&& self) noexcept {
+  Vector<StackTraceEntry, 16> const&
+  compute_entries(this StackTrace&& self BASE_LIFETIMEBOUND) noexcept {
     self.compute_entries();
     return base::move(self).entries_;
   }

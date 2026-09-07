@@ -34,7 +34,7 @@ public:
     }
   }
 
-  constexpr Option& operator=(this Option& self, Option const& other) noexcept {
+  constexpr Option& operator=(this Option& self BASE_LIFETIMEBOUND, Option const& other) noexcept {
     if (&other == &self) [[unlikely]] {
       return self;
     }
@@ -47,7 +47,7 @@ public:
     }
     return self;
   }
-  constexpr Option& operator=(this Option& self, Option&& other) noexcept {
+  constexpr Option& operator=(this Option& self BASE_LIFETIMEBOUND, Option&& other) noexcept {
     if (self.is_value_) {
       self.value_.destruct();
     }
@@ -58,14 +58,14 @@ public:
     return self;
   }
 
-  constexpr Option& operator=(this Option& self, Nil /*nil*/) noexcept {
+  constexpr Option& operator=(this Option& self BASE_LIFETIMEBOUND, Nil /*nil*/) noexcept {
     if (self.is_value_) {
       self.value_.destruct();
       self.is_value_ = false;
     }
     return self;
   }
-  constexpr Option& operator=(this Option& self, T const& value) noexcept {
+  constexpr Option& operator=(this Option& self BASE_LIFETIMEBOUND, T const& value) noexcept {
     if (self.is_value_) {
       self.value_.destruct();
     }
@@ -73,7 +73,7 @@ public:
     self.value_.construct(value);
     return self;
   }
-  constexpr Option& operator=(this Option& self, T&& value) noexcept {
+  constexpr Option& operator=(this Option& self BASE_LIFETIMEBOUND, T&& value) noexcept {
     if (self.is_value_) {
       self.value_.destruct();
     }
@@ -142,11 +142,11 @@ public:
   constexpr Option& operator=(this Option&, Option const&) noexcept = default;
   constexpr Option& operator=(this Option&, Option&&) noexcept      = default;
 
-  constexpr Option& operator=(this Option& self, Nil /*nil*/) noexcept {
+  constexpr Option& operator=(this Option& self BASE_LIFETIMEBOUND, Nil /*nil*/) noexcept {
     self.ptr_ = nullptr;
     return self;
   }
-  constexpr Option& operator=(this Option& self, T& value) noexcept {
+  constexpr Option& operator=(this Option& self BASE_LIFETIMEBOUND, T& value) noexcept {
     self.ptr_ = &value;
     return self;
   }
