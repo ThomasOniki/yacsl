@@ -31,7 +31,7 @@ public:
   ~File() noexcept { close(); }
 
   File& operator=(File const&) = delete;
-  File& operator=(this File& self, File&& other) noexcept;
+  File& operator=(this File& self BASE_LIFETIMEBOUND, File&& other) noexcept;
 
   [[nodiscard]] bool is_open(this File const& self) noexcept { return self.handle_ != NIL_HANDLE; }
 
