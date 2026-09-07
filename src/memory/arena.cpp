@@ -4,6 +4,10 @@
 #include "base/utilities/type_aliases.hpp"
 #include <stdlib.h>
 
+#if __has_feature(leak_sanitizer) || __has_feature(address_sanitizer)
+#include <sanitizer/lsan_interface.h>
+#endif
+
 namespace base {
 
 namespace {
@@ -27,6 +31,10 @@ void Arena::reserve(this Arena& self, usize capacity) noexcept {
   self.begin_ = static_cast<uchar*>(malloc(capacity));
   self.end_   = self.begin_ + capacity;
   self.ptr_   = self.begin_ + sizeof(Metadata);
+
+#if __has_feature(leak_sanitizer) || __has_feature(address_sanitizer)
+  __lsan_ignore_object(self.begin_);
+#endif
 
   panic_if(self.begin_ == nullptr, "[Arena] malloc failed.");
   construct_at(reinterpret_cast<Metadata*>(self.begin_), metadata);
