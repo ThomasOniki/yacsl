@@ -97,7 +97,7 @@ public:
 
   void flush(this Logger& self) noexcept {
     self.work_.store(Work::Flush, MemoryOrder::Release);
-    self.trace3("[Logger] flushing...");
+    self.ring_.push({.formatted = "", .level = Level::None});
     while (self.work_.load(MemoryOrder::Acquire) == Work::Flush) {
       sched_yield();
     }
@@ -165,13 +165,17 @@ private:
 
   void write_message(this Logger& self, Message const& msg) {
     if (msg.level >= Level::Error) {
-      String           buf;
-      StringView const lvl_str = self.log_lvl_strings_.error[static_cast<u8>(msg.level)];
-      char*            data    = buf.grow(lvl_str.size() + msg.formatted.size() + 1);
-      copy(lvl_str.slice(), data);
-      copy(msg.formatted.slice(), data + lvl_str.size());
-      data[lvl_str.size() + msg.formatted.size()] = '\n';
-      self.error_.write(buf.bytes());
+      if (msg.level == Level::None) {
+        self.error_.write(msg.formatted.bytes());
+      } else {
+        String           buf;
+        StringView const lvl_str = self.log_lvl_strings_.error[static_cast<u8>(msg.level)];
+        char*            data    = buf.grow(lvl_str.size() + msg.formatted.size() + 1);
+        copy(lvl_str.slice(), data);
+        copy(msg.formatted.slice(), data + lvl_str.size());
+        data[lvl_str.size() + msg.formatted.size()] = '\n';
+        self.error_.write(buf.bytes());
+      }
     } else {
       String           buf;
       StringView const lvl_str = self.log_lvl_strings_.output[static_cast<u8>(msg.level)];
@@ -187,7 +191,9 @@ private:
     Logger& self = *static_cast<Logger*>(pvoid);
     for (;;) {
       Work const work = self.work_.load(MemoryOrder::Acquire);
-      if (work != Work::Spin) {
+      if (work == Work::Spin) {
+        self.write_message(self.ring_.pop());
+      } else {
         for (Option<Message> option = self.ring_.try_pop(); option.is_value();
              option                 = self.ring_.try_pop()) {
           self.write_message(option.assert_value());
@@ -198,8 +204,6 @@ private:
         }
 
         self.work_.store(Work::Spin, MemoryOrder::Release);
-      } else {
-        self.write_message(self.ring_.pop());
       }
     }
     return nullptr;
