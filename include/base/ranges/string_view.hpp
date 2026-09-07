@@ -93,17 +93,23 @@ using StringView = BasicStringView<char>;
 
 inline namespace litterals {
 
-constexpr BasicStringView<char> operator""_sv(char const* cstr, usize len) { return {cstr, len}; }
-constexpr BasicStringView<wchar_t> operator""_sv(wchar_t const* cstr, usize len) {
+constexpr BasicStringView<char> operator""_sv(char const* cstr BASE_LIFETIMEBOUND, usize len) {
   return {cstr, len};
 }
-constexpr BasicStringView<char8_t> operator""_sv(char8_t const* cstr, usize len) {
+constexpr BasicStringView<wchar_t> operator""_sv(wchar_t const* cstr BASE_LIFETIMEBOUND,
+                                                 usize               len) {
   return {cstr, len};
 }
-constexpr BasicStringView<char16_t> operator""_sv(char16_t const* cstr, usize len) {
+constexpr BasicStringView<char8_t> operator""_sv(char8_t const* cstr BASE_LIFETIMEBOUND,
+                                                 usize               len) {
   return {cstr, len};
 }
-constexpr BasicStringView<char32_t> operator""_sv(char32_t const* cstr, usize len) {
+constexpr BasicStringView<char16_t> operator""_sv(char16_t const* cstr BASE_LIFETIMEBOUND,
+                                                  usize                len) {
+  return {cstr, len};
+}
+constexpr BasicStringView<char32_t> operator""_sv(char32_t const* cstr BASE_LIFETIMEBOUND,
+                                                  usize                len) {
   return {cstr, len};
 }
 
