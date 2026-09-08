@@ -67,7 +67,8 @@ static void log_to_file(base::Logger::Level lvl, base::FormatString<Args...> con
                         Args&&... args) {
   base::File::Flags const flags =
       base::File::Flags::Write | base::File::Flags::Create | base::File::Flags::Trunc;
-  base::Logger logger(base::File("test_logs.txt", flags), base::File("test_logs.txt", flags),
+  base::Logger logger(base::File::open("test_logs.txt", flags).expect_ok(),
+                      base::File::open("test_logs.txt", flags).expect_ok(),
                       base::Logger::Level::Trace3);
   logger.log(lvl, fmt, base::forward<Args>(args)...);
 }

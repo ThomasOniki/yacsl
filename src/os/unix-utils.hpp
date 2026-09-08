@@ -2,7 +2,6 @@
 
 #ifndef _WIN32
 
-#include "base/containers/result.hpp"
 #include "base/os/file.hpp"
 #include "base/ranges/string_view.hpp"
 #include "base/utilities/type_aliases.hpp"
@@ -23,7 +22,6 @@ struct OpenedFile {
   alignas(16) File::Handle handle;
   usize cursor_pos;
 };
-Result<OpenedFile, File::OpenError> open_file(char const* path, File::Flags flags) noexcept;
 
 int               unix_flags(File::Flags flags) noexcept;
 StringView        errno_str(int err) noexcept;
