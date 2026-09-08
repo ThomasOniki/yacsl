@@ -26,7 +26,6 @@ struct OpenedFile {
   alignas(16) File::Handle handle;
   usize cursor_pos;
 };
-Result<OpenedFile, File::OpenError> open_file(char const* path, File::Flags flags) noexcept;
 
 StringView        win32_err_str(DWORD err) noexcept;
 inline StringView win32_err_str() noexcept { return win32_err_str(GetLastError()); }
