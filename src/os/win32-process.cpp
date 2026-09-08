@@ -66,34 +66,34 @@ void Process::Input::write(this Input& self, Slice<uchar const> bytes) noexcept 
 void Process::open_files(this Process& self, void* pvoid_state) noexcept {
   State& state = *static_cast<State*>(pvoid_state);
   if (self.stdin_type_ == TYPE_FILE) {
-    state.info.hStdInput = open_file(state.stdio->input.file_info_.path,
-                                     state.stdio->input.file_info_.flags | File::Flags::Read |
-                                         File::Flags::DontCloseOnExec)
+    state.info.hStdInput = File::open(state.stdio->input.file_info_.path,
+                                      state.stdio->input.file_info_.flags | File::Flags::Read |
+                                          File::Flags::DontCloseOnExec)
                                .expect_ok()
-                               .handle;
+                               .handle();
   } else if (self.stdin_type_ == Null) {
     state.info.hStdInput =
-        open_file("NUL", File::Flags::Read | File::Flags::DontCloseOnExec).expect_ok().handle;
+        File::open("NUL", File::Flags::Read | File::Flags::DontCloseOnExec).expect_ok().handle();
   }
   if (self.stdout_type_ == TYPE_FILE) {
-    state.info.hStdOutput = open_file(state.stdio->output.file_info_.path,
-                                      state.stdio->output.file_info_.flags | File::Flags::Write |
-                                          File::Flags::DontCloseOnExec)
+    state.info.hStdOutput = File::open(state.stdio->output.file_info_.path,
+                                       state.stdio->output.file_info_.flags | File::Flags::Write |
+                                           File::Flags::DontCloseOnExec)
                                 .expect_ok()
-                                .handle;
+                                .handle();
   } else if (self.stdout_type_ == Null) {
     state.info.hStdOutput =
-        open_file("NUL", File::Flags::Write | File::Flags::DontCloseOnExec).expect_ok().handle;
+        File::open("NUL", File::Flags::Write | File::Flags::DontCloseOnExec).expect_ok().handle();
   }
   if (self.stderr_type_ == TYPE_FILE) {
-    state.info.hStdError = open_file(state.stdio->error.file_info_.path,
-                                     state.stdio->error.file_info_.flags | File::Flags::Write |
-                                         File::Flags::DontCloseOnExec)
+    state.info.hStdError = File::open(state.stdio->error.file_info_.path,
+                                      state.stdio->error.file_info_.flags | File::Flags::Write |
+                                          File::Flags::DontCloseOnExec)
                                .expect_ok()
-                               .handle;
+                               .handle();
   } else if (self.stderr_type_ == Null) {
     state.info.hStdError =
-        open_file("NUL", File::Flags::Write | File::Flags::DontCloseOnExec).expect_ok().handle;
+        File::open("NUL", File::Flags::Write | File::Flags::DontCloseOnExec).expect_ok().handle();
   }
 }
 

@@ -1,81 +1,12 @@
 #ifdef _WIN32
 
 #include "win32-utils.hpp"
-#include "base/os/file.hpp"
 #include "base/ranges/string_view.hpp"
-#include "base/utilities/type_aliases.hpp"
 #include <fileapi.h>
 #include <intsafe.h>
 #include <winerror.h>
 
-#include "base/logging/logger.hpp"
-
 namespace base {
-
-Result<OpenedFile, File::OpenError> open_file(char const* path, File::Flags flags) noexcept {
-  DWORD access = 0;
-  if (strip_file_open_flag(&flags, File::Flags::Read)) {
-    access |= GENERIC_READ;
-  }
-  if (strip_file_open_flag(&flags, File::Flags::Write)) {
-    access |= GENERIC_WRITE;
-  }
-  SECURITY_ATTRIBUTES security_attr = {
-      .nLength              = sizeof(SECURITY_ATTRIBUTES),
-      .lpSecurityDescriptor = nullptr,
-      .bInheritHandle = strip_file_open_flag(&flags, File::Flags::DontCloseOnExec) ? TRUE : FALSE,
-  };
-
-  bool const trunc                = strip_file_open_flag(&flags, File::Flags::Trunc);
-  bool const create               = strip_file_open_flag(&flags, File::Flags::Create);
-  DWORD      creation_disposition = 0;
-
-  if (create) {
-    if (trunc) {
-      creation_disposition = CREATE_ALWAYS;
-    } else {
-      creation_disposition = OPEN_ALWAYS;
-    }
-  } else {
-    if (trunc) {
-      creation_disposition = TRUNCATE_EXISTING;
-    } else {
-      creation_disposition = OPEN_EXISTING;
-    }
-  }
-
-  HANDLE const handle =
-      CreateFileA(path, access, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
-                  &security_attr, creation_disposition, FILE_ATTRIBUTE_NORMAL, nullptr);
-
-  //  log_info("opened {} at {}.", path, handle);
-  //  log_info("inheritable: {}", security_attr.bInheritHandle);
-
-  if (handle == INVALID_HANDLE_VALUE) {
-    DWORD const err = GetLastError();
-    switch (err) {
-    case ERROR_FILE_NOT_FOUND:
-      return File::OpenError::FileNotFound;
-    default:
-      panic("CreateFileA failed: {}", win32_err_str(err));
-    }
-  }
-
-  usize pos = 0;
-  if (strip_file_open_flag(&flags, File::Flags::SeekEnd)) {
-    LONG high = 0;
-    pos       = static_cast<usize>(SetFilePointer(handle, 0, &high, FILE_END));
-    pos += static_cast<usize>(high) * Limits<LONG>::MAX;
-    if (pos == static_cast<usize>(INVALID_SET_FILE_POINTER)) {
-      DWORD const err = GetLastError();
-      if (err != NO_ERROR) {
-        panic("SetFilePointer failed: {}", win32_err_str(err));
-      }
-    }
-  }
-
-  return OpenedFile{.handle = handle, .cursor_pos = pos};
-}
 
 StringView win32_err_str(DWORD err) noexcept {
   switch (err) {

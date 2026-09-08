@@ -1,11 +1,10 @@
 #ifndef _WIN32
 
-#include "base/containers/error.hpp"
 #include "base/containers/result.hpp"
+#include "base/logging/panic.hpp"
 #include "base/os/file.hpp"
 #include "base/ranges/slice.hpp"
 #include "base/utilities/isize.hpp"
-#include "base/utilities/nil.hpp"
 #include "base/utilities/type_aliases.hpp"
 #include "unix-utils.hpp"
 #include <fcntl.h>
@@ -14,19 +13,28 @@
 
 namespace base {
 
-Error<File::OpenError> File::open(this File& self, char const* path, File::Flags flags) noexcept {
-  self.close();
-  Result<OpenedFile, OpenError> const result = open_file(path, flags);
-  if (result.is_err()) [[unlikely]] {
-    return result.assert_err();
+Result<File, File::OpenError> File::open(char const* path, File::Flags flags) noexcept {
+
+  bool const seek_end = strip_file_open_flag(&flags, File::Flags::SeekEnd) &&
+                        (flags & File::Flags::Trunc) == File::Flags::None;
+  File       opened;
+  opened.handle_ = ::open(path, unix_flags(flags), 0644);
+  if (opened.handle_ == -1) [[unlikely]] {
+    switch (errno) {
+    case ENOENT:
+      return OpenError::FileNotFound;
+    default:
+      panic("::open() failed: {}", errno_str());
+    }
   }
-  self.handle_     = result.assert_ok().handle;
-  self.cursor_pos_ = result.assert_ok().cursor_pos;
-  return NIL;
+  if (seek_end) {
+    opened.cursor_pos_ = static_cast<usize>(BASE_TRY_SYSCALL(::lseek(opened.handle_, 0, SEEK_END)));
+  }
+  return opened;
 }
 
 void File::close(this File& self) noexcept {
-  if (self.is_open()) {
+  if (self.handle_ != NIL_HANDLE) {
     BASE_TRY_SYSCALL(::close(self.handle_));
     self.handle_ = NIL_HANDLE;
   }

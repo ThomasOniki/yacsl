@@ -1,11 +1,8 @@
 #ifndef _WIN32
 
 #include "unix-utils.hpp"
-#include "base/containers/result.hpp"
-#include "base/logging/panic.hpp"
 #include "base/os/file.hpp"
 #include "base/ranges/string_view.hpp"
-#include "base/utilities/type_aliases.hpp"
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -33,25 +30,6 @@ int unix_flags(File::Flags flags) noexcept {
     ret |= O_RDWR;
   }
   return static_cast<int>(ret);
-}
-
-Result<OpenedFile, File::OpenError> open_file(char const* path, File::Flags flags) noexcept {
-  bool const seek_end = strip_file_open_flag(&flags, File::Flags::SeekEnd) &&
-                        (flags & File::Flags::Trunc) == File::Flags::None;
-  int const  handle   = ::open(path, unix_flags(flags), 0644);
-  if (handle == -1) [[unlikely]] {
-    switch (errno) {
-    case ENOENT:
-      return File::OpenError::FileNotFound;
-    default:
-      panic("::open() failed: {}", errno_str());
-    }
-  }
-  usize cursor = 0;
-  if (seek_end) {
-    cursor = static_cast<usize>(BASE_TRY_SYSCALL(::lseek(handle, 0, SEEK_END)));
-  }
-  return OpenedFile{.handle = handle, .cursor_pos = cursor};
 }
 
 // NOLINTNEXTLINE(google-readability-function-size, readability-function-cognitive-complexity)

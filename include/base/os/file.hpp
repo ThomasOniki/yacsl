@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/containers/error.hpp"
+#include "base/containers/result.hpp"
 #include "base/containers/string.hpp"
 #include "base/ranges/slice.hpp"
 #include "base/ranges/string_view.hpp"
@@ -21,31 +21,32 @@ public:
     DontCloseOnExec = 1 << 5,
   };
   constexpr File() noexcept = default;
-  explicit File(StringView path, Flags flags) { open(path, flags).expect_nil(); }
-  explicit File(char const* path, Flags flags) { open(path, flags).expect_nil(); }
-  File(File const&) = delete;
-  File(File&& other) noexcept : handle_(other.handle_), cursor_pos_(other.cursor_pos_) {
-    other.handle_ = NIL_HANDLE;
-  }
-
-  ~File() noexcept { close(); }
-
-  File& operator=(File const&) = delete;
-  File& operator=(this File& self BASE_LIFETIMEBOUND, File&& other) noexcept;
-
-  [[nodiscard]] bool is_open(this File const& self) noexcept { return self.handle_ != NIL_HANDLE; }
 
   enum class OpenError : u8 {
     FileNotFound = 1,
   };
+  [[nodiscard]] static Result<File, OpenError> open(StringView path, Flags flags) noexcept {
+    return open(String(path).c_str(), flags);
+  }
+  [[nodiscard]] static Result<File, OpenError> open(char const* path, Flags flags) noexcept;
+  ~File() noexcept { close(); }
 
-  [[nodiscard]] Error<OpenError> open(this File& self, char const* path, Flags flags) noexcept;
-
-  [[nodiscard]] Error<OpenError> open(this File& self, StringView path, Flags flags) noexcept {
-    return self.open(String(path).c_str(), flags);
+  File(File const&) = delete;
+  File(File&& other) noexcept
+      : handle_(other.handle_), cursor_pos_(other.cursor_pos_), is_tty_(other.is_tty_) {
+    other.handle_ = NIL_HANDLE;
   }
 
-  void close(this File& self) noexcept;
+  File& operator=(File const&) = delete;
+
+  File& operator=(this File& self BASE_LIFETIMEBOUND, File&& other) noexcept {
+    self.close();
+    self.handle_     = other.handle_;
+    self.cursor_pos_ = other.cursor_pos_;
+    self.is_tty_     = other.is_tty_;
+    other.handle_    = NIL_HANDLE;
+    return self;
+  }
 
   // seek/close don't do anything. This doesn't duplicate the standard streams, it just sets
   // handle_.
@@ -74,6 +75,9 @@ public:
 #endif
 
   [[nodiscard]] constexpr Handle handle(this File const& self) noexcept { return self.handle_; }
+
+private:
+  void close(this File& self) noexcept;
 
 private:
   Handle handle_     = NIL_HANDLE;
