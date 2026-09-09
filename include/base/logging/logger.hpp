@@ -59,7 +59,8 @@ public:
       : output_(base::move(output)), error_(base::move(error)),
         log_lvl_strings_{
             .output = output_.is_tty() ? COLORED_LEVEL_STRINGS.slice() : LEVEL_STRINGS.slice(),
-            .error  = error_.is_tty() ? COLORED_LEVEL_STRINGS.slice() : LEVEL_STRINGS.slice()},
+            .error  = error_.is_tty() ? COLORED_LEVEL_STRINGS.slice() : LEVEL_STRINGS.slice(),
+        },
         level_(lvl) {}
   Logger(File&& output, File&& error, LevelStrings log_level_strings) noexcept
       : Logger(base::move(output), base::move(error), DEFAULT_LOG_LEVEL, log_level_strings) {}
@@ -67,21 +68,16 @@ public:
       : Logger(base::move(output), base::move(error), DEFAULT_LOG_LEVEL) {}
 
   Logger(Level lvl, LevelStrings log_level_strings) noexcept
-      : log_lvl_strings_{log_level_strings}, level_(lvl) {
-    output_.open_stdout();
-    error_.open_stderr();
-  }
+      : output_(File::open_stdout()), error_(File::open_stderr()),
+        log_lvl_strings_(log_level_strings), level_(lvl) {}
 
   explicit Logger(Level lvl) noexcept
-      : log_lvl_strings_{.output = LEVEL_STRINGS.slice(), .error = LEVEL_STRINGS.slice()},
-        level_(lvl) {
-    output_.open_stdout();
-    error_.open_stderr();
-    log_lvl_strings_ = {
-        .output = output_.is_tty() ? COLORED_LEVEL_STRINGS.slice() : LEVEL_STRINGS.slice(),
-        .error  = error_.is_tty() ? COLORED_LEVEL_STRINGS.slice() : LEVEL_STRINGS.slice(),
-    };
-  }
+      : output_(File::open_stdout()), error_(File::open_stderr()),
+        log_lvl_strings_({
+            .output = output_.is_tty() ? COLORED_LEVEL_STRINGS.slice() : LEVEL_STRINGS.slice(),
+            .error  = error_.is_tty() ? COLORED_LEVEL_STRINGS.slice() : LEVEL_STRINGS.slice(),
+        }),
+        level_(lvl) {}
   Logger() : Logger(DEFAULT_LOG_LEVEL) {}
 
   ~Logger() noexcept { work_.store(Work::Stop, MemoryOrder::Release); }
