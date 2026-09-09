@@ -203,15 +203,12 @@ static String make_command_line_string(char const* const* argv) {
   return str;
 }
 
-Error<Process::SpawnError> Process::start(this Process& self, char const* const* argv,
-                                          Stdio const& stdio) noexcept {
-  if (self.handle_ != nullptr) [[unlikely]] {
-    self.wait();
-  }
-
-  self.stdin_type_  = stdio.input.type_;
-  self.stdout_type_ = stdio.output.type_;
-  self.stderr_type_ = stdio.error.type_;
+Result<Process, Process::SpawnError> Process::spawn(char const* const* argv,
+                                                    Stdio const&       stdio) noexcept {
+  Process spawned;
+  spawned.stdin_type_  = stdio.input.type_;
+  spawned.stdout_type_ = stdio.output.type_;
+  spawned.stderr_type_ = stdio.error.type_;
 
   State state = {
       .info =
@@ -231,10 +228,12 @@ Error<Process::SpawnError> Process::start(this Process& self, char const* const*
               .wShowWindow     = 0,
               .cbReserved2     = 0,
               .lpReserved2     = nullptr,
-              .hStdInput = self.stdin_type_ == Inherit ? GetStdHandle(STD_INPUT_HANDLE) : nullptr,
+              .hStdInput =
+                  spawned.stdin_type_ == Inherit ? GetStdHandle(STD_INPUT_HANDLE) : nullptr,
               .hStdOutput =
-                  self.stdout_type_ == Inherit ? GetStdHandle(STD_OUTPUT_HANDLE) : nullptr,
-              .hStdError = self.stderr_type_ == Inherit ? GetStdHandle(STD_ERROR_HANDLE) : nullptr,
+                  spawned.stdout_type_ == Inherit ? GetStdHandle(STD_OUTPUT_HANDLE) : nullptr,
+              .hStdError =
+                  spawned.stderr_type_ == Inherit ? GetStdHandle(STD_ERROR_HANDLE) : nullptr,
           },
       .stdio       = &stdio,
       .stdin_pipe  = {},
@@ -242,35 +241,28 @@ Error<Process::SpawnError> Process::start(this Process& self, char const* const*
       .stderr_pipe = {},
   };
 
-  self.open_files(&state);
-  self.create_pipes(&state);
+  spawned.open_files(&state);
+  spawned.create_pipes(&state);
 
   PROCESS_INFORMATION proc_info{};
-
-  Error<SpawnError> ret = NIL;
 
   String cmdline = make_command_line_string(argv);
 
   if (CreateProcessA(nullptr, cmdline.c_str(), nullptr, nullptr, TRUE, CREATE_NEW_PROCESS_GROUP,
-                     nullptr, nullptr, &state.info, &proc_info) == TRUE) [[likely]] {
-    BASE_TRY_SYSCALL(CloseHandle(proc_info.hThread));
-    self.handle_ = proc_info.hProcess;
-    self.group_  = proc_info.dwProcessId;
-  } else {
-    self.handle_    = NIL_PROCESS_HANDLE;
+                     nullptr, nullptr, &state.info, &proc_info) == FALSE) [[unlikely]] {
     DWORD const err = GetLastError();
-    switch (err) {
-    case ERROR_FILE_NOT_FOUND:
-      ret = SpawnError::FileNotFound;
-      break;
-    default:
-      panic("CreateProcessA() failed: {}", win32_err_str(err));
+    if (err == ERROR_FILE_NOT_FOUND) {
+      return SpawnError::FileNotFound;
     }
+    panic("CreateProcessA() failed: {}", win32_err_str(err));
   }
 
-  self.cleanup_after_spawn(&state);
+  BASE_TRY_SYSCALL(CloseHandle(proc_info.hThread));
+  spawned.handle_ = proc_info.hProcess;
+  spawned.group_  = proc_info.dwProcessId;
 
-  return ret;
+  spawned.cleanup_after_spawn(&state);
+  return spawned;
 }
 
 static String drain_pipe(Process::Output* output) noexcept {
