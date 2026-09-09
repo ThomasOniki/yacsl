@@ -50,9 +50,9 @@ public:
 
   // seek/close don't do anything. This doesn't duplicate the standard streams, it just sets
   // handle_.
-  void open_stdin(this File& self) noexcept;
-  void open_stdout(this File& self) noexcept;
-  void open_stderr(this File& self) noexcept;
+  [[nodiscard]] static File open_stdin() noexcept;
+  [[nodiscard]] static File open_stdout() noexcept;
+  [[nodiscard]] static File open_stderr() noexcept;
 
   usize write(this File& self, Slice<uchar const> data) noexcept;
   usize read(this File& self, Slice<uchar> buffer) noexcept;

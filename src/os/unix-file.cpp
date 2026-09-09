@@ -40,9 +40,21 @@ void File::close(this File& self) noexcept {
   }
 }
 
-void File::open_stdin(this File& self) noexcept { self.handle_ = STDIN_FILENO; }
-void File::open_stdout(this File& self) noexcept { self.handle_ = STDOUT_FILENO; }
-void File::open_stderr(this File& self) noexcept { self.handle_ = STDERR_FILENO; }
+File File::open_stdin() noexcept {
+  File opened;
+  opened.handle_ = STDIN_FILENO;
+  return opened;
+}
+File File::open_stdout() noexcept {
+  File opened;
+  opened.handle_ = STDOUT_FILENO;
+  return opened;
+}
+File File::open_stderr() noexcept {
+  File opened;
+  opened.handle_ = STDERR_FILENO;
+  return opened;
+}
 
 // NOLINTBEGIN(readability-make-member-function-const)
 usize File::write(this File& self, Slice<uchar const> data) noexcept {
