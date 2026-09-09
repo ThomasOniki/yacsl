@@ -11,54 +11,12 @@
 namespace base {
 
 Result<File, File::OpenError> File::open(char const* path, File::Flags flags) noexcept {
-  DWORD access = 0;
-  if (strip_file_open_flag(&flags, File::Flags::Read)) {
-    access |= GENERIC_READ;
+  Result<HANDLE, OpenError> handle = open_file_handle(path, flags);
+  if (handle.is_err()) [[unlikely]] {
+    return handle.assert_err();
   }
-  if (strip_file_open_flag(&flags, File::Flags::Write)) {
-    access |= GENERIC_WRITE;
-  }
-  SECURITY_ATTRIBUTES security_attr = {
-      .nLength              = sizeof(SECURITY_ATTRIBUTES),
-      .lpSecurityDescriptor = nullptr,
-      .bInheritHandle = strip_file_open_flag(&flags, File::Flags::DontCloseOnExec) ? TRUE : FALSE,
-  };
-
-  bool const trunc                = strip_file_open_flag(&flags, File::Flags::Trunc);
-  bool const create               = strip_file_open_flag(&flags, File::Flags::Create);
-  DWORD      creation_disposition = 0;
-
-  if (create) {
-    if (trunc) {
-      creation_disposition = CREATE_ALWAYS;
-    } else {
-      creation_disposition = OPEN_ALWAYS;
-    }
-  } else {
-    if (trunc) {
-      creation_disposition = TRUNCATE_EXISTING;
-    } else {
-      creation_disposition = OPEN_EXISTING;
-    }
-  }
-
   File opened;
-  opened.handle_ =
-      CreateFileA(path, access, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
-                  &security_attr, creation_disposition, FILE_ATTRIBUTE_NORMAL, nullptr);
-
-  //  log_info("opened {} at {}.", path, handle);
-  //  log_info("inheritable: {}", security_attr.bInheritHandle);
-
-  if (opened.handle_ == INVALID_HANDLE_VALUE) {
-    DWORD const err = GetLastError();
-    switch (err) {
-    case ERROR_FILE_NOT_FOUND:
-      return File::OpenError::FileNotFound;
-    default:
-      panic("CreateFileA failed: {}", win32_err_str(err));
-    }
-  }
+  opened.handle_ = handle.assert_ok();
 
   if (strip_file_open_flag(&flags, File::Flags::SeekEnd)) {
     LONG high          = 0;

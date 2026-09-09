@@ -29,6 +29,10 @@ struct OpenedFile {
 
 StringView        win32_err_str(DWORD err) noexcept;
 inline StringView win32_err_str() noexcept { return win32_err_str(GetLastError()); }
+
+// SeekEnd will be ignored
+Result<HANDLE, File::OpenError> open_file_handle(char const* path, File::Flags flags);
+
 } // namespace base
 
 #define BASE_TRY_SYSCALL(syscall)                                                                  \
