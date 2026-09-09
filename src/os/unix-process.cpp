@@ -1,13 +1,12 @@
 #if !defined(__EMSCRIPTEN__) && !defined(_WIN32)
 
-#include "base/containers/error.hpp"
+#include "base/containers/result.hpp"
 #include "base/containers/stack_array.hpp"
 #include "base/containers/string.hpp"
 #include "base/logging/panic.hpp"
 #include "base/os/file.hpp"
 #include "base/os/process.hpp"
 #include "base/ranges/slice.hpp"
-#include "base/utilities/nil.hpp"
 #include "base/utilities/type_aliases.hpp"
 #include "unix-utils.hpp"
 #include <errno.h>
@@ -160,17 +159,14 @@ void Process::cleanup_after_spawn(this Process& self, void* pvoid_state) noexcep
 
 extern "C" char** environ;
 
-Error<Process::SpawnError> Process::start(this Process& self, char const* const* argv,
-                                          Stdio const& stdio) noexcept {
-  if (self.handle_ != -1) [[unlikely]] {
-    self.wait();
-  }
+Result<Process, Process::SpawnError> Process::spawn(char const* const* argv,
+                                                    Stdio const&       stdio) noexcept {
+  Process spawned;
+  spawned.stdin_type_  = stdio.input.type_;
+  spawned.stdout_type_ = stdio.output.type_;
+  spawned.stderr_type_ = stdio.error.type_;
 
-  self.stdin_type_  = stdio.input.type_;
-  self.stdout_type_ = stdio.output.type_;
-  self.stderr_type_ = stdio.error.type_;
-
-  State state{
+  State state = {
       .file_actions = {},
       .stdio        = &stdio,
       .stdin_pipe   = {-1, -1},
@@ -180,8 +176,8 @@ Error<Process::SpawnError> Process::start(this Process& self, char const* const*
 
   CHECK_RETURN(posix_spawn_file_actions_init(&state.file_actions));
 
-  self.open_files(&state);
-  self.create_pipes(&state);
+  spawned.open_files(&state);
+  spawned.create_pipes(&state);
 
   pid_t pid = 0;
 
@@ -189,14 +185,14 @@ Error<Process::SpawnError> Process::start(this Process& self, char const* const*
   auto const* argv_mut = const_cast<char* const*>(argv);
 
   int const result = posix_spawnp(&pid, argv[0], &state.file_actions, nullptr, argv_mut, environ);
-  if (result != 0 && result != ENOENT) {
-    panic("posix_spawnp failed: {}", errno_str(result));
+  if (result == ENOENT) {
+    return SpawnError::FileNotFound;
   }
-  self.handle_ = pid;
+  panic_if(result != 0, "posix_spawnp failed: {}", errno_str(result));
+  spawned.handle_ = pid;
 
-  self.cleanup_after_spawn(&state);
-
-  return result == ENOENT ? Error(SpawnError::FileNotFound) : NIL;
+  spawned.cleanup_after_spawn(&state);
+  return spawned;
 }
 
 static String drain_pipe(Process::Output* output) noexcept {
@@ -243,16 +239,7 @@ Process::ExitStatus Process::wait(this Process& self) noexcept {
   self.cleanup_before_wait(&status);
 
   int info = 0;
-  for (;;) {
-    if (waitpid(static_cast<pid_t>(self.handle_), &info, 0) != -1) {
-      break;
-    }
-    if (errno == EINTR) {
-      break;
-    }
-    perror("waitpid");
-    abort();
-  }
+  BASE_TRY_SYSCALL(waitpid(static_cast<pid_t>(self.handle_), &info, 0));
 
   self.handle_ = -1;
 

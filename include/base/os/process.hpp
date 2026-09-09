@@ -2,7 +2,7 @@
 
 #ifndef __EMSCRIPTEN__
 #include "base/attributes.hpp"
-#include "base/containers/error.hpp"
+#include "base/containers/result.hpp"
 #include "base/containers/string.hpp"
 #include "base/containers/vector.hpp"
 #include "base/os/file.hpp"
@@ -10,6 +10,7 @@
 #include "base/ranges/slice.hpp"
 #include "base/ranges/string_view.hpp"
 #include "base/type_traits/range_like.hpp"
+#include "base/utilities/nil.hpp"
 #include "base/utilities/type_aliases.hpp"
 
 namespace base {
@@ -47,9 +48,10 @@ private:
     constexpr StdioInit(char const* path, File::Flags flags) noexcept
         : type_(TYPE_FILE), file_info_{.path = path, .flags = flags} {}
     constexpr StdioInit(StringView path, File::Flags flags) noexcept
-        : type_(TYPE_FILE),
-          file_info_{.path  = (BasicString<char, 0, MainArenaAllocator>(path).c_str()),
-                     .flags = flags} {}
+        : type_(TYPE_FILE), file_info_{
+                                .path  = BasicString<char, 0, MainArenaAllocator>(path).c_str(),
+                                .flags = flags,
+                            } {}
 
   private:
     friend class Process;
@@ -74,11 +76,7 @@ public:
   public:
     void write(this Input& self, Slice<uchar const> bytes) noexcept;
 
-    Input(Input const&)            = delete;
-    Input(Input&&)                 = delete;
-    Input& operator=(Input const&) = delete;
-    Input& operator=(Input&&)      = delete;
-    ~Input() noexcept              = default;
+    ~Input() noexcept = default;
 
     using Init = StdioInit<true>;
     using enum StdioType;
@@ -86,7 +84,11 @@ public:
   private:
     friend class Process;
 
-    Input() noexcept = default;
+    Input() noexcept                                          = default;
+    Input(Input const&) noexcept                              = default;
+    Input(Input&&) noexcept                                   = default;
+    Input& operator=(this Input& self, Input const&) noexcept = default;
+    Input& operator=(this Input& self, Input&&) noexcept      = default;
 
   private:
     File::Handle handle_ = File::NIL_HANDLE;
@@ -94,11 +96,7 @@ public:
 
   class Output {
   public:
-    Output(Output const&)            = delete;
-    Output(Output&&)                 = delete;
-    Output& operator=(Output const&) = delete;
-    Output& operator=(Output&&)      = delete;
-    ~Output() noexcept               = default;
+    ~Output() noexcept = default;
 
     // returns 0 on EOF, between 1 and buffer.size() when sucessful.
     usize read(this Output& self, Slice<uchar> buffer) noexcept;
@@ -109,7 +107,11 @@ public:
   private:
     friend class Process;
 
-    Output() noexcept = default;
+    Output() noexcept                                       = default;
+    Output(Output const&) noexcept                          = default;
+    Output(Output&&) noexcept                               = default;
+    Output& operator=(this Output&, Output const&) noexcept = default;
+    Output& operator=(this Output&, Output&&) noexcept      = default;
 
   private:
     File::Handle handle_ = File::NIL_HANDLE;
@@ -118,10 +120,30 @@ public:
   Process() noexcept = default;
   ~Process() noexcept { wait(); }
 
-  Process(Process const&)            = delete;
-  Process(Process&&)                 = delete;
-  Process& operator=(Process const&) = delete;
-  Process& operator=(Process&&)      = delete;
+  Process(Process const&)                           = delete;
+  Process& operator=(this Process&, Process const&) = delete;
+
+  Process(Process&& other) noexcept
+      : handle_(other.handle_), stdin_type_(other.stdin_type_), stdout_type_(other.stdout_type_),
+        stderr_type_(other.stderr_type_), stdin_input_(base::move(other.stdin_input_)),
+        stdout_output_(base::move(other.stdout_output_)),
+        stderr_output_(base::move(other.stderr_output_)) {
+    other.handle_ = NIL_PROCESS_HANDLE;
+  }
+
+  Process& operator=(this Process& self BASE_LIFETIMEBOUND, Process&& other) noexcept {
+    debug_panic_if(self.handle_ != NIL_PROCESS_HANDLE,
+                   "Tried to move assign an active Process instance.");
+    self.handle_        = other.handle_;
+    self.stdin_type_    = other.stdin_type_;
+    self.stdout_type_   = other.stdout_type_;
+    self.stderr_type_   = other.stderr_type_;
+    self.stdin_input_   = base::move(other.stdin_input_);
+    self.stdout_output_ = base::move(other.stdout_output_);
+    self.stderr_output_ = base::move(other.stderr_output_);
+    other.handle_       = NIL_PROCESS_HANDLE;
+    return self;
+  }
 
   enum class SpawnError : u8 {
     FileNotFound = 1,
@@ -133,28 +155,28 @@ public:
     Output::Init error;
   };
 
-  [[nodiscard]] Error<SpawnError> start(this Process& self, char const* const* argv,
-                                        Stdio const& stdio) noexcept;
+  [[nodiscard]] static Result<Process, SpawnError> spawn(char const* const* argv,
+                                                         Stdio const&       stdio) noexcept;
 
-  [[nodiscard]] Error<SpawnError> start(this Process& self, InitializerList<char const*> argv,
-                                        Stdio const& stdio) noexcept {
+  [[nodiscard]] static Result<Process, SpawnError> spawn(InitializerList<char const*> argv,
+                                                         Stdio const& stdio) noexcept {
     Vector<char const*, 6> cstrs;
     cstrs.reserve(argv.size());
     for (char const* str : argv) {
       cstrs.push_back(str);
     }
     cstrs.push_back(nullptr);
-    return self.start(cstrs.data(), stdio);
+    return spawn(cstrs.data(), stdio);
   }
 
-  [[nodiscard]] Error<SpawnError> start(this Process& self, InitializerList<StringView> argv,
-                                        Stdio const& stdio) noexcept {
-    return self.start<InitializerList<StringView>>(argv, stdio);
+  [[nodiscard]] static Result<Process, SpawnError> spawn(InitializerList<StringView> argv,
+                                                         Stdio const& stdio) noexcept {
+    return spawn<InitializerList<StringView>>(argv, stdio);
   }
 
   template <RangeOf<StringView> Range>
-  [[nodiscard]] Error<SpawnError> start(this Process& self, Range const& argv,
-                                        Stdio const& stdio) noexcept {
+  [[nodiscard]] static Result<Process, SpawnError> spawn(Range const& argv,
+                                                         Stdio const& stdio) noexcept {
     Vector<BasicString<char, 16>, 6> cstrs(argv);
     Vector<char const*, 6>           cstr_ptrs;
     cstr_ptrs.reserve(cstrs.size() + 1);
@@ -162,7 +184,7 @@ public:
       cstr_ptrs.push_back(cstr.c_str());
     }
     cstr_ptrs.push_back(nullptr);
-    return self.start(cstr_ptrs.data(), stdio);
+    return spawn(cstr_ptrs.data(), stdio);
   }
 
   enum class Signal : u8 {
@@ -245,7 +267,7 @@ private:
   Output stderr_output_;
 
 #ifdef _WIN32
-  u32 group_;
+  u32 group_ = 0;
 #endif
 };
 
