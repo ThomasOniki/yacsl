@@ -81,9 +81,21 @@ void File::close(this File& self) noexcept {
   }
 }
 
-void File::open_stdin(this File& self) noexcept { self.handle_ = GetStdHandle(STD_INPUT_HANDLE); }
-void File::open_stdout(this File& self) noexcept { self.handle_ = GetStdHandle(STD_OUTPUT_HANDLE); }
-void File::open_stderr(this File& self) noexcept { self.handle_ = GetStdHandle(STD_ERROR_HANDLE); }
+File File::open_stdin() noexcept {
+  File opened;
+  opened.handle_ = GetStdHandle(STD_INPUT_HANDLE);
+  return opened;
+}
+File File::open_stdout() noexcept {
+  File opened;
+  opened.handle_ = GetStdHandle(STD_OUTPUT_HANDLE);
+  return opened;
+}
+File File::open_stderr() noexcept {
+  File opened;
+  opened.handle_ = GetStdHandle(STD_ERROR_HANDLE);
+  return opened;
+}
 
 // NOLINTBEGIN(readability-make-member-function-const)
 usize File::write(this File& self, Slice<uchar const> data) noexcept {
