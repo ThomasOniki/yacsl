@@ -77,8 +77,11 @@ struct Pipes {
 
   Pipes()
 #ifndef _WIN32
-      : original{fcntl(STDIN_FILENO, F_DUPFD_CLOEXEC, 0), fcntl(STDOUT_FILENO, F_DUPFD_CLOEXEC, 0),
-                 fcntl(STDERR_FILENO, F_DUPFD_CLOEXEC, 0)}
+      : original{
+            fcntl(STDIN_FILENO, F_DUPFD_CLOEXEC, 0),
+            fcntl(STDOUT_FILENO, F_DUPFD_CLOEXEC, 0),
+            fcntl(STDERR_FILENO, F_DUPFD_CLOEXEC, 0),
+        }
 #endif
   {
 #ifdef _WIN32
@@ -158,7 +161,7 @@ static void create_other_pipes(base::StackArray<Process, 3>& processes, IoTypes 
         .output = Process::Output::Pipe,
         .error  = Process::Output::Inherit,
     };
-    processes[0].start({HELLO_WORLD_EXECUTABLE}, stdio).expect_nil();
+    processes[0] = Process::spawn({HELLO_WORLD_EXECUTABLE}, stdio).expect_ok();
   }
   Process::Stdio const stdio = {
       .input  = Process::Input::Pipe,
@@ -166,10 +169,10 @@ static void create_other_pipes(base::StackArray<Process, 3>& processes, IoTypes 
       .error  = Process::Output::Inherit,
   };
   if (types.output == Type::OtherPipe) {
-    processes[1].start({CAT_EXECUTABLE}, stdio).expect_nil();
+    processes[1] = Process::spawn({CAT_EXECUTABLE}, stdio).expect_ok();
   }
   if (types.error == Type::OtherPipe) {
-    processes[2].start({CAT_EXECUTABLE}, stdio).expect_nil();
+    processes[2] = Process::spawn({CAT_EXECUTABLE}, stdio).expect_ok();
   }
 }
 
@@ -414,9 +417,9 @@ static int test_run_c(IoTypes types) {
                                                  other_pipes[2].get_stdin()),
   };
 
-  Process process;
-  process.start({STD_STREAMS_EXECUTABLE, "arg1", "arg2", "argument with spaces"}, stdio)
-      .expect_nil();
+  auto process =
+      Process::spawn({STD_STREAMS_EXECUTABLE, "arg1", "arg2", "argument with spaces"}, stdio)
+          .expect_ok();
 
   write_input(types.input, &process, &pipes);
 
@@ -487,8 +490,9 @@ int main() {
 
   (void)base::Logger::get_default_instance();
 
-  base::StackArray<Type, 5> const types = {Type::Null, Type::Inherit, Type::Pipe, Type::File,
-                                           Type::OtherPipe};
+  base::StackArray<Type, 5> const types = {
+      Type::Null, Type::Inherit, Type::Pipe, Type::File, Type::OtherPipe,
+  };
   for (Type stdin_type : types) {
     for (Type stdout_type : types) {
       for (Type stderr_type : types) {

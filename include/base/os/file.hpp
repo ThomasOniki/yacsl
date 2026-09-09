@@ -25,10 +25,11 @@ public:
   enum class OpenError : u8 {
     FileNotFound = 1,
   };
+  [[nodiscard]] static Result<File, OpenError> open(char const* path, Flags flags) noexcept;
   [[nodiscard]] static Result<File, OpenError> open(StringView path, Flags flags) noexcept {
     return open(String(path).c_str(), flags);
   }
-  [[nodiscard]] static Result<File, OpenError> open(char const* path, Flags flags) noexcept;
+
   ~File() noexcept { close(); }
 
   File(File const&) = delete;
