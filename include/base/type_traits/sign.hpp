@@ -15,11 +15,13 @@ template <Integral T> using MakeSigned   = __make_signed(T);
 namespace base::internal {
 
 template <typename T> struct MakeUnsignedImpl {
-  using Type = FirstOfSize<sizeof(T), unsigned char, unsigned short, unsigned int, unsigned long,
-                           unsigned long long, u128>::Type;
+  using Type =
+      FirstOfSize<sizeof(T), unsigned char, unsigned short, unsigned int,
+                  unsigned long, unsigned long long, u128>::Type;
 };
 template <typename T> struct MakeSignedImpl {
-  using Type = FirstOfSize<sizeof(T), signed char, short, int, long, long long, i128>::Type;
+  using Type = FirstOfSize<sizeof(T), signed char, short, int, long, long long,
+                           i128>::Type;
 };
 
 template <typename T> struct MakeUnsignedImpl<T const> {
@@ -29,8 +31,8 @@ template <typename T> struct MakeSignedImpl<T const> {
   using Type = MakeSignedImpl<T>::Type const;
 };
 
-// if sizeof(int) == sizeof(long), MakeUnsigned<long> will be unsigned int unless you explicitely
-// instantiate.
+// if sizeof(int) == sizeof(long), MakeUnsigned<long> will be unsigned int
+// unless you explicitely instantiate.
 template <> struct MakeUnsignedImpl<long> {
   using Type = unsigned long;
 };
@@ -44,8 +46,8 @@ template <> struct MakeSignedImpl<unsigned long> {
   using Type = long;
 };
 
-// if sizeof(long) == sizeof(long long), MakeUnsigned<long long> will be unsigned long unless you
-// explicitely instantiate.
+// if sizeof(long) == sizeof(long long), MakeUnsigned<long long> will be
+// unsigned long unless you explicitely instantiate.
 template <> struct MakeUnsignedImpl<long long> {
   using Type = unsigned long long;
 };

@@ -4,7 +4,8 @@
 
 namespace base {
 
-template <typename T, NTTPString Name, bool ThreadLocal = true> class SingletonAllocator {
+template <typename T, NTTPString Name, bool ThreadLocal = true>
+class SingletonAllocator {
 public:
   using SizeT = T::SizeT;
 
@@ -14,7 +15,8 @@ public:
   }
 };
 
-template <typename T, NTTPString Name> class SingletonAllocator<T, Name, false> {
+template <typename T, NTTPString Name>
+class SingletonAllocator<T, Name, false> {
 public:
   using SizeT = T::SizeT;
 

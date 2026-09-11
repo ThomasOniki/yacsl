@@ -11,7 +11,8 @@ template <typename T, T... Ints> class IntegerSequence {
 namespace internal {
 template <typename A, typename B> struct MergeIntegerSequencesImpl;
 template <typename T, T... Ints1, T... Ints2>
-struct MergeIntegerSequencesImpl<IntegerSequence<T, Ints1...>, IntegerSequence<T, Ints2...>> {
+struct MergeIntegerSequencesImpl<IntegerSequence<T, Ints1...>,
+                                 IntegerSequence<T, Ints2...>> {
   using Type = IntegerSequence<T, Ints1..., Ints2...>;
 };
 template <typename T, T Int, typename Seq> struct PrependToIntegerSequenceImpl;
@@ -26,14 +27,19 @@ struct AppendToIntegerSequenceImpl<T, Int, IntegerSequence<T, Ints...>> {
 };
 } // namespace internal
 
-template <usize... Indices> using IndexSequence = IntegerSequence<usize, Indices...>;
+template <usize... Indices>
+using IndexSequence = IntegerSequence<usize, Indices...>;
 
 #ifdef __clang__
-template <typename T, T N> using IntegerSequenceToN = __make_integer_seq<IntegerSequence, T, N>;
-template <usize N> using IndexSequenceToN           = __make_integer_seq<IntegerSequence, usize, N>;
+template <typename T, T N>
+using IntegerSequenceToN = __make_integer_seq<IntegerSequence, T, N>;
+template <usize N>
+using IndexSequenceToN = __make_integer_seq<IntegerSequence, usize, N>;
 #else
-template <typename T, T N> using IntegerSequenceToN = IntegerSequence<T, __integer_pack(N)...>;
-template <usize N> using IndexSequenceToN           = IntegerSequence<usize, __integer_pack(N)...>;
+template <typename T, T N>
+using IntegerSequenceToN = IntegerSequence<T, __integer_pack(N)...>;
+template <usize N>
+using IndexSequenceToN = IntegerSequence<usize, __integer_pack(N)...>;
 #endif
 
 template <typename A, typename B>

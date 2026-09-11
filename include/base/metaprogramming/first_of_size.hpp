@@ -6,7 +6,8 @@ using usize = decltype(sizeof(int));
 
 namespace internal {
 
-template <usize Size, typename First, typename... Others> struct FirstOfSizeImpl;
+template <usize Size, typename First, typename... Others>
+struct FirstOfSizeImpl;
 
 template <usize Size, typename First, typename... Others>
   requires(sizeof(First) != Size)
@@ -21,6 +22,7 @@ struct FirstOfSizeImpl<Size, First, Others...> {
 
 } // namespace internal
 
-template <usize Size, typename... Ts> using FirstOfSize = internal::FirstOfSizeImpl<Size, Ts...>;
+template <usize Size, typename... Ts>
+using FirstOfSize = internal::FirstOfSizeImpl<Size, Ts...>;
 
 } // namespace base

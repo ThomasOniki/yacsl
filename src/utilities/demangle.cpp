@@ -11,7 +11,8 @@ namespace base {
 namespace {
 class Demangler {
 public:
-  String const& demangle(this Demangler& self, StringView mangled_func) noexcept {
+  String const& demangle(this Demangler& self,
+                         StringView      mangled_func) noexcept {
     self.mangled_       = mangled_func.begin();
     self.has_templates_ = false;
     self.demangled_.clear();
@@ -143,12 +144,14 @@ private:
         index = atoi<usize>(self.mangled_, end) + 1;
       }
       if (index < self.template_args_.size()) {
-        self.demangled_.append(&self.demangled_[self.template_args_[index].begin],
-                               self.template_args_[index].end - self.template_args_[index].begin);
+        self.demangled_.append(
+            &self.demangled_[self.template_args_[index].begin],
+            self.template_args_[index].end - self.template_args_[index].begin);
       }
       self.mangled_ = end + 1;
-    } else if ((*self.mangled_ >= '0' && *self.mangled_ <= '9') || *self.mangled_ == 'N' ||
-               *self.mangled_ == 'W' || self.is_substitution()) {
+    } else if ((*self.mangled_ >= '0' && *self.mangled_ <= '9') ||
+               *self.mangled_ == 'N' || *self.mangled_ == 'W' ||
+               self.is_substitution()) {
       self.demangle_string();
     } else {
       self.demangle_builtin_type_id();
@@ -157,7 +160,8 @@ private:
   }
 
   // NOLINTNEXTLINE(misc-no-recursion)
-  void demangle_template_parameter_pack(this Demangler& self, StringView qualifiers) noexcept {
+  void demangle_template_parameter_pack(this Demangler& self,
+                                        StringView      qualifiers) noexcept {
     self.mangled_ += "Dp"_sv.size();
     if (*self.mangled_ == 'T') {
       self.demangle_type();
@@ -170,7 +174,8 @@ private:
   }
 
   // NOLINTNEXTLINE(misc-no-recursion)
-  void demangle_array_type(this Demangler& self, StringView qualifiers) noexcept {
+  void demangle_array_type(this Demangler& self,
+                           StringView      qualifiers) noexcept {
     ++self.mangled_;
     char const*      end = num_end(self.mangled_);
     StringView const arr_len(self.mangled_, end);
@@ -188,7 +193,8 @@ private:
     data[prefix.size() + arr_len.size()] = ']';
   }
 
-  void demangle_type_qualifiers(this Demangler& self, StringView mangled) noexcept {
+  void demangle_type_qualifiers(this Demangler& self,
+                                StringView      mangled) noexcept {
     for (char const* it = mangled.end() - 1; it != mangled.begin() - 1; --it) {
       switch (*it) {
       case 'K':
@@ -214,8 +220,9 @@ private:
 
   StringView get_mangled_qualifiers(this Demangler& self) noexcept {
     char const* begin = self.mangled_;
-    while (*self.mangled_ == 'K' || *self.mangled_ == 'V' || *self.mangled_ == 'P' ||
-           *self.mangled_ == 'R' || *self.mangled_ == 'O') {
+    while (*self.mangled_ == 'K' || *self.mangled_ == 'V' ||
+           *self.mangled_ == 'P' || *self.mangled_ == 'R' ||
+           *self.mangled_ == 'O') {
       ++self.mangled_;
     }
     return {begin, self.mangled_};
@@ -360,7 +367,8 @@ private:
 
   [[nodiscard]] bool is_substitution(this Demangler const& self) noexcept {
     return self.mangled_[0] == 'S' &&
-           (self.mangled_[1] == '_' || (self.mangled_[1] >= '0' && self.mangled_[1] <= '9') ||
+           (self.mangled_[1] == '_' ||
+            (self.mangled_[1] >= '0' && self.mangled_[1] <= '9') ||
             (self.mangled_[1] >= 'A' && self.mangled_[1] <= 'Z'));
   }
 
