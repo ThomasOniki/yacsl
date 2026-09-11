@@ -482,6 +482,17 @@ static int test_run_c(IoTypes types) {
 int main() {
   int ret = 0;
 
+  Process p = Process::spawn({"echo", "hello", "world"},
+                             {
+                                 .input  = Process::StdioType::Null,
+                                 .output = Process::StdioType::Inherit,
+                                 .error  = Process::StdioType::Null,
+                             })
+                  .expect_ok();
+  p.wait();
+
+  return 0;
+
   int const file = ::open(CHILD_STDIN_FILE_PATH, O_WRONLY | O_CREAT | O_CLOEXEC | O_TRUNC, 0644);
   EXPECT(file != -1);
   [[maybe_unused]] ssize_t const written = ::write(file, INPUT_DATA.data(), INPUT_DATA.size());

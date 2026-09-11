@@ -8,6 +8,7 @@
 #include "base/ranges/string_view.hpp"
 #include "base/type_traits/allocator.hpp"
 #include "base/type_traits/categories.hpp"
+#include "base/type_traits/qualifiers.hpp"
 #include "base/utilities/type_aliases.hpp"
 
 namespace base {
@@ -202,21 +203,10 @@ public:
     return static_cast<SizeT>(self.allocated_end_ - self.begin_);
   }
 
-  [[nodiscard]] constexpr Char& operator[](this BasicString& self BASE_LIFETIMEBOUND,
-                                           SizeT                  index) noexcept {
-    return self.begin_[index];
-  }
-  [[nodiscard]] constexpr Char&& operator[](this BasicString&& self BASE_LIFETIMEBOUND,
-                                            SizeT                   index) noexcept {
-    return base::move(base::move(self).begin_[index]);
-  }
-  [[nodiscard]] constexpr Char const& operator[](this BasicString const& self BASE_LIFETIMEBOUND,
-                                                 SizeT                        index) noexcept {
-    return self.begin_[index];
-  }
-  [[nodiscard]] constexpr Char const&& operator[](this BasicString const&& self BASE_LIFETIMEBOUND,
-                                                  SizeT                         index) noexcept {
-    return base::move(base::move(self).begin_[index]);
+  template <typename Self>
+  [[nodiscard]] constexpr auto&& operator[](this Self&& self BASE_LIFETIMEBOUND,
+                                            SizeT            index) noexcept {
+    return base::forward<CopyCVRef<Self&&, Char>>(base::forward<Self>(self).begin_[index]);
   }
 
   [[nodiscard]] constexpr bool operator==(this BasicString const& self,
@@ -237,12 +227,12 @@ public:
   }
   template <typename Self>
   [[nodiscard]] constexpr auto slice(this Self&& self BASE_LIFETIMEBOUND) noexcept
-      -> Slice<RemoveReference<decltype(*self.begin())>, SizeT> {
+      -> Slice<CopyCV<Self, Char>, SizeT> {
     return {base::forward<Self>(self).begin_, base::forward<Self>(self).end_};
   }
   template <typename Self>
   [[nodiscard]] constexpr auto reversed_slice(this Self&& self BASE_LIFETIMEBOUND) noexcept
-      -> ReversedSlice<RemoveReference<decltype(*self.begin())>, SizeT> {
+      -> ReversedSlice<CopyCV<Self, Char>, SizeT> {
     return {base::forward<Self>(self).begin_, base::forward<Self>(self).end_};
   }
   template <typename Self>
@@ -250,11 +240,9 @@ public:
     return base::forward<Self>(self).slice().bytes();
   }
 
-  [[nodiscard]] constexpr Char* data(this BasicString& self BASE_LIFETIMEBOUND) noexcept {
-    return self.begin_;
-  }
-  [[nodiscard]] constexpr Char* data(this BasicString&& self BASE_LIFETIMEBOUND) noexcept {
-    return base::move(self).begin_;
+  template <MutableType Self>
+  [[nodiscard]] constexpr Char* data(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+    return base::forward<Self>(self).begin_;
   }
   [[nodiscard]] constexpr Char const*
   data(this BasicString const& self BASE_LIFETIMEBOUND) noexcept {
