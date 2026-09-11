@@ -33,12 +33,12 @@ public:
 
   template <typename Self>
   [[nodiscard]] constexpr auto slice(this Self&& self BASE_LIFETIMEBOUND) noexcept
-      -> Slice<RemoveReference<decltype(*self.begin())>, SizeT> {
+      -> Slice<CopyCV<Self, T>, SizeT> {
     return {base::forward<Self>(self).data_, static_cast<SizeT>(N)};
   }
   template <typename Self>
   [[nodiscard]] constexpr auto reversed_slice(this Self&& self BASE_LIFETIMEBOUND) noexcept
-      -> ReversedSlice<RemoveReference<decltype(*self.begin())>, SizeT> {
+      -> ReversedSlice<CopyCV<Self, T>, SizeT> {
     return {base::forward<Self>(self).data_, static_cast<SizeT>(N)};
   }
   template <typename Self>

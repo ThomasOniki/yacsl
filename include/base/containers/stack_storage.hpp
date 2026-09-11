@@ -3,6 +3,7 @@
 #include "base/attributes.hpp"
 #include "base/containers/stack_array.hpp"
 #include "base/memory/lifetimes.hpp"
+#include "base/type_traits/qualifiers.hpp"
 #include "base/utilities/type_aliases.hpp"
 
 namespace base {
@@ -23,29 +24,15 @@ public:
     return base::forward<Self>(self).get();
   }
 
-  [[nodiscard]] constexpr T& get(this StackStorage& self BASE_LIFETIMEBOUND) noexcept {
-    return *self.ptr();
-  }
-  [[nodiscard]] constexpr T&& get(this StackStorage&& self BASE_LIFETIMEBOUND) noexcept {
-    return base::move(*base::move(self).ptr());
-  }
-  [[nodiscard]] constexpr T const& get(this StackStorage const& self BASE_LIFETIMEBOUND) noexcept {
-    return *self.ptr();
-  }
-  [[nodiscard]] constexpr T const&&
-  get(this StackStorage const&& self BASE_LIFETIMEBOUND) noexcept {
-    return base::move(*base::move(self).ptr());
+  template <typename Self>
+  [[nodiscard]] constexpr auto&& get(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+    return base::forward<CopyCVRef<Self&&, T>>(*base::forward<Self>(self).ptr());
   }
 
 private:
-  [[nodiscard]] constexpr T* ptr(this StackStorage& self BASE_LIFETIMEBOUND) noexcept {
-    return reinterpret_cast<T*>(self.data_.data());
-  }
-  [[nodiscard]] constexpr T* ptr(this StackStorage&& self BASE_LIFETIMEBOUND) noexcept {
-    return reinterpret_cast<T*>(base::move(self).data_.data());
-  }
-  [[nodiscard]] constexpr T const* ptr(this StackStorage const& self BASE_LIFETIMEBOUND) noexcept {
-    return reinterpret_cast<T const*>(base::move(self).data_.data());
+  template <typename Self>
+  [[nodiscard]] constexpr auto* ptr(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+    return reinterpret_cast<CopyCV<Self, T>*>(base::forward<Self>(self).data_.data());
   }
 
 private:

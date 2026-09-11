@@ -5,6 +5,7 @@
 #include "base/logging/panic.hpp"
 #include "base/memory/lifetimes.hpp"
 #include "base/type_traits/categories.hpp"
+#include "base/type_traits/qualifiers.hpp"
 #include "base/type_traits/trivial.hpp"
 #include "base/type_traits/type_string.hpp"
 
@@ -12,12 +13,8 @@ namespace base {
 
 template <typename Ok, Enum Err> class Result {
 public:
+  template <MaybeCVRef<Err> E> Result(E&& err) : err_(base::forward<E>(err)), is_err_(true) {}
   template <typename... Args> Result(Args&&... args) : ok_(base::forward<Args>(args)...) {}
-
-  Result(Err&& err) : err_(base::move(err)), is_err_(true) {}
-  Result(Err const&& err) : err_(err), is_err_(true) {}
-  Result(Err& err) : err_(err), is_err_(true) {}
-  Result(Err const& err) : err_(err), is_err_(true) {}
 
   ~Result() noexcept { destroy(); }
 
@@ -137,18 +134,11 @@ public:
   }
 
 private:
-  void destroy(this Result& self) noexcept {
+  template <typename Self> void destroy(this Self&& self) noexcept {
     if (self.is_err_) [[unlikely]] {
-      self.err_.~Err();
+      base::forward<Self>(self).err_.~Err();
     } else if constexpr (!TriviallyDestructible<Ok>) {
-      self.ok_.~Ok();
-    }
-  }
-  void destroy(this Result&& self) noexcept {
-    if (self.is_err_) [[unlikely]] {
-      base::move(self).err_.~Err();
-    } else if constexpr (!TriviallyDestructible<Ok>) {
-      base::move(self).ok_.~Ok();
+      base::forward<Self>(self).ok_.~Ok();
     }
   }
 

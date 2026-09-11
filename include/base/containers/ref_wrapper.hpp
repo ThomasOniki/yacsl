@@ -9,27 +9,17 @@ template <typename T> class RefWrapper {
 public:
   RefWrapper(T& value BASE_LIFETIMEBOUND) noexcept : ptr_(value) {}
 
-  [[nodiscard]] constexpr T& get(this RefWrapper& self BASE_LIFETIMEBOUND) noexcept {
-    return *self.ptr_;
+  template <typename Self>
+  [[nodiscard]] constexpr auto&& get(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+    return base::forward<CopyCVRef<Self&&, T>>(*base::forward<Self>(self).ptr_);
   }
-  [[nodiscard]] constexpr T&& get(this RefWrapper&& self BASE_LIFETIMEBOUND) noexcept {
-    return base::move(*base::move(self).ptr_);
-  }
-  [[nodiscard]] T const& get(this RefWrapper const& self BASE_LIFETIMEBOUND) noexcept {
-    return *self.ptr_;
-  }
-  [[nodiscard]] T const&& get(this RefWrapper const&& self BASE_LIFETIMEBOUND) noexcept {
-    return base::move(*base::move(self).ptr_);
-  }
-
   template <typename Self>
   [[nodiscard]] constexpr auto&& operator*(this Self&& self BASE_LIFETIMEBOUND) {
-    return base::forward<Self>(self).get();
+    return base::forward<CopyCVRef<Self&&, T>>(*base::forward<Self>(self).ptr_);
   }
   template <typename Self>
-  [[nodiscard]] constexpr auto operator->(this Self&& self BASE_LIFETIMEBOUND) {
-    auto&& ref = base::forward<Self>(self).get();
-    return &ref;
+  [[nodiscard]] constexpr CopyCV<Self, T>* operator->(this Self&& self BASE_LIFETIMEBOUND) {
+    return base::forward<Self>(self).ptr_;
   }
 
 private:

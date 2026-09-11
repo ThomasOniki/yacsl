@@ -173,69 +173,27 @@ public:
     return self.ptr_ != nullptr && self.ptr_ == &value;
   }
 
-  template <typename... Args>
-  [[nodiscard]] constexpr T& expect_value(this Option& self            BASE_LIFETIMEBOUND,
-                                          FormatString<Args...> const& fmt,
-                                          Args&&... args) noexcept {
+  template <typename Self, typename... Args>
+  [[nodiscard]] constexpr auto&& expect_value(this Self&& self             BASE_LIFETIMEBOUND,
+                                              FormatString<Args...> const& fmt,
+                                              Args&&... args) noexcept {
     panic_if(self.ptr_ == nullptr, fmt, base::forward<Args>(args)...);
-    return *self.ptr_;
-  }
-  template <typename... Args>
-  [[nodiscard]] constexpr T&& expect_value(this Option&& self           BASE_LIFETIMEBOUND,
-                                           FormatString<Args...> const& fmt,
-                                           Args&&... args) noexcept {
-    panic_if(self.ptr_ == nullptr, fmt, base::forward<Args>(args)...);
-    return base::move(*base::move(self).ptr_);
-  }
-  template <typename... Args>
-  [[nodiscard]] constexpr T const& expect_value(this Option const& self      BASE_LIFETIMEBOUND,
-                                                FormatString<Args...> const& fmt,
-                                                Args&&... args) noexcept {
-    panic_if(self.ptr_ == nullptr, fmt, base::forward<Args>(args)...);
-    return *self.ptr_;
-  }
-  template <typename... Args>
-  [[nodiscard]] constexpr T const&& expect_value(this Option const&& self     BASE_LIFETIMEBOUND,
-                                                 FormatString<Args...> const& fmt,
-                                                 Args&&... args) noexcept {
-    panic_if(self.ptr_ == nullptr, fmt, base::forward<Args>(args)...);
-    return base::move(*base::move(self).ptr_);
+    return base::forward<CopyCVRef<Self&&, T>>(*base::forward<Self>(self).ptr_);
   }
   template <typename Self>
-  [[nodiscard]] constexpr T& expect_value(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+  [[nodiscard]] constexpr auto&& expect_value(this Self&& self BASE_LIFETIMEBOUND) noexcept {
     return base::forward<Self>(self).expect_value("Option<{}> is nil.", TYPE_STRING<T>);
   }
 
-  template <typename... Args>
-  [[nodiscard]] constexpr T& assert_value(this Option& self            BASE_LIFETIMEBOUND,
-                                          FormatString<Args...> const& fmt,
-                                          Args&&... args) noexcept {
+  template <typename Self, typename... Args>
+  [[nodiscard]] constexpr auto&& assert_value(this Self&& self             BASE_LIFETIMEBOUND,
+                                              FormatString<Args...> const& fmt,
+                                              Args&&... args) noexcept {
     debug_panic_if(self.ptr_ == nullptr, fmt, base::forward<Args>(args)...);
-    return *self.ptr_;
-  }
-  template <typename... Args>
-  [[nodiscard]] constexpr T&& assert_value(this Option&& self           BASE_LIFETIMEBOUND,
-                                           FormatString<Args...> const& fmt,
-                                           Args&&... args) noexcept {
-    debug_panic_if(self.ptr_ == nullptr, fmt, base::forward<Args>(args)...);
-    return base::move(*base::move(self).ptr_);
-  }
-  template <typename... Args>
-  [[nodiscard]] constexpr T const& assert_value(this Option const& self      BASE_LIFETIMEBOUND,
-                                                FormatString<Args...> const& fmt,
-                                                Args&&... args) noexcept {
-    debug_panic_if(self.ptr_ == nullptr, fmt, base::forward<Args>(args)...);
-    return *self.ptr_;
-  }
-  template <typename... Args>
-  [[nodiscard]] constexpr T const&& assert_value(this Option const&& self     BASE_LIFETIMEBOUND,
-                                                 FormatString<Args...> const& fmt,
-                                                 Args&&... args) noexcept {
-    debug_panic_if(self.ptr_ == nullptr, fmt, base::forward<Args>(args)...);
-    return base::move(*base::move(self).ptr_);
+    return base::forward<CopyCVRef<Self&&, T>>(*base::forward<Self>(self).ptr_);
   }
   template <typename Self>
-  [[nodiscard]] constexpr T& assert_value(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+  [[nodiscard]] constexpr auto&& assert_value(this Self&& self BASE_LIFETIMEBOUND) noexcept {
     return base::forward<Self>(self).assert_value("Option<{}> is nil.", TYPE_STRING<T>);
   }
 

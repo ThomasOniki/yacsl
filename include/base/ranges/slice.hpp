@@ -34,45 +34,41 @@ public:
   // used here.
   // NOLINTBEGIN(cppcoreguidelines-missing-std-forward)
   // NOLINTBEGIN(cppcoreguidelines-rvalue-reference-param-not-moved)
-  [[nodiscard]] constexpr T*       data(this Slice& self) noexcept { return self.data_; }
-  [[nodiscard]] constexpr T*       data(this Slice&& self) noexcept { return self.data_; }
-  [[nodiscard]] constexpr T const* data(this Slice const& self) noexcept { return self.data_; }
-  [[nodiscard]] constexpr SizeT    size(this Slice const& self) noexcept { return self.size_; }
+  template <typename Self>
+  [[nodiscard]] constexpr CopyCV<Self, T>* data(this Self&& self) noexcept {
+    return self.data_;
+  }
+  [[nodiscard]] constexpr SizeT size(this Slice const& self) noexcept { return self.size_; }
 
-  [[nodiscard]] constexpr T& operator[](this Slice& self, SizeT index) noexcept {
-    return self.data_[Reversed ? -index : index];
-  }
-  [[nodiscard]] constexpr T&& operator[](this Slice&& self, SizeT index) noexcept {
-    return static_cast<T&&>(self.data_[Reversed ? -index : index]);
-  }
-  [[nodiscard]] constexpr T const& operator[](this Slice const& self, SizeT index) noexcept {
-    return self.data_[Reversed ? -index : index];
-  }
-  [[nodiscard]] constexpr T const&& operator[](this Slice const&& self, SizeT index) noexcept {
-    return static_cast<T const&&>(self.data_[Reversed ? -index : index]);
+  template <typename Self>
+  [[nodiscard]] constexpr auto&& operator[](this Self&& self, SizeT index) noexcept {
+    return static_cast<CopyCVRef<Self&&, T>>(self.data_[Reversed ? -index : index]);
   }
 
-  [[nodiscard]] constexpr Slice<uchar, SizeT> bytes(this Slice& self) noexcept
-    requires(!ConstType<T>)
-  {
-    return {reinterpret_cast<uchar*>(self.data_), static_cast<SizeT>(self.size_ * sizeof(T))};
+  template <typename Self> [[nodiscard]] constexpr auto bytes(this Self&& self) noexcept {
+    if constexpr (ConstType<T>) {
+      using Byte = CopyCV<Self, uchar const>;
+      return Slice<Byte, SizeT>{
+          reinterpret_cast<Byte*>(self.data_),
+          static_cast<SizeT>(self.size_ * sizeof(T)),
+      };
+    } else {
+      using Byte = CopyCV<Self, uchar>;
+      return Slice<Byte, SizeT>{
+          reinterpret_cast<Byte*>(self.data_),
+          static_cast<SizeT>(self.size_ * sizeof(T)),
+      };
+    }
   }
-  [[nodiscard]] constexpr Slice<uchar, SizeT> bytes(this Slice&& self) noexcept
-    requires(!ConstType<T>)
-  {
-    return {reinterpret_cast<uchar*>(self.data_), static_cast<SizeT>(self.size_ * sizeof(T))};
-  }
-  [[nodiscard]] constexpr Slice<uchar const, SizeT> bytes(this Slice const& self) noexcept {
-    return {reinterpret_cast<uchar const*>(self.data_), static_cast<SizeT>(self.size_ * sizeof(T))};
-  }
+
   template <typename Self>
   [[nodiscard]] constexpr auto slice(this Self&& self) noexcept
-      -> Slice<RemoveReference<decltype(*self.begin())>, SizeT, false> {
+      -> Slice<CopyCV<Self, T>, SizeT, false> {
     return {static_cast<Self&&>(self).data_, static_cast<Self&&>(self).size_};
   }
   template <typename Self>
   [[nodiscard]] constexpr auto reversed_slice(this Self&& self) noexcept
-      -> Slice<RemoveReference<decltype(*self.begin())>, SizeT, true> {
+      -> Slice<CopyCV<Self, T>, SizeT, true> {
     return {static_cast<Self&&>(self).data_, static_cast<Self&&>(self).size_};
   }
 
@@ -92,12 +88,11 @@ public:
     return true;
   }
 
-  [[nodiscard]] constexpr T* begin(this Slice& self) noexcept { return self.data_; }
-  [[nodiscard]] constexpr T* end(this Slice& self) noexcept { return self.data_ + self.size_; }
-  [[nodiscard]] constexpr T* begin(this Slice&& self) noexcept { return self.data_; }
-  [[nodiscard]] constexpr T* end(this Slice&& self) noexcept { return self.data_ + self.size_; }
-  [[nodiscard]] constexpr T const* begin(this Slice const& self) noexcept { return self.data_; }
-  [[nodiscard]] constexpr T const* end(this Slice const& self) noexcept {
+  template <typename Self>
+  [[nodiscard]] constexpr CopyCV<Self, T>* begin(this Self&& self) noexcept {
+    return self.data_;
+  }
+  template <typename Self> [[nodiscard]] constexpr CopyCV<Self, T>* end(this Self&& self) noexcept {
     return self.data_ + self.size_;
   }
   // NOLINTEND(cppcoreguidelines-rvalue-reference-param-not-moved)

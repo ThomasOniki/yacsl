@@ -6,6 +6,7 @@
 #include "base/ranges/integer_range.hpp"
 #include "base/ranges/slice.hpp"
 #include "base/type_traits/categories.hpp"
+#include "base/type_traits/qualifiers.hpp"
 #include "base/utilities/type_aliases.hpp"
 
 namespace base {
@@ -39,15 +40,9 @@ public:
     }
   }
 
-  [[nodiscard]] constexpr T* data(this StackArrayStorage& self BASE_LIFETIMEBOUND) noexcept {
-    return reinterpret_cast<T*>(self.data_.data());
-  }
-  [[nodiscard]] constexpr T* data(this StackArrayStorage&& self BASE_LIFETIMEBOUND) noexcept {
-    return reinterpret_cast<T*>(base::move(self).data_.data());
-  }
-  [[nodiscard]] constexpr T const*
-  data(this StackArrayStorage const& self BASE_LIFETIMEBOUND) noexcept {
-    return reinterpret_cast<T const*>(base::move(self).data_.data());
+  template <typename Self>
+  [[nodiscard]] constexpr auto* data(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+    return reinterpret_cast<CopyCV<Self, T>*>(base::forward<Self>(self).data_.data());
   }
 
   [[nodiscard]] constexpr SizeT size(this StackArrayStorage const& /*self*/) noexcept {
@@ -61,12 +56,12 @@ public:
 
   template <typename Self>
   [[nodiscard]] constexpr auto slice(this Self&& self BASE_LIFETIMEBOUND) noexcept
-      -> Slice<RemoveReference<decltype(*self.begin())>, SizeT> {
+      -> Slice<CopyCV<Self, T>, SizeT> {
     return {base::forward<Self>(self).data(), static_cast<SizeT>(N)};
   }
   template <typename Self>
   [[nodiscard]] constexpr auto reversed_slice(this Self&& self BASE_LIFETIMEBOUND) noexcept
-      -> ReversedSlice<RemoveReference<decltype(*self.begin())>, SizeT> {
+      -> ReversedSlice<CopyCV<Self, T>, SizeT> {
     return {base::forward<Self>(self).data(), static_cast<SizeT>(N)};
   }
   template <typename Self>
