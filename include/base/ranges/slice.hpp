@@ -1,6 +1,7 @@
 #pragma once
 
 #include "base/attributes.hpp"
+#include "base/ranges/initializer_list.hpp"
 #include "base/ranges/integer_range.hpp"
 #include "base/type_traits/categories.hpp"
 #include "base/type_traits/qualifiers.hpp"
@@ -20,6 +21,10 @@ public:
 
   constexpr Slice(T* data BASE_LIFETIMEBOUND, SizeT size) noexcept
       : data_(Reversed ? data + size - 1 : data), size_(size) {}
+
+  constexpr Slice(InitializerList<T> data BASE_LIFETIMEBOUND) noexcept
+    requires ConstType<T>
+      : data_(data.begin()), size_(data.size()) {}
 
   constexpr Slice(Slice<T, SizeT, !Reversed> other) noexcept
       : data_(Reversed ? other.end() - 1 : other.end() + 1),
