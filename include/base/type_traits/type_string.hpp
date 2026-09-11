@@ -6,15 +6,19 @@
 namespace base {
 
 namespace internal {
-template <typename T> constexpr StringView type_string_impl_pretty() { return __PRETTY_FUNCTION__; }
+template <typename T> constexpr StringView type_string_impl_pretty() {
+  return __PRETTY_FUNCTION__;
+}
 
 constexpr usize TYPE_STRING_IMPL_OFFSET_FROM_BEGIN = []() -> usize {
   constexpr StringView pretty  = type_string_impl_pretty<int>();
   constexpr StringView to_find = "T = ";
-  for (char const* it = pretty.begin(); it < pretty.end() - to_find.size(); ++it) {
+  for (char const* it = pretty.begin(); it < pretty.end() - to_find.size();
+       ++it) {
     for (usize i = 0;; ++i) {
       if (i == to_find.size()) {
-        return static_cast<usize>(it - pretty.begin()) + i - "_pretty"_sv.size();
+        return static_cast<usize>(it - pretty.begin()) + i -
+               "_pretty"_sv.size();
       }
       if (it[i] != to_find[i]) {
         break;
@@ -50,6 +54,7 @@ template <typename T> constexpr StringView type_string_impl() {
 }
 } // namespace internal
 
-template <typename T> constexpr StringView TYPE_STRING = internal::type_string_impl<T>();
+template <typename T>
+constexpr StringView TYPE_STRING = internal::type_string_impl<T>();
 
 } // namespace base

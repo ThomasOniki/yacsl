@@ -13,7 +13,8 @@
 #endif
 
 #ifdef BASE_NO_LIBCPP
-[[nodiscard]] constexpr void* operator new(base::usize /*count*/, void* ptr) noexcept {
+[[nodiscard]] constexpr void* operator new(base::usize /*count*/,
+                                           void* ptr) noexcept {
   return ptr;
 }
 #endif
@@ -25,16 +26,20 @@ using ::operator new;
 } // namespace _export_placement_new
 
 template <typename T> // NOLINTNEXTLINE(cppcoreguidelines-missing-std-forward)
-[[nodiscard]] constexpr RemoveReference<T>&& move(BASE_LIFETIMEBOUND T&& value) {
+[[nodiscard]] constexpr RemoveReference<T>&&
+move(BASE_LIFETIMEBOUND T&& value) {
   return static_cast<RemoveReference<T>&&>(value);
 }
 
-template <typename T> // NOLINTNEXTLINE(cppcoreguidelines-rvalue-reference-param-not-moved)
-[[nodiscard]] constexpr T&& forward(BASE_LIFETIMEBOUND RemoveReference<T>&& value) {
+template <
+    typename T> // NOLINTNEXTLINE(cppcoreguidelines-rvalue-reference-param-not-moved)
+[[nodiscard]] constexpr T&&
+forward(BASE_LIFETIMEBOUND RemoveReference<T>&& value) {
   return static_cast<T&&>(value);
 }
 template <typename T>
-[[nodiscard]] constexpr T&& forward(BASE_LIFETIMEBOUND RemoveReference<T>& value) {
+[[nodiscard]] constexpr T&&
+forward(BASE_LIFETIMEBOUND RemoveReference<T>& value) {
   return static_cast<T&&>(value);
 }
 
@@ -45,7 +50,7 @@ constexpr T* construct_at(T* location BASE_LIFETIMEBOUND, Args&&... args) {
 
 template <MutableType T>
 constexpr Slice<T> copy(Slice<TypeIdentity<T> const> src,
-                        Slice<T> dst                 BASE_LIFETIMEBOUND) noexcept {
+                        Slice<T> dst BASE_LIFETIMEBOUND) noexcept {
   usize const size = dst.size() < src.size() ? dst.size() : src.size();
   if !consteval {
     if (TriviallyCopyable<T>) {
@@ -58,10 +63,12 @@ constexpr Slice<T> copy(Slice<TypeIdentity<T> const> src,
   return {dst.data(), size};
 }
 template <MutableType T>
-constexpr Slice<T> copy(Slice<TypeIdentity<T> const> src, T* dst BASE_LIFETIMEBOUND) noexcept {
+constexpr Slice<T> copy(Slice<TypeIdentity<T> const> src,
+                        T* dst BASE_LIFETIMEBOUND) noexcept {
   if !consteval {
     if (TriviallyCopyable<T>) {
-      return {static_cast<T*>(::memcpy(dst, src.data(), src.size())), src.size()};
+      return {static_cast<T*>(::memcpy(dst, src.data(), src.size())),
+              src.size()};
     }
   }
   for (usize i = 0; i < src.size(); ++i) {

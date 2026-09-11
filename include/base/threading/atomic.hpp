@@ -53,21 +53,32 @@ public:
     return *ret;
   }
 
-  bool compare_exchange(this Atomic& self, T& expected, T desired, MemoryOrder success,
-                        MemoryOrder failure) noexcept {
-    return __atomic_compare_exchange(&self.value_, &expected, &desired, /*weak:*/ false,
-                                     static_cast<int>(success), static_cast<int>(failure));
+  bool compare_exchange(this Atomic& self, T& expected, T desired,
+                        MemoryOrder success, MemoryOrder failure) noexcept {
+    return __atomic_compare_exchange(&self.value_, &expected, &desired,
+                                     /*weak:*/ false, static_cast<int>(success),
+                                     static_cast<int>(failure));
   }
-  bool compare_exchange_weak(this Atomic& self, T& expected, T desired, MemoryOrder success,
+  bool compare_exchange_weak(this Atomic& self, T& expected, T desired,
+                             MemoryOrder success,
                              MemoryOrder failure) noexcept {
-    return __atomic_compare_exchange(&self.value_, &expected, &desired, /*weak:*/ true,
-                                     static_cast<int>(success), static_cast<int>(failure));
+    return __atomic_compare_exchange(&self.value_, &expected, &desired,
+                                     /*weak:*/ true, static_cast<int>(success),
+                                     static_cast<int>(failure));
   }
 
-  T operator++(this Atomic& self) noexcept { return self.fetch_add(1, MemoryOrder::SeqCst) + 1; }
-  T operator++(this Atomic& self, int) noexcept { return self.fetch_add(1, MemoryOrder::SeqCst); }
-  T operator--(this Atomic& self) noexcept { return self.fetch_sub(1, MemoryOrder::SeqCst) - 1; }
-  T operator--(this Atomic& self, int) noexcept { return self.fetch_sub(1, MemoryOrder::SeqCst); }
+  T operator++(this Atomic& self) noexcept {
+    return self.fetch_add(1, MemoryOrder::SeqCst) + 1;
+  }
+  T operator++(this Atomic& self, int) noexcept {
+    return self.fetch_add(1, MemoryOrder::SeqCst);
+  }
+  T operator--(this Atomic& self) noexcept {
+    return self.fetch_sub(1, MemoryOrder::SeqCst) - 1;
+  }
+  T operator--(this Atomic& self, int) noexcept {
+    return self.fetch_sub(1, MemoryOrder::SeqCst);
+  }
 
 private:
   T value_ = T();

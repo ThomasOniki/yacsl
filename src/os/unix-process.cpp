@@ -38,56 +38,65 @@ struct State {
 };
 } // namespace
 
-#define CHECK_RETURN(func)                                                                         \
-  do {                                                                                             \
-    int const _result = func;                                                                      \
-    panic_if(_result != 0, #func " failed: {}", errno_str(_result));                               \
+#define CHECK_RETURN(func)                                                     \
+  do {                                                                         \
+    int const _result = func;                                                  \
+    panic_if(_result != 0, #func " failed: {}", errno_str(_result));           \
   } while (false)
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 usize Process::Output::read(this Output& self, Slice<uchar> buffer) noexcept {
-  return static_cast<usize>(BASE_TRY_SYSCALL(::read(self.handle_, buffer.data(), buffer.size())));
+  return static_cast<usize>(
+      BASE_TRY_SYSCALL(::read(self.handle_, buffer.data(), buffer.size())));
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void Process::Input::write(this Input& self, Slice<uchar const> bytes) noexcept {
-  usize written =
-      static_cast<usize>(BASE_TRY_SYSCALL(::write(self.handle_, bytes.data(), bytes.size())));
+void Process::Input::write(this Input&        self,
+                           Slice<uchar const> bytes) noexcept {
+  usize written = static_cast<usize>(
+      BASE_TRY_SYSCALL(::write(self.handle_, bytes.data(), bytes.size())));
   while (written < bytes.size()) {
-    written += static_cast<usize>(
-        BASE_TRY_SYSCALL(::write(self.handle_, &bytes[written], bytes.size() - written)));
+    written += static_cast<usize>(BASE_TRY_SYSCALL(
+        ::write(self.handle_, &bytes[written], bytes.size() - written)));
   }
 }
 
-static void redirect_child_stdio_to_file(posix_spawn_file_actions_t* actions, File::Flags flags,
-                                         char const* path, int stream) noexcept {
-  int const oflag = unix_flags(flags | File::Flags::DontCloseOnExec |
-                               (stream == STDIN_FILENO ? File::Flags::Read : File::Flags::Write));
+static void redirect_child_stdio_to_file(posix_spawn_file_actions_t* actions,
+                                         File::Flags flags, char const* path,
+                                         int stream) noexcept {
+  int const oflag = unix_flags(
+      flags | File::Flags::DontCloseOnExec |
+      (stream == STDIN_FILENO ? File::Flags::Read : File::Flags::Write));
 
-  CHECK_RETURN(posix_spawn_file_actions_addopen(actions, stream, path, oflag, 0644));
+  CHECK_RETURN(
+      posix_spawn_file_actions_addopen(actions, stream, path, oflag, 0644));
 }
 
 void Process::open_files(this Process& self, void* pvoid_state) noexcept {
   State& state = *static_cast<State*>(pvoid_state);
   if (self.stdin_type_ == TYPE_FILE) {
-    redirect_child_stdio_to_file(&state.file_actions, state.stdio->input.file_info_.flags,
-                                 state.stdio->input.file_info_.path, STDIN_FILENO);
+    redirect_child_stdio_to_file(
+        &state.file_actions, state.stdio->input.file_info_.flags,
+        state.stdio->input.file_info_.path, STDIN_FILENO);
   } else if (self.stdin_type_ == Null) {
-    redirect_child_stdio_to_file(&state.file_actions, File::Flags::None, "/dev/null", STDIN_FILENO);
+    redirect_child_stdio_to_file(&state.file_actions, File::Flags::None,
+                                 "/dev/null", STDIN_FILENO);
   }
   if (self.stdout_type_ == TYPE_FILE) {
-    redirect_child_stdio_to_file(&state.file_actions, state.stdio->output.file_info_.flags,
-                                 state.stdio->output.file_info_.path, STDOUT_FILENO);
+    redirect_child_stdio_to_file(
+        &state.file_actions, state.stdio->output.file_info_.flags,
+        state.stdio->output.file_info_.path, STDOUT_FILENO);
   } else if (self.stdout_type_ == Null) {
-    redirect_child_stdio_to_file(&state.file_actions, File::Flags::None, "/dev/null",
-                                 STDOUT_FILENO);
+    redirect_child_stdio_to_file(&state.file_actions, File::Flags::None,
+                                 "/dev/null", STDOUT_FILENO);
   }
   if (self.stderr_type_ == TYPE_FILE) {
-    redirect_child_stdio_to_file(&state.file_actions, state.stdio->error.file_info_.flags,
-                                 state.stdio->error.file_info_.path, STDERR_FILENO);
+    redirect_child_stdio_to_file(
+        &state.file_actions, state.stdio->error.file_info_.flags,
+        state.stdio->error.file_info_.path, STDERR_FILENO);
   } else if (self.stderr_type_ == Null) {
-    redirect_child_stdio_to_file(&state.file_actions, File::Flags::None, "/dev/null",
-                                 STDERR_FILENO);
+    redirect_child_stdio_to_file(&state.file_actions, File::Flags::None,
+                                 "/dev/null", STDERR_FILENO);
   }
 }
 
@@ -97,46 +106,56 @@ void Process::create_pipes(this Process& self, void* pvoid_state) noexcept {
   if (self.stdin_type_ == Pipe) {
     BASE_TRY_SYSCALL(::pipe(state.stdin_pipe.data()));
     self.stdin_input_.handle_ = state.stdin_pipe[1];
-    CHECK_RETURN(
-        posix_spawn_file_actions_adddup2(&state.file_actions, state.stdin_pipe[0], STDIN_FILENO));
-    CHECK_RETURN(posix_spawn_file_actions_addclose(&state.file_actions, state.stdin_pipe[0]));
-    CHECK_RETURN(posix_spawn_file_actions_addclose(&state.file_actions, state.stdin_pipe[1]));
+    CHECK_RETURN(posix_spawn_file_actions_adddup2(
+        &state.file_actions, state.stdin_pipe[0], STDIN_FILENO));
+    CHECK_RETURN(posix_spawn_file_actions_addclose(&state.file_actions,
+                                                   state.stdin_pipe[0]));
+    CHECK_RETURN(posix_spawn_file_actions_addclose(&state.file_actions,
+                                                   state.stdin_pipe[1]));
   } else if (self.stdin_type_ == TYPE_OTHER_PIPE) {
     CHECK_RETURN(posix_spawn_file_actions_adddup2(
-        &state.file_actions, state.stdio->input.other_pipe_handle_, STDIN_FILENO));
-    CHECK_RETURN(posix_spawn_file_actions_addclose(&state.file_actions,
-                                                   state.stdio->input.other_pipe_handle_));
+        &state.file_actions, state.stdio->input.other_pipe_handle_,
+        STDIN_FILENO));
+    CHECK_RETURN(posix_spawn_file_actions_addclose(
+        &state.file_actions, state.stdio->input.other_pipe_handle_));
   }
   if (self.stdout_type_ == Pipe) {
     BASE_TRY_SYSCALL(::pipe(state.stdout_pipe.data()));
     self.stdout_output_.handle_ = state.stdout_pipe[0];
-    CHECK_RETURN(
-        posix_spawn_file_actions_adddup2(&state.file_actions, state.stdout_pipe[1], STDOUT_FILENO));
-    CHECK_RETURN(posix_spawn_file_actions_addclose(&state.file_actions, state.stdout_pipe[0]));
-    CHECK_RETURN(posix_spawn_file_actions_addclose(&state.file_actions, state.stdout_pipe[1]));
+    CHECK_RETURN(posix_spawn_file_actions_adddup2(
+        &state.file_actions, state.stdout_pipe[1], STDOUT_FILENO));
+    CHECK_RETURN(posix_spawn_file_actions_addclose(&state.file_actions,
+                                                   state.stdout_pipe[0]));
+    CHECK_RETURN(posix_spawn_file_actions_addclose(&state.file_actions,
+                                                   state.stdout_pipe[1]));
   } else if (self.stdout_type_ == TYPE_OTHER_PIPE) {
     CHECK_RETURN(posix_spawn_file_actions_adddup2(
-        &state.file_actions, state.stdio->output.other_pipe_handle_, STDOUT_FILENO));
-    CHECK_RETURN(posix_spawn_file_actions_addclose(&state.file_actions,
-                                                   state.stdio->output.other_pipe_handle_));
+        &state.file_actions, state.stdio->output.other_pipe_handle_,
+        STDOUT_FILENO));
+    CHECK_RETURN(posix_spawn_file_actions_addclose(
+        &state.file_actions, state.stdio->output.other_pipe_handle_));
   }
   if (self.stderr_type_ == Pipe) {
     BASE_TRY_SYSCALL(::pipe(state.stderr_pipe.data()));
     self.stderr_output_.handle_ = state.stderr_pipe[0];
-    CHECK_RETURN(
-        posix_spawn_file_actions_adddup2(&state.file_actions, state.stderr_pipe[1], STDERR_FILENO));
-    CHECK_RETURN(posix_spawn_file_actions_addclose(&state.file_actions, state.stderr_pipe[0]));
-    CHECK_RETURN(posix_spawn_file_actions_addclose(&state.file_actions, state.stderr_pipe[1]));
+    CHECK_RETURN(posix_spawn_file_actions_adddup2(
+        &state.file_actions, state.stderr_pipe[1], STDERR_FILENO));
+    CHECK_RETURN(posix_spawn_file_actions_addclose(&state.file_actions,
+                                                   state.stderr_pipe[0]));
+    CHECK_RETURN(posix_spawn_file_actions_addclose(&state.file_actions,
+                                                   state.stderr_pipe[1]));
   } else if (self.stderr_type_ == TYPE_OTHER_PIPE) {
     CHECK_RETURN(posix_spawn_file_actions_adddup2(
-        &state.file_actions, state.stdio->error.other_pipe_handle_, STDERR_FILENO));
-    CHECK_RETURN(posix_spawn_file_actions_addclose(&state.file_actions,
-                                                   state.stdio->error.other_pipe_handle_));
+        &state.file_actions, state.stdio->error.other_pipe_handle_,
+        STDERR_FILENO));
+    CHECK_RETURN(posix_spawn_file_actions_addclose(
+        &state.file_actions, state.stdio->error.other_pipe_handle_));
   }
   // NOLINTEND(android-cloexec-pipe)
 }
 
-void Process::cleanup_after_spawn(this Process& self, void* pvoid_state) noexcept {
+void Process::cleanup_after_spawn(this Process& self,
+                                  void*         pvoid_state) noexcept {
   State& state = *static_cast<State*>(pvoid_state);
   CHECK_RETURN(posix_spawn_file_actions_destroy(&state.file_actions));
 
@@ -159,8 +178,8 @@ void Process::cleanup_after_spawn(this Process& self, void* pvoid_state) noexcep
 
 extern "C" char** environ;
 
-Result<Process, Process::SpawnError> Process::spawn(char const* const* argv,
-                                                    Stdio const&       stdio) noexcept {
+Result<Process, Process::SpawnError>
+Process::spawn(char const* const* argv, Stdio const& stdio) noexcept {
   Process spawned;
   spawned.stdin_type_  = stdio.input.type_;
   spawned.stdout_type_ = stdio.output.type_;
@@ -184,7 +203,8 @@ Result<Process, Process::SpawnError> Process::spawn(char const* const* argv,
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
   auto const* argv_mut = const_cast<char* const*>(argv);
 
-  int const result = posix_spawnp(&pid, argv[0], &state.file_actions, nullptr, argv_mut, environ);
+  int const result = posix_spawnp(&pid, argv[0], &state.file_actions, nullptr,
+                                  argv_mut, environ);
   if (result == ENOENT) {
     return SpawnError::FileNotFound;
   }
@@ -206,7 +226,8 @@ static String drain_pipe(Process::Output* output) noexcept {
   return data.resize(data.size() - PIPE_BUF);
 }
 
-void Process::cleanup_before_wait(this Process& self, ExitStatus* status) noexcept {
+void Process::cleanup_before_wait(this Process& self,
+                                  ExitStatus*   status) noexcept {
   if (self.stdin_type_ == Pipe && self.stdin_input_.handle_ != -1) {
     BASE_TRY_SYSCALL(close(self.stdin_input_.handle_));
     self.stdin_input_.handle_ = -1;
@@ -258,8 +279,10 @@ Process::ExitStatus Process::wait(this Process& self) noexcept {
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void Process::send_signal(this Process& self, Signal signal) noexcept {
-  debug_panic_if(self.handle_ == -1, "Tried to send_signal to a Process that isn't running.");
-  BASE_TRY_SYSCALL(kill(static_cast<pid_t>(self.handle_), static_cast<int>(signal)));
+  debug_panic_if(self.handle_ == -1,
+                 "Tried to send_signal to a Process that isn't running.");
+  BASE_TRY_SYSCALL(
+      kill(static_cast<pid_t>(self.handle_), static_cast<int>(signal)));
   self.handle_ = -1;
 }
 

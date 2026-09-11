@@ -30,11 +30,13 @@ template <typename T> struct RemoveVolatileImpl<volatile T> {
 } // namespace base::internal
 
 namespace base {
-template <typename T> using RemoveReference = internal::RemoveReferenceImpl<T>::Type;
-template <typename T> using RemoveConst     = internal::RemoveConstImpl<T>::Type;
-template <typename T> using RemoveVolatile  = internal::RemoveVolatileImpl<T>::Type;
-template <typename T> using RemoveCV        = RemoveConst<RemoveVolatile<T>>;
-template <typename T> using RemoveCVRef     = RemoveCV<RemoveReference<T>>;
+template <typename T>
+using RemoveReference = internal::RemoveReferenceImpl<T>::Type;
+template <typename T> using RemoveConst = internal::RemoveConstImpl<T>::Type;
+template <typename T>
+using RemoveVolatile                    = internal::RemoveVolatileImpl<T>::Type;
+template <typename T> using RemoveCV    = RemoveConst<RemoveVolatile<T>>;
+template <typename T> using RemoveCVRef = RemoveCV<RemoveReference<T>>;
 } // namespace base
 #endif
 
@@ -56,7 +58,8 @@ concept MaybeConst = OneOf<T, BaseType, BaseType const>;
 template <typename T, typename BaseType>
 concept MaybeVolatile = OneOf<T, BaseType, BaseType volatile>;
 template <typename T, typename BaseType>
-concept MaybeCV = OneOf<T, BaseType, BaseType const, BaseType volatile, BaseType const volatile>;
+concept MaybeCV = OneOf<T, BaseType, BaseType const, BaseType volatile,
+                        BaseType const volatile>;
 
 template <typename T, typename BaseType>
 concept MaybeRValueRef = OneOf<T, BaseType, BaseType&&>;
@@ -67,13 +70,16 @@ concept MaybeRef = OneOf<T, BaseType, BaseType&, BaseType&&>;
 
 template <typename T, typename BaseType>
 concept MaybeConstRef =
-    OneOf<T, BaseType, BaseType&, BaseType&&, BaseType const, BaseType const&, BaseType const&&>;
+    OneOf<T, BaseType, BaseType&, BaseType&&, BaseType const, BaseType const&,
+          BaseType const&&>;
 template <typename T, typename BaseType>
-concept MaybeVolatileRef = OneOf<T, BaseType, BaseType&, BaseType&&, BaseType volatile,
-                                 BaseType volatile&, BaseType volatile&&>;
+concept MaybeVolatileRef =
+    OneOf<T, BaseType, BaseType&, BaseType&&, BaseType volatile,
+          BaseType volatile&, BaseType volatile&&>;
 template <typename T, typename BaseType>
-concept MaybeCVRef = OneOf<T, BaseType, BaseType&, BaseType&&, BaseType volatile,
-                           BaseType volatile&, BaseType volatile&&>;
+concept MaybeCVRef =
+    OneOf<T, BaseType, BaseType&, BaseType&&, BaseType volatile,
+          BaseType volatile&, BaseType volatile&&>;
 
 namespace internal {
 
@@ -87,7 +93,8 @@ template <typename Src, typename Dst> struct CopyConstImpl<Src const, Dst> {
 template <typename Src, typename Dst> struct CopyVolatileImpl {
   using Type = Dst;
 };
-template <typename Src, typename Dst> struct CopyVolatileImpl<Src volatile, Dst> {
+template <typename Src, typename Dst>
+struct CopyVolatileImpl<Src volatile, Dst> {
   using Type = Dst volatile;
 };
 
@@ -100,7 +107,8 @@ template <typename Src, typename Dst> struct CopyCVImpl<Src const, Dst> {
 template <typename Src, typename Dst> struct CopyCVImpl<Src volatile, Dst> {
   using Type = Dst volatile;
 };
-template <typename Src, typename Dst> struct CopyCVImpl<Src const volatile, Dst> {
+template <typename Src, typename Dst>
+struct CopyCVImpl<Src const volatile, Dst> {
   using Type = Dst const volatile;
 };
 
@@ -133,7 +141,8 @@ template <typename Src, typename Dst> struct CopyReferenceImpl<Src&&, Dst> {
 template <typename Src, typename Dst>
 using CopyConst = internal::CopyConstImpl<RemoveReference<Src>, Dst>::Type;
 template <typename Src, typename Dst>
-using CopyVolatile = internal::CopyVolatileImpl<RemoveReference<Src>, Dst>::Type;
+using CopyVolatile =
+    internal::CopyVolatileImpl<RemoveReference<Src>, Dst>::Type;
 template <typename Src, typename Dst>
 using CopyCV = internal::CopyCVImpl<RemoveReference<Src>, Dst>::Type;
 
@@ -144,6 +153,7 @@ using CopyLValueRef = internal::CopyLValueRefImpl<Src, Dst>::Type;
 template <typename Src, typename Dst>
 using CopyReference = internal::CopyReferenceImpl<Src, Dst>::Type;
 
-template <typename Src, typename Dst> using CopyCVRef = CopyReference<Src, CopyCV<Src, Dst>>;
+template <typename Src, typename Dst>
+using CopyCVRef = CopyReference<Src, CopyCV<Src, Dst>>;
 
 } // namespace base

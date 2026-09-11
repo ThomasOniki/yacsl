@@ -19,8 +19,9 @@ struct StackTrace {
 
   BASE_NOINLINE static StackTrace current() noexcept;
 
-  // Only call this when you actually need it. Computing the entries is non trivial and can be done
-  // at any time as long as this->ptrs_ was gotten at the right time.
+  // Only call this when you actually need it. Computing the entries is non
+  // trivial and can be done at any time as long as this->ptrs_ was gotten at
+  // the right time.
   Vector<StackTraceEntry, 16> const&
   compute_entries(this StackTrace& self BASE_LIFETIMEBOUND) noexcept;
 
@@ -30,11 +31,12 @@ struct StackTrace {
     return base::move(self).entries_;
   }
 
-  template <typename Self> void print(this Self&& self, Logger::Level lvl) noexcept {
+  template <typename Self>
+  void print(this Self&& self, Logger::Level lvl) noexcept {
     base::forward<Self>(self).compute_entries();
     for (usize i = 0; i < self.entries_.size(); ++i) {
-      base::log(lvl, "#{} {} in {} ({}+{#x})", i, self.entries_[i].address, self.entries_[i].caller,
-                self.entries_[i].object,
+      base::log(lvl, "#{} {} in {} ({}+{#x})", i, self.entries_[i].address,
+                self.entries_[i].caller, self.entries_[i].object,
                 static_cast<uchar*>(self.entries_[i].address) -
                     static_cast<uchar*>(self.entries_[i].base_address));
     }

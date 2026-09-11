@@ -9,11 +9,12 @@
 
 namespace base {
 
-template <Arithmetic T, usize Rows, usize Cols, Integral SizeT = usize> class Matrix {
+template <Arithmetic T, usize Rows, usize Cols, Integral SizeT = usize>
+class Matrix {
 public:
   template <typename Self>
-  [[nodiscard]] constexpr CopyCVRef<Self&&, T> operator[](this Self&& self, SizeT row,
-                                                          SizeT column) noexcept {
+  [[nodiscard]] constexpr CopyCVRef<Self&&, T>
+  operator[](this Self&& self, SizeT row, SizeT column) noexcept {
     if constexpr (Cols == 1) {
       return base::forward<Self>(self).data_[row];
     } else {
@@ -22,7 +23,8 @@ public:
   }
 
   template <typename Self>
-  [[nodiscard]] constexpr CopyCVRef<Self&&, T> operator[](this Self&& self, SizeT column) noexcept
+  [[nodiscard]] constexpr CopyCVRef<Self&&, T> operator[](this Self&& self,
+                                                          SizeT column) noexcept
     requires(Cols == 1)
   {
     return base::forward<Self>(self).data_[column];
@@ -30,7 +32,8 @@ public:
 
   template <usize N>
   [[nodiscard]] constexpr Matrix<T, Rows, N, SizeT>
-  operator*(this Matrix& self, Matrix<T, Cols, N, SizeT> const& other) noexcept {
+  operator*(this Matrix&                     self,
+            Matrix<T, Cols, N, SizeT> const& other) noexcept {
     Matrix<T, Rows, N, SizeT> result;
     for (usize i = 0; i < N; ++i) {
       for (usize j = 0; j < Rows; ++j) {
@@ -50,7 +53,8 @@ public:
     }
     return self;
   }
-  [[nodiscard]] constexpr Matrix operator*(this Matrix& self, T factor) noexcept {
+  [[nodiscard]] constexpr Matrix operator*(this Matrix& self,
+                                           T            factor) noexcept {
     Matrix result = self;
     result *= factor;
     return result;
@@ -73,12 +77,18 @@ public:
       data_;
 };
 
-template <Arithmetic T, Integral SizeT = usize> using Vec2 = Matrix<T, 2, 1, SizeT>;
-template <Arithmetic T, Integral SizeT = usize> using Vec3 = Matrix<T, 3, 1, SizeT>;
-template <Arithmetic T, Integral SizeT = usize> using Vec4 = Matrix<T, 4, 1, SizeT>;
+template <Arithmetic T, Integral SizeT = usize>
+using Vec2 = Matrix<T, 2, 1, SizeT>;
+template <Arithmetic T, Integral SizeT = usize>
+using Vec3 = Matrix<T, 3, 1, SizeT>;
+template <Arithmetic T, Integral SizeT = usize>
+using Vec4 = Matrix<T, 4, 1, SizeT>;
 
-template <Arithmetic T, Integral SizeT = usize> using Mat2x2 = Matrix<T, 2, 2, SizeT>;
-template <Arithmetic T, Integral SizeT = usize> using Mat3x3 = Matrix<T, 3, 3, SizeT>;
-template <Arithmetic T, Integral SizeT = usize> using Mat4x4 = Matrix<T, 4, 4, SizeT>;
+template <Arithmetic T, Integral SizeT = usize>
+using Mat2x2 = Matrix<T, 2, 2, SizeT>;
+template <Arithmetic T, Integral SizeT = usize>
+using Mat3x3 = Matrix<T, 3, 3, SizeT>;
+template <Arithmetic T, Integral SizeT = usize>
+using Mat4x4 = Matrix<T, 4, 4, SizeT>;
 
 } // namespace base

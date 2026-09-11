@@ -40,9 +40,9 @@ struct State {
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 usize Process::Output::read(this Output& self, Slice<uchar> buffer) noexcept {
-  DWORD   ret = 0;
-  WINBOOL result =
-      ReadFile(self.handle_, buffer.data(), static_cast<DWORD>(buffer.size()), &ret, nullptr);
+  DWORD   ret    = 0;
+  WINBOOL result = ReadFile(self.handle_, buffer.data(),
+                            static_cast<DWORD>(buffer.size()), &ret, nullptr);
   if (result == FALSE) [[unlikely]] {
     DWORD err = GetLastError();
     if (err == ERROR_BROKEN_PIPE) {
@@ -53,12 +53,14 @@ usize Process::Output::read(this Output& self, Slice<uchar> buffer) noexcept {
   return static_cast<usize>(ret);
 }
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void Process::Input::write(this Input& self, Slice<uchar const> bytes) noexcept {
+void Process::Input::write(this Input&        self,
+                           Slice<uchar const> bytes) noexcept {
   usize to_write = bytes.size();
   while (to_write > 0) {
     DWORD written = 0;
-    BASE_TRY_SYSCALL(
-        WriteFile(self.handle_, bytes.data(), static_cast<DWORD>(bytes.size()), &written, nullptr));
+    BASE_TRY_SYSCALL(WriteFile(self.handle_, bytes.data(),
+                               static_cast<DWORD>(bytes.size()), &written,
+                               nullptr));
     to_write -= static_cast<usize>(written);
   }
 }
@@ -66,31 +68,40 @@ void Process::Input::write(this Input& self, Slice<uchar const> bytes) noexcept 
 void Process::open_files(this Process& self, void* pvoid_state) noexcept {
   State& state = *static_cast<State*>(pvoid_state);
   if (self.stdin_type_ == TYPE_FILE) {
-    state.info.hStdInput = open_file_handle(state.stdio->input.file_info_.path,
-                                            state.stdio->input.file_info_.flags |
-                                                File::Flags::Read | File::Flags::DontCloseOnExec)
-                               .expect_ok();
+    state.info.hStdInput =
+        open_file_handle(state.stdio->input.file_info_.path,
+                         state.stdio->input.file_info_.flags |
+                             File::Flags::Read | File::Flags::DontCloseOnExec)
+            .expect_ok();
   } else if (self.stdin_type_ == Null) {
     state.info.hStdInput =
-        open_file_handle("NUL", File::Flags::Read | File::Flags::DontCloseOnExec).expect_ok();
+        open_file_handle("NUL",
+                         File::Flags::Read | File::Flags::DontCloseOnExec)
+            .expect_ok();
   }
   if (self.stdout_type_ == TYPE_FILE) {
-    state.info.hStdOutput = open_file_handle(state.stdio->output.file_info_.path,
-                                             state.stdio->output.file_info_.flags |
-                                                 File::Flags::Write | File::Flags::DontCloseOnExec)
-                                .expect_ok();
+    state.info.hStdOutput =
+        open_file_handle(state.stdio->output.file_info_.path,
+                         state.stdio->output.file_info_.flags |
+                             File::Flags::Write | File::Flags::DontCloseOnExec)
+            .expect_ok();
   } else if (self.stdout_type_ == Null) {
     state.info.hStdOutput =
-        open_file_handle("NUL", File::Flags::Write | File::Flags::DontCloseOnExec).expect_ok();
+        open_file_handle("NUL",
+                         File::Flags::Write | File::Flags::DontCloseOnExec)
+            .expect_ok();
   }
   if (self.stderr_type_ == TYPE_FILE) {
-    state.info.hStdError = open_file_handle(state.stdio->error.file_info_.path,
-                                            state.stdio->error.file_info_.flags |
-                                                File::Flags::Write | File::Flags::DontCloseOnExec)
-                               .expect_ok();
+    state.info.hStdError =
+        open_file_handle(state.stdio->error.file_info_.path,
+                         state.stdio->error.file_info_.flags |
+                             File::Flags::Write | File::Flags::DontCloseOnExec)
+            .expect_ok();
   } else if (self.stderr_type_ == Null) {
     state.info.hStdError =
-        open_file_handle("NUL", File::Flags::Write | File::Flags::DontCloseOnExec).expect_ok();
+        open_file_handle("NUL",
+                         File::Flags::Write | File::Flags::DontCloseOnExec)
+            .expect_ok();
   }
 }
 
@@ -110,37 +121,41 @@ void Process::create_pipes(this Process& self, void* pvoid_state) noexcept {
 
   if (self.stdin_type_ == Pipe) {
     state.stdin_pipe = create_pipe();
-    BASE_TRY_SYSCALL(SetHandleInformation(state.stdin_pipe[1], HANDLE_FLAG_INHERIT, 0));
+    BASE_TRY_SYSCALL(
+        SetHandleInformation(state.stdin_pipe[1], HANDLE_FLAG_INHERIT, 0));
     state.info.hStdInput      = state.stdin_pipe[0];
     self.stdin_input_.handle_ = state.stdin_pipe[1];
   } else if (self.stdin_type_ == TYPE_OTHER_PIPE) {
     state.info.hStdInput = state.stdio->input.other_pipe_handle_;
-    BASE_TRY_SYSCALL(
-        SetHandleInformation(state.info.hStdInput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT));
+    BASE_TRY_SYSCALL(SetHandleInformation(
+        state.info.hStdInput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT));
   }
   if (self.stdout_type_ == Pipe) {
     state.stdout_pipe = create_pipe();
-    BASE_TRY_SYSCALL(SetHandleInformation(state.stdout_pipe[0], HANDLE_FLAG_INHERIT, 0));
+    BASE_TRY_SYSCALL(
+        SetHandleInformation(state.stdout_pipe[0], HANDLE_FLAG_INHERIT, 0));
     state.info.hStdOutput       = state.stdout_pipe[1];
     self.stdout_output_.handle_ = state.stdout_pipe[0];
   } else if (self.stdout_type_ == TYPE_OTHER_PIPE) {
     state.info.hStdOutput = state.stdio->output.other_pipe_handle_;
-    BASE_TRY_SYSCALL(
-        SetHandleInformation(state.info.hStdOutput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT));
+    BASE_TRY_SYSCALL(SetHandleInformation(
+        state.info.hStdOutput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT));
   }
   if (self.stderr_type_ == Pipe) {
     state.stderr_pipe = create_pipe();
-    BASE_TRY_SYSCALL(SetHandleInformation(state.stderr_pipe[0], HANDLE_FLAG_INHERIT, 0));
+    BASE_TRY_SYSCALL(
+        SetHandleInformation(state.stderr_pipe[0], HANDLE_FLAG_INHERIT, 0));
     state.info.hStdError        = state.stderr_pipe[1];
     self.stderr_output_.handle_ = state.stderr_pipe[0];
   } else if (self.stderr_type_ == TYPE_OTHER_PIPE) {
     state.info.hStdError = state.stdio->error.other_pipe_handle_;
-    BASE_TRY_SYSCALL(
-        SetHandleInformation(state.info.hStdError, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT));
+    BASE_TRY_SYSCALL(SetHandleInformation(
+        state.info.hStdError, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT));
   }
 }
 
-void Process::cleanup_after_spawn(this Process& self, void* pvoid_state) noexcept {
+void Process::cleanup_after_spawn(this Process& self,
+                                  void*         pvoid_state) noexcept {
   State& state = *static_cast<State*>(pvoid_state);
 
   if (self.stdin_type_ == TYPE_FILE || self.stdin_type_ == Type::Null) {
@@ -203,8 +218,8 @@ static String make_command_line_string(char const* const* argv) {
   return str;
 }
 
-Result<Process, Process::SpawnError> Process::spawn(char const* const* argv,
-                                                    Stdio const&       stdio) noexcept {
+Result<Process, Process::SpawnError>
+Process::spawn(char const* const* argv, Stdio const& stdio) noexcept {
   Process spawned;
   spawned.stdin_type_  = stdio.input.type_;
   spawned.stdout_type_ = stdio.output.type_;
@@ -228,12 +243,15 @@ Result<Process, Process::SpawnError> Process::spawn(char const* const* argv,
               .wShowWindow     = 0,
               .cbReserved2     = 0,
               .lpReserved2     = nullptr,
-              .hStdInput =
-                  spawned.stdin_type_ == Inherit ? GetStdHandle(STD_INPUT_HANDLE) : nullptr,
-              .hStdOutput =
-                  spawned.stdout_type_ == Inherit ? GetStdHandle(STD_OUTPUT_HANDLE) : nullptr,
-              .hStdError =
-                  spawned.stderr_type_ == Inherit ? GetStdHandle(STD_ERROR_HANDLE) : nullptr,
+              .hStdInput       = spawned.stdin_type_ == Inherit
+                                     ? GetStdHandle(STD_INPUT_HANDLE)
+                                     : nullptr,
+              .hStdOutput      = spawned.stdout_type_ == Inherit
+                                     ? GetStdHandle(STD_OUTPUT_HANDLE)
+                                     : nullptr,
+              .hStdError       = spawned.stderr_type_ == Inherit
+                                     ? GetStdHandle(STD_ERROR_HANDLE)
+                                     : nullptr,
           },
       .stdio       = &stdio,
       .stdin_pipe  = {},
@@ -248,8 +266,9 @@ Result<Process, Process::SpawnError> Process::spawn(char const* const* argv,
 
   String cmdline = make_command_line_string(argv);
 
-  if (CreateProcessA(nullptr, cmdline.c_str(), nullptr, nullptr, TRUE, CREATE_NEW_PROCESS_GROUP,
-                     nullptr, nullptr, &state.info, &proc_info) == FALSE) [[unlikely]] {
+  if (CreateProcessA(nullptr, cmdline.c_str(), nullptr, nullptr, TRUE,
+                     CREATE_NEW_PROCESS_GROUP, nullptr, nullptr, &state.info,
+                     &proc_info) == FALSE) [[unlikely]] {
     DWORD const err = GetLastError();
     if (err == ERROR_FILE_NOT_FOUND) {
       return SpawnError::FileNotFound;
@@ -268,8 +287,8 @@ Result<Process, Process::SpawnError> Process::spawn(char const* const* argv,
 static String drain_pipe(Process::Output* output) noexcept {
   static constexpr usize read_size = 1024;
   String                 data;
-  Slice<uchar>           bytes  = Slice<char>(data.grow(read_size), read_size).bytes();
-  usize                  result = output->read(bytes);
+  Slice<uchar> bytes  = Slice<char>(data.grow(read_size), read_size).bytes();
+  usize        result = output->read(bytes);
   while (result != 0) {
     bytes  = Slice<char>(data.grow(result), read_size).bytes();
     result = output->read(bytes);
@@ -277,17 +296,21 @@ static String drain_pipe(Process::Output* output) noexcept {
   return data.resize(data.size() - read_size);
 }
 
-void Process::cleanup_before_wait(this Process& self, ExitStatus* status) noexcept {
-  if (self.stdin_type_ == Pipe && self.stdin_input_.handle_ != File::NIL_HANDLE) {
+void Process::cleanup_before_wait(this Process& self,
+                                  ExitStatus*   status) noexcept {
+  if (self.stdin_type_ == Pipe &&
+      self.stdin_input_.handle_ != File::NIL_HANDLE) {
     BASE_TRY_SYSCALL(CloseHandle(self.stdin_input_.handle_));
     self.stdin_input_.handle_ = File::NIL_HANDLE;
   }
-  if (self.stdout_type_ == Pipe && self.stdout_output_.handle_ != File::NIL_HANDLE) {
+  if (self.stdout_type_ == Pipe &&
+      self.stdout_output_.handle_ != File::NIL_HANDLE) {
     status->unread_stdout = drain_pipe(&self.stdout_output_);
     BASE_TRY_SYSCALL(CloseHandle(self.stdout_output_.handle_));
     self.stdout_output_.handle_ = File::NIL_HANDLE;
   }
-  if (self.stderr_type_ == Pipe && self.stderr_output_.handle_ != File::NIL_HANDLE) {
+  if (self.stderr_type_ == Pipe &&
+      self.stderr_output_.handle_ != File::NIL_HANDLE) {
     status->unread_stderr = drain_pipe(&self.stderr_output_);
     BASE_TRY_SYSCALL(CloseHandle(self.stderr_output_.handle_));
     self.stderr_output_.handle_ = File::NIL_HANDLE;

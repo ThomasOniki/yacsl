@@ -43,7 +43,8 @@ template <Character C> void pad_char(String& buf, C chr, PaddingOptions opts) {
   }
 }
 
-template <Character C> void pad_debug_char(String& buf, C chr, PaddingOptions opts) {
+template <Character C>
+void pad_debug_char(String& buf, C chr, PaddingOptions opts) {
   u32 const len = debug_char_len(chr);
   // +2 for the quotes
   if (len + 2 >= opts.width) {
@@ -124,7 +125,8 @@ void pad_string_middle_aligned(String& buf, BasicStringView<C, usize> str,
 }
 
 template <bool IsDebug = false, Character C>
-void pad_string(String& buf, BasicStringView<C, usize> str, PaddingOptions opts) noexcept {
+void pad_string(String& buf, BasicStringView<C, usize> str,
+                PaddingOptions opts) noexcept {
   if constexpr (IsDebug) {
     // + 2 for the 2 quotes
     if (str.size() + 2 > opts.width) {
@@ -163,7 +165,8 @@ constexpr StackArray<T, 129 + Offset> gen_powers() noexcept {
   return ret;
 }
 
-template <NTTPString Charset = "0123456789", NTTPString Prefix = "", UnsignedIntegral T>
+template <NTTPString Charset = "0123456789", NTTPString Prefix = "",
+          UnsignedIntegral T>
 void pad_integral(String& buf, T value, PaddingOptions opts) noexcept {
   // Prefix.size() zeroes, 0, Base, Base^2, Base^3... Base^128
   static constexpr StackArray<T, 129 + Prefix.size()> powers =
@@ -171,8 +174,8 @@ void pad_integral(String& buf, T value, PaddingOptions opts) noexcept {
 
   constexpr u32 max_len = count_digits(Limits<T>::MAX, Charset.size());
 
-  // If value >= powers[opts.width], value has width or more digits. If it does, you should skip
-  // padding and just use itoa.
+  // If value >= powers[opts.width], value has width or more digits. If it does,
+  // you should skip padding and just use itoa.
   if (opts.width < max_len && value >= powers[opts.width]) {
     char* str = buf.grow(count_digits(value, Charset.size()) + Prefix.size());
     copy(Prefix.slice(), str);
@@ -182,7 +185,8 @@ void pad_integral(String& buf, T value, PaddingOptions opts) noexcept {
 
   char* begin = buf.grow(opts.width);
   if (opts.align == FormatStringParser::Align::Right) {
-    char* prefix_begin = itoa_from_end(buf.end(), value, Charset.view()) - Prefix.size();
+    char* prefix_begin =
+        itoa_from_end(buf.end(), value, Charset.view()) - Prefix.size();
     copy(Prefix.slice(), prefix_begin);
     memset(begin, opts.fill, static_cast<usize>(prefix_begin - begin));
   } else if (opts.align == FormatStringParser::Align::Left) {
@@ -204,11 +208,12 @@ void pad_integral(String& buf, T value, PaddingOptions opts) noexcept {
 template <NTTPString Charset, NTTPString Prefix = "", SignedIntegral T>
 void pad_integral(String& buf, T value, PaddingOptions opts) noexcept {
   if (value >= 0) {
-    pad_integral<Charset, Prefix>(buf, static_cast<MakeUnsigned<T>>(value), opts);
+    pad_integral<Charset, Prefix>(buf, static_cast<MakeUnsigned<T>>(value),
+                                  opts);
     return;
   }
-  pad_integral<Charset, cat_nttpstrings<Prefix, "-">>(buf, static_cast<MakeUnsigned<T>>(-value),
-                                                      opts);
+  pad_integral<Charset, cat_nttpstrings<Prefix, "-">>(
+      buf, static_cast<MakeUnsigned<T>>(-value), opts);
 }
 
 } // namespace base

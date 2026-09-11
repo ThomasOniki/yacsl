@@ -11,17 +11,20 @@
 
 namespace base {
 
-// THIS DOES NOT KEEP TRACK OF WHICH ELEMENTS WHERE CREATED AND DESTROYED, YOU ARE RESPONSIBLE FOR
-// THAT.
+// THIS DOES NOT KEEP TRACK OF WHICH ELEMENTS WHERE CREATED AND DESTROYED, YOU
+// ARE RESPONSIBLE FOR THAT.
 
 template <typename T, usize N, Integral SizeT = usize> class StackArrayStorage {
 public:
   template <typename... Args>
-  constexpr void construct_at(this StackArrayStorage& self, SizeT index, Args&&... args) {
+  constexpr void construct_at(this StackArrayStorage& self, SizeT index,
+                              Args&&... args) {
     base::construct_at(self.data() + index, base::forward<Args>(args)...);
   }
 
-  constexpr void destruct_at(this StackArrayStorage& self, SizeT index) { self.data()[index].~T(); }
+  constexpr void destruct_at(this StackArrayStorage& self, SizeT index) {
+    self.data()[index].~T();
+  }
 
   constexpr void construct_all(this StackArrayStorage& self) {
     for (usize i = 0; i < N; ++i) {
@@ -41,31 +44,38 @@ public:
   }
 
   template <typename Self>
-  [[nodiscard]] constexpr auto* data(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    return reinterpret_cast<CopyCV<Self, T>*>(base::forward<Self>(self).data_.data());
+  [[nodiscard]] constexpr auto*
+  data(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+    return reinterpret_cast<CopyCV<Self, T>*>(
+        base::forward<Self>(self).data_.data());
   }
 
-  [[nodiscard]] constexpr SizeT size(this StackArrayStorage const& /*self*/) noexcept {
+  [[nodiscard]] constexpr SizeT
+  size(this StackArrayStorage const& /*self*/) noexcept {
     return static_cast<SizeT>(N);
   }
 
   template <typename Self>
-  [[nodiscard]] constexpr auto&& operator[](this Self&& self, SizeT index) noexcept {
+  [[nodiscard]] constexpr auto&& operator[](this Self&& self,
+                                            SizeT       index) noexcept {
     return base::forward<Self>(self).data()[index];
   }
 
   template <typename Self>
-  [[nodiscard]] constexpr auto slice(this Self&& self BASE_LIFETIMEBOUND) noexcept
+  [[nodiscard]] constexpr auto
+  slice(this Self&& self BASE_LIFETIMEBOUND) noexcept
       -> Slice<CopyCV<Self, T>, SizeT> {
     return {base::forward<Self>(self).data(), static_cast<SizeT>(N)};
   }
   template <typename Self>
-  [[nodiscard]] constexpr auto reversed_slice(this Self&& self BASE_LIFETIMEBOUND) noexcept
+  [[nodiscard]] constexpr auto
+  reversed_slice(this Self&& self BASE_LIFETIMEBOUND) noexcept
       -> ReversedSlice<CopyCV<Self, T>, SizeT> {
     return {base::forward<Self>(self).data(), static_cast<SizeT>(N)};
   }
   template <typename Self>
-  [[nodiscard]] constexpr auto bytes(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+  [[nodiscard]] constexpr auto
+  bytes(this Self&& self BASE_LIFETIMEBOUND) noexcept {
     return base::forward<Self>(self).slice().bytes();
   }
 
@@ -75,11 +85,13 @@ public:
   }
 
   template <typename Self>
-  [[nodiscard]] constexpr auto begin(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+  [[nodiscard]] constexpr auto
+  begin(this Self&& self BASE_LIFETIMEBOUND) noexcept {
     return base::forward<Self>(self).data();
   }
   template <typename Self>
-  [[nodiscard]] constexpr auto end(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+  [[nodiscard]] constexpr auto
+  end(this Self&& self BASE_LIFETIMEBOUND) noexcept {
     return base::forward<Self>(self).data() + N;
   }
 

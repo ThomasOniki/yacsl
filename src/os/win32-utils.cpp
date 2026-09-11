@@ -8,7 +8,8 @@
 
 namespace base {
 
-Result<HANDLE, File::OpenError> open_file_handle(char const* path, File::Flags flags) {
+Result<HANDLE, File::OpenError> open_file_handle(char const* path,
+                                                 File::Flags flags) {
   DWORD access = 0;
   if (strip_file_open_flag(&flags, File::Flags::Read)) {
     access |= GENERIC_READ;
@@ -19,11 +20,13 @@ Result<HANDLE, File::OpenError> open_file_handle(char const* path, File::Flags f
   SECURITY_ATTRIBUTES security_attr = {
       .nLength              = sizeof(SECURITY_ATTRIBUTES),
       .lpSecurityDescriptor = nullptr,
-      .bInheritHandle = strip_file_open_flag(&flags, File::Flags::DontCloseOnExec) ? TRUE : FALSE,
+      .bInheritHandle =
+          strip_file_open_flag(&flags, File::Flags::DontCloseOnExec) ? TRUE
+                                                                     : FALSE,
   };
 
-  bool const trunc                = strip_file_open_flag(&flags, File::Flags::Trunc);
-  bool const create               = strip_file_open_flag(&flags, File::Flags::Create);
+  bool const trunc  = strip_file_open_flag(&flags, File::Flags::Trunc);
+  bool const create = strip_file_open_flag(&flags, File::Flags::Create);
   DWORD      creation_disposition = 0;
 
   if (create) {
@@ -40,8 +43,9 @@ Result<HANDLE, File::OpenError> open_file_handle(char const* path, File::Flags f
     }
   }
 
-  HANDLE handle = CreateFileA(path, access, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
-                              &security_attr, creation_disposition, FILE_ATTRIBUTE_NORMAL, nullptr);
+  HANDLE handle = CreateFileA(
+      path, access, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
+      &security_attr, creation_disposition, FILE_ATTRIBUTE_NORMAL, nullptr);
 
   if (handle == INVALID_HANDLE_VALUE) {
     DWORD const err = GetLastError();

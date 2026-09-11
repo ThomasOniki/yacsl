@@ -17,13 +17,16 @@ protected:
   Allocator& allocator(this AllocatorMember& self BASE_LIFETIMEBOUND) noexcept {
     return self.allocator_;
   }
-  Allocator&& allocator(this AllocatorMember&& self BASE_LIFETIMEBOUND) noexcept {
+  Allocator&&
+  allocator(this AllocatorMember&& self BASE_LIFETIMEBOUND) noexcept {
     return base::move(self).allocator_;
   }
-  Allocator const& allocator(this AllocatorMember const& self BASE_LIFETIMEBOUND) noexcept {
+  Allocator const&
+  allocator(this AllocatorMember const& self BASE_LIFETIMEBOUND) noexcept {
     return self.allocator_;
   }
-  Allocator const&& allocator(this AllocatorMember const&& self BASE_LIFETIMEBOUND) noexcept {
+  Allocator const&&
+  allocator(this AllocatorMember const&& self BASE_LIFETIMEBOUND) noexcept {
     return base::move(self).allocator_;
   }
 
@@ -32,21 +35,33 @@ private:
 };
 template <SingletonAllocatorLike Allocator> class AllocatorMember<Allocator> {
 protected:
-  auto& allocator(this const AllocatorMember& /*self*/) noexcept { return Allocator::get(); }
+  auto& allocator(this const AllocatorMember& /*self*/) noexcept {
+    return Allocator::get();
+  }
 };
 
 template <typename T, usize N, Integral SizeT> class FixedBufferMember {
 protected:
-  static constexpr bool trivial = TriviallyCopyable<T> && TriviallyDestructible<T>;
-  ConditionalT<trivial, StackArray<T, N, SizeT>, StackArrayStorage<T, N, SizeT>> fixed_buffer_{};
+  static constexpr bool trivial =
+      TriviallyCopyable<T> && TriviallyDestructible<T>;
+  ConditionalT<trivial, StackArray<T, N, SizeT>, StackArrayStorage<T, N, SizeT>>
+      fixed_buffer_{};
 };
 template <typename T, Integral SizeT> class FixedBufferMember<T, 0, SizeT> {
 protected:
   struct DummyFixedBuffer {
-    [[nodiscard]] T*    data(this DummyFixedBuffer const& /*self*/) noexcept { return nullptr; }
-    [[nodiscard]] T*    begin(this DummyFixedBuffer const& /*self*/) noexcept { return nullptr; }
-    [[nodiscard]] T*    end(this DummyFixedBuffer const& /*self*/) noexcept { return nullptr; }
-    [[nodiscard]] SizeT size(this DummyFixedBuffer const& /*self*/) noexcept { return 0; }
+    [[nodiscard]] T* data(this DummyFixedBuffer const& /*self*/) noexcept {
+      return nullptr;
+    }
+    [[nodiscard]] T* begin(this DummyFixedBuffer const& /*self*/) noexcept {
+      return nullptr;
+    }
+    [[nodiscard]] T* end(this DummyFixedBuffer const& /*self*/) noexcept {
+      return nullptr;
+    }
+    [[nodiscard]] SizeT size(this DummyFixedBuffer const& /*self*/) noexcept {
+      return 0;
+    }
   };
   static constexpr DummyFixedBuffer fixed_buffer_{};
 };

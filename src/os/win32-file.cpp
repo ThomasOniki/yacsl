@@ -10,7 +10,8 @@
 
 namespace base {
 
-Result<File, File::OpenError> File::open(char const* path, File::Flags flags) noexcept {
+Result<File, File::OpenError> File::open(char const* path,
+                                         File::Flags flags) noexcept {
   Result<HANDLE, OpenError> handle = open_file_handle(path, flags);
   if (handle.is_err()) [[unlikely]] {
     return handle.assert_err();
@@ -19,8 +20,9 @@ Result<File, File::OpenError> File::open(char const* path, File::Flags flags) no
   opened.handle_ = handle.assert_ok();
 
   if (strip_file_open_flag(&flags, File::Flags::SeekEnd)) {
-    LONG high          = 0;
-    opened.cursor_pos_ = static_cast<usize>(SetFilePointer(opened.handle_, 0, &high, FILE_END));
+    LONG high = 0;
+    opened.cursor_pos_ =
+        static_cast<usize>(SetFilePointer(opened.handle_, 0, &high, FILE_END));
     opened.cursor_pos_ += static_cast<usize>(high) * Limits<LONG>::MAX;
     if (opened.cursor_pos_ == static_cast<usize>(INVALID_SET_FILE_POINTER)) {
       DWORD const err = GetLastError();
@@ -58,14 +60,14 @@ File File::open_stderr() noexcept {
 // NOLINTBEGIN(readability-make-member-function-const)
 usize File::write(this File& self, Slice<uchar const> data) noexcept {
   DWORD ret = 0;
-  BASE_TRY_SYSCALL(
-      WriteFile(self.handle_, data.data(), static_cast<DWORD>(data.size()), &ret, nullptr));
+  BASE_TRY_SYSCALL(WriteFile(self.handle_, data.data(),
+                             static_cast<DWORD>(data.size()), &ret, nullptr));
   return static_cast<usize>(ret);
 }
 usize File::read(this File& self, Slice<uchar> buffer) noexcept {
   DWORD ret = 0;
-  BASE_TRY_SYSCALL(
-      ReadFile(self.handle_, buffer.data(), static_cast<DWORD>(buffer.size()), &ret, nullptr));
+  BASE_TRY_SYSCALL(ReadFile(self.handle_, buffer.data(),
+                            static_cast<DWORD>(buffer.size()), &ret, nullptr));
   return static_cast<usize>(ret);
 }
 
@@ -109,7 +111,8 @@ void File::seek_cursor(this File& self, isize offset) noexcept {
 
 bool File::is_tty(this File const& self) noexcept {
   if (self.is_tty_ == IsTtyFlag::NotComputed) {
-    self.is_tty_ = static_cast<IsTtyFlag>(GetFileType(self.handle_) == FILE_TYPE_CHAR);
+    self.is_tty_ =
+        static_cast<IsTtyFlag>(GetFileType(self.handle_) == FILE_TYPE_CHAR);
   }
   return static_cast<bool>(self.is_tty_);
 }

@@ -13,18 +13,19 @@ namespace base {
 StackTrace StackTrace::current() noexcept {
   StackTrace ret;
   ret.addresses_.resize(ret.addresses_.capacity());
-  auto size =
-      static_cast<usize>(backtrace(ret.addresses_.data(), static_cast<int>(ret.addresses_.size())));
+  auto size = static_cast<usize>(backtrace(
+      ret.addresses_.data(), static_cast<int>(ret.addresses_.size())));
   while (size == ret.addresses_.size()) {
     ret.addresses_.resize(ret.addresses_.capacity() * 2);
-    size = static_cast<usize>(
-        backtrace(ret.addresses_.data(), static_cast<int>(ret.addresses_.size())));
+    size = static_cast<usize>(backtrace(
+        ret.addresses_.data(), static_cast<int>(ret.addresses_.size())));
   }
   ret.addresses_.resize(size);
   return ret;
 }
 
-Vector<StackTraceEntry, 16> const& StackTrace::compute_entries(this StackTrace& self) noexcept {
+Vector<StackTraceEntry, 16> const&
+StackTrace::compute_entries(this StackTrace& self) noexcept {
   if (self.entries_.size() == self.addresses_.size()) {
     return self.entries_;
   }

@@ -8,7 +8,8 @@ namespace base {
 namespace internal {
 template <typename T>
 concept TypeWithAllocatorMethods =
-    requires(T allocator, RemoveCVRef<T>::SizeT count, Slice<int, decltype(count)> slice) {
+    requires(T allocator, RemoveCVRef<T>::SizeT count,
+             Slice<int, decltype(count)> slice) {
       { allocator.template allocate<int>(count) } -> SameAs<decltype(slice)>;
       { allocator.template free<int>(slice) };
     };
@@ -29,11 +30,14 @@ template <SingletonAllocatorLike T> struct UnderlyingAllocatorImpl<T> {
 } // namespace internal
 
 template <typename T>
-concept InstanceAllocatorLike = internal::TypeWithAllocatorMethods<T> && !SingletonAllocatorLike<T>;
+concept InstanceAllocatorLike =
+    internal::TypeWithAllocatorMethods<T> && !SingletonAllocatorLike<T>;
 
 template <typename T>
-concept AllocatorLike = internal::TypeWithAllocatorMethods<T> || SingletonAllocatorLike<T>;
+concept AllocatorLike =
+    internal::TypeWithAllocatorMethods<T> || SingletonAllocatorLike<T>;
 
-template <typename T> using UnderlyingAllocator = internal::UnderlyingAllocatorImpl<T>::Type;
+template <typename T>
+using UnderlyingAllocator = internal::UnderlyingAllocatorImpl<T>::Type;
 
 } // namespace base

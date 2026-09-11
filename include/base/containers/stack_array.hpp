@@ -14,7 +14,8 @@
 namespace base {
 
 // NOLINTBEGIN(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
-template <typename T, usize N, Integral SizeT = ConditionalT<(N > Limits<u32>::MAX), usize, u32>>
+template <typename T, usize N,
+          Integral SizeT = ConditionalT<(N > Limits<u32>::MAX), usize, u32>>
 class StackArray {
 public:
   [[nodiscard]] constexpr SizeT size(this StackArray const& /*self*/) noexcept {
@@ -22,7 +23,8 @@ public:
   }
 
   template <typename Self>
-  [[nodiscard]] constexpr auto data(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+  [[nodiscard]] constexpr auto
+  data(this Self&& self BASE_LIFETIMEBOUND) noexcept {
     return base::forward<Self>(self).data_;
   }
   template <typename Self>
@@ -32,44 +34,53 @@ public:
   }
 
   template <typename Self>
-  [[nodiscard]] constexpr auto slice(this Self&& self BASE_LIFETIMEBOUND) noexcept
+  [[nodiscard]] constexpr auto
+  slice(this Self&& self BASE_LIFETIMEBOUND) noexcept
       -> Slice<CopyCV<Self, T>, SizeT> {
     return {base::forward<Self>(self).data_, static_cast<SizeT>(N)};
   }
   template <typename Self>
-  [[nodiscard]] constexpr auto reversed_slice(this Self&& self BASE_LIFETIMEBOUND) noexcept
+  [[nodiscard]] constexpr auto
+  reversed_slice(this Self&& self BASE_LIFETIMEBOUND) noexcept
       -> ReversedSlice<CopyCV<Self, T>, SizeT> {
     return {base::forward<Self>(self).data_, static_cast<SizeT>(N)};
   }
   template <typename Self>
-  [[nodiscard]] constexpr auto bytes(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+  [[nodiscard]] constexpr auto
+  bytes(this Self&& self BASE_LIFETIMEBOUND) noexcept {
     return base::forward<Self>(self).slice().bytes();
   }
 
-  [[nodiscard]] constexpr IntegerRange<SizeT> indices(this StackArray const& /*self*/) noexcept {
+  [[nodiscard]] constexpr IntegerRange<SizeT>
+  indices(this StackArray const& /*self*/) noexcept {
     return {0, N};
   }
 
   template <typename Self>
-  [[nodiscard]] constexpr auto&& front(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+  [[nodiscard]] constexpr auto&&
+  front(this Self&& self BASE_LIFETIMEBOUND) noexcept {
     return base::forward<Self>(self).data_[0];
   }
   template <typename Self>
-  [[nodiscard]] constexpr auto&& back(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+  [[nodiscard]] constexpr auto&&
+  back(this Self&& self BASE_LIFETIMEBOUND) noexcept {
     return base::forward<Self>(self).data_[N - 1];
   }
 
   template <typename Self>
-  [[nodiscard]] constexpr auto begin(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+  [[nodiscard]] constexpr auto
+  begin(this Self&& self BASE_LIFETIMEBOUND) noexcept {
     return base::forward<Self>(self).data_;
   }
   template <typename Self>
-  [[nodiscard]] constexpr auto end(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+  [[nodiscard]] constexpr auto
+  end(this Self&& self BASE_LIFETIMEBOUND) noexcept {
     return base::forward<Self>(self).data_ + N;
   }
 
   template <usize I, typename Self>
-  [[nodiscard]] constexpr auto&& get(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+  [[nodiscard]] constexpr auto&&
+  get(this Self&& self BASE_LIFETIMEBOUND) noexcept {
     return base::forward<Self>(self).data_[I];
   }
 
@@ -81,7 +92,8 @@ public:
 };
 // NOLINTEND(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
 
-template <typename T, usize N, Integral SizeT> struct TupleSize<StackArray<T, N, SizeT>> {
+template <typename T, usize N, Integral SizeT>
+struct TupleSize<StackArray<T, N, SizeT>> {
   static constexpr usize value = N;
 };
 

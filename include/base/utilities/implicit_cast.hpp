@@ -4,6 +4,9 @@
 
 namespace base {
 
-template <typename To> constexpr To implicit_cast(TypeIdentity<To> value) noexcept { return value; }
+template <typename To>
+constexpr To implicit_cast(TypeIdentity<To> value) noexcept {
+  return value;
+}
 
 } // namespace base

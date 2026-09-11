@@ -15,8 +15,8 @@ using Guard = u64;
 
 extern "C" int __cxa_guard_acquire(Guard* guard) noexcept {
   Guard expected = 0;
-  while (!__atomic_compare_exchange_n(guard, &expected, 2, false, __ATOMIC_ACQ_REL,
-                                      __ATOMIC_ACQUIRE)) {
+  while (!__atomic_compare_exchange_n(guard, &expected, 2, false,
+                                      __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) {
     if (expected == 1) {
       return 0;
     }

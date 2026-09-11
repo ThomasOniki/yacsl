@@ -52,18 +52,22 @@ public:
     Slice<StringView const, u32> error;
   };
 
-  Logger(File&& output, File&& error, Level lvl, LevelStrings log_level_strings) noexcept
-      : output_(base::move(output)), error_(base::move(error)), log_lvl_strings_(log_level_strings),
-        level_(lvl) {}
+  Logger(File&& output, File&& error, Level lvl,
+         LevelStrings log_level_strings) noexcept
+      : output_(base::move(output)), error_(base::move(error)),
+        log_lvl_strings_(log_level_strings), level_(lvl) {}
   Logger(File&& output, File&& error, Level lvl) noexcept
       : output_(base::move(output)), error_(base::move(error)),
         log_lvl_strings_{
-            .output = output_.is_tty() ? COLORED_LEVEL_STRINGS.slice() : LEVEL_STRINGS.slice(),
-            .error  = error_.is_tty() ? COLORED_LEVEL_STRINGS.slice() : LEVEL_STRINGS.slice(),
+            .output = output_.is_tty() ? COLORED_LEVEL_STRINGS.slice()
+                                       : LEVEL_STRINGS.slice(),
+            .error  = error_.is_tty() ? COLORED_LEVEL_STRINGS.slice()
+                                      : LEVEL_STRINGS.slice(),
         },
         level_(lvl) {}
   Logger(File&& output, File&& error, LevelStrings log_level_strings) noexcept
-      : Logger(base::move(output), base::move(error), DEFAULT_LOG_LEVEL, log_level_strings) {}
+      : Logger(base::move(output), base::move(error), DEFAULT_LOG_LEVEL,
+               log_level_strings) {}
   Logger(File&& output, File&& error) noexcept
       : Logger(base::move(output), base::move(error), DEFAULT_LOG_LEVEL) {}
 
@@ -74,8 +78,10 @@ public:
   explicit Logger(Level lvl) noexcept
       : output_(File::open_stdout()), error_(File::open_stderr()),
         log_lvl_strings_({
-            .output = output_.is_tty() ? COLORED_LEVEL_STRINGS.slice() : LEVEL_STRINGS.slice(),
-            .error  = error_.is_tty() ? COLORED_LEVEL_STRINGS.slice() : LEVEL_STRINGS.slice(),
+            .output = output_.is_tty() ? COLORED_LEVEL_STRINGS.slice()
+                                       : LEVEL_STRINGS.slice(),
+            .error  = error_.is_tty() ? COLORED_LEVEL_STRINGS.slice()
+                                      : LEVEL_STRINGS.slice(),
         }),
         level_(lvl) {}
   Logger() : Logger(DEFAULT_LOG_LEVEL) {}
@@ -89,7 +95,9 @@ public:
 
   [[nodiscard]] static Logger& get_default_instance() noexcept;
 
-  [[nodiscard]] Level level(this Logger const& self) noexcept { return self.level_; }
+  [[nodiscard]] Level level(this Logger const& self) noexcept {
+    return self.level_;
+  }
 
   void flush(this Logger& self) noexcept {
     self.work_.store(Work::Flush, MemoryOrder::Release);
@@ -100,39 +108,48 @@ public:
   }
 
   template <typename... Args>
-  void trace3(this Logger& self, FormatString<Args...> const& fmt, Args&&... args) {
+  void trace3(this Logger& self, FormatString<Args...> const& fmt,
+              Args&&... args) {
     self.log(Level::Trace3, fmt, base::forward<Args>(args)...);
   }
   template <typename... Args>
-  void trace2(this Logger& self, FormatString<Args...> const& fmt, Args&&... args) {
+  void trace2(this Logger& self, FormatString<Args...> const& fmt,
+              Args&&... args) {
     self.log(Level::Trace2, fmt, base::forward<Args>(args)...);
   }
   template <typename... Args>
-  void trace1(this Logger& self, FormatString<Args...> const& fmt, Args&&... args) {
+  void trace1(this Logger& self, FormatString<Args...> const& fmt,
+              Args&&... args) {
     self.log(Level::Trace1, fmt, base::forward<Args>(args)...);
   }
   template <typename... Args>
-  void debug(this Logger& self, FormatString<Args...> const& fmt, Args&&... args) {
+  void debug(this Logger& self, FormatString<Args...> const& fmt,
+             Args&&... args) {
     self.log(Level::Debug, fmt, base::forward<Args>(args)...);
   }
   template <typename... Args>
-  void info(this Logger& self, FormatString<Args...> const& fmt, Args&&... args) {
+  void info(this Logger& self, FormatString<Args...> const& fmt,
+            Args&&... args) {
     self.log(Level::Info, fmt, base::forward<Args>(args)...);
   }
   template <typename... Args>
-  void notice(this Logger& self, FormatString<Args...> const& fmt, Args&&... args) {
+  void notice(this Logger& self, FormatString<Args...> const& fmt,
+              Args&&... args) {
     self.log(Level::Notice, fmt, base::forward<Args>(args)...);
   }
   template <typename... Args>
-  void warn(this Logger& self, FormatString<Args...> const& fmt, Args&&... args) {
+  void warn(this Logger& self, FormatString<Args...> const& fmt,
+            Args&&... args) {
     self.log(Level::Warning, fmt, base::forward<Args>(args)...);
   }
   template <typename... Args>
-  void error(this Logger& self, FormatString<Args...> const& fmt, Args&&... args) {
+  void error(this Logger& self, FormatString<Args...> const& fmt,
+             Args&&... args) {
     self.log(Level::Error, fmt, base::forward<Args>(args)...);
   }
   template <typename... Args>
-  void panic(this Logger& self, FormatString<Args...> const& fmt, Args&&... args) {
+  void panic(this Logger& self, FormatString<Args...> const& fmt,
+             Args&&... args) {
     self.log(Level::Panic, fmt, base::forward<Args>(args)...);
   }
 
@@ -144,7 +161,8 @@ public:
   }
 
   template <typename... Args>
-  void log(this Logger& self, Level lvl, FormatString<Args...> const& fmt, Args&&... args) {
+  void log(this Logger& self, Level lvl, FormatString<Args...> const& fmt,
+           Args&&... args) {
     if (lvl < self.level_) {
       return;
     }
@@ -165,8 +183,9 @@ private:
         self.error_.write(msg.formatted.bytes());
       } else {
         String           buf;
-        StringView const lvl_str = self.log_lvl_strings_.error[static_cast<u8>(msg.level)];
-        char*            data    = buf.grow(lvl_str.size() + msg.formatted.size() + 1);
+        StringView const lvl_str =
+            self.log_lvl_strings_.error[static_cast<u8>(msg.level)];
+        char* data = buf.grow(lvl_str.size() + msg.formatted.size() + 1);
         copy(lvl_str.slice(), data);
         copy(msg.formatted.slice(), data + lvl_str.size());
         data[lvl_str.size() + msg.formatted.size()] = '\n';
@@ -174,8 +193,9 @@ private:
       }
     } else {
       String           buf;
-      StringView const lvl_str = self.log_lvl_strings_.output[static_cast<u8>(msg.level)];
-      char*            data    = buf.grow(lvl_str.size() + msg.formatted.size() + 1);
+      StringView const lvl_str =
+          self.log_lvl_strings_.output[static_cast<u8>(msg.level)];
+      char* data = buf.grow(lvl_str.size() + msg.formatted.size() + 1);
       copy(lvl_str.slice(), data);
       copy(msg.formatted.slice(), data + lvl_str.size());
       data[lvl_str.size() + msg.formatted.size()] = '\n';
@@ -221,25 +241,41 @@ private:
   Level        level_ = DEFAULT_LOG_LEVEL;
 };
 
-// lvl is used to determine if it needs to output to the output file or error file.
+// lvl is used to determine if it needs to output to the output file or error
+// file.
 inline void log(Logger::Level lvl, String const& formatted) noexcept {
   Logger::get_default_instance().log(lvl, formatted);
 }
 template <typename... Args>
-void log(Logger::Level lvl, FormatString<Args...> const& fmt, Args&&... args) noexcept {
+void log(Logger::Level lvl, FormatString<Args...> const& fmt,
+         Args&&... args) noexcept {
   Logger::get_default_instance().log(lvl, fmt, base::forward<Args>(args)...);
 }
 
-inline void log_trace3(String const& formatted) noexcept { log(Logger::Level::Trace3, formatted); }
-inline void log_trace2(String const& formatted) noexcept { log(Logger::Level::Trace2, formatted); }
-inline void log_trace1(String const& formatted) noexcept { log(Logger::Level::Trace1, formatted); }
-inline void log_debug(String const& formatted) noexcept { log(Logger::Level::Debug, formatted); }
-inline void log_info(String const& formatted) noexcept { log(Logger::Level::Info, formatted); }
-inline void log_notice(String const& formatted) noexcept { log(Logger::Level::Notice, formatted); }
+inline void log_trace3(String const& formatted) noexcept {
+  log(Logger::Level::Trace3, formatted);
+}
+inline void log_trace2(String const& formatted) noexcept {
+  log(Logger::Level::Trace2, formatted);
+}
+inline void log_trace1(String const& formatted) noexcept {
+  log(Logger::Level::Trace1, formatted);
+}
+inline void log_debug(String const& formatted) noexcept {
+  log(Logger::Level::Debug, formatted);
+}
+inline void log_info(String const& formatted) noexcept {
+  log(Logger::Level::Info, formatted);
+}
+inline void log_notice(String const& formatted) noexcept {
+  log(Logger::Level::Notice, formatted);
+}
 inline void log_warning(String const& formatted) noexcept {
   log(Logger::Level::Warning, formatted);
 }
-inline void log_error(String const& formatted) noexcept { log(Logger::Level::Error, formatted); }
+inline void log_error(String const& formatted) noexcept {
+  log(Logger::Level::Error, formatted);
+}
 
 template <typename... Args>
 void log_trace3(FormatString<Args...> const& fmt, Args&&... args) noexcept {

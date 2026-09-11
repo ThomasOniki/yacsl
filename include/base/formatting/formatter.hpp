@@ -22,10 +22,12 @@ namespace base {
 
 template <typename T> class Formatter {
 public:
-  constexpr char const* parse(this Formatter& /*self*/, char const* fmt) noexcept {
+  constexpr char const* parse(this Formatter& /*self*/,
+                              char const* fmt) noexcept {
     return fmt + 2;
   }
-  void format(this Formatter const& /*self*/, String& buf, T const& value) noexcept {
+  void format(this Formatter const& /*self*/, String& buf,
+              T const& value) noexcept {
     buf += TYPE_STRING<T>;
     buf += " at ";
     itoa(buf, reinterpret_cast<uptr>(&value), "0123456789abcdef");
@@ -36,9 +38,9 @@ template <Integral T> class Formatter<T> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
     FormatStringParser parser(fmt);
-    self.fill_              = parser.check_fill();
-    self.align_             = parser.check_align(FormatStringParser::Align::Right);
-    self.sign_              = parser.check_sign();
+    self.fill_  = parser.check_fill();
+    self.align_ = parser.check_align(FormatStringParser::Align::Right);
+    self.sign_  = parser.check_sign();
     self.is_alternate_form_ = parser.skip('#');
     self.width_             = parser.check_width();
     if (parser.skip('b')) {
@@ -136,7 +138,8 @@ private:
                         PaddingOptions opts) noexcept {
     switch (self.sign_) {
     case FormatStringParser::Sign::Normal:
-      [[likely]] format_with_prefix_after_sign<Charset, Prefix, "">(buf, value, opts);
+      [[likely]] format_with_prefix_after_sign<Charset, Prefix, "">(buf, value,
+                                                                    opts);
       break;
     case FormatStringParser::Sign::Space:
       format_with_prefix_after_sign<Charset, Prefix, " ">(buf, value, opts);
@@ -151,7 +154,8 @@ private:
 
 public:
   template <NTTPString Charset, NTTPString Prefix, NTTPString Plus = "">
-  static void format_with_prefix_after_sign(String& buf, T value, PaddingOptions opts) noexcept {
+  static void format_with_prefix_after_sign(String& buf, T value,
+                                            PaddingOptions opts) noexcept {
     if constexpr (UnsignedIntegral<T>) {
       pad_integral<Charset, cat_nttpstrings<Plus, Prefix>>(buf, value, opts);
     } else {
@@ -177,11 +181,11 @@ private:
     DebugChar,
   };
 
-  u32                       width_                 = 0;
-  char                      fill_                  = ' ';
-  Type                      type_ : 3              = Character<T> ? Type::Char : Type::Decimal;
-  FormatStringParser::Align align_ : 2             = FormatStringParser::Align::Right;
-  FormatStringParser::Sign  sign_ : 2              = FormatStringParser::Sign::Normal;
+  u32  width_    = 0;
+  char fill_     = ' ';
+  Type type_ : 3 = Character<T> ? Type::Char : Type::Decimal;
+  FormatStringParser::Align align_ : 2 = FormatStringParser::Align::Right;
+  FormatStringParser::Sign  sign_ : 2  = FormatStringParser::Sign::Normal;
   bool                      is_alternate_form_ : 1 = false;
 };
 
@@ -277,7 +281,8 @@ public:
         .fill  = self.fill_,
         .align = self.align_,
     };
-    pad_integral<"0123456789abcdef", "0x">(buf, reinterpret_cast<uptr>(ptr), opts);
+    pad_integral<"0123456789abcdef", "0x">(buf, reinterpret_cast<uptr>(ptr),
+                                           opts);
   }
 
 private:
@@ -286,7 +291,8 @@ private:
   FormatStringParser::Align align_ : 2 = FormatStringParser::Align::Right;
 };
 
-template <Character Char, Integral SizeT> class Formatter<BasicStringView<Char, SizeT>> {
+template <Character Char, Integral SizeT>
+class Formatter<BasicStringView<Char, SizeT>> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
     FormatStringParser parser(fmt);
@@ -300,13 +306,20 @@ public:
     return parser.end_parse();
   }
 
-  void format(this Formatter const& self, String& buf, BasicStringView<Char, SizeT> str) noexcept {
-    PaddingOptions const opts{.width = self.width_, .fill = self.fill_, .align = self.align_};
+  void format(this Formatter const& self, String& buf,
+              BasicStringView<Char, SizeT> str) noexcept {
+    PaddingOptions const opts{
+        .width = self.width_, .fill = self.fill_, .align = self.align_};
     if (self.type_ == Type::Normal) [[likely]] {
-      pad_string(buf, BasicStringView<Char>(str.data(), static_cast<usize>(str.size())), opts);
+      pad_string(
+          buf,
+          BasicStringView<Char>(str.data(), static_cast<usize>(str.size())),
+          opts);
     } else {
-      pad_string<true>(buf, BasicStringView<Char>(str.data(), static_cast<usize>(str.size())),
-                       opts);
+      pad_string<true>(
+          buf,
+          BasicStringView<Char>(str.data(), static_cast<usize>(str.size())),
+          opts);
     }
   }
 
@@ -327,8 +340,10 @@ public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
     return self.Formatter<BasicStringView<Char, SizeT>>::parse(fmt);
   }
-  void format(this Formatter const& self, String& buf, Slice<Char, SizeT> str) noexcept {
-    return self.Formatter<BasicStringView<Char, SizeT>>::format(buf, {str.data(), str.size()});
+  void format(this Formatter const& self, String& buf,
+              Slice<Char, SizeT> str) noexcept {
+    return self.Formatter<BasicStringView<Char, SizeT>>::format(
+        buf, {str.data(), str.size()});
   }
 };
 
@@ -347,8 +362,10 @@ public:
     return parser.end_parse();
   }
 
-  void format(this Formatter const& self, String& buf, Char const* str) noexcept {
-    PaddingOptions const opts{.width = self.width_, .fill = self.fill_, .align = self.align_};
+  void format(this Formatter const& self, String& buf,
+              Char const* str) noexcept {
+    PaddingOptions const opts{
+        .width = self.width_, .fill = self.fill_, .align = self.align_};
     if (self.type_ == Type::CString) [[likely]] {
       pad_string(buf, BasicStringView<Char>(str), opts);
     } else if (self.type_ == Type::Debug) {
@@ -372,7 +389,8 @@ private:
 };
 
 template <Character Char, usize N, AllocatorLike Allocator, Integral SizeT>
-class Formatter<BasicString<Char, N, Allocator, SizeT>> : Formatter<BasicStringView<Char>> {
+class Formatter<BasicString<Char, N, Allocator, SizeT>>
+    : Formatter<BasicStringView<Char>> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
     return self.Formatter<BasicStringView<Char>>::parse(fmt);
@@ -383,12 +401,14 @@ public:
   }
 };
 
-template <Character Char, usize N> class Formatter<Char[N]> : Formatter<BasicStringView<Char>> {
+template <Character Char, usize N>
+class Formatter<Char[N]> : Formatter<BasicStringView<Char>> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
     return self.Formatter<BasicStringView<Char>>::parse(fmt);
   }
-  void format(this Formatter const& self, String& buf, Char const (&str)[N]) noexcept {
+  void format(this Formatter const& self, String& buf,
+              Char const (&str)[N]) noexcept {
     return self.Formatter<BasicStringView<Char>>::format(
         buf, BasicStringView(static_cast<Char const*>(str), N - 1));
   }
@@ -400,8 +420,10 @@ public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
     return self.Formatter<BasicStringView<Char>>::parse(fmt);
   }
-  void format(this Formatter const& self, String& buf, Char const (&str)[N]) noexcept {
-    return self.Formatter<BasicStringView<Char>>::format(buf, BasicStringView(str, N - 1));
+  void format(this Formatter const& self, String& buf,
+              Char const (&str)[N]) noexcept {
+    return self.Formatter<BasicStringView<Char>>::format(
+        buf, BasicStringView(str, N - 1));
   }
 };
 
@@ -412,7 +434,8 @@ public:
     return self.Base::parse(fmt);
   }
 
-  void format(this Formatter const& self, String& buf, T const& range) noexcept {
+  void format(this Formatter const& self, String& buf,
+              T const& range) noexcept {
     buf += '[';
     auto iter = range.begin();
     auto end  = range.end();
@@ -443,9 +466,9 @@ public:
   }
 
   void format(this Formatter& self, String& buf, T value) noexcept {
-    auto const           scalar = static_cast<UnderlyingType>(value);
-    auto const           u_val  = static_cast<MakeUnsigned<UnderlyingType>>(value);
-    PaddingOptions const opts   = {
+    auto const scalar = static_cast<UnderlyingType>(value);
+    auto const u_val  = static_cast<MakeUnsigned<UnderlyingType>>(value);
+    PaddingOptions const opts = {
         .width = self.width_,
         .fill  = self.fill_,
         .align = self.align_,
@@ -454,19 +477,22 @@ public:
       pad_string(buf, TABLE[u_val], opts);
       return;
     }
-    pad_integral<"0123456789", NTTPString<CAST_STRING.size()>(CAST_STRING)>(buf, scalar, opts);
+    pad_integral<"0123456789", NTTPString<CAST_STRING.size()>(CAST_STRING)>(
+        buf, scalar, opts);
   }
 
 private:
-  static constexpr StackArray<char, TYPE_STRING<T>.size() + 2> CAST_STRING_ARR = []() {
-    StackArray<char, TYPE_STRING<T>.size() + 2> arr{};
-    arr[0]              = '(';
-    arr[arr.size() - 1] = ')';
-    copy(TYPE_STRING<T>.slice(), &arr[1]);
-    return arr;
-  }();
+  static constexpr StackArray<char, TYPE_STRING<T>.size() + 2> CAST_STRING_ARR =
+      []() {
+        StackArray<char, TYPE_STRING<T>.size() + 2> arr{};
+        arr[0]              = '(';
+        arr[arr.size() - 1] = ')';
+        copy(TYPE_STRING<T>.slice(), &arr[1]);
+        return arr;
+      }();
 
-  static constexpr StringView CAST_STRING{CAST_STRING_ARR.data(), CAST_STRING_ARR.size()};
+  static constexpr StringView CAST_STRING{CAST_STRING_ARR.data(),
+                                          CAST_STRING_ARR.size()};
 
   using UnderlyingType = UnderlyingEnumType<T>;
   template <u32... Values>
@@ -484,10 +510,12 @@ private:
   static constexpr usize TABLE_ENTRY_OFFSET_FROM_BEGIN = []() -> usize {
     constexpr StringView pretty  = table_entry_pretty<static_cast<T>(0)>();
     constexpr StringView to_find = "Value = ";
-    for (char const* it = pretty.begin(); it < pretty.end() - to_find.size(); ++it) {
+    for (char const* it = pretty.begin(); it < pretty.end() - to_find.size();
+         ++it) {
       for (usize i = 0;; ++i) {
         if (i == to_find.size()) {
-          return static_cast<usize>(it - pretty.begin()) + i - "_pretty"_sv.size();
+          return static_cast<usize>(it - pretty.begin()) + i -
+                 "_pretty"_sv.size();
         }
         if (it[i] != to_find[i]) {
           break;
@@ -522,7 +550,8 @@ private:
             pretty.end() - TABLE_ENTRY_OFFSET_FROM_END};
   }
 
-  static constexpr StackArray<StringView, 256> TABLE = make_table(IntegerSequenceToN<u32, 256>{});
+  static constexpr StackArray<StringView, 256> TABLE =
+      make_table(IntegerSequenceToN<u32, 256>{});
 
 private:
   u32                       width_     = 0;

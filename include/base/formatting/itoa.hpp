@@ -26,12 +26,14 @@ constexpr char* itoa_from_end(BASE_LIFETIMEBOUND char* buf_end, T value,
   if (value >= 0) {
     return itoa_from_end(buf_end, static_cast<MakeUnsigned<T>>(value), charset);
   }
-  buf_end    = itoa_from_end(buf_end, static_cast<MakeUnsigned<T>>(-value), charset);
+  buf_end =
+      itoa_from_end(buf_end, static_cast<MakeUnsigned<T>>(-value), charset);
   *--buf_end = '-';
   return buf_end;
 }
 
-template <UnsignedIntegral T> constexpr u32 count_digits(T value, u32 base = 10) noexcept {
+template <UnsignedIntegral T>
+constexpr u32 count_digits(T value, u32 base = 10) noexcept {
   u32 count = 1;
   while (value >= base) {
     ++count;
@@ -41,12 +43,14 @@ template <UnsignedIntegral T> constexpr u32 count_digits(T value, u32 base = 10)
 }
 
 template <Integral T>
-constexpr void itoa(char* buf, T value, StringView charset = "0123456789") noexcept {
+constexpr void itoa(char* buf, T value,
+                    StringView charset = "0123456789") noexcept {
   u32 const len = count_digits(value, static_cast<u32>(charset.size()));
   itoa_from_end(buf + len, value, charset);
 }
 template <Integral T>
-constexpr void itoa(String buf, T value, StringView charset = "0123456789") noexcept {
+constexpr void itoa(String buf, T value,
+                    StringView charset = "0123456789") noexcept {
   u32 const len = count_digits(value, static_cast<u32>(charset.size()));
   buf.grow(len);
   itoa_from_end(buf.end(), value, charset);

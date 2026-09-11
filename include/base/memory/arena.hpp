@@ -13,13 +13,15 @@ namespace base {
 class Arena;
 using MainArenaAllocator    = SingletonAllocator<Arena, "main", true>;
 using ScratchArenaAllocator = SingletonAllocator<Arena, "scratch", true>;
-using PermanentArena        = SingletonAllocator<Arena, "permanent", true>; // NO NOT RESET
+using PermanentArena =
+    SingletonAllocator<Arena, "permanent", true>; // NO NOT RESET
 
 class Arena {
 public:
   using SizeT = uptr;
 
-  explicit constexpr Arena(usize capacity) : initial_capacity_((capacity + 4095) / 4096 * 4096) {}
+  explicit constexpr Arena(usize capacity)
+      : initial_capacity_((capacity + 4095) / 4096 * 4096) {}
   explicit constexpr Arena() = default;
 
   Arena(Arena const&)     = delete;
@@ -36,13 +38,16 @@ public:
   [[nodiscard]] Slice<T, SizeT> push_array(this Arena& self, SizeT count);
 
   template <typename T>
-  [[nodiscard]] Slice<T, SizeT> allocate(this Arena& self, SizeT count) noexcept;
-  template <typename T> void    free(this Arena& /*self*/, Slice<T, SizeT> /*mem*/) noexcept {}
+  [[nodiscard]] Slice<T, SizeT> allocate(this Arena& self,
+                                         SizeT       count) noexcept;
+  template <typename T>
+  void free(this Arena& /*self*/, Slice<T, SizeT> /*mem*/) noexcept {}
 
 public:
   class Scope {
   public:
-    explicit Scope(BASE_LIFETIMEBOUND Arena& arena) : arena_(arena), ptr_(arena.ptr_) {}
+    explicit Scope(BASE_LIFETIMEBOUND Arena& arena)
+        : arena_(arena), ptr_(arena.ptr_) {}
     Scope(Scope const&)     = delete;
     Scope(Scope&&) noexcept = delete;
     ~Scope() noexcept;
@@ -66,7 +71,8 @@ private:
 
 template <TriviallyDestructible T, typename... Args>
 T& Arena::push(this Arena& self, Args&&... args) {
-  return *base::construct_at(self.allocate<T>(1).data(), base::forward<Args>(args)...);
+  return *base::construct_at(self.allocate<T>(1).data(),
+                             base::forward<Args>(args)...);
 }
 
 template <TriviallyDestructible T>
@@ -88,7 +94,8 @@ Slice<T, Arena::SizeT> Arena::allocate(this Arena& self, SizeT count) noexcept {
   top += sizeof(T) * count;
 
   if (top > reinterpret_cast<uptr>(self.end_)) [[unlikely]] {
-    self.reserve(static_cast<usize>(self.end_ - self.begin_) * 2 + sizeof(T) * count);
+    self.reserve(static_cast<usize>(self.end_ - self.begin_) * 2 +
+                 sizeof(T) * count);
 
     top = reinterpret_cast<uptr>(self.ptr_);
     top = (top + alignof(T) - 1) & ~(alignof(T) - 1);
@@ -103,8 +110,8 @@ Slice<T, Arena::SizeT> Arena::allocate(this Arena& self, SizeT count) noexcept {
 }
 
 #ifdef BASE_LSP_ONLY
-template int&
-Arena::push<int>(this Arena& self); // Instantiates to avoid 'placement_new.hpp is unsed'.
+template int& Arena::push<int>(
+    this Arena& self); // Instantiates to avoid 'placement_new.hpp is unsed'.
 #endif
 
 } // namespace base

@@ -19,8 +19,14 @@ template <Integral T> constexpr T pow10(u32 exp) noexcept {
 }
 
 template <Integral T> constexpr T pow2(u32 exp) noexcept { return 1 << exp; }
-template <Integral T> constexpr T pow4(u32 exp) noexcept { return 1 << 2 * exp; }
-template <Integral T> constexpr T pow8(u32 exp) noexcept { return 1 << 3 * exp; }
-template <Integral T> constexpr T pow16(u32 exp) noexcept { return 1 << 4 * exp; }
+template <Integral T> constexpr T pow4(u32 exp) noexcept {
+  return 1 << 2 * exp;
+}
+template <Integral T> constexpr T pow8(u32 exp) noexcept {
+  return 1 << 3 * exp;
+}
+template <Integral T> constexpr T pow16(u32 exp) noexcept {
+  return 1 << 4 * exp;
+}
 
 } // namespace base

@@ -7,7 +7,8 @@
 
 namespace base {
 
-template <Character Char> constexpr Char const* num_end(BASE_LIFETIMEBOUND Char const* begin) {
+template <Character Char>
+constexpr Char const* num_end(BASE_LIFETIMEBOUND Char const* begin) {
   while (*begin >= '0' && *begin <= '9') {
     ++begin;
   }

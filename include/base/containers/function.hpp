@@ -9,11 +9,13 @@
 
 namespace base {
 
-template <typename F, usize BufSz = 8, AllocatorLike Allocator = MainArenaAllocator> class Function;
+template <typename F, usize BufSz = 8,
+          AllocatorLike Allocator = MainArenaAllocator>
+class Function;
 
 template <typename Ret, typename... Args, usize BufSz, AllocatorLike Allocator>
-class Function<Ret(Args...), BufSz, Allocator> : AllocatorMember<Allocator>,
-                                                 FixedBufferMember<char, 16, usize> {
+class Function<Ret(Args...), BufSz, Allocator>
+    : AllocatorMember<Allocator>, FixedBufferMember<char, 16, usize> {
 public:
   Function(auto&& func);
 
@@ -26,10 +28,13 @@ public:
   Function& operator=(this Function&, Function&&)      = delete;
 
   template <typename Self> Ret operator()(this Self&& self, Args... args) {
-    return base::forward<Self>(self).call_(self.data_, base::forward<Args>(args)...);
+    return base::forward<Self>(self).call_(self.data_,
+                                           base::forward<Args>(args)...);
   }
 
-  [[nodiscard]] auto const& get_allocator() const noexcept { return allocator(); }
+  [[nodiscard]] auto const& get_allocator() const noexcept {
+    return allocator();
+  }
 
 private:
   using AllocatorMember<Allocator>::allocator;
@@ -58,7 +63,8 @@ Function<Ret(Args...), BufSz, Allocator>::Function(auto&& func) {
     };
   }
 
-  base::construct_at(static_cast<Func*>(data_), base::forward<decltype(func)>(func));
+  base::construct_at(static_cast<Func*>(data_),
+                     base::forward<decltype(func)>(func));
 
   call_ = [](void* data, Args... args) {
     return (*static_cast<Func*>(data))(base::forward<Args>(args)...);
