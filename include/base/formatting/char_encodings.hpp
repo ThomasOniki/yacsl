@@ -37,22 +37,22 @@ inline char* write_char1(BASE_LIFETIMEBOUND char* buf, char8_t chr) {
 inline char* write_char2(BASE_LIFETIMEBOUND char* buf, char32_t chr) {
   static constexpr char32_t mask = 0b11'1111;
   buf[0]                         = static_cast<char>(0b1100'0000 | (chr >> 6));
-  buf[1]                         = static_cast<char>(0b1000'0000 | (chr & mask));
+  buf[1] = static_cast<char>(0b1000'0000 | (chr & mask));
   return buf + 2;
 }
 inline char* write_char3(BASE_LIFETIMEBOUND char* buf, char32_t chr) {
   static constexpr char32_t mask = 0b11'1111;
   buf[0]                         = static_cast<char>(0b1110'0000 | (chr >> 12));
-  buf[1]                         = static_cast<char>(0b1000'0000 | ((chr >> 6) & mask));
-  buf[2]                         = static_cast<char>(0b1000'0000 | (chr & mask));
+  buf[1] = static_cast<char>(0b1000'0000 | ((chr >> 6) & mask));
+  buf[2] = static_cast<char>(0b1000'0000 | (chr & mask));
   return buf + 3;
 }
 inline char* write_char4(BASE_LIFETIMEBOUND char* buf, char32_t chr) {
   static constexpr char32_t mask = 0b11'1111;
   buf[0]                         = static_cast<char>(0b1111'0000 | (chr >> 18));
-  buf[1]                         = static_cast<char>(0b1000'0000 | ((chr >> 12) & mask));
-  buf[2]                         = static_cast<char>(0b1000'0000 | ((chr >> 6) & mask));
-  buf[3]                         = static_cast<char>(0b1000'0000 | (chr & mask));
+  buf[1] = static_cast<char>(0b1000'0000 | ((chr >> 12) & mask));
+  buf[2] = static_cast<char>(0b1000'0000 | ((chr >> 6) & mask));
+  buf[3] = static_cast<char>(0b1000'0000 | (chr & mask));
   return buf + 4;
 }
 
@@ -63,7 +63,8 @@ inline char* write_char4(BASE_LIFETIMEBOUND char* buf, char32_t chr) {
 // Unicode - 0x10000 = yyyyyyyyyyxxxxxxxxxx
 // W1 = 0xD800 + yyyyyyyyyy = 110110yyyyyyyyyy
 // W2 = 0xDC00 + xxxxxxxxxx = 110111xxxxxxxxxx
-inline char* write_low_surrogate(BASE_LIFETIMEBOUND char* buf, char32_t high, char32_t low) {
+inline char* write_low_surrogate(BASE_LIFETIMEBOUND char* buf, char32_t high,
+                                 char32_t low) {
   static constexpr char32_t mask = 0b11'1111'1111;
   high &= mask;
   low &= mask;
@@ -139,8 +140,8 @@ template <Character C> u32 char_len(C chr) {
     if (chr >= 0xE000) {
       return 3;
     }
-    // If its a surrogate, returns 2 here. All surrogate pairs in UTF-8 are 4 chars, and when the
-    // 2 2s from the 2 surrogates are added it makes 4.
+    // If its a surrogate, returns 2 here. All surrogate pairs in UTF-8 are 4
+    // chars, and when the 2 2s from the 2 surrogates are added it makes 4.
     return 2;
   }
   if (chr < 0x80) {
@@ -166,7 +167,8 @@ template <Character C> usize real_string_len(BasicStringView<C, usize> str) {
   return ret;
 }
 
-template <Character C> void write_string(char* buf, BasicStringView<C, usize> str) {
+template <Character C>
+void write_string(char* buf, BasicStringView<C, usize> str) {
   if constexpr (sizeof(C) == 1) {
     copy(str.bytes(), reinterpret_cast<uchar*>(buf));
     return;
@@ -176,7 +178,8 @@ template <Character C> void write_string(char* buf, BasicStringView<C, usize> st
   }
 }
 
-template <Character C> void write_string(String& buf, BasicStringView<C, usize> str) {
+template <Character C>
+void write_string(String& buf, BasicStringView<C, usize> str) {
   if constexpr (sizeof(C) == 1) {
     copy(str.bytes(), reinterpret_cast<uchar*>(buf.grow(str.size())));
     return;

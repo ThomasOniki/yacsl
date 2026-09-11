@@ -26,16 +26,20 @@ public:
     requires SameAs<T, T&&>
       : value_(base::forward<Arg>(other)) {}
 
-  [[nodiscard]] constexpr T& get(this TupleLeaf& self BASE_LIFETIMEBOUND) noexcept {
+  [[nodiscard]] constexpr T&
+  get(this TupleLeaf& self BASE_LIFETIMEBOUND) noexcept {
     return self.value_;
   }
-  [[nodiscard]] constexpr T&& get(this TupleLeaf&& self BASE_LIFETIMEBOUND) noexcept {
+  [[nodiscard]] constexpr T&&
+  get(this TupleLeaf&& self BASE_LIFETIMEBOUND) noexcept {
     return base::move(self).value_;
   }
-  [[nodiscard]] constexpr T const& get(this TupleLeaf const& self BASE_LIFETIMEBOUND) noexcept {
+  [[nodiscard]] constexpr T const&
+  get(this TupleLeaf const& self BASE_LIFETIMEBOUND) noexcept {
     return self.value_;
   }
-  [[nodiscard]] constexpr T const&& get(this TupleLeaf const&& self BASE_LIFETIMEBOUND) noexcept {
+  [[nodiscard]] constexpr T const&&
+  get(this TupleLeaf const&& self BASE_LIFETIMEBOUND) noexcept {
     return base::move(self).value_;
   }
 
@@ -57,10 +61,13 @@ public:
     requires(sizeof...(Args) == sizeof...(Ts))
       : TupleLeaf<Indices, Ts>(base::forward<Args>(args))... {}
 
-  constexpr usize size(this TupleImpl const& /*self*/) noexcept { return sizeof...(Ts); }
+  constexpr usize size(this TupleImpl const& /*self*/) noexcept {
+    return sizeof...(Ts);
+  }
 
   template <usize I, typename Self>
-  [[nodiscard]] constexpr auto&& get(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+  [[nodiscard]] constexpr auto&&
+  get(this Self&& self BASE_LIFETIMEBOUND) noexcept {
     return base::forward<Self>(self).Leaf<I>::get();
   }
 };
@@ -69,7 +76,8 @@ public:
 
 namespace base {
 
-template <typename... Ts> using Tuple = internal::TupleImpl<IndexSequenceToN<sizeof...(Ts)>, Ts...>;
+template <typename... Ts>
+using Tuple = internal::TupleImpl<IndexSequenceToN<sizeof...(Ts)>, Ts...>;
 
 template <typename... Ts> struct TupleSize<Tuple<Ts...>> {
   static constexpr usize value = sizeof...(Ts);

@@ -25,8 +25,10 @@ public:
   enum class OpenError : u8 {
     FileNotFound = 1,
   };
-  [[nodiscard]] static Result<File, OpenError> open(char const* path, Flags flags) noexcept;
-  [[nodiscard]] static Result<File, OpenError> open(StringView path, Flags flags) noexcept {
+  [[nodiscard]] static Result<File, OpenError> open(char const* path,
+                                                    Flags       flags) noexcept;
+  [[nodiscard]] static Result<File, OpenError> open(StringView path,
+                                                    Flags      flags) noexcept {
     return open(String(path).c_str(), flags);
   }
 
@@ -34,7 +36,8 @@ public:
 
   File(File const&) = delete;
   File(File&& other) noexcept
-      : handle_(other.handle_), cursor_pos_(other.cursor_pos_), is_tty_(other.is_tty_) {
+      : handle_(other.handle_), cursor_pos_(other.cursor_pos_),
+        is_tty_(other.is_tty_) {
     other.handle_ = NIL_HANDLE;
   }
 
@@ -49,8 +52,8 @@ public:
     return self;
   }
 
-  // seek/close don't do anything. This doesn't duplicate the standard streams, it just sets
-  // handle_.
+  // seek/close don't do anything. This doesn't duplicate the standard streams,
+  // it just sets handle_.
   [[nodiscard]] static File open_stdin() noexcept;
   [[nodiscard]] static File open_stdout() noexcept;
   [[nodiscard]] static File open_stderr() noexcept;
@@ -58,10 +61,14 @@ public:
   usize write(this File& self, Slice<uchar const> data) noexcept;
   usize read(this File& self, Slice<uchar> buffer) noexcept;
 
-  [[nodiscard]] usize get_cursor(this File const& self) noexcept { return self.cursor_pos_; }
+  [[nodiscard]] usize get_cursor(this File const& self) noexcept {
+    return self.cursor_pos_;
+  }
 
   [[nodiscard]] bool is_tty(this File const& self) noexcept;
-  void invalidate_is_tty_cache(this File& self) noexcept { self.is_tty_ = IsTtyFlag::NotComputed; }
+  void               invalidate_is_tty_cache(this File& self) noexcept {
+    self.is_tty_ = IsTtyFlag::NotComputed;
+  }
 
   void seek_begin(this File& self, isize offset) noexcept;
   void seek_end(this File& self, isize offset) noexcept;
@@ -75,7 +82,9 @@ public:
   static constexpr Handle NIL_HANDLE = -1;
 #endif
 
-  [[nodiscard]] constexpr Handle handle(this File const& self) noexcept { return self.handle_; }
+  [[nodiscard]] constexpr Handle handle(this File const& self) noexcept {
+    return self.handle_;
+  }
 
 private:
   void close(this File& self) noexcept;
@@ -93,10 +102,12 @@ private:
 };
 
 constexpr File::Flags operator|(File::Flags lhs, File::Flags rhs) noexcept {
-  return File::Flags(static_cast<u8>(static_cast<u8>(lhs) | static_cast<u8>(rhs)));
+  return File::Flags(
+      static_cast<u8>(static_cast<u8>(lhs) | static_cast<u8>(rhs)));
 }
 constexpr File::Flags operator&(File::Flags lhs, File::Flags rhs) noexcept {
-  return File::Flags(static_cast<u8>(static_cast<u8>(lhs) & static_cast<u8>(rhs)));
+  return File::Flags(
+      static_cast<u8>(static_cast<u8>(lhs) & static_cast<u8>(rhs)));
 }
 constexpr File::Flags operator~(File::Flags flags) noexcept {
   return File::Flags(~static_cast<u8>(flags));

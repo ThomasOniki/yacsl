@@ -10,7 +10,8 @@
 
 namespace base {
 
-template <usize N, Character C = char, Integral SizeT = usize> class NTTPString {
+template <usize N, Character C = char, Integral SizeT = usize>
+class NTTPString {
 public:
   constexpr NTTPString(C const (&str)[N + 1]) noexcept {
     for (usize i = 0; i < N; ++i) {
@@ -30,7 +31,8 @@ public:
     return static_cast<SizeT>(N);
   }
   template <typename Self>
-  [[nodiscard]] constexpr auto data(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+  [[nodiscard]] constexpr auto
+  data(this Self&& self BASE_LIFETIMEBOUND) noexcept {
     return base::forward<Self>(self).data_.data();
   }
   template <typename Self>
@@ -45,24 +47,29 @@ public:
     return {base::forward<Self>(self).data_.data(), static_cast<SizeT>(N)};
   }
   template <typename Self>
-  [[nodiscard]] constexpr auto slice(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+  [[nodiscard]] constexpr auto
+  slice(this Self&& self BASE_LIFETIMEBOUND) noexcept {
     return base::forward<Self>(self).data_.slice();
   }
   template <typename Self>
-  [[nodiscard]] constexpr auto reversed_slice(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+  [[nodiscard]] constexpr auto
+  reversed_slice(this Self&& self BASE_LIFETIMEBOUND) noexcept {
     return base::forward<Self>(self).data_.reversed_slice();
   }
   template <typename Self>
-  [[nodiscard]] constexpr auto bytes(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+  [[nodiscard]] constexpr auto
+  bytes(this Self&& self BASE_LIFETIMEBOUND) noexcept {
     return base::forward<Self>(self).data_.bytes();
   }
 
   template <typename Self>
-  [[nodiscard]] constexpr auto begin(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+  [[nodiscard]] constexpr auto
+  begin(this Self&& self BASE_LIFETIMEBOUND) noexcept {
     return base::forward<Self>(self).data_.begin();
   }
   template <typename Self>
-  [[nodiscard]] constexpr auto end(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+  [[nodiscard]] constexpr auto
+  end(this Self&& self BASE_LIFETIMEBOUND) noexcept {
     return base::forward<Self>(self).data_.end();
   }
 
@@ -75,9 +82,12 @@ public:
   constexpr NTTPString(C const (& /*str*/)[1]) noexcept {}
   constexpr NTTPString() noexcept = default;
 
-  [[nodiscard]] constexpr SizeT size(this NTTPString const& /*self*/) noexcept { return 0; }
+  [[nodiscard]] constexpr SizeT size(this NTTPString const& /*self*/) noexcept {
+    return 0;
+  }
   template <typename Self>
-  [[nodiscard]] constexpr auto data(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+  [[nodiscard]] constexpr auto
+  data(this Self&& self BASE_LIFETIMEBOUND) noexcept {
     auto&& ref = base::forward<Self>(self).char_;
     return &ref;
   }
@@ -93,33 +103,39 @@ public:
     return {&self.char_, static_cast<SizeT>(0)};
   }
   template <typename Self>
-  [[nodiscard]] constexpr auto slice(this Self&& self BASE_LIFETIMEBOUND) noexcept
+  [[nodiscard]] constexpr auto
+  slice(this Self&& self BASE_LIFETIMEBOUND) noexcept
       -> Slice<CopyCV<Self, C>, SizeT> {
     return {base::forward<Self>(self).data(), static_cast<SizeT>(0)};
   }
   template <typename Self>
-  [[nodiscard]] constexpr auto reversed_slice(this Self&& self BASE_LIFETIMEBOUND) noexcept
+  [[nodiscard]] constexpr auto
+  reversed_slice(this Self&& self BASE_LIFETIMEBOUND) noexcept
       -> ReversedSlice<CopyCV<Self, C>, SizeT> {
     return {base::forward<Self>(self).data(), static_cast<SizeT>(0)};
   }
   template <typename Self>
-  [[nodiscard]] constexpr auto bytes(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+  [[nodiscard]] constexpr auto
+  bytes(this Self&& self BASE_LIFETIMEBOUND) noexcept {
     return base::forward<Self>(self).slice().bytes();
   }
 
   template <typename Self>
-  [[nodiscard]] constexpr auto begin(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+  [[nodiscard]] constexpr auto
+  begin(this Self&& self BASE_LIFETIMEBOUND) noexcept {
     return base::forward<Self>(self).data();
   }
   template <typename Self>
-  [[nodiscard]] constexpr auto end(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+  [[nodiscard]] constexpr auto
+  end(this Self&& self BASE_LIFETIMEBOUND) noexcept {
     return base::forward<Self>(self).data();
   }
 
   C char_ = '\0';
 };
 
-template <Character C, usize N> NTTPString(C const (&str)[N]) -> NTTPString<N - 1, C, usize>;
+template <Character C, usize N>
+NTTPString(C const (&str)[N]) -> NTTPString<N - 1, C, usize>;
 
 template <NTTPString... Strings>
 constexpr NTTPString cat_nttpstrings = []() {

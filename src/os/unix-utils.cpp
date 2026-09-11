@@ -32,7 +32,8 @@ int unix_flags(File::Flags flags) noexcept {
   return static_cast<int>(ret);
 }
 
-// NOLINTNEXTLINE(google-readability-function-size, readability-function-cognitive-complexity)
+// NOLINTNEXTLINE(google-readability-function-size,
+// readability-function-cognitive-complexity)
 StringView errno_str(int err) noexcept {
   // clang-format off
   if (err == 0) { return "Success"; }	

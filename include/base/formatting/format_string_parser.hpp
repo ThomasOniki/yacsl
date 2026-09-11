@@ -21,15 +21,17 @@ public:
     Space,
   };
   explicit constexpr FormatStringParser(BASE_LIFETIMEBOUND char const* fmt);
-  constexpr bool                skip(this FormatStringParser& self, char chr) noexcept;
+  constexpr bool skip(this FormatStringParser& self, char chr) noexcept;
   [[nodiscard]] constexpr char  check_fill(this FormatStringParser& self);
-  [[nodiscard]] constexpr Align check_align(this FormatStringParser& self, Align default_align);
+  [[nodiscard]] constexpr Align check_align(this FormatStringParser& self,
+                                            Align default_align);
   /// returns '\0', ' ' or '+'.
   [[nodiscard]] constexpr Sign check_sign(this FormatStringParser& self);
   [[nodiscard]] constexpr u32  check_width(this FormatStringParser& self);
   [[nodiscard]] constexpr u32  check_precision(this FormatStringParser& self);
 
-  [[nodiscard]] constexpr char check_option(this FormatStringParser& self, char default_option,
+  [[nodiscard]] constexpr char check_option(this FormatStringParser& self,
+                                            char       default_option,
                                             StringView possibilities);
 
   [[nodiscard]] constexpr char const* end_parse(this FormatStringParser& self);
@@ -42,7 +44,8 @@ private:
 
 constexpr FormatStringParser::FormatStringParser(char const* fmt) : fmt_(fmt) {
   if (*fmt_ != '{') {
-    log_error_no_deps("FormatStringParser called on a string that doesn't start with '{'.");
+    log_error_no_deps(
+        "FormatStringParser called on a string that doesn't start with '{'.");
   }
 
   ++fmt_;
@@ -52,7 +55,8 @@ constexpr FormatStringParser::FormatStringParser(char const* fmt) : fmt_(fmt) {
   }
 }
 
-constexpr bool FormatStringParser::skip(this FormatStringParser& self, char chr) noexcept {
+constexpr bool FormatStringParser::skip(this FormatStringParser& self,
+                                        char                     chr) noexcept {
   if (*self.fmt_ == chr) {
     ++self.fmt_;
     return true;
@@ -68,14 +72,16 @@ constexpr char FormatStringParser::check_fill(this FormatStringParser& self) {
     }
     return ' ';
   }
-  if (*self.fmt_ == '0' || self.fmt_[1] == '>' || self.fmt_[1] == '<' || self.fmt_[1] == '^') {
+  if (*self.fmt_ == '0' || self.fmt_[1] == '>' || self.fmt_[1] == '<' ||
+      self.fmt_[1] == '^') {
     return *self.fmt_++;
   }
   return ' ';
 }
 
-constexpr FormatStringParser::Align FormatStringParser::check_align(this FormatStringParser& self,
-                                                                    Align default_align) {
+constexpr FormatStringParser::Align
+FormatStringParser::check_align(this FormatStringParser& self,
+                                Align                    default_align) {
   if (self.skip('>')) {
     return Align::Right;
   }
@@ -88,7 +94,8 @@ constexpr FormatStringParser::Align FormatStringParser::check_align(this FormatS
   return default_align;
 }
 
-constexpr FormatStringParser::Sign FormatStringParser::check_sign(this FormatStringParser& self) {
+constexpr FormatStringParser::Sign
+FormatStringParser::check_sign(this FormatStringParser& self) {
   if (self.skip('+')) {
     return Sign::Plus;
   }
@@ -105,7 +112,8 @@ constexpr u32 FormatStringParser::check_width(this FormatStringParser& self) {
   return atoi<u32>(begin, self.fmt_);
 }
 
-constexpr u32 FormatStringParser::check_precision(this FormatStringParser& self) {
+constexpr u32
+FormatStringParser::check_precision(this FormatStringParser& self) {
   if (*self.fmt_ == '.') {
     ++self.fmt_;
     return self.check_width();
@@ -113,7 +121,8 @@ constexpr u32 FormatStringParser::check_precision(this FormatStringParser& self)
   return 0;
 }
 
-constexpr char FormatStringParser::check_option(this FormatStringParser& self, char default_option,
+constexpr char FormatStringParser::check_option(this FormatStringParser& self,
+                                                char       default_option,
                                                 StringView possibilities) {
   for (char const possibility : possibilities) {
     if (self.skip(possibility)) {
@@ -123,7 +132,8 @@ constexpr char FormatStringParser::check_option(this FormatStringParser& self, c
   return default_option;
 }
 
-constexpr char const* FormatStringParser::end_parse(this FormatStringParser& self) {
+constexpr char const*
+FormatStringParser::end_parse(this FormatStringParser& self) {
   if (*self.fmt_ == '\0') {
     log_error_no_deps("Expected '}' before '\\0' in format string.");
   }

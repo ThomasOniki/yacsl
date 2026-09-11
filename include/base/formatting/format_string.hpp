@@ -58,7 +58,8 @@ template <> class FormatStringImpl<IndexSequence<>> {
 public:
   // NOLINTNEXTLINE
   template <usize N>
-  consteval FormatStringImpl(char const (&msg BASE_LIFETIMEBOUND)[N]) : msg_{msg} {}
+  consteval FormatStringImpl(char const (&msg BASE_LIFETIMEBOUND)[N])
+      : msg_{msg} {}
 
   friend class FormatToImpl<FormatStringImpl>;
 
@@ -73,12 +74,14 @@ template <usize... Indices, typename... Args>
 class FormatToImpl<FormatStringImpl<IndexSequence<Indices...>, Args...>> {
 public:
   // NOLINTNEXTLINE(misc-no-recursion)
-  static void format_to_impl(String&                                                     buf,
-                             FormatStringImpl<IndexSequence<Indices...>, Args...> const& fmt,
-                             Args&&... args) {
+  static void format_to_impl(
+      String&                                                     buf,
+      FormatStringImpl<IndexSequence<Indices...>, Args...> const& fmt,
+      Args&&... args) {
     (..., [&]() {
       buf += fmt.segments_[Indices];
-      fmt.formatters_.template get<Indices>().format(buf, base::forward<Args>(args));
+      fmt.formatters_.template get<Indices>().format(buf,
+                                                     base::forward<Args>(args));
     }());
     buf += fmt.segments_[sizeof...(Args)];
   }
@@ -87,7 +90,8 @@ public:
 template <> class FormatToImpl<FormatStringImpl<IndexSequence<>>> {
 public:
   // NOLINTNEXTLINE(misc-no-recursion)
-  static void format_to_impl(String& buf, FormatStringImpl<IndexSequence<>> const& msg) {
+  static void format_to_impl(String&                                  buf,
+                             FormatStringImpl<IndexSequence<>> const& msg) {
     buf += msg.msg_;
   }
 };
@@ -98,12 +102,13 @@ namespace base {
 
 template <typename... Args>
 using FormatString =
-    internal::FormatStringImpl<IndexSequenceToN<sizeof...(Args)>, Args...>::TypeIdentity;
+    internal::FormatStringImpl<IndexSequenceToN<sizeof...(Args)>,
+                               Args...>::TypeIdentity;
 
 template <typename... Args> // NOLINTNEXTLINE(misc-no-recursion)
 void format_to(String& buf, FormatString<Args...> const& fmt, Args&&... args) {
-  internal::FormatToImpl<FormatString<Args...>>::format_to_impl(buf, fmt,
-                                                                base::forward<Args>(args)...);
+  internal::FormatToImpl<FormatString<Args...>>::format_to_impl(
+      buf, fmt, base::forward<Args>(args)...);
 }
 
 } // namespace base
