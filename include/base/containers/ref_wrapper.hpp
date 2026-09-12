@@ -7,7 +7,7 @@ namespace base {
 
 template <typename T> class RefWrapper {
 public:
-  RefWrapper(T& value BASE_LIFETIMEBOUND) noexcept : ptr_(value) {}
+  RefWrapper(T& value BASE_LIFETIMEBOUND) noexcept : ptr_(&value) {}
 
   template <typename Self>
   [[nodiscard]] constexpr auto&&
