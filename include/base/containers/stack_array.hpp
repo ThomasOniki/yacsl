@@ -9,11 +9,11 @@
 #include "base/type_traits/categories.hpp"
 #include "base/type_traits/limits.hpp"
 #include "base/type_traits/qualifiers.hpp"
+#include "base/utilities/implicit_cast.hpp"
 #include "base/utilities/type_aliases.hpp"
 
 namespace base {
 
-// NOLINTBEGIN(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
 template <typename T, usize N,
           Integral SizeT = ConditionalT<(N > Limits<u32>::MAX), usize, u32>>
 class StackArray {
@@ -88,9 +88,68 @@ public:
                             StackArray const&      other) noexcept = default;
 
 public:
-  T data_[N]; // NOLINT
+  T data_[N];
 };
-// NOLINTEND(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
+
+template <typename T, Integral SizeT> class StackArray<T, 0, SizeT> {
+public:
+  [[nodiscard]] constexpr SizeT size(this StackArray const& /*self*/) noexcept {
+    return 0;
+  }
+
+  template <typename Self>
+  [[nodiscard]] constexpr auto data(this Self&& /*self*/) noexcept {
+    return implicit_cast<CopyCV<Self, T>*>(nullptr);
+  }
+  template <typename Self>
+  [[nodiscard]] constexpr auto&& operator[](this Self&& /*self*/,
+                                            SizeT /*index*/) noexcept {
+    return implicit_cast<CopyCV<Self, T>*>(nullptr)[0];
+  }
+
+  template <typename Self>
+  [[nodiscard]] constexpr auto slice(this Self&& /*self*/) noexcept {
+    return Slice<CopyCV<Self, T>, SizeT>{nullptr, 0};
+  }
+  template <typename Self>
+  [[nodiscard]] constexpr auto reversed_slice(this Self&& /*self*/) noexcept {
+    return ReversedSlice<CopyCV<Self, T>, SizeT>{nullptr, 0};
+  }
+  template <typename Self>
+  [[nodiscard]] constexpr auto bytes(this Self&& /*self*/) noexcept {
+    return ReversedSlice<CopyCV<Self, uchar>, SizeT>{nullptr, 0};
+  }
+
+  [[nodiscard]] constexpr IntegerRange<SizeT>
+  indices(this StackArray const& /*self*/) noexcept {
+    return {0, 0};
+  }
+
+  template <typename Self>
+  [[nodiscard]] constexpr auto&& front(this Self&& /*self*/) noexcept {
+    return implicit_cast<CopyCV<Self, T>*>(nullptr)[0];
+  }
+  template <typename Self>
+  [[nodiscard]] constexpr auto&& back(this Self&& /*self*/) noexcept {
+    return implicit_cast<CopyCV<Self, T>*>(nullptr)[0];
+  }
+
+  template <typename Self>
+  [[nodiscard]] constexpr auto begin(this Self&& /*self*/) noexcept {
+    return implicit_cast<CopyCV<Self, T>*>(nullptr);
+  }
+  template <typename Self>
+  [[nodiscard]] constexpr auto end(this Self&& /*self */) noexcept {
+    return implicit_cast<CopyCV<Self, T>*>(nullptr);
+  }
+  template <usize I, typename Self>
+  [[nodiscard]] constexpr auto&& get(this Self&& /*self*/) noexcept {
+    return implicit_cast<CopyCV<Self, T>*>(nullptr)[0];
+  }
+
+  constexpr bool operator==(this StackArray const& self,
+                            StackArray const&      other) noexcept = default;
+};
 
 template <typename T, usize N, Integral SizeT>
 struct TupleSize<StackArray<T, N, SizeT>> {
