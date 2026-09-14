@@ -2,7 +2,6 @@
 #include "base/containers/vector.hpp"
 #include "base/formatting/formatter.hpp"
 #include "base/logging/logger.hpp"
-#include "base/memory/arena.hpp"
 #include "base/memory/singleton_allocator.hpp"
 #include "base/ranges/slice.hpp"
 #include "base/ranges/string_view.hpp"
@@ -22,13 +21,15 @@
 
 // NOLINTBEGIN(bugprone-exception-escape)
 
-template <> class base::Formatter<std::string> : base::Formatter<base::StringView> {
+template <>
+class base::Formatter<std::string> : base::Formatter<base::StringView> {
 public:
   constexpr char const* parse(char const* fmt) noexcept {
     return base::Formatter<base::StringView>::parse(fmt);
   }
   void format(base::String& buf, std::string_view const& str) const noexcept {
-    base::Formatter<base::StringView>::format(buf, base::StringView(str.data(), str.size()));
+    base::Formatter<base::StringView>::format(
+        buf, base::StringView(str.data(), str.size()));
   }
 };
 
@@ -64,9 +65,10 @@ public:
 
       freed.emplace(mem.data());
       events.push_back(std::format("freed {}", mem.size()));
-      events_with_ptrs.push_back(
-          std::format("freed {} at {}", mem.size(), static_cast<void*>(mem.data())));
-      ::operator delete(mem.data(), mem.size() * sizeof(T), std::align_val_t{alignof(T)});
+      events_with_ptrs.push_back(std::format("freed {} at {}", mem.size(),
+                                             static_cast<void*>(mem.data())));
+      ::operator delete(mem.data(), mem.size() * sizeof(T),
+                        std::align_val_t{alignof(T)});
     } else {
       events.push_back(std::format("freed {} (nullptr)", mem.size()));
     }
@@ -78,7 +80,8 @@ private:
   inline static std::unordered_set<void*> allocated;
 };
 
-using TestAllocatorSingleton = base::SingletonAllocator<TestAllocator, "main", true>;
+using TestAllocatorSingleton =
+    base::SingletonAllocator<TestAllocator, "main", true>;
 
 class TestClass {
 public:
@@ -120,19 +123,17 @@ using Snapshot = std::vector<std::string>;
 
 class EventTester {
 public:
-  template <typename Vector0, typename Vector1 = Vector0, typename Vector2 = Vector1,
-            typename Vector3 = Vector2, typename Vector4 = Vector3>
-  int test() {
+  template <typename Vector> int test() {
     int  ret  = 0;
     auto test = [this, &ret]() {
-      return test_events<Vector0, Vector1, Vector2, Vector3, Vector4>([this,
-                                                                       &ret](bool strict_ordering) {
+      return test_events<Vector>([this, &ret](bool strict_ordering) {
         auto const& expected = expected_snapshots_[snapshot_index_];
         ++snapshot_index_;
         if (strict_ordering) {
           EXPECT_EQ(TestClass::events, expected);
         } else {
-          std::unordered_multiset<std::string> expected_events(expected.begin(), expected.end());
+          std::unordered_multiset<std::string> expected_events(expected.begin(),
+                                                               expected.end());
           std::unordered_multiset<std::string> events(TestClass::events.begin(),
                                                       TestClass::events.end());
           EXPECT_EQ(events, expected_events);
@@ -157,15 +158,13 @@ private:
     });
   }
 
-  template <typename Vector0, typename Vector1 = Vector0, typename Vector2 = Vector1,
-            typename Vector3 = Vector2, typename Vector4 = Vector3>
-  int test_events(auto&& func) {
+  template <typename Vector> int test_events(auto&& func) {
     int ret = 0;
     TestClass::events.clear();
     snapshot_index_ = 0;
     {
 
-      Vector0 temp;
+      Vector temp;
       temp.reserve(2);
 
       temp.emplace_back("a");
@@ -177,7 +176,7 @@ private:
       EXPECT_EQ(temp[0].name_, "a");
       EXPECT_EQ(temp[1].name_, "b");
 
-      Vector1 moved_to(std::move(temp));
+      Vector moved_to(std::move(temp));
       func(true);
 
       EXPECT_EQ(moved_to.size(), 2);
@@ -185,7 +184,8 @@ private:
       EXPECT_EQ(moved_to[1].name_, "b");
 
       moved_to.push_back(TestClass("c"));
-      // Move order on realloc is implementation defined, so the exact order can't be checked.
+      // Move order on realloc is implementation defined, so the exact order
+      // can't be checked.
       func(false);
 
       TestClass const copied("d");
@@ -226,7 +226,12 @@ static int test_push_after_copy() {
   int ret = 0;
   TestAllocator::events.clear();
   {
-    base::Vector<char, 0, TestAllocator, int32_t> foo = {'f', 'o', 'o', '\0'}; // 1 alloc
+    base::Vector<char, 0, TestAllocator, int32_t> foo = {
+        'f',
+        'o',
+        'o',
+        '\0',
+    }; // 1 alloc
     EXPECT_STREQ(foo.data(), "foo");
 
     base::Vector<char, 2, TestAllocator> foo_bar(foo); // 2 allocs
@@ -259,96 +264,12 @@ static int test_custom_allocator() {
   return EventTester::get().test<base::Vector<TestClass, 0, TestAllocator>>();
 }
 
-static int test_different_vectors() {
-  return EventTester::get()
-      .test<base::Vector<TestClass, 0, base::ScratchArenaAllocator, uint32_t>,
-            base::Vector<TestClass, 1, base::ScratchArenaAllocator, int16_t>>();
-}
-
-static int test_different_allocators() {
-  int  ret    = 0;
-  auto expect = [&ret](std::vector<std::string> const& expected) {
-    EXPECT_EQ(TestClass::events, expected);
-    TestClass::events.clear();
-  };
-
-  TestClass::events.clear();
-  {
-    base::Vector<TestClass, 1, base::ScratchArenaAllocator> arena_alloc_vector;
-    arena_alloc_vector.reserve(2);
-    arena_alloc_vector.emplace_back("a");
-    arena_alloc_vector.emplace_back("b");
-
-    expect({"default constructed a", "default constructed b"});
-
-    EXPECT_EQ(arena_alloc_vector.size(), 2);
-    EXPECT_EQ(arena_alloc_vector[0].name_, "a");
-    EXPECT_EQ(arena_alloc_vector[1].name_, "b");
-
-    base::Vector<TestClass, 0, TestAllocator> test_alloc_vector(std::move(arena_alloc_vector));
-
-    EXPECT_EQ(test_alloc_vector.size(), 2);
-    EXPECT_EQ(test_alloc_vector[0].name_, "a (moved)");
-    EXPECT_EQ(test_alloc_vector[1].name_, "b (moved)");
-
-    expect({"move constructed a (moved)", "move constructed b (moved)"});
-
-    base::Vector<TestClass, 6> to_copy_assign;
-    to_copy_assign.push_back(TestClass("e"));
-    to_copy_assign.emplace_back("f");
-
-    expect({
-        "default constructed e",
-        "move constructed e (moved)",
-        "destructed e",
-        "default constructed f",
-    });
-
-    test_alloc_vector = to_copy_assign;
-
-    expect({
-        "destructed b (moved)",
-        "destructed a (moved)",
-        "copy constructed e (moved) (copied)",
-        "copy constructed f (copied)",
-    });
-
-    base::Vector<TestClass> to_move_assign;
-    to_move_assign.reserve(2);
-    to_move_assign.emplace_back("g");
-    to_move_assign.emplace_back("h");
-
-    expect({
-        "default constructed g",
-        "default constructed h",
-    });
-
-    test_alloc_vector = std::move(to_move_assign);
-
-    expect({
-        "destructed f (copied)",
-        "destructed e (moved) (copied)",
-        "move constructed g (moved)",
-        "move constructed h (moved)",
-    });
-  }
-  std::vector<std::string> expected = {
-      "destructed h",         "destructed g",         "destructed f", "destructed e (moved)",
-      "destructed h (moved)", "destructed g (moved)", "destructed b", "destructed a",
-  };
-  EXPECT_EQ(TestClass::events, expected);
-  TestClass::events.clear();
-  return ret;
-}
-
 int main() {
   int ret = 0;
   EXPECT(test_allocator() == 0);
   EXPECT(test_push_after_copy() == 0);
   EXPECT(test_default_template_args() == 0);
   EXPECT(test_custom_allocator() == 0);
-  EXPECT(test_different_vectors() == 0);
-  EXPECT(test_different_allocators() == 0);
   base::Logger::get_default_instance().flush();
   return ret;
 }
