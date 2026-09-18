@@ -3,8 +3,8 @@
 #include "base/attributes.hpp"
 #include "base/containers/structured_bindings.hpp"
 #include "base/memory/lifetimes.hpp"
-#include "base/metaprogramming/integer_sequence.hpp"
-#include "base/metaprogramming/type_manip.hpp"
+#include "base/meta/integer_sequence.hpp"
+#include "base/meta/type_manip.hpp"
 #include "base/type_traits/comparaison.hpp"
 #include "base/utilities/type_aliases.hpp"
 

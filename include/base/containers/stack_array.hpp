@@ -3,7 +3,7 @@
 #include "base/attributes.hpp"
 #include "base/containers/structured_bindings.hpp"
 #include "base/memory/lifetimes.hpp"
-#include "base/metaprogramming/type_manip.hpp"
+#include "base/meta/type_manip.hpp"
 #include "base/ranges/integer_range.hpp"
 #include "base/ranges/slice.hpp"
 #include "base/type_traits/categories.hpp"

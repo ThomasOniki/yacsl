@@ -2,8 +2,8 @@
 
 #include "base/containers/tuple.hpp"
 #include "base/memory/lifetimes.hpp"
-#include "base/metaprogramming/integer_sequence.hpp"
-#include "base/threading/atomic.hpp"
+#include "base/meta/integer_sequence.hpp"
+#include "base/threads/atomic.hpp"
 #include "base/type_traits/comparaison.hpp"
 #include "base/type_traits/qualifiers.hpp"
 #include "base/utilities/type_aliases.hpp"

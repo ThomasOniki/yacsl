@@ -1,7 +1,7 @@
 #pragma once
 
 #include "base/containers/string.hpp"
-#include "base/formatting/format_string.hpp"
+#include "base/format/format_string.hpp"
 #include "base/memory/lifetimes.hpp"
 
 namespace base {

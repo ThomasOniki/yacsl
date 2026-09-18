@@ -1,6 +1,6 @@
-#include "base/formatting/format_string_parser.hpp"
+#include "base/format/format_string_parser.hpp"
 #include "base/containers/string.hpp"
-#include "base/logging/logger.hpp"
+#include "base/log/logger.hpp"
 #include "base/ranges/string_view.hpp"
 
 namespace base {

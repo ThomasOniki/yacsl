@@ -4,7 +4,7 @@
 #include "base/containers/stack_array.hpp"
 #include "base/memory/arena.hpp"
 #include "base/memory/lifetimes.hpp"
-#include "base/metaprogramming/type_identity.hpp"
+#include "base/meta/type_identity.hpp"
 #include "base/ranges/initializer_list.hpp"
 #include "base/ranges/integer_range.hpp"
 #include "base/ranges/slice.hpp"

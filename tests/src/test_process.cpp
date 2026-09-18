@@ -539,7 +539,7 @@ int main() {
 
 #else
 
-#include "base/logging/logger.hpp"
+#include "base/log/logger.hpp"
 
 int main() {
   base::log_info("test_process does nothing when compiling with emscripten.");
