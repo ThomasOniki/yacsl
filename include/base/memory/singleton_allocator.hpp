@@ -4,25 +4,37 @@
 
 namespace base {
 
-template <typename T, NTTPString Name, bool ThreadLocal = true>
+template <typename Allocator, NTTPString Name, bool ThreadLocal = true>
 class SingletonAllocator {
 public:
-  using SizeT = T::SizeT;
+  using SizeT = Allocator::SizeT;
 
-  static constexpr T& get() {
-    static thread_local T instance;
+  static constexpr Allocator& get()
+    requires ThreadLocal
+  {
+    static thread_local Allocator instance;
     return instance;
   }
-};
-
-template <typename T, NTTPString Name>
-class SingletonAllocator<T, Name, false> {
-public:
-  using SizeT = T::SizeT;
-
-  static constexpr T& get() {
-    static T instance;
+  static constexpr Allocator& get()
+    requires(!ThreadLocal)
+  {
+    static Allocator instance;
     return instance;
+  }
+
+  template <typename T>
+  [[nodiscard]] Slice<T, SizeT> allocate(this SingletonAllocator /*self*/,
+                                         SizeT count) noexcept {
+    return get().template allocate<T>(count);
+  }
+  template <typename T>
+  void free(this SingletonAllocator /*self*/, Slice<T, SizeT> mem) noexcept {
+    get().template free<T>(mem);
+  }
+
+  [[nodiscard]] constexpr bool operator==(this SingletonAllocator /*self*/,
+                                          SingletonAllocator /*other*/) {
+    return true;
   }
 };
 

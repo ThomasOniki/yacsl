@@ -20,17 +20,35 @@ class Arena {
 public:
   using SizeT = uptr;
 
-  explicit constexpr Arena(usize capacity)
+  explicit constexpr Arena(usize capacity) noexcept
       : initial_capacity_((capacity + 4095) / 4096 * 4096) {}
-  explicit constexpr Arena() = default;
+  explicit constexpr Arena() noexcept = default;
 
-  Arena(Arena const&)     = delete;
-  Arena(Arena&&) noexcept = delete;
+  Arena(Arena const& other) noexcept
+      : initial_capacity_(other.initial_capacity_) {}
+  Arena& operator=(this Arena& self BASE_LIFETIMEBOUND,
+                   Arena const&     other) noexcept {
+    self.free_all();
+    self.initial_capacity_ = other.initial_capacity_;
+    return self;
+  }
+
+  Arena(Arena&& other) noexcept
+      : begin_(other.begin_), end_(other.end_), ptr_(other.ptr_),
+        initial_capacity_(other.initial_capacity_) {
+    other.begin_ = other.end_ = other.ptr_ = nullptr;
+  }
+  Arena& operator=(this Arena& self BASE_LIFETIMEBOUND,
+                   Arena&&          other) noexcept {
+    self.begin_            = other.begin_;
+    self.end_              = other.end_;
+    self.ptr_              = other.ptr_;
+    self.initial_capacity_ = other.initial_capacity_;
+    other.begin_ = other.end_ = other.ptr_ = nullptr;
+    return self;
+  }
 
   constexpr ~Arena() noexcept = default;
-
-  Arena& operator=(Arena const&)     = delete;
-  Arena& operator=(Arena&&) noexcept = delete;
 
   template <TriviallyDestructible T, typename... Args>
   [[nodiscard]] T& push(this Arena& self, Args&&... args);
@@ -42,6 +60,11 @@ public:
                                          SizeT       count) noexcept;
   template <typename T>
   void free(this Arena& /*self*/, Slice<T, SizeT> /*mem*/) noexcept {}
+
+  [[nodiscard]] constexpr bool operator==(this Arena const& self,
+                                          Arena const&      other) noexcept {
+    return &self == &other;
+  }
 
 public:
   class Scope {
@@ -61,6 +84,7 @@ public:
 
 private:
   void reserve(this Arena& self, usize capacity) noexcept;
+  void free_all(this Arena& self) noexcept;
 
 private:
   uchar* begin_            = nullptr;
