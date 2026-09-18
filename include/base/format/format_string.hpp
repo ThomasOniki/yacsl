@@ -14,9 +14,6 @@
 namespace base::internal {
 
 template <typename Indices, typename... Args> class FormatStringImpl;
-
-template <typename FString> class FormatToImpl;
-
 template <usize... Indices, typename... Args>
 class FormatStringImpl<IndexSequence<Indices...>, Args...> {
 public:
@@ -43,57 +40,39 @@ public:
     segments_[sizeof...(Args)] = {segment_begin, fmt};
   }
 
-  friend class internal::FormatToImpl<FormatStringImpl>;
+  template <typename... FmtArgs>
+  static void format_to(String& buf, FormatStringImpl const& fmt,
+                        FmtArgs&&... args) {
+    (..., [&] {
+      buf += fmt.segments_[Indices];
+      fmt.formatters_.template get<Indices>().format(
+          buf, base::forward<FmtArgs>(args));
+    }());
+    buf += fmt.segments_[sizeof...(Args)];
+  }
 
 public:
   using TypeIdentity = FormatStringImpl;
 
 private:
-  mutable Tuple<Formatter<RemoveCVRef<Args>>...> formatters_;
+  mutable Tuple<Formatter<Args>...> formatters_;
 
   StackArray<StringView, sizeof...(Args) + 1> segments_;
 };
 
 template <> class FormatStringImpl<IndexSequence<>> {
 public:
-  // NOLINTNEXTLINE
-  template <usize N>
-  consteval FormatStringImpl(char const (&msg BASE_LIFETIMEBOUND)[N])
-      : msg_{msg} {}
+  consteval FormatStringImpl(char const* msg) : msg_{msg} {}
 
-  friend class FormatToImpl<FormatStringImpl>;
+  static void format_to(String& buf, FormatStringImpl const& fmt) {
+    buf += fmt.msg_;
+  }
 
 public:
   using TypeIdentity = FormatStringImpl;
 
 private:
   StringView msg_;
-};
-
-template <usize... Indices, typename... Args>
-class FormatToImpl<FormatStringImpl<IndexSequence<Indices...>, Args...>> {
-public:
-  // NOLINTNEXTLINE(misc-no-recursion)
-  static void format_to_impl(
-      String&                                                     buf,
-      FormatStringImpl<IndexSequence<Indices...>, Args...> const& fmt,
-      Args&&... args) {
-    (..., [&]() {
-      buf += fmt.segments_[Indices];
-      fmt.formatters_.template get<Indices>().format(buf,
-                                                     base::forward<Args>(args));
-    }());
-    buf += fmt.segments_[sizeof...(Args)];
-  }
-};
-
-template <> class FormatToImpl<FormatStringImpl<IndexSequence<>>> {
-public:
-  // NOLINTNEXTLINE(misc-no-recursion)
-  static void format_to_impl(String&                                  buf,
-                             FormatStringImpl<IndexSequence<>> const& msg) {
-    buf += msg.msg_;
-  }
 };
 
 } // namespace base::internal
@@ -103,12 +82,11 @@ namespace base {
 template <typename... Args>
 using FormatString =
     internal::FormatStringImpl<IndexSequenceToN<sizeof...(Args)>,
-                               Args...>::TypeIdentity;
+                               RemoveCVRef<Args>...>::TypeIdentity;
 
 template <typename... Args> // NOLINTNEXTLINE(misc-no-recursion)
 void format_to(String& buf, FormatString<Args...> const& fmt, Args&&... args) {
-  internal::FormatToImpl<FormatString<Args...>>::format_to_impl(
-      buf, fmt, base::forward<Args>(args)...);
+  FormatString<Args...>::format_to(buf, fmt, base::forward<Args>(args)...);
 }
 
 } // namespace base
