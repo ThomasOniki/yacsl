@@ -3,6 +3,7 @@
 #include "base/containers/stack_array.hpp"
 #include "base/containers/string.hpp"
 #include "base/containers/tuple.hpp"
+#include "base/debug/source_location.hpp"
 #include "base/format/format_string_parser.hpp"
 #include "base/format/formatter.hpp"
 #include "base/memory/lifetimes.hpp"
@@ -17,7 +18,9 @@ template <typename Indices, typename... Args> class FormatStringImpl;
 template <usize... Indices, typename... Args>
 class FormatStringImpl<IndexSequence<Indices...>, Args...> {
 public:
-  consteval FormatStringImpl(char const* fmt) {
+  consteval FormatStringImpl(
+      char const* fmt, SourceLocation location = SourceLocation::current())
+      : location_(location) {
     (..., [&]() {
       char const* segment_begin = fmt;
       for (; *fmt != '{'; ++fmt) {
@@ -51,6 +54,11 @@ public:
     buf += fmt.segments_[sizeof...(Args)];
   }
 
+  [[nodiscard]] constexpr SourceLocation const&
+  source_location(this FormatStringImpl const& self) noexcept {
+    return self.location_;
+  }
+
 public:
   using TypeIdentity = FormatStringImpl;
 
@@ -58,21 +66,31 @@ private:
   mutable Tuple<Formatter<Args>...> formatters_;
 
   StackArray<StringView, sizeof...(Args) + 1> segments_;
+
+  SourceLocation location_;
 };
 
 template <> class FormatStringImpl<IndexSequence<>> {
 public:
-  consteval FormatStringImpl(char const* msg) : msg_{msg} {}
+  consteval FormatStringImpl(
+      char const* msg, SourceLocation location = SourceLocation::current())
+      : location_(location), msg_{msg} {}
 
   static void format_to(String& buf, FormatStringImpl const& fmt) {
     buf += fmt.msg_;
+  }
+
+  [[nodiscard]] constexpr SourceLocation const&
+  source_location(this FormatStringImpl const& self) noexcept {
+    return self.location_;
   }
 
 public:
   using TypeIdentity = FormatStringImpl;
 
 private:
-  StringView msg_;
+  SourceLocation location_;
+  StringView     msg_;
 };
 
 } // namespace base::internal

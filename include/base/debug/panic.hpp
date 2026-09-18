@@ -1,19 +1,22 @@
 #pragma once
 
 #include "base/containers/string.hpp"
+#include "base/debug/source_location.hpp"
 #include "base/format/format_string.hpp"
 #include "base/memory/lifetimes.hpp"
 
 namespace base {
 
-[[noreturn]] void panic(String const& formatted) noexcept;
+[[noreturn]] void
+panic(String const&  formatted,
+      SourceLocation location = SourceLocation::current()) noexcept;
 
 template <typename... Args>
 [[noreturn]] // NOLINTNEXTLINE(misc-no-recursion)
 void panic(FormatString<Args...> const& fmt, Args&&... args) noexcept {
   String buf;
   format_to(buf, fmt, base::forward<Args>(args)...);
-  panic(buf);
+  panic(buf, fmt.source_location());
 }
 
 template <typename... Args> // NOLINTNEXTLINE(misc-no-recursion)
