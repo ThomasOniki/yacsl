@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/metaprogramming/declval.hpp"
+#include "base/meta/declval.hpp"
 #include "base/type_traits/comparaison.hpp"
 #include "base/type_traits/convertible_to.hpp"
 

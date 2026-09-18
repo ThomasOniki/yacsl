@@ -3,7 +3,7 @@
 #include "base/containers/result.hpp"
 #include "base/containers/stack_array.hpp"
 #include "base/containers/string.hpp"
-#include "base/logging/panic.hpp"
+#include "base/log/panic.hpp"
 #include "base/os/file.hpp"
 #include "base/os/process.hpp"
 #include "base/ranges/slice.hpp"

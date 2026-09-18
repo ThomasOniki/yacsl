@@ -1,8 +1,8 @@
 #include "base/containers/vector.hpp"
-#include "base/logging/logger.hpp"
-#include "base/threading/atomic.hpp"
-#include "base/threading/mutex.hpp"
-#include "base/threading/thread.hpp"
+#include "base/log/logger.hpp"
+#include "base/threads/atomic.hpp"
+#include "base/threads/mutex.hpp"
+#include "base/threads/thread.hpp"
 #include "test_utils.hpp"
 #include <stdint.h>
 

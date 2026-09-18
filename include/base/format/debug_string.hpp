@@ -2,7 +2,7 @@
 
 #include "base/attributes.hpp"
 #include "base/containers/string.hpp"
-#include "base/formatting/char_encodings.hpp"
+#include "base/format/char_encodings.hpp"
 #include "base/memory/lifetimes.hpp"
 #include "base/ranges/string_view.hpp"
 #include "base/type_traits/categories.hpp"

@@ -4,7 +4,7 @@
 #include "base/containers/stack_array.hpp"
 #include "base/containers/stack_storage.hpp"
 #include "base/memory/lifetimes.hpp"
-#include "base/threading/atomic.hpp"
+#include "base/threads/atomic.hpp"
 #include "base/type_traits/limits.hpp"
 #include "base/utilities/nil.hpp"
 #include "base/utilities/type_aliases.hpp"

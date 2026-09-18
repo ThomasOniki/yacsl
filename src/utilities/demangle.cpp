@@ -1,7 +1,7 @@
 #include "base/utilities/demangle.hpp"
 #include "base/containers/string.hpp"
 #include "base/containers/vector.hpp"
-#include "base/formatting/atoi.hpp"
+#include "base/format/atoi.hpp"
 #include "base/memory/lifetimes.hpp"
 #include "base/ranges/string_view.hpp"
 #include "base/utilities/type_aliases.hpp"
