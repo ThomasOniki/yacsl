@@ -2,7 +2,7 @@
 
 #include "base/attributes.hpp"
 #include "base/format/format_string.hpp"
-#include "base/log/panic.hpp"
+#include "base/debug/panic.hpp"
 #include "base/memory/lifetimes.hpp"
 #include "base/type_traits/categories.hpp"
 #include "base/type_traits/qualifiers.hpp"

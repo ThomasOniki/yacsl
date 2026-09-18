@@ -3,9 +3,9 @@
 // IWYU pragma: begin_exports
 #include "base/attributes.hpp"
 #include "base/containers/containers.hpp"
+#include "base/debug/debug.hpp"
 #include "base/export.hpp"
 #include "base/format/format.hpp"
-#include "base/log/log.hpp"
 #include "base/math/math.hpp"
 #include "base/memory/memory.hpp"
 #include "base/meta/meta.hpp"
