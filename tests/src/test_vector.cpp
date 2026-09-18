@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "base/format/formatter.hpp"
-#include "base/log/logger.hpp"
+#include "base/debug/log.hpp"
 #include "base/ranges/slice.hpp"
 #include "base/utilities/type_aliases.hpp"
 #include "test_utils.hpp"

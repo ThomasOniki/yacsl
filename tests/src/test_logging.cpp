@@ -1,6 +1,6 @@
 #include "base/containers/stack_array.hpp"
 #include "base/format/format_string.hpp"
-#include "base/log/logger.hpp"
+#include "base/debug/log.hpp"
 #include "base/memory/lifetimes.hpp"
 #include "base/os/file.hpp"
 #include "base/ranges/initializer_list.hpp"
