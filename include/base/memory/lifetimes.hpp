@@ -5,6 +5,7 @@
 #include "base/ranges/slice.hpp"
 #include "base/type_traits/qualifiers.hpp"
 #include "base/type_traits/trivial.hpp"
+#include "base/utilities/is_constant_evaluated.hpp"
 #include "base/utilities/type_aliases.hpp"
 #include <string.h>
 
@@ -52,10 +53,11 @@ template <MutableType T>
 constexpr Slice<T> copy(Slice<TypeIdentity<T> const> src,
                         Slice<T> dst BASE_LIFETIMEBOUND) noexcept {
   usize const size = dst.size() < src.size() ? dst.size() : src.size();
-  if !consteval {
-    if (TriviallyCopyable<T>) {
-      return {static_cast<T*>(::memcpy(dst.data(), src.data(), size)), size};
-    }
+  if (!is_constant_evaluated() && TriviallyCopyable<T>) {
+    return {
+        static_cast<T*>(::memcpy(dst.data(), src.data(), size * sizeof(T))),
+        size,
+    };
   }
   for (usize i = 0; i < size; ++i) {
     dst[i] = src[i];
@@ -65,11 +67,11 @@ constexpr Slice<T> copy(Slice<TypeIdentity<T> const> src,
 template <MutableType T>
 constexpr Slice<T> copy(Slice<TypeIdentity<T> const> src,
                         T* dst BASE_LIFETIMEBOUND) noexcept {
-  if !consteval {
-    if (TriviallyCopyable<T>) {
-      return {static_cast<T*>(::memcpy(dst, src.data(), src.size())),
-              src.size()};
-    }
+  if (!is_constant_evaluated() && TriviallyCopyable<T>) {
+    return {
+        static_cast<T*>(::memcpy(dst, src.data(), src.size() * sizeof(T))),
+        src.size(),
+    };
   }
   for (usize i = 0; i < src.size(); ++i) {
     dst[i] = src[i];

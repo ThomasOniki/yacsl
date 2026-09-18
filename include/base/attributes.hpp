@@ -13,3 +13,9 @@
 #define BASE_NOINLINE
 #define BASE_ALWAYS_INLINE
 #endif
+
+#if defined(_MSC_VER) && !defined(__clang__)
+#define BASE_NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
+#else
+#define BASE_NO_UNIQUE_ADDRESS [[no_unique_address]]
+#endif

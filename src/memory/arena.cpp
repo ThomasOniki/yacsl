@@ -40,6 +40,16 @@ void Arena::reserve(this Arena& self, usize capacity) noexcept {
   construct_at(reinterpret_cast<Metadata*>(self.begin_), metadata);
 }
 
+void Arena::free_all(this Arena& self) noexcept {
+  while (self.begin_ != nullptr) {
+    Metadata const metadata = *reinterpret_cast<Metadata*>(self.begin_);
+    // NOLINTNEXTLINE(cppcoreguidelines-no-malloc)
+    ::free(self.begin_);
+    self.begin_ = metadata.last_begin;
+  }
+  self.begin_ = self.end_ = self.ptr_ = nullptr;
+}
+
 Arena::Scope::~Scope() noexcept {
   while (ptr_ < arena_.begin_ || ptr_ > arena_.end_) {
     Metadata const metadata = *reinterpret_cast<Metadata*>(arena_.begin_);

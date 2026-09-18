@@ -1,7 +1,7 @@
 #pragma once
 
 #include "base/attributes.hpp"
-#include "base/containers/base_classes.hpp"
+#include "base/containers/vector.hpp"
 #include "base/memory/arena.hpp"
 #include "base/memory/lifetimes.hpp"
 #include "base/ranges/slice.hpp"
@@ -14,89 +14,45 @@
 namespace base {
 
 template <Character Char, usize N = 0,
-          AllocatorLike Allocator = MainArenaAllocator, Integral SizeT = usize>
-class BasicString : AllocatorMember<Allocator>,
-                    FixedBufferMember<Char, N, SizeT> {
+          AllocatorType Allocator = MainArenaAllocator, Integral SizeT = usize>
+class BasicString {
 public:
   constexpr BasicString() noexcept = default;
+  constexpr explicit BasicString(Allocator const& allocator)
+      : data_(allocator) {}
 
-  constexpr ~BasicString() noexcept { free(); }
+  constexpr ~BasicString() noexcept = default;
 
-  constexpr BasicString(Char const* cstr) noexcept
-      : BasicString(BasicStringView<Char, usize>(cstr)) {}
+  constexpr BasicString(Char const*      cstr,
+                        Allocator const& allocator = Allocator()) noexcept
+      : data_(BasicStringView<Char, usize>(cstr), allocator) {}
 
-  constexpr BasicString(BasicStringView<Char, SizeT> str) noexcept {
-    SizeT const size = str.size();
-
-    if constexpr (N > 0) {
-      if (size > fixed_buffer_.size()) {
-        begin_         = allocator().template allocate<Char>(size).data();
-        allocated_end_ = end_ = begin_ + size;
-      } else {
-        end_ = begin_ + size;
-      }
-    } else {
-      begin_         = allocator().template allocate<Char>(size).data();
-      allocated_end_ = end_ = begin_ + size;
-    }
-
-    copy(str.slice(), begin_);
-  }
+  constexpr BasicString(BasicStringView<Char, SizeT> str,
+                        Allocator const& allocator = Allocator()) noexcept
+      : data_(str, allocator) {}
 
   constexpr BasicString(BasicString const& other) noexcept
-      : BasicString(other.view()) {}
+      : data_(other.data_) {}
 
   constexpr BasicString(BasicString&& other) noexcept
-      : begin_(other.begin_), end_(other.end_),
-        allocated_end_(other.allocated_end_) {
-    other.begin_ = other.end_ = other.fixed_buffer_.begin();
-    other.allocated_end_      = other.fixed_buffer_.end();
-  }
+      : data_(base::move(other.data_)) {}
 
   constexpr BasicString& operator=(this BasicString& self BASE_LIFETIMEBOUND,
                                    BasicString const&     other) noexcept {
-    if (&self == &other) {
-      return self;
-    }
-    SizeT const size = other.size();
-    if (self.capacity() < size) {
-      self.free();
-      self.begin_ = self.allocator().template allocate<Char>(size).data();
-      self.allocated_end_ = self.end_ = self.begin_ + size;
-    } else {
-      self.end_ = self.begin_ + size;
-    }
-    copy({other.begin_, size}, self.begin_);
+    self.data_ = other.data_;
     return self;
   }
 
   constexpr BasicString& operator=(this BasicString& self BASE_LIFETIMEBOUND,
                                    BasicString&&          other) noexcept {
-    if constexpr (N > 0) {
-      if (other.begin_ == other.fixed_buffer_.begin()) {
-        SizeT const size = other.size();
-        copy({other.fixed_buffer_.begin(), size}, fixed_buffer_.begin());
-        self.end_ = self.begin_ + size;
-        return self;
-      }
-    }
-    self.free();
-    self.begin_         = other.begin_;
-    self.end_           = other.end_;
-    self.allocated_end_ = other.allocated_end_;
-    other.begin_ = other.end_ = other.fixed_buffer_.begin();
-    other.allocated_end_      = other.fixed_buffer_.end();
+    self.data_ = base::move(other.data_);
     return self;
   }
 
   // NOLINTNEXTLINE(misc-no-recursion)
   constexpr BasicString& append(this BasicString& self BASE_LIFETIMEBOUND,
                                 Char const* ptr, SizeT len) noexcept {
-    if (static_cast<SizeT>(self.allocated_end_ - self.end_) < len) {
-      self.definitely_reserve(self.capacity() * 2 + len);
-    }
-    copy({ptr, len}, self.end_);
-    self.end_ += len;
+    copy({ptr, len}, self.grow(len));
     return self;
   }
   constexpr BasicString& append(this BasicString& self BASE_LIFETIMEBOUND,
@@ -119,11 +75,7 @@ public:
 
   constexpr BasicString& append(this BasicString& self BASE_LIFETIMEBOUND,
                                 Char                   chr) noexcept {
-    if (self.end_ + 1 > self.allocated_end_) {
-      self.definitely_reserve(self.capacity() * 2 + 1);
-    }
-    *self.end_ = chr;
-    ++self.end_;
+    *self.grow(1) = chr;
     return self;
   }
 
@@ -169,15 +121,12 @@ public:
 
   constexpr BasicString& reserve(this BasicString& self BASE_LIFETIMEBOUND,
                                  SizeT                  capacity) noexcept {
-    if (capacity > self.capacity()) {
-      self.definitely_reserve(capacity);
-    }
+    self.data_.reserve(capacity);
     return self;
   }
   constexpr BasicString& resize(this BasicString& self BASE_LIFETIMEBOUND,
                                 SizeT                  size) noexcept {
-    self.reserve(size);
-    self.end_ = self.begin_ + size;
+    self.data_.resize(size);
     return self;
   }
 
@@ -185,43 +134,36 @@ public:
   // for characters you want to memcpy into. It returns new_end - count.
   constexpr Char* grow(this BasicString& self BASE_LIFETIMEBOUND,
                        SizeT                  count) noexcept {
-    if (static_cast<SizeT>(self.allocated_end_ - self.end_) < count) {
-      self.definitely_reserve(self.capacity() * 2 + count);
-    }
-    Char* ret = self.end_;
-    self.end_ += count;
-    return ret;
+    self.data_.resize(self.data_.size() + count);
+    return self.data_.end() - count;
   }
 
   constexpr BasicString&
   clear(this BasicString& self BASE_LIFETIMEBOUND) noexcept {
-    self.end_ = self.begin_;
+    self.data_.clear();
     return self;
   }
 
   template <typename Self>
   [[nodiscard]] constexpr Char*
   c_str(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    if (self.end_ == self.allocated_end_) {
-      self.definitely_reserve(self.capacity() * 2 + 1);
-    }
-    *self.end_ = '\0';
-    return base::forward<Self>(self).begin_;
+    self.data_.reserve(self.data_.size() + 1);
+    self.data_[self.data_.size()] = '\0';
+    return base::forward<Self>(self).data_.data();
   }
 
   [[nodiscard]] constexpr SizeT size(this BasicString const& self) noexcept {
-    return static_cast<SizeT>(self.end_ - self.begin_);
+    return self.data_.size();
   }
   [[nodiscard]] constexpr SizeT
   capacity(this BasicString const& self) noexcept {
-    return static_cast<SizeT>(self.allocated_end_ - self.begin_);
+    return self.data_.capacity();
   }
 
   template <typename Self>
   [[nodiscard]] constexpr auto&& operator[](this Self&& self BASE_LIFETIMEBOUND,
                                             SizeT            index) noexcept {
-    return base::forward<CopyCVRef<Self&&, Char>>(
-        base::forward<Self>(self).begin_[index]);
+    return base::forward<Self>(self).data_[index];
   }
 
   [[nodiscard]] constexpr bool operator==(this BasicString const& self,
@@ -240,79 +182,42 @@ public:
 
   [[nodiscard]] constexpr BasicStringView<Char, SizeT>
   view(this BasicString const& self BASE_LIFETIMEBOUND) noexcept {
-    return {self.begin_, self.end_};
+    return {self.data_.data(), self.data_.size()};
   }
   template <typename Self>
-  [[nodiscard]] constexpr auto
-  slice(this Self&& self BASE_LIFETIMEBOUND) noexcept
-      -> Slice<CopyCV<Self, Char>, SizeT> {
-    return {base::forward<Self>(self).begin_, base::forward<Self>(self).end_};
+  [[nodiscard]] constexpr Slice<CopyCV<Self, Char>, SizeT>
+  slice(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+    return base::forward<Self>(self).data_.slice();
   }
   template <typename Self>
-  [[nodiscard]] constexpr auto
-  reversed_slice(this Self&& self BASE_LIFETIMEBOUND) noexcept
-      -> ReversedSlice<CopyCV<Self, Char>, SizeT> {
-    return {base::forward<Self>(self).begin_, base::forward<Self>(self).end_};
+  [[nodiscard]] constexpr ReversedSlice<CopyCV<Self, Char>, SizeT>
+  reversed_slice(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+    return base::forward<Self>(self).data_.reversed_slice();
   }
   template <typename Self>
   [[nodiscard]] constexpr auto
   bytes(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    return base::forward<Self>(self).slice().bytes();
+    return base::forward<Self>(self).data_.bytes();
   }
 
-  template <MutableType Self>
-  [[nodiscard]] constexpr Char*
-  data(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    return base::forward<Self>(self).begin_;
-  }
-  [[nodiscard]] constexpr Char const*
+  [[nodiscard]] constexpr auto
   data(this BasicString const& self BASE_LIFETIMEBOUND) noexcept {
-    return self.begin_;
+    return self.data_.data();
   }
 
   template <typename Self>
   [[nodiscard]] constexpr auto
   begin(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    return base::forward<Self>(self).begin_;
+    return base::forward<Self>(self).data_.begin();
   }
   template <typename Self>
   [[nodiscard]] constexpr auto
   end(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    return base::forward<Self>(self).end_;
+    return base::forward<Self>(self).data_.end();
   }
 
 private:
-  using FixedBufferMember<Char, N, SizeT>::fixed_buffer_;
-  using AllocatorMember<Allocator>::allocator;
-
-private:
-  // NOLINTNEXTLINE(misc-no-recursion)
-  constexpr void definitely_reserve(this BasicString& self,
-                                    SizeT             capacity) noexcept {
-    Char* data = self.allocator().template allocate<Char>(capacity).data();
-    SizeT const size = self.size();
-    copy({self.begin_, size}, data);
-    self.free();
-    self.begin_         = data;
-    self.end_           = data + size;
-    self.allocated_end_ = data + capacity;
-  }
-
-  void free(this BasicString& self) noexcept {
-    if constexpr (N > 0) {
-      if (self.begin_ != self.fixed_buffer_.begin()) {
-        self.allocator().template free<Char>(
-            {self.begin_, self.allocated_end_});
-      }
-    } else {
-      self.allocator().template free<Char>({self.begin_, self.allocated_end_});
-    }
-  }
-
-private:
-  Char* begin_         = fixed_buffer_.begin();
-  Char* end_           = fixed_buffer_.begin();
-  Char* allocated_end_ = fixed_buffer_.end();
+  Vector<Char, N, Allocator, SizeT> data_;
 };
 
 using String = BasicString<char>;

@@ -365,7 +365,10 @@ public:
   void format(this Formatter const& self, String& buf,
               Char const* str) noexcept {
     PaddingOptions const opts{
-        .width = self.width_, .fill = self.fill_, .align = self.align_};
+        .width = self.width_,
+        .fill  = self.fill_,
+        .align = self.align_,
+    };
     if (self.type_ == Type::CString) [[likely]] {
       pad_string(buf, BasicStringView<Char>(str), opts);
     } else if (self.type_ == Type::Debug) {
@@ -388,7 +391,7 @@ private:
   FormatStringParser::Align align_ : 2 = FormatStringParser::Align::Left;
 };
 
-template <Character Char, usize N, AllocatorLike Allocator, Integral SizeT>
+template <Character Char, usize N, AllocatorType Allocator, Integral SizeT>
 class Formatter<BasicString<Char, N, Allocator, SizeT>>
     : Formatter<BasicStringView<Char>> {
 public:
