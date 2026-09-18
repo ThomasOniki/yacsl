@@ -5,7 +5,10 @@
 
 namespace base {
 
-[[noreturn]] void panic(String const& formatted) noexcept {
+[[noreturn]] void panic(String const&  formatted,
+                        SourceLocation location) noexcept {
+  Logger::get_default_instance().log(Logger::Level::Panic, "panicked at {}",
+                                     location);
   Logger::get_default_instance().log(Logger::Level::Panic, formatted);
   StackTrace::current().print(Logger::Level::Panic);
   Logger::get_default_instance().flush();
