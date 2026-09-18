@@ -231,4 +231,24 @@ private:
 
 using String = BasicString<char>;
 
+constexpr String operator""_s(char const* cstr BASE_LIFETIMEBOUND, usize len) {
+  return {cstr, len};
+}
+constexpr BasicString<wchar_t>
+operator""_s(wchar_t const* cstr BASE_LIFETIMEBOUND, usize len) {
+  return {cstr, len};
+}
+constexpr BasicString<char8_t>
+operator""_s(char8_t const* cstr BASE_LIFETIMEBOUND, usize len) {
+  return {cstr, len};
+}
+constexpr BasicString<char16_t>
+operator""_s(char16_t const* cstr BASE_LIFETIMEBOUND, usize len) {
+  return {cstr, len};
+}
+constexpr BasicString<char32_t>
+operator""_s(char32_t const* cstr BASE_LIFETIMEBOUND, usize len) {
+  return {cstr, len};
+}
+
 } // namespace base
