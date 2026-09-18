@@ -21,24 +21,24 @@
 #include <winerror.h>
 #include <winnt.h>
 
-#define TRY_SYSCALL_WIN32(syscall)                                                                 \
-  do {                                                                                             \
-    if ((syscall) == FALSE) [[unlikely]] {                                                         \
-      base::panic(#syscall " failed: {}", GetLastError());                                         \
-    }                                                                                              \
+#define TRY_SYSCALL_WIN32(syscall)                                             \
+  do {                                                                         \
+    if ((syscall) == FALSE) [[unlikely]] {                                     \
+      base::panic(#syscall " failed: {}", GetLastError());                     \
+    }                                                                          \
   } while (false)
 
 #define O_CLOEXEC _O_NOINHERIT
 #endif
 
-#define TRY_SYSCALL(syscall)                                                                       \
-  [&]() {                                                                                          \
-    auto _result = syscall;                                                                        \
-    if (_result == -1) [[unlikely]] {                                                              \
-      perror(#syscall);                                                                            \
-      abort();                                                                                     \
-    }                                                                                              \
-    return _result;                                                                                \
+#define TRY_SYSCALL(syscall)                                                   \
+  [&]() {                                                                      \
+    auto _result = syscall;                                                    \
+    if (_result == -1) [[unlikely]] {                                          \
+      perror(#syscall);                                                        \
+      abort();                                                                 \
+    }                                                                          \
+    return _result;                                                            \
   }()
 
 using base::Process;
@@ -88,17 +88,20 @@ struct Pipes {
     TRY_SYSCALL_WIN32(CreatePipe(&input[0], &input[1], nullptr, 0));
     TRY_SYSCALL_WIN32(CreatePipe(&output[0], &output[1], nullptr, 0));
     TRY_SYSCALL_WIN32(CreatePipe(&error[0], &error[1], nullptr, 0));
-    TRY_SYSCALL_WIN32(SetHandleInformation(input[0], HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT));
-    TRY_SYSCALL_WIN32(SetHandleInformation(output[1], HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT));
-    TRY_SYSCALL_WIN32(SetHandleInformation(error[1], HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT));
+    TRY_SYSCALL_WIN32(SetHandleInformation(input[0], HANDLE_FLAG_INHERIT,
+                                           HANDLE_FLAG_INHERIT));
+    TRY_SYSCALL_WIN32(SetHandleInformation(output[1], HANDLE_FLAG_INHERIT,
+                                           HANDLE_FLAG_INHERIT));
+    TRY_SYSCALL_WIN32(SetHandleInformation(error[1], HANDLE_FLAG_INHERIT,
+                                           HANDLE_FLAG_INHERIT));
 
     // NOLINTBEGIN(performance-no-int-to-ptr)
-    TRY_SYSCALL_WIN32(
-        SetStdHandleEx(STD_INPUT_HANDLE, reinterpret_cast<HANDLE>(input[0]), &original[0]));
-    TRY_SYSCALL_WIN32(
-        SetStdHandleEx(STD_OUTPUT_HANDLE, reinterpret_cast<HANDLE>(output[1]), &original[1]));
-    TRY_SYSCALL_WIN32(
-        SetStdHandleEx(STD_ERROR_HANDLE, reinterpret_cast<HANDLE>(error[1]), &original[2]));
+    TRY_SYSCALL_WIN32(SetStdHandleEx(
+        STD_INPUT_HANDLE, reinterpret_cast<HANDLE>(input[0]), &original[0]));
+    TRY_SYSCALL_WIN32(SetStdHandleEx(
+        STD_OUTPUT_HANDLE, reinterpret_cast<HANDLE>(output[1]), &original[1]));
+    TRY_SYSCALL_WIN32(SetStdHandleEx(
+        STD_ERROR_HANDLE, reinterpret_cast<HANDLE>(error[1]), &original[2]));
 
     //  NOLINTEND(performance-no-int-to-ptr)
 #else
@@ -144,7 +147,8 @@ struct Pipes {
 };
 } // namespace
 
-template <typename T> static T create_io(Type type, char const* path, auto& pipe) noexcept {
+template <typename T>
+static T create_io(Type type, char const* path, auto& pipe) noexcept {
   if (type == Type::File) {
     return T(path, base::File::Flags::Create);
   }
@@ -154,7 +158,8 @@ template <typename T> static T create_io(Type type, char const* path, auto& pipe
   return static_cast<Process::StdioType>(type);
 }
 
-static void create_other_pipes(base::StackArray<Process, 3>& processes, IoTypes types) {
+static void create_other_pipes(base::StackArray<Process, 3>& processes,
+                               IoTypes                       types) {
   if (types.input == Type::OtherPipe) {
     Process::Stdio const stdio = {
         .input  = Process::Input::Inherit,
@@ -189,8 +194,8 @@ static void write_input(Type type, Process* proc, Pipes* pipes) {
   if (type == Type::Inherit) {
 #ifdef _WIN32
     DWORD written = 0;
-    TRY_SYSCALL_WIN32(
-        WriteFile(pipes->input[1], INPUT_DATA.data(), INPUT_DATA.size(), &written, nullptr));
+    TRY_SYSCALL_WIN32(WriteFile(pipes->input[1], INPUT_DATA.data(),
+                                INPUT_DATA.size(), &written, nullptr));
 #else
     ::write(pipes->input[1], INPUT_DATA.data(), INPUT_DATA.size());
 #endif
@@ -199,13 +204,15 @@ static void write_input(Type type, Process* proc, Pipes* pipes) {
   }
 }
 
-static base::String get_pipe_output(Process::Output* output, base::StringView expected) {
+static base::String get_pipe_output(Process::Output* output,
+                                    base::StringView expected) {
   base::String str;
   str.resize(expected.size() + 256);
   base::Slice<base::uchar> bytes      = str.bytes();
   base::usize              total_read = output->read(bytes);
   while (total_read < expected.size()) {
-    total_read += output->read({bytes.data() + total_read, bytes.size() - total_read});
+    total_read +=
+        output->read({bytes.data() + total_read, bytes.size() - total_read});
   }
   str.resize(total_read);
   return str;
@@ -214,7 +221,8 @@ static base::String get_pipe_output(Process::Output* output, base::StringView ex
 static int check_file(char const* path, base::StringView expected) {
   int ret = 0;
 
-  int const fildes = TRY_SYSCALL(open(path, O_RDWR | O_CREAT | O_CLOEXEC, 0644));
+  int const fildes =
+      TRY_SYSCALL(open(path, O_RDWR | O_CREAT | O_CLOEXEC, 0644));
 
   base::String buf;
 
@@ -226,8 +234,8 @@ static int check_file(char const* path, base::StringView expected) {
     result = ::read(fildes, buf.grow(static_cast<base::usize>(result)),
                     static_cast<unsigned int>(result));
 #else
-    result =
-        ::read(fildes, buf.grow(static_cast<base::usize>(result)), static_cast<size_t>(result));
+    result = ::read(fildes, buf.grow(static_cast<base::usize>(result)),
+                    static_cast<size_t>(result));
 #endif
   }
   EXPECT_EQ(result, 0);
@@ -264,7 +272,7 @@ static int check_file_output(IoTypes types) noexcept {
 }
 
 static int check_other_pipe_output(base::StackArray<Process, 3>& processes,
-                                   IoTypes                       types) noexcept {
+                                   IoTypes types) noexcept {
   int ret = 0;
   if (types.output == Type::OtherPipe) {
     Process::ExitStatus const status = processes[1].wait();
@@ -309,7 +317,8 @@ static int check_fd_output(int file, base::StringView expected) {
 #endif
 #ifdef _WIN32
   while (result > 0) {
-    success = ReadFile(file, output.grow(static_cast<base::usize>(result)), 512, &result, nullptr);
+    success = ReadFile(file, output.grow(static_cast<base::usize>(result)), 512,
+                       &result, nullptr);
     if (success == FALSE) [[unlikely]] {
       DWORD err = GetLastError();
       if (err != ERROR_BROKEN_PIPE) {
@@ -409,48 +418,54 @@ static int test_run_c(IoTypes types) {
   create_other_pipes(other_pipes, types);
 
   Process::Stdio const stdio = {
-      .input  = create_io<Process::Input::Init>(types.input, CHILD_STDIN_FILE_PATH,
-                                                other_pipes[0].get_stdout()),
-      .output = create_io<Process::Output::Init>(types.output, CHILD_STDOUT_FILE_PATH,
-                                                 other_pipes[1].get_stdin()),
-      .error  = create_io<Process::Output::Init>(types.error, CHILD_STDERR_FILE_PATH,
-                                                 other_pipes[2].get_stdin()),
+      .input = create_io<Process::Input::Init>(
+          types.input, CHILD_STDIN_FILE_PATH, other_pipes[0].get_stdout()),
+      .output = create_io<Process::Output::Init>(
+          types.output, CHILD_STDOUT_FILE_PATH, other_pipes[1].get_stdin()),
+      .error = create_io<Process::Output::Init>(
+          types.error, CHILD_STDERR_FILE_PATH, other_pipes[2].get_stdin()),
   };
 
-  auto process =
-      Process::spawn({STD_STREAMS_EXECUTABLE, "arg1", "arg2", "argument with spaces"}, stdio)
-          .expect_ok();
+  auto process = Process::spawn({STD_STREAMS_EXECUTABLE, "arg1", "arg2",
+                                 "argument with spaces"},
+                                stdio)
+                     .expect_ok();
 
   write_input(types.input, &process, &pipes);
 
   base::String piped_output;
   if (types.output == Type::Pipe) {
     if (types.input == Type::Pipe || types.input == Type::Inherit) {
-      piped_output = get_pipe_output(&process.get_stdout(), "arguments (to stdout):\n"
-                                                            "arg1\n"
-                                                            "arg2\n"
-                                                            "argument with spaces\n");
+      piped_output =
+          get_pipe_output(&process.get_stdout(), "arguments (to stdout):\n"
+                                                 "arg1\n"
+                                                 "arg2\n"
+                                                 "argument with spaces\n");
     } else {
-      piped_output = get_pipe_output(&process.get_stdout(), "arguments (to stdout):\n"
-                                                            "arg1\n"
-                                                            "arg2\n"
-                                                            "argument with spaces\n"
-                                                            "exiting (to stdout)\n");
+      piped_output =
+          get_pipe_output(&process.get_stdout(), "arguments (to stdout):\n"
+                                                 "arg1\n"
+                                                 "arg2\n"
+                                                 "argument with spaces\n"
+                                                 "exiting (to stdout)\n");
     }
   }
 
   base::String piped_error;
   if (types.error == Type::Pipe) {
     if (types.input == Type::Pipe || types.input == Type::Inherit) {
-      piped_error = get_pipe_output(&process.get_stderr(), "stdin (to stderr):\n"
-                                                           "hello world\n");
+      piped_error =
+          get_pipe_output(&process.get_stderr(), "stdin (to stderr):\n"
+                                                 "hello world\n");
     } else if (types.input == Type::Null) {
-      piped_error = get_pipe_output(&process.get_stderr(), "stdin (to stderr):\n"
-                                                           "exiting (to stderr)\n");
+      piped_error =
+          get_pipe_output(&process.get_stderr(), "stdin (to stderr):\n"
+                                                 "exiting (to stderr)\n");
     } else {
-      piped_error = get_pipe_output(&process.get_stderr(), "stdin (to stderr):\n"
-                                                           "hello world\n"
-                                                           "exiting (to stderr)\n");
+      piped_error =
+          get_pipe_output(&process.get_stderr(), "stdin (to stderr):\n"
+                                                 "hello world\n"
+                                                 "exiting (to stderr)\n");
     }
   }
 
@@ -465,8 +480,9 @@ static int test_run_c(IoTypes types) {
   EXPECT(check_file_output(types) == 0);
   EXPECT(check_other_pipe_output(other_pipes, types) == 0);
   EXPECT(check_inherited_output(types, pipes) == 0);
-  EXPECT(check_piped_output(types, {.out = piped_output.view(), .err = piped_error.view()},
-                            status) == 0);
+  EXPECT(check_piped_output(
+             types, {.out = piped_output.view(), .err = piped_error.view()},
+             status) == 0);
 
 #ifdef _WIN32
   TRY_SYSCALL_WIN32(CloseHandle(pipes.output[0]));
@@ -482,20 +498,11 @@ static int test_run_c(IoTypes types) {
 int main() {
   int ret = 0;
 
-  Process p = Process::spawn({"echo", "hello", "world"},
-                             {
-                                 .input  = Process::StdioType::Null,
-                                 .output = Process::StdioType::Inherit,
-                                 .error  = Process::StdioType::Null,
-                             })
-                  .expect_ok();
-  p.wait();
-
-  return 0;
-
-  int const file = ::open(CHILD_STDIN_FILE_PATH, O_WRONLY | O_CREAT | O_CLOEXEC | O_TRUNC, 0644);
+  int const file = ::open(CHILD_STDIN_FILE_PATH,
+                          O_WRONLY | O_CREAT | O_CLOEXEC | O_TRUNC, 0644);
   EXPECT(file != -1);
-  [[maybe_unused]] ssize_t const written = ::write(file, INPUT_DATA.data(), INPUT_DATA.size());
+  [[maybe_unused]] ssize_t const written =
+      ::write(file, INPUT_DATA.data(), INPUT_DATA.size());
   EXPECT(written == INPUT_DATA.size());
   EXPECT(close(file) == 0);
 
@@ -507,13 +514,16 @@ int main() {
   for (Type stdin_type : types) {
     for (Type stdout_type : types) {
       for (Type stderr_type : types) {
-        base::log_info("calling test_run_c() with input type {}, output type {} and error type {}",
+        base::log_info("calling test_run_c() with input type {}, output type "
+                       "{} and error type {}",
                        stdin_type, stdout_type, stderr_type);
         base::Logger::get_default_instance().flush();
-        if (test_run_c({.input = stdin_type, .output = stdout_type, .error = stderr_type}) != 0) {
-          base::log_error(
-              "test_run_c() failed with input type {}, output type {} and error type {}",
-              stdin_type, stdout_type, stderr_type);
+        if (test_run_c({.input  = stdin_type,
+                        .output = stdout_type,
+                        .error  = stderr_type}) != 0) {
+          base::log_error("test_run_c() failed with input type {}, output type "
+                          "{} and error type {}",
+                          stdin_type, stdout_type, stderr_type);
           ret = 1;
         }
       }
@@ -531,6 +541,8 @@ int main() {
 
 #include "base/logging/logger.hpp"
 
-int main() { base::log_info("test_process does nothing when compiling with emscripten."); }
+int main() {
+  base::log_info("test_process does nothing when compiling with emscripten.");
+}
 
 #endif
