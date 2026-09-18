@@ -310,7 +310,10 @@ public:
   void format(this Formatter const& self, String& buf,
               BasicStringView<Char, SizeT> str) noexcept {
     PaddingOptions const opts{
-        .width = self.width_, .fill = self.fill_, .align = self.align_};
+        .width = self.width_,
+        .fill  = self.fill_,
+        .align = self.align_,
+    };
     if (self.type_ == Type::Normal) [[likely]] {
       pad_string(
           buf,
@@ -335,17 +338,18 @@ private:
   Type                      type_ : 1  = Type::Normal;
 };
 
-template <Character Char, Integral SizeT>
-class Formatter<Slice<Char, SizeT>> : Formatter<BasicStringView<Char, SizeT>> {
+template <Character Char, Integral SizeT> class Formatter<Slice<Char, SizeT>> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
-    return self.Formatter<BasicStringView<Char, SizeT>>::parse(fmt);
+    return self.impl_.parse(fmt);
   }
   void format(this Formatter const& self, String& buf,
               Slice<Char, SizeT> str) noexcept {
-    return self.Formatter<BasicStringView<Char, SizeT>>::format(
-        buf, {str.data(), str.size()});
+    return self.impl_.format(buf, {str.data(), str.size()});
   }
+
+private:
+  Formatter<BasicStringView<Char, SizeT>> impl_;
 };
 
 template <Character Char> class Formatter<Char*> {
@@ -393,49 +397,54 @@ private:
 };
 
 template <Character Char, usize N, AllocatorType Allocator, Integral SizeT>
-class Formatter<BasicString<Char, N, Allocator, SizeT>>
-    : Formatter<BasicStringView<Char>> {
+class Formatter<BasicString<Char, N, Allocator, SizeT>> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
-    return self.Formatter<BasicStringView<Char>>::parse(fmt);
+    return self.impl_.parse(fmt);
   }
   void format(this Formatter const& self, String& buf,
               BasicString<Char, N, Allocator, SizeT> const& str) noexcept {
-    return self.Formatter<BasicStringView<Char>>::format(buf, str.view());
+    return self.impl_.format(buf, str.view());
   }
+
+private:
+  Formatter<BasicStringView<Char>> impl_;
 };
 
-template <Character Char, usize N>
-class Formatter<Char[N]> : Formatter<BasicStringView<Char>> {
+template <Character Char, usize N> class Formatter<Char[N]> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
-    return self.Formatter<BasicStringView<Char>>::parse(fmt);
+    return self.impl_.parse(fmt);
   }
   void format(this Formatter const& self, String& buf,
               Char const (&str)[N]) noexcept {
-    return self.Formatter<BasicStringView<Char>>::format(
+    return self.impl_.format(
         buf, BasicStringView(static_cast<Char const*>(str), N - 1));
   }
+
+private:
+  Formatter<BasicStringView<Char>> impl_;
 };
 
-template <Character Char, usize N>
-class Formatter<Char const[N]> : Formatter<BasicStringView<Char>> {
+template <Character Char, usize N> class Formatter<Char const[N]> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
-    return self.Formatter<BasicStringView<Char>>::parse(fmt);
+    return self.impl_.parse(fmt);
   }
   void format(this Formatter const& self, String& buf,
               Char const (&str)[N]) noexcept {
     return self.Formatter<BasicStringView<Char>>::format(
         buf, BasicStringView(str, N - 1));
   }
+
+private:
+  Formatter<BasicStringView<Char>> impl_;
 };
 
-template <RangeLike T>
-class Formatter<T> : Formatter<RemoveCVRef<decltype(*declval<T>().begin())>> {
+template <RangeLike T> class Formatter<T> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
-    return self.Base::parse(fmt);
+    return self.impl_.parse(fmt);
   }
 
   void format(this Formatter const& self, String& buf,
@@ -444,19 +453,18 @@ public:
     auto iter = range.begin();
     auto end  = range.end();
     if (iter != end) {
-      self.Base::format(buf, *iter);
+      self.impl_.format(buf, *iter);
       ++iter;
       for (; iter != end; ++iter) {
         buf += ", ";
-        self.Base::format(buf, *iter);
+        self.impl_.format(buf, *iter);
       }
     }
     buf += ']';
   }
 
 private:
-  using Element = RemoveCVRef<decltype(*declval<T>().begin())>;
-  using Base    = Formatter<Element>;
+  Formatter<RemoveCVRef<decltype(*declval<T>().begin())>> impl_;
 };
 
 template <Enum T> class Formatter<T> {
