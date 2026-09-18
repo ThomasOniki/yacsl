@@ -330,7 +330,7 @@ private:
     while (*self.mangled_ != 'E') {
       ++self.mangled_;
     }
-    self.demangled_ += {begin, self.mangled_};
+    self.demangled_ += StringView{begin, self.mangled_};
     ++self.mangled_;
   }
 
