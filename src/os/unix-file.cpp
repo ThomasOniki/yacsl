@@ -1,7 +1,7 @@
 #ifndef _WIN32
 
 #include "base/containers/result.hpp"
-#include "base/logging/panic.hpp"
+#include "base/log/panic.hpp"
 #include "base/os/file.hpp"
 #include "base/ranges/slice.hpp"
 #include "base/utilities/isize.hpp"

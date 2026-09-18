@@ -1,7 +1,7 @@
 #pragma once
 
 #include "base/attributes.hpp"
-#include "base/metaprogramming/type_identity.hpp"
+#include "base/meta/type_identity.hpp"
 #include "base/ranges/slice.hpp"
 #include "base/type_traits/qualifiers.hpp"
 #include "base/type_traits/trivial.hpp"

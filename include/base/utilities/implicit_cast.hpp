@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/metaprogramming/type_identity.hpp"
+#include "base/meta/type_identity.hpp"
 
 namespace base {
 

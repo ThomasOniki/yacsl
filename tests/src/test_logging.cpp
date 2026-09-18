@@ -1,6 +1,6 @@
 #include "base/containers/stack_array.hpp"
-#include "base/formatting/format_string.hpp"
-#include "base/logging/logger.hpp"
+#include "base/format/format_string.hpp"
+#include "base/log/logger.hpp"
 #include "base/memory/lifetimes.hpp"
 #include "base/os/file.hpp"
 #include "base/ranges/initializer_list.hpp"
@@ -149,8 +149,8 @@ int main() {
   check(
       "[INFO] debug char16_t string: \"nerd emoji (again): 🤓, newline: \\n\"");
 
-  log_to_file(Info, "enum formatting: {}", test_ns::Enum1::Zero);
-  check("[INFO] enum formatting: test_ns::Zero");
+  log_to_file(Info, "enum format: {}", test_ns::Enum1::Zero);
+  check("[INFO] enum format: test_ns::Zero");
   log_to_file(Info, "values >= 256 are formatted as casted ints: {}",
               test_ns::Enum1::FiveHundred);
   check(

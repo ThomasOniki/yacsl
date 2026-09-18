@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/logging/logger.hpp"
+#include "base/log/logger.hpp"
 #include "base/ranges/string_view.hpp"
 #include <string.h>
 

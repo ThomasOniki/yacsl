@@ -1,5 +1,5 @@
 #include "base/memory/arena.hpp"
-#include "base/logging/panic.hpp"
+#include "base/log/panic.hpp"
 #include "base/memory/lifetimes.hpp"
 #include "base/utilities/type_aliases.hpp"
 #include <stdlib.h>

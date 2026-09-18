@@ -2,13 +2,13 @@
 
 #include "base/containers/option.hpp"
 #include "base/containers/string.hpp"
-#include "base/formatting/format_string.hpp"
+#include "base/format/format_string.hpp"
 #include "base/memory/lifetimes.hpp"
 #include "base/os/file.hpp"
 #include "base/ranges/string_view.hpp"
-#include "base/threading/atomic.hpp"
-#include "base/threading/mpsc_ring_buffer.hpp"
-#include "base/threading/thread.hpp"
+#include "base/threads/atomic.hpp"
+#include "base/threads/mpsc_ring_buffer.hpp"
+#include "base/threads/thread.hpp"
 #include "base/utilities/type_aliases.hpp"
 #include <sched.h>
 
