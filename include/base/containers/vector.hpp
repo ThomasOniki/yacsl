@@ -1,7 +1,7 @@
 #pragma once
 
 #include "base/attributes.hpp"
-#include "base/containers/base_classes.hpp"
+#include "base/containers/stack_array.hpp"
 #include "base/memory/arena.hpp"
 #include "base/memory/lifetimes.hpp"
 #include "base/metaprogramming/type_identity.hpp"
@@ -20,7 +20,7 @@ namespace base {
 
 template <typename T, usize N = 0, AllocatorType Allocator = MainArenaAllocator,
           Integral SizeT = usize>
-class Vector : private FixedBufferMember<T, N, SizeT> {
+class Vector {
 public:
   constexpr Vector() noexcept = default;
   constexpr explicit Vector(Allocator const& allocator) noexcept
@@ -148,9 +148,8 @@ private:
   void definitely_reserve(this Vector& self, SizeT capacity);
 
 private:
-  using FixedBufferMember<T, N, SizeT>::fixed_buffer_;
-
   BASE_NO_UNIQUE_ADDRESS Allocator allocator_;
+  BASE_NO_UNIQUE_ADDRESS StackArray<T, N, SizeT> fixed_buffer_;
 
   T*    data_     = fixed_buffer_.data();
   SizeT size_     = 0;
