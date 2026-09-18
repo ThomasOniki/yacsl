@@ -62,5 +62,11 @@ constexpr void itoa(String& buf, T value,
   buf.grow(len);
   itoa_from_end(buf.end(), value, charset);
 }
+template <Integral T>
+constexpr String itoa(T value, StringView charset = "0123456789") noexcept {
+  String buf;
+  itoa(buf, value, charset);
+  return buf;
+}
 
 } // namespace base

@@ -3,6 +3,7 @@
 #include "base/containers/nttp_string.hpp"
 #include "base/containers/stack_array.hpp"
 #include "base/containers/string.hpp"
+#include "base/debug/source_location.hpp"
 #include "base/format/format_string_parser.hpp"
 #include "base/format/itoa.hpp"
 #include "base/format/padding.hpp"
@@ -494,8 +495,10 @@ private:
         return arr;
       }();
 
-  static constexpr StringView CAST_STRING{CAST_STRING_ARR.data(),
-                                          CAST_STRING_ARR.size()};
+  static constexpr StringView CAST_STRING{
+      CAST_STRING_ARR.data(),
+      CAST_STRING_ARR.size(),
+  };
 
   using UnderlyingType = UnderlyingEnumType<T>;
   template <u32... Values>
@@ -560,6 +563,22 @@ private:
   u32                       width_     = 0;
   char                      fill_      = ' ';
   FormatStringParser::Align align_ : 2 = FormatStringParser::Align::Left;
+};
+
+template <> class Formatter<SourceLocation> {
+public:
+  constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
+    return self.impl_.parse(fmt);
+  }
+
+  void format(this Formatter& self, String& buf,
+              SourceLocation const& location) noexcept {
+    self.impl_.format(buf, String(location.file) + ":" + itoa(location.line) +
+                               " in " + location.function);
+  }
+
+private:
+  Formatter<String> impl_;
 };
 
 } // namespace base
