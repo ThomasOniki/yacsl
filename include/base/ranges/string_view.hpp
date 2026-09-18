@@ -105,8 +105,6 @@ BasicStringView(Char const*, Char const*) -> BasicStringView<Char, usize>;
 
 using StringView = BasicStringView<char>;
 
-inline namespace litterals {
-
 constexpr BasicStringView<char>
 operator""_sv(char const* cstr BASE_LIFETIMEBOUND, usize len) {
   return {cstr, len};
@@ -127,7 +125,5 @@ constexpr BasicStringView<char32_t>
 operator""_sv(char32_t const* cstr BASE_LIFETIMEBOUND, usize len) {
   return {cstr, len};
 }
-
-} // namespace litterals
 
 } // namespace base
