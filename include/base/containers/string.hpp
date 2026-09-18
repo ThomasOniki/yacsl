@@ -27,6 +27,14 @@ public:
                         Allocator const& allocator = Allocator()) noexcept
       : data_(BasicStringView<Char, usize>(cstr), allocator) {}
 
+  constexpr BasicString(Char const* data, SizeT len,
+                        Allocator const& allocator = Allocator()) noexcept
+      : data_(BasicStringView<Char, usize>(data, len), allocator) {}
+
+  constexpr BasicString(Char const* begin, Char const* end,
+                        Allocator const& allocator = Allocator()) noexcept
+      : data_(BasicStringView<Char, usize>(begin, end), allocator) {}
+
   constexpr BasicString(BasicStringView<Char, SizeT> str,
                         Allocator const& allocator = Allocator()) noexcept
       : data_(str, allocator) {}
