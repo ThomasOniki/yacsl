@@ -41,6 +41,13 @@ constexpr u32 count_digits(T value, u32 base = 10) noexcept {
   }
   return count;
 }
+template <SignedIntegral T>
+constexpr u32 count_digits(T value, u32 base = 10) noexcept {
+  if (value >= 0) {
+    return count_digits(static_cast<MakeUnsigned<T>>(value), base);
+  }
+  return count_digits(static_cast<MakeUnsigned<T>>(-value), base) + 1;
+}
 
 template <Integral T>
 constexpr void itoa(char* buf, T value,
@@ -49,7 +56,7 @@ constexpr void itoa(char* buf, T value,
   itoa_from_end(buf + len, value, charset);
 }
 template <Integral T>
-constexpr void itoa(String buf, T value,
+constexpr void itoa(String& buf, T value,
                     StringView charset = "0123456789") noexcept {
   u32 const len = count_digits(value, static_cast<u32>(charset.size()));
   buf.grow(len);
