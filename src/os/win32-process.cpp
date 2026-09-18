@@ -1,7 +1,7 @@
 #ifdef _WIN32
 
 #include "base/containers/string.hpp"
-#include "base/log/panic.hpp"
+#include "base/debug/panic.hpp"
 #include "base/os/process.hpp"
 #include "base/ranges/slice.hpp"
 #include "base/utilities/nil.hpp"

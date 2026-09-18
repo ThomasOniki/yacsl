@@ -1,5 +1,5 @@
 #include "base/containers/string.hpp"
-#include "base/log/logger.hpp"
+#include "base/debug/log.hpp"
 #include "base/os/stack_trace.hpp"
 #include <stdlib.h>
 

@@ -2,7 +2,7 @@
 
 #include "base/containers/stack_storage.hpp"
 #include "base/format/format_string.hpp"
-#include "base/log/panic.hpp"
+#include "base/debug/panic.hpp"
 #include "base/memory/lifetimes.hpp"
 #include "base/type_traits/type_string.hpp"
 #include "base/utilities/nil.hpp"
