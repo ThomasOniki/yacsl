@@ -200,9 +200,10 @@ public:
     return base::forward<Self>(self).data_.bytes();
   }
 
+  template <typename Self>
   [[nodiscard]] constexpr auto
-  data(this BasicString const& self BASE_LIFETIMEBOUND) noexcept {
-    return self.data_.data();
+  data(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+    return base::forward<Self>(self).data_.data();
   }
 
   template <typename Self>
