@@ -1,7 +1,7 @@
 #pragma once
 
 #include "base/attributes.hpp"
-#include "base/containers/base_classes.hpp"
+#include "base/containers/stack_array.hpp"
 #include "base/memory/arena.hpp"
 #include "base/memory/lifetimes.hpp"
 #include "base/type_traits/allocator.hpp"
@@ -15,8 +15,7 @@ template <typename F, usize BufSz = 8,
 class Function;
 
 template <typename Ret, typename... Args, usize BufSz, AllocatorType Allocator>
-class Function<Ret(Args...), BufSz, Allocator>
-    : FixedBufferMember<char, 16, usize> {
+class Function<Ret(Args...), BufSz, Allocator> {
 public:
   Function(auto&& func);
 
@@ -38,9 +37,10 @@ public:
   }
 
 private:
-  using FixedBufferMember<char, 16, usize>::fixed_buffer_;
-
   BASE_NO_UNIQUE_ADDRESS Allocator allocator_;
+
+  alignas(8)
+      BASE_NO_UNIQUE_ADDRESS StackArray<uchar, BufSz, usize> fixed_buffer_;
 
   void* data_ = fixed_buffer_.data();
 
