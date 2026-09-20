@@ -12,6 +12,7 @@
 #include "base/os/os.hpp"
 #include "base/ranges/ranges.hpp"
 #include "base/threads/threads.hpp"
+#include "base/type_aliases.hpp"
 #include "base/type_traits/type_traits.hpp"
 #include "base/utilities/utilities.hpp"
 // IWYU pragma: end_exports

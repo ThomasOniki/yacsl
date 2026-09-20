@@ -5,7 +5,7 @@
 #include "base/containers/result.hpp"
 #include "base/os/file.hpp"
 #include "base/ranges/string_view.hpp"
-#include "base/utilities/type_aliases.hpp"
+#include "base/type_aliases.hpp"
 #include <errhandlingapi.h>
 #include <intsafe.h>
 #include <windef.h>
@@ -13,7 +13,8 @@
 
 namespace base {
 
-inline bool strip_file_open_flag(File::Flags* flags, File::Flags flag) noexcept {
+inline bool strip_file_open_flag(File::Flags* flags,
+                                 File::Flags  flag) noexcept {
   File::Flags const stripped = *flags & ~flag;
   if (stripped != *flags) {
     *flags = stripped;
@@ -28,15 +29,18 @@ struct OpenedFile {
 };
 
 StringView        win32_err_str(DWORD err) noexcept;
-inline StringView win32_err_str() noexcept { return win32_err_str(GetLastError()); }
+inline StringView win32_err_str() noexcept {
+  return win32_err_str(GetLastError());
+}
 
 // SeekEnd will be ignored
-Result<HANDLE, File::OpenError> open_file_handle(char const* path, File::Flags flags);
+Result<HANDLE, File::OpenError> open_file_handle(char const* path,
+                                                 File::Flags flags);
 
 } // namespace base
 
-#define BASE_TRY_SYSCALL(syscall)                                                                  \
-  if ((syscall) == FALSE) [[unlikely]]                                                             \
+#define BASE_TRY_SYSCALL(syscall)                                              \
+  if ((syscall) == FALSE) [[unlikely]]                                         \
   panic(#syscall " failed: {}", win32_err_str())
 
 #endif

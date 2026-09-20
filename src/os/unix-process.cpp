@@ -7,7 +7,7 @@
 #include "base/os/file.hpp"
 #include "base/os/process.hpp"
 #include "base/ranges/slice.hpp"
-#include "base/utilities/type_aliases.hpp"
+#include "base/type_aliases.hpp"
 #include "unix-utils.hpp"
 #include <errno.h>
 #include <fcntl.h>

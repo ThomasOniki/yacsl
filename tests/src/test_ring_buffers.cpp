@@ -50,7 +50,8 @@ static int test(Counts counts) noexcept {
     consumers.emplace_back([&ring, &start, &did_pop, &pop_count, counts]() {
       while (!start.load(base::MemoryOrder::Acquire)) {
       }
-      while (pop_count.fetch_add(1, base::MemoryOrder::Relaxed) < counts.producers) {
+      while (pop_count.fetch_add(1, base::MemoryOrder::Relaxed) <
+             counts.producers) {
         did_pop[ring.pop()] = true;
       }
     });
@@ -74,7 +75,9 @@ static int test(Counts counts) noexcept {
 
 int main() {
   int ret = 0;
-  EXPECT((test<base::MPSCRingBuffer<base::usize, SLOTS>>({.producers = 50, .consumers = 1}) == 0));
-  EXPECT((test<base::MPMCRingBuffer<base::usize, SLOTS>>({.producers = 50, .consumers = 50}) == 0));
+  EXPECT((test<base::MPSCRingBuffer<base::usize, SLOTS>>(
+              {.producers = 50, .consumers = 1}) == 0));
+  EXPECT((test<base::MPMCRingBuffer<base::usize, SLOTS>>(
+              {.producers = 50, .consumers = 50}) == 0));
   return ret;
 }

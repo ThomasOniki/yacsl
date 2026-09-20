@@ -5,8 +5,9 @@
 #include "test_utils.hpp"
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define CHECK_ENTRY(entry_idx, expected_caller)                                                    \
-  EXPECT_EQ(stack_trace.entries_[entry_idx].caller.view(), base::StringView(expected_caller))
+#define CHECK_ENTRY(entry_idx, expected_caller)                                \
+  EXPECT_EQ(stack_trace.entries_[entry_idx].caller.view(),                     \
+            base::StringView(expected_caller))
 
 BASE_NOINLINE static int f1(bool /*unused*/, char /*unused*/) {
   int              ret         = 0;
@@ -15,9 +16,12 @@ BASE_NOINLINE static int f1(bool /*unused*/, char /*unused*/) {
   CHECK_ENTRY(0, "base::StackTrace::current()");
   CHECK_ENTRY(1, "f1(bool, char)");
   CHECK_ENTRY(2, "ns1::ns2::f2(void*)");
-  CHECK_ENTRY(3, "int ns1::ns2::(anonymous namespace)::S<void, 0>::f3<void, 15>()");
-  CHECK_ENTRY(4, "int (anonymous namespace)::f4<ns1::ns2::(anonymous namespace)::S<void, "
-                 "0>{(void*)0, (char)97}>()");
+  CHECK_ENTRY(
+      3, "int ns1::ns2::(anonymous namespace)::S<void, 0>::f3<void, 15>()");
+  CHECK_ENTRY(
+      4,
+      "int (anonymous namespace)::f4<ns1::ns2::(anonymous namespace)::S<void, "
+      "0>{(void*)0, (char)97}>()");
   return ret;
 }
 

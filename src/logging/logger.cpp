@@ -1,5 +1,5 @@
-#include "base/debug/log.hpp"
 #include "base/containers/stack_storage.hpp"
+#include "base/debug/log.hpp"
 
 namespace base {
 

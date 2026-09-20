@@ -9,9 +9,9 @@
 #include "base/ranges/initializer_list.hpp"
 #include "base/ranges/slice.hpp"
 #include "base/ranges/string_view.hpp"
+#include "base/type_aliases.hpp"
 #include "base/type_traits/range_like.hpp"
 #include "base/utilities/nil.hpp"
-#include "base/utilities/type_aliases.hpp"
 
 namespace base {
 
@@ -215,7 +215,7 @@ public:
                   // terminal
     SigTtou = 22, // stop process         background write attempted to control
                   // terminal
-    SigIo = 23,   // discard signal       I/O is possible on a descriptor (see
+    SigIo   = 23, // discard signal       I/O is possible on a descriptor (see
                   // fcntl(2))
     SigXcpu =
         24, // terminate process    cpu time limit exceeded (see setrlimit(2))

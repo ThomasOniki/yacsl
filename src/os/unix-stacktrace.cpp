@@ -3,8 +3,8 @@
 #include "base/containers/vector.hpp"
 #include "base/os/stack_trace.hpp"
 #include "base/ranges/string_view.hpp"
+#include "base/type_aliases.hpp"
 #include "base/utilities/demangle.hpp"
-#include "base/utilities/type_aliases.hpp"
 #include <dlfcn.h>
 #include <execinfo.h>
 

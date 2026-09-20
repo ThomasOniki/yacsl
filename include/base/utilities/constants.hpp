@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/utilities/type_aliases.hpp"
+#include "base/type_aliases.hpp"
 
 namespace base {
 

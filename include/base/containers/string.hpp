@@ -6,10 +6,10 @@
 #include "base/memory/lifetimes.hpp"
 #include "base/ranges/slice.hpp"
 #include "base/ranges/string_view.hpp"
+#include "base/type_aliases.hpp"
 #include "base/type_traits/allocator.hpp"
 #include "base/type_traits/categories.hpp"
 #include "base/type_traits/qualifiers.hpp"
-#include "base/utilities/type_aliases.hpp"
 
 namespace base {
 
