@@ -76,9 +76,11 @@ static int test_align() {
 static int test_rewind() {
   int ret = 0;
   {
-    base::Arena::Scope const scope(base::MainArenaAllocator::get()); // test scope with ptr_ = 0
+    base::Arena::Scope const scope(
+        base::MainArenaAllocator::get()); // test scope with ptr_ = 0
   }
-  // Calls malloc so that the rewind test uses the same memory in and outside of the scope.
+  // Calls malloc so that the rewind test uses the same memory in and outside of
+  // the scope.
   (void)base::MainArenaAllocator::get().push<int>();
   char const* ptr = nullptr;
   {

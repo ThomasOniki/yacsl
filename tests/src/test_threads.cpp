@@ -15,7 +15,8 @@ static int test_atomic(uint32_t thread_count) {
     EXPECT_EQ(count.load(base::MemoryOrder::Relaxed), 0);
 
     for (uint32_t i = 0; i < thread_count; ++i) {
-      threads.emplace_back([](base::Atomic<uint32_t>& lambda_count) { ++lambda_count; }, count);
+      threads.emplace_back(
+          [](base::Atomic<uint32_t>& lambda_count) { ++lambda_count; }, count);
     }
   }
 

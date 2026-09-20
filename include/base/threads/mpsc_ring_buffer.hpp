@@ -5,9 +5,9 @@
 #include "base/containers/stack_storage.hpp"
 #include "base/memory/lifetimes.hpp"
 #include "base/threads/atomic.hpp"
+#include "base/type_aliases.hpp"
 #include "base/type_traits/limits.hpp"
 #include "base/utilities/nil.hpp"
-#include "base/utilities/type_aliases.hpp"
 #include <sched.h>
 
 namespace base {

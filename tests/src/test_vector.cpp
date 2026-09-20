@@ -2,10 +2,10 @@
 #include <unordered_set>
 #include <vector>
 
-#include "base/format/formatter.hpp"
 #include "base/debug/log.hpp"
+#include "base/format/formatter.hpp"
 #include "base/ranges/slice.hpp"
-#include "base/utilities/type_aliases.hpp"
+#include "base/type_aliases.hpp"
 #include "test_utils.hpp"
 
 using SMFCall  = std::string;

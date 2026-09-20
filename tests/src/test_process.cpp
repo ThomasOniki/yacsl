@@ -7,7 +7,7 @@
 #include "base/os/process.hpp"
 #include "base/ranges/slice.hpp"
 #include "base/ranges/string_view.hpp"
-#include "base/utilities/type_aliases.hpp"
+#include "base/type_aliases.hpp"
 #include "test_utils.hpp"
 #include <fcntl.h>
 #include <limits.h>

@@ -9,7 +9,7 @@
 #include "base/threads/atomic.hpp"
 #include "base/threads/mpsc_ring_buffer.hpp"
 #include "base/threads/thread.hpp"
-#include "base/utilities/type_aliases.hpp"
+#include "base/type_aliases.hpp"
 #include <sched.h>
 
 namespace base {

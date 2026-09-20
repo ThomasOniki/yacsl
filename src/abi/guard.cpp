@@ -1,6 +1,6 @@
 #ifdef BASE_NO_LIBCPP
 
-#include "base/utilities/type_aliases.hpp"
+#include "base/type_aliases.hpp"
 #include <sched.h>
 
 namespace base {

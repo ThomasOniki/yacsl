@@ -4,7 +4,7 @@
 #include "base/containers/vector.hpp"
 #include "base/memory/lifetimes.hpp"
 #include "base/os/stack_trace.hpp"
-#include "base/utilities/type_aliases.hpp"
+#include "base/type_aliases.hpp"
 #include "win32-utils.hpp"
 #include <libloaderapi.h>
 #include <processthreadsapi.h>
