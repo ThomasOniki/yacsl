@@ -6,7 +6,7 @@
 #include "base/type_aliases.hpp"
 #include "base/type_traits/qualifiers.hpp"
 #include "base/type_traits/trivial.hpp"
-#include "base/utilities/is_constant_evaluated.hpp"
+#include "base/utils/is_constant_evaluated.hpp"
 #include <string.h>
 
 #ifndef BASE_NO_LIBCPP
