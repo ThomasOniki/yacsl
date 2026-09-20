@@ -51,6 +51,8 @@ else()
       "$<$<CXX_COMPILER_ID:GNU>:-Wsuggest-attribute=format>"
       "$<$<CXX_COMPILER_ID:GNU>:-Wsuggest-attribute=noreturn>"
       "$<$<CXX_COMPILER_ID:GNU>:-Wsuggest-attribute=malloc>"
+      "$<$<CXX_COMPILER_ID:GNU>:-Wno-stringop-overflow>"
+      "$<$<CXX_COMPILER_ID:GNU>:-Wno-array-bounds>"
       "$<$<CXX_COMPILER_ID:Clang>:-Wmissing-format-attribute>"
       "$<$<CXX_COMPILER_ID:Clang>:-Wmissing-noreturn>"
       "$<$<CXX_COMPILER_ID:Clang>:-Wmissing-noescape>"
