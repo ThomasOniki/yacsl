@@ -1,7 +1,7 @@
 #pragma once
 
+#include "base/type_aliases.hpp"
 #include "base/type_traits/categories.hpp"
-#include "base/utilities/type_aliases.hpp"
 
 #ifdef BASE_COMPILER_MSVC
 #include <intrin.h>

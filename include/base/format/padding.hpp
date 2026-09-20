@@ -9,10 +9,10 @@
 #include "base/format/itoa.hpp"
 #include "base/memory/lifetimes.hpp"
 #include "base/ranges/string_view.hpp"
+#include "base/type_aliases.hpp"
 #include "base/type_traits/categories.hpp"
 #include "base/type_traits/limits.hpp"
 #include "base/type_traits/sign.hpp"
-#include "base/utilities/type_aliases.hpp"
 #include <string.h>
 
 namespace base {

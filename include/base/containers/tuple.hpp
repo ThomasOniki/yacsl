@@ -5,8 +5,8 @@
 #include "base/memory/lifetimes.hpp"
 #include "base/meta/integer_sequence.hpp"
 #include "base/meta/type_manip.hpp"
+#include "base/type_aliases.hpp"
 #include "base/type_traits/comparaison.hpp"
-#include "base/utilities/type_aliases.hpp"
 
 namespace base::internal {
 
@@ -17,7 +17,7 @@ public:
   template <typename Arg>
   // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   explicit constexpr TupleLeaf(Arg&& other) noexcept
-    requires(!SameAs<T, T &&>)
+    requires(!SameAs<T, T&&>)
       : value_(base::forward<Arg>(other)) {}
 
   template <typename Arg>

@@ -1,7 +1,7 @@
 #include "base/memory/arena.hpp"
 #include "base/debug/panic.hpp"
 #include "base/memory/lifetimes.hpp"
-#include "base/utilities/type_aliases.hpp"
+#include "base/type_aliases.hpp"
 #include <stdlib.h>
 
 #if __has_feature(leak_sanitizer) || __has_feature(address_sanitizer)

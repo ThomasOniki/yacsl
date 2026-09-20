@@ -1,8 +1,8 @@
 #ifdef _WIN32
 
+#include "base/type_aliases.hpp"
 #include "base/type_traits/limits.hpp"
 #include "base/utilities/isize.hpp"
-#include "base/utilities/type_aliases.hpp"
 #include "win32-utils.hpp"
 #include <fileapi.h>
 #include <intsafe.h>

@@ -4,9 +4,9 @@
 #include "base/memory/lifetimes.hpp"
 #include "base/meta/integer_sequence.hpp"
 #include "base/threads/atomic.hpp"
+#include "base/type_aliases.hpp"
 #include "base/type_traits/comparaison.hpp"
 #include "base/type_traits/qualifiers.hpp"
-#include "base/utilities/type_aliases.hpp"
 #include <pthread.h>
 
 namespace base::internal {

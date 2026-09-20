@@ -1,11 +1,11 @@
 #include "base/containers/stack_array.hpp"
-#include "base/format/format_string.hpp"
 #include "base/debug/log.hpp"
+#include "base/format/format_string.hpp"
 #include "base/memory/lifetimes.hpp"
 #include "base/os/file.hpp"
 #include "base/ranges/initializer_list.hpp"
 #include "base/ranges/string_view.hpp"
-#include "base/utilities/type_aliases.hpp"
+#include "base/type_aliases.hpp"
 #include <assert.h>
 #include <inttypes.h>
 #include <stddef.h>

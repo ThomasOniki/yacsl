@@ -1,8 +1,8 @@
 #pragma once
 
+#include "base/type_aliases.hpp"
 #include "base/type_traits/categories.hpp"
 #include "base/type_traits/sign.hpp"
-#include "base/utilities/type_aliases.hpp"
 
 namespace base {
 

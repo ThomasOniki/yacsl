@@ -3,10 +3,10 @@
 #include "base/attributes.hpp"
 #include "base/meta/type_identity.hpp"
 #include "base/ranges/slice.hpp"
+#include "base/type_aliases.hpp"
 #include "base/type_traits/qualifiers.hpp"
 #include "base/type_traits/trivial.hpp"
 #include "base/utilities/is_constant_evaluated.hpp"
-#include "base/utilities/type_aliases.hpp"
 #include <string.h>
 
 #ifndef BASE_NO_LIBCPP

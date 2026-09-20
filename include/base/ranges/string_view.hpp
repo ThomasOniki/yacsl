@@ -3,9 +3,9 @@
 #include <string.h>
 
 #include "base/ranges/slice.hpp"
+#include "base/type_aliases.hpp"
 #include "base/type_traits/categories.hpp"
 #include "base/type_traits/comparaison.hpp"
-#include "base/utilities/type_aliases.hpp"
 
 namespace base {
 

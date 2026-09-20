@@ -4,7 +4,7 @@
 #include <initializer_list>
 #endif
 
-#include "base/utilities/type_aliases.hpp"
+#include "base/type_aliases.hpp"
 
 #ifdef BASE_NO_LIBCPP
 

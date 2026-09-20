@@ -3,9 +3,9 @@
 #include "base/attributes.hpp"
 #include "base/ranges/initializer_list.hpp"
 #include "base/ranges/integer_range.hpp"
+#include "base/type_aliases.hpp"
 #include "base/type_traits/categories.hpp"
 #include "base/type_traits/qualifiers.hpp"
-#include "base/utilities/type_aliases.hpp"
 
 namespace base {
 

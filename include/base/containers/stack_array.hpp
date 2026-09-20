@@ -6,11 +6,11 @@
 #include "base/meta/type_manip.hpp"
 #include "base/ranges/integer_range.hpp"
 #include "base/ranges/slice.hpp"
+#include "base/type_aliases.hpp"
 #include "base/type_traits/categories.hpp"
 #include "base/type_traits/limits.hpp"
 #include "base/type_traits/qualifiers.hpp"
 #include "base/utilities/implicit_cast.hpp"
-#include "base/utilities/type_aliases.hpp"
 
 namespace base {
 

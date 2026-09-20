@@ -4,9 +4,9 @@
 #include "base/containers/stack_array.hpp"
 #include "base/memory/lifetimes.hpp"
 #include "base/ranges/string_view.hpp"
+#include "base/type_aliases.hpp"
 #include "base/type_traits/categories.hpp"
 #include "base/type_traits/qualifiers.hpp"
-#include "base/utilities/type_aliases.hpp"
 
 namespace base {
 

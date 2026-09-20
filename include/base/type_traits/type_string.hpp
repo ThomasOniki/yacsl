@@ -1,7 +1,7 @@
 #pragma once
 
 #include "base/ranges/string_view.hpp"
-#include "base/utilities/type_aliases.hpp"
+#include "base/type_aliases.hpp"
 
 namespace base {
 
