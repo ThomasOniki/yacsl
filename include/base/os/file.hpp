@@ -5,7 +5,7 @@
 #include "base/ranges/slice.hpp"
 #include "base/ranges/string_view.hpp"
 #include "base/type_aliases.hpp"
-#include "base/utilities/isize.hpp"
+#include "base/utils/isize.hpp"
 
 namespace base {
 

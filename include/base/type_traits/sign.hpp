@@ -10,7 +10,7 @@ template <Integral T> using MakeSigned   = __make_signed(T);
 #else
 
 #include "base/meta/first_of_size.hpp"
-#include "base/utilities/extended_types.hpp"
+#include "base/utils/extended_types.hpp"
 
 namespace base::internal {
 

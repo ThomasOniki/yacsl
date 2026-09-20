@@ -2,7 +2,7 @@
 
 #include "base/type_aliases.hpp"
 #include "base/type_traits/limits.hpp"
-#include "base/utilities/isize.hpp"
+#include "base/utils/isize.hpp"
 #include "win32-utils.hpp"
 #include <fileapi.h>
 #include <intsafe.h>

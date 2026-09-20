@@ -6,7 +6,7 @@
 #include "base/ranges/slice.hpp"
 #include "base/type_aliases.hpp"
 #include "base/type_traits/trivial.hpp"
-#include "base/utilities/constants.hpp"
+#include "base/utils/constants.hpp"
 
 namespace base {
 
