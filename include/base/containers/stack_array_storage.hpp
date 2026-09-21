@@ -20,8 +20,7 @@ public:
   template <typename... Args>
   constexpr void construct_at(this StackArrayStorage& self, SizeT index,
                               Args&&... args) {
-    memory::construct_at(self.data() + index,
-                               memory::forward<Args>(args)...);
+    memory::construct_at(self.data() + index, memory::forward<Args>(args)...);
   }
 
   constexpr void destruct_at(this StackArrayStorage& self, SizeT index) {

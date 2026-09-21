@@ -31,27 +31,28 @@ static constexpr auto TYPE_OTHER_PIPE = Type{255};
 namespace {
 struct State {
   alignas(64) posix_spawn_file_actions_t file_actions;
-  Process::Stdio const* stdio;
-  containers::StackArray<int, 2>    stdin_pipe;
-  containers::StackArray<int, 2>    stdout_pipe;
-  containers::StackArray<int, 2>    stderr_pipe;
+  Process::Stdio const*          stdio;
+  containers::StackArray<int, 2> stdin_pipe;
+  containers::StackArray<int, 2> stdout_pipe;
+  containers::StackArray<int, 2> stderr_pipe;
 };
 } // namespace
 
 #define CHECK_RETURN(func)                                                     \
   do {                                                                         \
     int const _result = func;                                                  \
-    debug::panic_if(_result != 0, #func " failed: {}", errno_str(_result));           \
+    debug::panic_if(_result != 0, #func " failed: {}", errno_str(_result));    \
   } while (false)
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-usize Process::Output::read(this Output& self, ranges::Slice<uchar> buffer) noexcept {
+usize Process::Output::read(this Output&         self,
+                            ranges::Slice<uchar> buffer) noexcept {
   return static_cast<usize>(
       BASE_TRY_SYSCALL(::read(self.handle_, buffer.data(), buffer.size())));
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void Process::Input::write(this Input&        self,
+void Process::Input::write(this Input&                self,
                            ranges::Slice<uchar const> bytes) noexcept {
   usize written = static_cast<usize>(
       BASE_TRY_SYSCALL(::write(self.handle_, bytes.data(), bytes.size())));
@@ -216,9 +217,10 @@ Process::spawn(char const* const* argv, Stdio const& stdio) noexcept {
 }
 
 static containers::String drain_pipe(Process::Output* output) noexcept {
-  containers::String       data;
-  ranges::Slice<uchar> bytes  = ranges::Slice<char>(data.grow(PIPE_BUF), PIPE_BUF).bytes();
-  usize        result = output->read(bytes);
+  containers::String   data;
+  ranges::Slice<uchar> bytes =
+      ranges::Slice<char>(data.grow(PIPE_BUF), PIPE_BUF).bytes();
+  usize result = output->read(bytes);
   while (result != 0) {
     bytes  = ranges::Slice<char>(data.grow(result), PIPE_BUF).bytes();
     result = output->read(bytes);
@@ -279,8 +281,9 @@ Process::ExitStatus Process::wait(this Process& self) noexcept {
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void Process::send_signal(this Process& self, Signal signal) noexcept {
-  debug::debug_panic_if(self.handle_ == -1,
-                 "Tried to send_signal to a Process that isn't running.");
+  debug::debug_panic_if(
+      self.handle_ == -1,
+      "Tried to send_signal to a Process that isn't running.");
   BASE_TRY_SYSCALL(
       kill(static_cast<pid_t>(self.handle_), static_cast<int>(signal)));
   self.handle_ = -1;

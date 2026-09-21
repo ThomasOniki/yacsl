@@ -107,8 +107,7 @@ using FormatString =
 template <typename... Args> // NOLINTNEXTLINE(misc-no-recursion)
 void format_to(containers::String& buf, FormatString<Args...> const& fmt,
                Args&&... args) {
-  FormatString<Args...>::format_to(buf, fmt,
-                                   memory::forward<Args>(args)...);
+  FormatString<Args...>::format_to(buf, fmt, memory::forward<Args>(args)...);
 }
 
 } // namespace base::format

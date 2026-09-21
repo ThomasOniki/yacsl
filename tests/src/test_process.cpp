@@ -196,7 +196,7 @@ static void write_input(Type type, Process* proc, Pipes* pipes) {
 #ifdef _WIN32
     DWORD written = 0;
     TRY_SYSCALL_WIN32(WriteFile(pipes->input[1], INPUT_DATA.data(),
-                                    INPUT_DATA.size(), &written, nullptr));
+                                INPUT_DATA.size(), &written, nullptr));
 #else
     ::write(pipes->input[1], INPUT_DATA.data(), INPUT_DATA.size());
 #endif
@@ -319,8 +319,8 @@ static int check_fd_output(int file, base::ranges::StringView expected) {
 #endif
 #ifdef _WIN32
   while (result > 0) {
-    success = ReadFile(file, output.grow(static_cast<base::usize>(result)),
-                           512, &result, nullptr);
+    success = ReadFile(file, output.grow(static_cast<base::usize>(result)), 512,
+                       &result, nullptr);
     if (success == FALSE) [[unlikely]] {
       DWORD err = GetLastError();
       if (err != ERROR_BROKEN_PIPE) {
