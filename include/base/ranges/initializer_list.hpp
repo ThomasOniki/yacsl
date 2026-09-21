@@ -27,7 +27,7 @@ public:
   using value_type      = T;
   using reference       = T const&;
   using const_reference = T const&;
-  using usizeype        = base::usize;
+  using size_type       = base::usize;
 
   using iterator       = T const*;
   using const_iterator = T const*;
