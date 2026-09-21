@@ -7,13 +7,13 @@
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define CHECK_ENTRY(entry_idx, expected_caller)                                \
   EXPECT_EQ(stack_trace.entries_[entry_idx].caller.view(),                     \
-            base::StringView(expected_caller))
+            base::ranges::StringView(expected_caller))
 
 BASE_NOINLINE static int f1(bool /*unused*/, char /*unused*/) {
   int              ret         = 0;
-  base::StackTrace stack_trace = base::StackTrace::current();
+  base::os::StackTrace stack_trace = base::os::StackTrace::current();
   stack_trace.compute_entries();
-  CHECK_ENTRY(0, "base::StackTrace::current()");
+  CHECK_ENTRY(0, "base::os::StackTrace::current()");
   CHECK_ENTRY(1, "f1(bool, char)");
   CHECK_ENTRY(2, "ns1::ns2::f2(void*)");
   CHECK_ENTRY(
@@ -55,6 +55,6 @@ template <ns1::ns2::S<> S = ns1::ns2::S<>{}> BASE_NOINLINE int f4() noexcept {
 int main() {
   int ret = 0;
   EXPECT(f4() == 0);
-  base::Logger::get_default_instance().flush();
+  base::debug::Logger::get_default_instance().flush();
   return ret;
 }

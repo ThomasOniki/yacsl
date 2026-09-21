@@ -9,11 +9,11 @@
 #include "base/type_traits/sign.hpp"
 #include "base/type_traits/type_string.hpp"
 
-namespace base {
+namespace base::containers {
 
-template <UnsignedIntegral Ok, Enum Err>
+template <type_traits::UnsignedIntegral Ok, type_traits::Enum Err>
   requires(sizeof(Err) <= sizeof(Ok) &&
-           UnsignedIntegral<UnderlyingEnumType<Err>>)
+           type_traits::UnsignedIntegral<type_traits::UnderlyingEnumType<Err>>)
 class UnsignedResult {
 public:
   constexpr UnsignedResult(Ok expected) noexcept
@@ -38,34 +38,34 @@ public:
 
   template <typename... Args>
   [[nodiscard]] constexpr Ok expect_ok(this UnsignedResult   self,
-                                       FormatString<Args...> fmt,
+                                       format::FormatString<Args...> fmt,
                                        Args&&... args) noexcept {
     if (self.is_error()) [[unlikely]] {
-      panic("UnsignedResult<{}, {}> is error {}.", Err(-self.value_));
-      panic(fmt, base::forward<Args>(args)...);
+      debug::panic("UnsignedResult<{}, {}> is error {}.", Err(-self.value_));
+      debug::panic(fmt, memory::forward<Args>(args)...);
     }
     return static_cast<Ok>(self.value_);
   }
   [[nodiscard]] constexpr Ok expect_ok(this UnsignedResult self) noexcept {
     return self.expect_ok("UnsignedResult<{}, {}> is error {}.",
-                          TYPE_STRING<Ok>, TYPE_STRING<Err>, self.error());
+                          type_traits::TYPE_STRING<Ok>, type_traits::TYPE_STRING<Err>, self.error());
   }
 
   template <typename... Args>
   [[nodiscard]] constexpr Ok assert_ok(this UnsignedResult   self,
-                                       FormatString<Args...> fmt,
+                                       format::FormatString<Args...> fmt,
                                        Args&&... args) noexcept {
-    debug_panic_if(self.is_error(), fmt, base::forward<Args>(args)...);
+    debug::debug_panic_if(self.is_error(), fmt, memory::forward<Args>(args)...);
     return static_cast<Ok>(self.value_);
   }
   [[nodiscard]] constexpr Ok assert_ok(this UnsignedResult self) noexcept {
     return self.assert_ok("UnsignedResult<{}, {}> is error {}.",
-                          TYPE_STRING<Ok>, TYPE_STRING<Err>, self.error());
+                          type_traits::TYPE_STRING<Ok>, type_traits::TYPE_STRING<Err>, self.error());
   }
 
 private:
-  using Signed = MakeSigned<Ok>;
+  using Signed = type_traits::MakeSigned<Ok>;
   Signed value_;
 };
 
-} // namespace base
+} // namespace base::containers

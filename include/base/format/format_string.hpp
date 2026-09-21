@@ -12,14 +12,15 @@
 #include "base/type_aliases.hpp"
 #include "base/type_traits/qualifiers.hpp"
 
-namespace base::internal {
+namespace base::format::internal {
 
 template <typename Indices, typename... Args> class FormatStringImpl;
 template <usize... Indices, typename... Args>
-class FormatStringImpl<IndexSequence<Indices...>, Args...> {
+class FormatStringImpl<meta::IndexSequence<Indices...>, Args...> {
 public:
   consteval FormatStringImpl(
-      char const* fmt, SourceLocation location = SourceLocation::current())
+      char const*           fmt,
+      debug::SourceLocation location = debug::SourceLocation::current())
       : location_(location) {
     (..., [&]() {
       char const* segment_begin = fmt;
@@ -44,17 +45,17 @@ public:
   }
 
   template <typename... FmtArgs>
-  static void format_to(String& buf, FormatStringImpl const& fmt,
+  static void format_to(containers::String& buf, FormatStringImpl const& fmt,
                         FmtArgs&&... args) {
     (..., [&] {
       buf += fmt.segments_[Indices];
       fmt.formatters_.template get<Indices>().format(
-          buf, base::forward<FmtArgs>(args));
+          buf, memory::forward<FmtArgs>(args));
     }());
     buf += fmt.segments_[sizeof...(Args)];
   }
 
-  [[nodiscard]] constexpr SourceLocation const&
+  [[nodiscard]] constexpr debug::SourceLocation const&
   source_location(this FormatStringImpl const& self) noexcept {
     return self.location_;
   }
@@ -63,24 +64,25 @@ public:
   using TypeIdentity = FormatStringImpl;
 
 private:
-  mutable Tuple<Formatter<Args>...> formatters_;
+  mutable containers::Tuple<Formatter<Args>...> formatters_;
 
-  StackArray<StringView, sizeof...(Args) + 1> segments_;
+  containers::StackArray<ranges::StringView, sizeof...(Args) + 1> segments_;
 
-  SourceLocation location_;
+  debug::SourceLocation location_;
 };
 
-template <> class FormatStringImpl<IndexSequence<>> {
+template <> class FormatStringImpl<meta::IndexSequence<>> {
 public:
   consteval FormatStringImpl(
-      char const* msg, SourceLocation location = SourceLocation::current())
+      char const*           msg,
+      debug::SourceLocation location = debug::SourceLocation::current())
       : location_(location), msg_{msg} {}
 
-  static void format_to(String& buf, FormatStringImpl const& fmt) {
+  static void format_to(containers::String& buf, FormatStringImpl const& fmt) {
     buf += fmt.msg_;
   }
 
-  [[nodiscard]] constexpr SourceLocation const&
+  [[nodiscard]] constexpr debug::SourceLocation const&
   source_location(this FormatStringImpl const& self) noexcept {
     return self.location_;
   }
@@ -89,22 +91,24 @@ public:
   using TypeIdentity = FormatStringImpl;
 
 private:
-  SourceLocation location_;
-  StringView     msg_;
+  debug::SourceLocation location_;
+  ranges::StringView    msg_;
 };
 
-} // namespace base::internal
+} // namespace base::format::internal
 
-namespace base {
+namespace base::format {
 
 template <typename... Args>
 using FormatString =
-    internal::FormatStringImpl<IndexSequenceToN<sizeof...(Args)>,
-                               RemoveCVRef<Args>...>::TypeIdentity;
+    internal::FormatStringImpl<meta::IndexSequenceToN<sizeof...(Args)>,
+                               type_traits::RemoveCVRef<Args>...>::TypeIdentity;
 
 template <typename... Args> // NOLINTNEXTLINE(misc-no-recursion)
-void format_to(String& buf, FormatString<Args...> const& fmt, Args&&... args) {
-  FormatString<Args...>::format_to(buf, fmt, base::forward<Args>(args)...);
+void format_to(containers::String& buf, FormatString<Args...> const& fmt,
+               Args&&... args) {
+  FormatString<Args...>::format_to(buf, fmt,
+                                   memory::forward<Args>(args)...);
 }
 
-} // namespace base
+} // namespace base::format

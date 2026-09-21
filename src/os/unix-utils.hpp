@@ -7,7 +7,7 @@
 #include "base/type_aliases.hpp"
 #include <errno.h>
 
-namespace base {
+namespace base::os {
 
 inline bool strip_file_open_flag(File::Flags* flags,
                                  File::Flags  flag) noexcept {
@@ -24,15 +24,15 @@ struct OpenedFile {
   usize cursor_pos;
 };
 
-int               unix_flags(File::Flags flags) noexcept;
-StringView        errno_str(int err) noexcept;
-inline StringView errno_str() noexcept { return errno_str(errno); }
-} // namespace base
+int                       unix_flags(File::Flags flags) noexcept;
+ranges::StringView        errno_str(int err) noexcept;
+inline ranges::StringView errno_str() noexcept { return errno_str(errno); }
+} // namespace base::os
 
 #define BASE_TRY_SYSCALL(syscall)                                              \
   [&]() {                                                                      \
     auto result = syscall;                                                     \
-    panic_if(result == -1, #syscall " failed: {}", errno_str());               \
+    debug::panic_if(result == -1, #syscall " failed: {}", errno_str());        \
     return result;                                                             \
   }()
 

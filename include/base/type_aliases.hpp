@@ -23,7 +23,7 @@ using usize = decltype(sizeof(int));
 using uptr  = uintptr_t;
 using iptr  = intptr_t;
 
-// String litterals are pointers, you can get ptrdiff by substracting them.
+// containers::String litterals are pointers, you can get ptrdiff by substracting them.
 using ptrdiff = decltype("" - "");
 
 } // namespace base

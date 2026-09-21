@@ -2,9 +2,9 @@
 
 #include "base/type_traits/categories.hpp"
 
-namespace base {
+namespace base::ranges {
 
-template <Integral T, bool Reversed = false> class IntegerRange {
+template <type_traits::Integral T, bool Reversed = false> class IntegerRange {
 public:
   class Iterator {
   public:
@@ -68,4 +68,4 @@ private:
   T end_   = 0;
 };
 
-} // namespace base
+} // namespace base::ranges

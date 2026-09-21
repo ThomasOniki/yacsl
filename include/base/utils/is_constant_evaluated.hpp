@@ -1,6 +1,6 @@
 #pragma once
 
-namespace base {
+namespace base::utils {
 
 [[nodiscard]] constexpr bool is_constant_evaluated() {
   if consteval {
@@ -10,4 +10,4 @@ namespace base {
   }
 }
 
-} // namespace base
+} // namespace base::utils

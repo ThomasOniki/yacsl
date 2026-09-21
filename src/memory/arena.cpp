@@ -8,7 +8,7 @@
 #include <sanitizer/lsan_interface.h>
 #endif
 
-namespace base {
+namespace base::memory {
 
 namespace {
 struct Metadata {
@@ -36,7 +36,7 @@ void Arena::reserve(this Arena& self, usize capacity) noexcept {
   __lsan_ignore_object(self.begin_);
 #endif
 
-  panic_if(self.begin_ == nullptr, "[Arena] malloc failed.");
+  debug::panic_if(self.begin_ == nullptr, "[Arena] malloc failed.");
   construct_at(reinterpret_cast<Metadata*>(self.begin_), metadata);
 }
 
@@ -62,4 +62,4 @@ Arena::Scope::~Scope() noexcept {
   arena_.ptr_ = ptr_;
 }
 
-} // namespace base
+} // namespace base::memory

@@ -6,11 +6,11 @@
 #include "base/type_traits/categories.hpp"
 #include "base/utils/nil.hpp"
 
-namespace base {
+namespace base::containers {
 
-template <Enum Err> class Error {
+template <type_traits::Enum Err> class Error {
 public:
-  constexpr Error(Nil /*nil*/) noexcept {}
+  constexpr Error(utils::Nil /*nil*/) noexcept {}
 
   constexpr Error(Err error) noexcept : value_(error) {}
 
@@ -18,7 +18,7 @@ public:
     return self.value_ == error;
   }
   [[nodiscard]] constexpr bool operator==(this Error self,
-                                          Nil /*nil*/) noexcept {
+                                          utils::Nil /*nil*/) noexcept {
     return self.value_ == Err(0);
   }
 
@@ -28,10 +28,10 @@ public:
 
   template <typename... Args>
   constexpr void expect_nil(this Error                   self,
-                            FormatString<Args...> const& error_fmt,
+                            format::FormatString<Args...> const& error_fmt,
                             Args&&... args) {
     if (self.value_ != Err(0)) [[unlikely]] {
-      panic(error_fmt, base::forward<Args>(args)...);
+      debug::panic(error_fmt, memory::forward<Args>(args)...);
     }
   }
   constexpr void expect_nil(this Error self) {
@@ -40,10 +40,10 @@ public:
 
   template <typename... Args>
   constexpr void assert_nil(this Error                   self,
-                            FormatString<Args...> const& error_fmt,
+                            format::FormatString<Args...> const& error_fmt,
                             Args&&... args) {
     if (self.value_ != Err(0)) [[unlikely]] {
-      debug_panic(error_fmt, base::forward<Args>(args)...);
+      debug::debug_panic(error_fmt, memory::forward<Args>(args)...);
     }
   }
   constexpr void assert_nil(this Error self) {
@@ -54,6 +54,6 @@ private:
   Err value_{0};
 };
 
-template <Enum Err> Error(Err) -> Error<Err>;
+template <type_traits::Enum Err> Error(Err) -> Error<Err>;
 
-} // namespace base
+} // namespace base::containers

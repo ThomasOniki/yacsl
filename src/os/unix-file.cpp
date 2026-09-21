@@ -11,10 +11,10 @@
 #include <stdio.h>
 #include <unistd.h>
 
-namespace base {
+namespace base::os {
 
-Result<File, File::OpenError> File::open(char const* path,
-                                         File::Flags flags) noexcept {
+containers::Result<File, File::OpenError>
+File::open(char const* path, File::Flags flags) noexcept {
 
   bool const seek_end = strip_file_open_flag(&flags, File::Flags::SeekEnd) &&
                         (flags & File::Flags::Trunc) == File::Flags::None;
@@ -25,7 +25,7 @@ Result<File, File::OpenError> File::open(char const* path,
     case ENOENT:
       return OpenError::FileNotFound;
     default:
-      panic("::open() failed: {}", errno_str());
+      debug::panic("::open() failed: {}", errno_str());
     }
   }
   if (seek_end) {
@@ -59,28 +59,28 @@ File File::open_stderr() noexcept {
 }
 
 // NOLINTBEGIN(readability-make-member-function-const)
-usize File::write(this File& self, Slice<uchar const> data) noexcept {
+usize File::write(this File& self, ranges::Slice<uchar const> data) noexcept {
   ssize_t const result =
       BASE_TRY_SYSCALL(::write(self.handle_, data.data(), data.size()));
   return static_cast<usize>(result);
 }
-usize File::read(this File& self, Slice<uchar> buffer) noexcept {
+usize File::read(this File& self, ranges::Slice<uchar> buffer) noexcept {
   ssize_t const result =
       BASE_TRY_SYSCALL(::read(self.handle_, buffer.data(), buffer.size()));
   return static_cast<usize>(result);
 }
 
-void File::seek_begin(this File& self, isize offset) noexcept {
+void File::seek_begin(this File& self, utils::isize offset) noexcept {
   off_t const result = BASE_TRY_SYSCALL(
       ::lseek(self.handle_, static_cast<off_t>(offset), SEEK_SET));
   self.cursor_pos_ = static_cast<usize>(result);
 }
-void File::seek_end(this File& self, isize offset) noexcept {
+void File::seek_end(this File& self, utils::isize offset) noexcept {
   off_t const result = BASE_TRY_SYSCALL(
       ::lseek(self.handle_, static_cast<off_t>(offset), SEEK_END));
   self.cursor_pos_ = static_cast<usize>(result);
 }
-void File::seek_cursor(this File& self, isize offset) noexcept {
+void File::seek_cursor(this File& self, utils::isize offset) noexcept {
   off_t const result = BASE_TRY_SYSCALL(
       ::lseek(self.handle_, static_cast<off_t>(offset), SEEK_CUR));
   self.cursor_pos_ = static_cast<usize>(result);
@@ -94,6 +94,6 @@ bool File::is_tty(this File const& self) noexcept {
   return static_cast<bool>(self.is_tty_);
 }
 
-} // namespace base
+} // namespace base::os
 
 #endif

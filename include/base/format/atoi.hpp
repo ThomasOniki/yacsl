@@ -5,9 +5,9 @@
 #include "base/type_aliases.hpp"
 #include "base/type_traits/categories.hpp"
 
-namespace base {
+namespace base::format {
 
-template <Character Char>
+template <type_traits::Character Char>
 constexpr Char const* num_end(BASE_LIFETIMEBOUND Char const* begin) {
   while (*begin >= '0' && *begin <= '9') {
     ++begin;
@@ -15,17 +15,9 @@ constexpr Char const* num_end(BASE_LIFETIMEBOUND Char const* begin) {
   return begin;
 }
 
-template <Integral T, Character Char = char, Integral SizeT = usize>
-constexpr T atoi(Char const* begin, Char const* end) {
-  return atoi<T>(BasicStringView<Char, SizeT>(begin, end));
-}
-template <Integral T, Character Char = char, Integral SizeT = usize>
-constexpr T atoi(Char const* ptr, SizeT len) {
-  return atoi<T>(BasicStringView<Char, SizeT>(ptr, len));
-}
-
-template <Integral T, Character Char = char, Integral SizeT = usize>
-constexpr T atoi(BasicStringView<Char, SizeT> str) noexcept {
+template <type_traits::Integral T, type_traits::Character Char = char,
+          type_traits::Integral SizeT = usize>
+constexpr T atoi(ranges::BasicStringView<Char, SizeT> str) noexcept {
   T ret = 0;
   for (char const chr : str) {
     ret *= 10;
@@ -33,5 +25,15 @@ constexpr T atoi(BasicStringView<Char, SizeT> str) noexcept {
   }
   return ret;
 }
+template <type_traits::Integral T, type_traits::Character Char = char,
+          type_traits::Integral SizeT = usize>
+constexpr T atoi(Char const* begin, Char const* end) {
+  return format::atoi<T>(ranges::BasicStringView<Char, SizeT>(begin, end));
+}
+template <type_traits::Integral T, type_traits::Character Char = char,
+          type_traits::Integral SizeT = usize>
+constexpr T atoi(Char const* ptr, SizeT len) {
+  return format::atoi<T>(ranges::BasicStringView<Char, SizeT>(ptr, len));
+}
 
-} // namespace base
+} // namespace base::format

@@ -7,15 +7,15 @@
 #include "base/type_traits/type_string.hpp"
 #include "base/utils/nil.hpp"
 
-namespace base {
+namespace base::containers {
 
 template <typename T> class Option {
 public:
-  constexpr Option(Nil /*nil*/) noexcept : is_value_(false) {}
+  constexpr Option(utils::Nil /*nil*/) noexcept : is_value_(false) {}
 
   template <typename... Args>
   constexpr Option(Args&&... args) noexcept : is_value_(true) {
-    value_.construct(base::forward<Args>(args)...);
+    value_.construct(memory::forward<Args>(args)...);
   }
 
   constexpr ~Option() noexcept {
@@ -31,7 +31,7 @@ public:
   }
   constexpr Option(Option&& other) noexcept : is_value_(other.is_value_) {
     if (is_value_) {
-      value_.construct(base::move(*other.value_));
+      value_.construct(memory::move(*other.value_));
     }
   }
 
@@ -56,13 +56,13 @@ public:
     }
     self.is_value_ = other.is_value_;
     if (self.is_value_) {
-      self.value_.construct(base::move(*other.value_));
+      self.value_.construct(memory::move(*other.value_));
     }
     return self;
   }
 
   constexpr Option& operator=(this Option& self BASE_LIFETIMEBOUND,
-                              Nil /*nil*/) noexcept {
+                              utils::Nil /*nil*/) noexcept {
     if (self.is_value_) {
       self.value_.destruct();
       self.is_value_ = false;
@@ -84,7 +84,7 @@ public:
       self.value_.destruct();
     }
     self.is_value_ = true;
-    self.value_.construct(base::move(value));
+    self.value_.construct(memory::move(value));
     return self;
   }
 
@@ -94,16 +94,16 @@ public:
     if (self.is_value_) {
       self.value_.destruct();
     }
-    return base::forward<Self>(self).value_.construct(
-        base::forward<Args>(args)...);
+    return memory::forward<Self>(self).value_.construct(
+        memory::forward<Args>(args)...);
   }
 
   [[nodiscard]] constexpr bool operator==(this Option const& self,
-                                          Nil /*nil*/) noexcept {
+                                          utils::Nil /*nil*/) noexcept {
     return !self.is_value_;
   }
   [[nodiscard]] constexpr bool operator!=(this Option const& self,
-                                          Nil /*nil*/) noexcept {
+                                          utils::Nil /*nil*/) noexcept {
     return self.is_value_;
   }
 
@@ -122,26 +122,26 @@ public:
   template <typename Self, typename... Args>
   [[nodiscard]] constexpr auto&&
   expect_value(this Self&& self             BASE_LIFETIMEBOUND,
-               FormatString<Args...> const& fmt, Args&&... args) noexcept {
-    panic_if(!self.is_value_, fmt, base::forward<Args>(args)...);
-    return *base::forward<Self>(self).value_;
+               format::FormatString<Args...> const& fmt, Args&&... args) noexcept {
+    debug::panic_if(!self.is_value_, fmt, memory::forward<Args>(args)...);
+    return *memory::forward<Self>(self).value_;
   }
   template <typename Self>
   [[nodiscard]] constexpr auto&& expect_value(this Self&& self) noexcept {
-    return base::forward<Self>(self).expect_value("Option<{}> is nil.",
-                                                  TYPE_STRING<T>);
+    return memory::forward<Self>(self).expect_value("Option<{}> is nil.",
+                                                  type_traits::TYPE_STRING<T>);
   }
   template <typename Self, typename... Args>
   [[nodiscard]] constexpr auto&&
   assert_value(this Self&& self             BASE_LIFETIMEBOUND,
-               FormatString<Args...> const& fmt, Args&&... args) noexcept {
-    debug_panic_if(!self.is_value_, fmt, base::forward<Args>(args)...);
-    return *base::forward<Self>(self).value_;
+               format::FormatString<Args...> const& fmt, Args&&... args) noexcept {
+    debug::debug_panic_if(!self.is_value_, fmt, memory::forward<Args>(args)...);
+    return *memory::forward<Self>(self).value_;
   }
   template <typename Self>
   [[nodiscard]] constexpr auto&& assert_value(this Self&& self) noexcept {
-    return base::forward<Self>(self).assert_value("Option<{}> is nil.",
-                                                  TYPE_STRING<T>);
+    return memory::forward<Self>(self).assert_value("Option<{}> is nil.",
+                                                  type_traits::TYPE_STRING<T>);
   }
 
 private:
@@ -151,7 +151,7 @@ private:
 
 template <typename T> class Option<T&> {
 public:
-  constexpr Option(Nil /*nil*/) noexcept {}
+  constexpr Option(utils::Nil /*nil*/) noexcept {}
 
   constexpr Option(T& value) noexcept : ptr_(&value) {}
 
@@ -162,7 +162,7 @@ public:
   constexpr Option& operator=(this Option&, Option&&) noexcept      = default;
 
   constexpr Option& operator=(this Option& self BASE_LIFETIMEBOUND,
-                              Nil /*nil*/) noexcept {
+                              utils::Nil /*nil*/) noexcept {
     self.ptr_ = nullptr;
     return self;
   }
@@ -185,11 +185,11 @@ public:
   }
 
   [[nodiscard]] constexpr bool operator==(this Option const& self,
-                                          Nil /*nil*/) noexcept {
+                                          utils::Nil /*nil*/) noexcept {
     return self.ptr_ == nullptr;
   }
   [[nodiscard]] constexpr bool operator!=(this Option const& self,
-                                          Nil /*nil*/) noexcept {
+                                          utils::Nil /*nil*/) noexcept {
     return self.ptr_ != nullptr;
   }
   [[nodiscard]] constexpr bool operator==(this Option const& self,
@@ -200,33 +200,33 @@ public:
   template <typename Self, typename... Args>
   [[nodiscard]] constexpr auto&&
   expect_value(this Self&& self             BASE_LIFETIMEBOUND,
-               FormatString<Args...> const& fmt, Args&&... args) noexcept {
-    panic_if(self.ptr_ == nullptr, fmt, base::forward<Args>(args)...);
-    return base::forward<CopyCVRef<Self&&, T>>(*base::forward<Self>(self).ptr_);
+               format::FormatString<Args...> const& fmt, Args&&... args) noexcept {
+    debug::panic_if(self.ptr_ == nullptr, fmt, memory::forward<Args>(args)...);
+    return memory::forward<type_traits::CopyCVRef<Self&&, T>>(*memory::forward<Self>(self).ptr_);
   }
   template <typename Self>
   [[nodiscard]] constexpr auto&&
   expect_value(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    return base::forward<Self>(self).expect_value("Option<{}> is nil.",
-                                                  TYPE_STRING<T>);
+    return memory::forward<Self>(self).expect_value("Option<{}> is nil.",
+                                                  type_traits::TYPE_STRING<T>);
   }
 
   template <typename Self, typename... Args>
   [[nodiscard]] constexpr auto&&
   assert_value(this Self&& self             BASE_LIFETIMEBOUND,
-               FormatString<Args...> const& fmt, Args&&... args) noexcept {
-    debug_panic_if(self.ptr_ == nullptr, fmt, base::forward<Args>(args)...);
-    return base::forward<CopyCVRef<Self&&, T>>(*base::forward<Self>(self).ptr_);
+               format::FormatString<Args...> const& fmt, Args&&... args) noexcept {
+    debug::debug_panic_if(self.ptr_ == nullptr, fmt, memory::forward<Args>(args)...);
+    return memory::forward<type_traits::CopyCVRef<Self&&, T>>(*memory::forward<Self>(self).ptr_);
   }
   template <typename Self>
   [[nodiscard]] constexpr auto&&
   assert_value(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    return base::forward<Self>(self).assert_value("Option<{}> is nil.",
-                                                  TYPE_STRING<T>);
+    return memory::forward<Self>(self).assert_value("Option<{}> is nil.",
+                                                  type_traits::TYPE_STRING<T>);
   }
 
 private:
   T* ptr_ = nullptr;
 };
 
-} // namespace base
+} // namespace base::containers

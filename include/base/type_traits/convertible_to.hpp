@@ -1,8 +1,8 @@
 #pragma once
 
-namespace base {
+namespace base::type_traits {
 
 template <typename From, typename To>
 concept ConvertibleTo = __is_convertible(From, To);
 
-} // namespace base
+} // namespace base::type_traits

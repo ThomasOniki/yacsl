@@ -7,9 +7,9 @@
 #include "base/type_traits/categories.hpp"
 #include "base/type_traits/qualifiers.hpp"
 
-namespace base {
+namespace base::ranges {
 
-template <typename T, Integral SizeT = usize, bool Reversed = false>
+template <typename T, type_traits::Integral SizeT = usize, bool Reversed = false>
 class Slice {
 public:
   friend class Slice<T const, SizeT>;
@@ -23,29 +23,29 @@ public:
       : data_(Reversed ? data + size - 1 : data), size_(size) {}
 
   constexpr Slice(InitializerList<T> data BASE_LIFETIMEBOUND) noexcept
-    requires ConstType<T>
+    requires type_traits::ConstType<T>
       : data_(data.begin()), size_(data.size()) {}
 
   constexpr Slice(Slice<T, SizeT, !Reversed> other) noexcept
       : data_(Reversed ? other.end() - 1 : other.end() + 1),
         size_(other.size() + 1) {}
 
-  constexpr Slice(Slice<RemoveConst<T>, SizeT> const& mutable_slice) noexcept
+  constexpr Slice(Slice<type_traits::RemoveConst<T>, SizeT> const& mutable_slice) noexcept
       : data_(mutable_slice.data_), size_(mutable_slice.size_) {}
   // NOLINTNEXTLINE(bugprone-unhandled-self-assignment)
   constexpr Slice&
-  operator=(Slice<RemoveConst<T>, SizeT> const& mutable_slice) noexcept {
+  operator=(Slice<type_traits::RemoveConst<T>, SizeT> const& mutable_slice) noexcept {
     data_ = mutable_slice.data_;
     size_ = mutable_slice.size_;
     return *this;
   }
 
-  // The move and forward functions are in lifetimes.hpp which includes this
+  // The memory::move and memory::forward functions are in lifetimes.hpp which includes this
   // file, so they cannot be used here.
-  // NOLINTBEGIN(cppcoreguidelines-missing-std-forward)
-  // NOLINTBEGIN(cppcoreguidelines-rvalue-reference-param-not-moved)
+  // NOLINTBEGIN(cppcoreguidelines-missing-std-memory::forward)
+  // NOLINTBEGIN(cppcoreguidelines-rvalue-reference-param-not-memory::moved)
   template <typename Self>
-  [[nodiscard]] constexpr CopyCV<Self, T>* data(this Self&& self) noexcept {
+  [[nodiscard]] constexpr type_traits::CopyCV<Self, T>* data(this Self&& self) noexcept {
     return self.data_;
   }
   [[nodiscard]] constexpr SizeT size(this Slice const& self) noexcept {
@@ -55,20 +55,20 @@ public:
   template <typename Self>
   [[nodiscard]] constexpr auto&& operator[](this Self&& self,
                                             SizeT       index) noexcept {
-    return static_cast<CopyCVRef<Self&&, T>>(
+    return static_cast<type_traits::CopyCVRef<Self&&, T>>(
         self.data_[Reversed ? -index : index]);
   }
 
   template <typename Self>
   [[nodiscard]] constexpr auto bytes(this Self&& self) noexcept {
-    if constexpr (ConstType<T>) {
-      using Byte = CopyCV<Self, uchar const>;
+    if constexpr (type_traits::ConstType<T>) {
+      using Byte = type_traits::CopyCV<Self, uchar const>;
       return Slice<Byte, SizeT>{
           reinterpret_cast<Byte*>(self.data_),
           static_cast<SizeT>(self.size_ * sizeof(T)),
       };
     } else {
-      using Byte = CopyCV<Self, uchar>;
+      using Byte = type_traits::CopyCV<Self, uchar>;
       return Slice<Byte, SizeT>{
           reinterpret_cast<Byte*>(self.data_),
           static_cast<SizeT>(self.size_ * sizeof(T)),
@@ -78,12 +78,12 @@ public:
 
   template <typename Self>
   [[nodiscard]] constexpr auto slice(this Self&& self) noexcept
-      -> Slice<CopyCV<Self, T>, SizeT, false> {
+      -> Slice<type_traits::CopyCV<Self, T>, SizeT, false> {
     return {static_cast<Self&&>(self).data_, static_cast<Self&&>(self).size_};
   }
   template <typename Self>
   [[nodiscard]] constexpr auto reversed_slice(this Self&& self) noexcept
-      -> Slice<CopyCV<Self, T>, SizeT, true> {
+      -> Slice<type_traits::CopyCV<Self, T>, SizeT, true> {
     return {static_cast<Self&&>(self).data_, static_cast<Self&&>(self).size_};
   }
 
@@ -106,22 +106,22 @@ public:
   }
 
   template <typename Self>
-  [[nodiscard]] constexpr CopyCV<Self, T>* begin(this Self&& self) noexcept {
+  [[nodiscard]] constexpr type_traits::CopyCV<Self, T>* begin(this Self&& self) noexcept {
     return self.data_;
   }
   template <typename Self>
-  [[nodiscard]] constexpr CopyCV<Self, T>* end(this Self&& self) noexcept {
+  [[nodiscard]] constexpr type_traits::CopyCV<Self, T>* end(this Self&& self) noexcept {
     return self.data_ + self.size_;
   }
-  // NOLINTEND(cppcoreguidelines-rvalue-reference-param-not-moved)
-  // NOLINTEND(cppcoreguidelines-missing-std-forward)
+  // NOLINTEND(cppcoreguidelines-rvalue-reference-param-not-memory::moved)
+  // NOLINTEND(cppcoreguidelines-missing-std-memory::forward)
 
 private:
   T*    data_;
   SizeT size_;
 };
 
-template <typename T, Integral SizeT = usize>
+template <typename T, type_traits::Integral SizeT = usize>
 using ReversedSlice = Slice<T, SizeT, true>;
 
-} // namespace base
+} // namespace base::ranges

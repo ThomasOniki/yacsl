@@ -2,7 +2,7 @@
 
 #include "base/type_aliases.hpp"
 
-namespace base {
+namespace base::meta {
 
 template <typename T, T... Ints> class IntegerSequence {
   using Type = T;
@@ -52,4 +52,4 @@ template <typename Seq, Seq::Type Elem>
 using AppendToIntegerSequence =
     internal::AppendToIntegerSequenceImpl<typename Seq::Type, Elem, Seq>;
 
-} // namespace base
+} // namespace base::meta

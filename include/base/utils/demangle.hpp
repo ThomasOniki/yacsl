@@ -3,8 +3,8 @@
 #include "base/containers/string.hpp"
 #include "base/ranges/string_view.hpp"
 
-namespace base {
+namespace base::utils {
 
-String demangle(StringView mangled);
+containers::String demangle(ranges::StringView mangled);
 
-} // namespace base
+} // namespace base::utils
