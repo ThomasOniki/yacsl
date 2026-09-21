@@ -6,13 +6,13 @@
 #include "base/debug/log.hpp"
 #include "base/type_aliases.hpp"
 
-namespace base::os {
+namespace base::debug {
 
 struct StackTraceEntry {
   alignas(64) containers::String caller;
   containers::String object;
-  void*  base_address = nullptr;
-  void*  address      = nullptr;
+  void*              base_address = nullptr;
+  void*              address      = nullptr;
 };
 
 struct StackTrace {
@@ -32,13 +32,13 @@ struct StackTrace {
   }
 
   template <typename Self>
-  void print(this Self&& self, debug::Logger::Level lvl) noexcept {
+  void print(this Self&& self, Logger::Level lvl) noexcept {
     memory::forward<Self>(self).compute_entries();
     for (usize i = 0; i < self.entries_.size(); ++i) {
-      base::debug::log(lvl, "#{} {} in {} ({}+{#x})", i, self.entries_[i].address,
-                self.entries_[i].caller, self.entries_[i].object,
-                static_cast<uchar*>(self.entries_[i].address) -
-                    static_cast<uchar*>(self.entries_[i].base_address));
+      log(lvl, "#{} {} in {} ({}+{#x})", i, self.entries_[i].address,
+          self.entries_[i].caller, self.entries_[i].object,
+          static_cast<uchar*>(self.entries_[i].address) -
+              static_cast<uchar*>(self.entries_[i].base_address));
     }
   }
 
@@ -46,4 +46,4 @@ struct StackTrace {
   containers::Vector<void*, 21> addresses_;
 };
 
-} // namespace base::os
+} // namespace base::debug
