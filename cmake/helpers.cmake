@@ -39,6 +39,12 @@ function(init_target target_name)
               "-Wconversion")
   endif()
 
+  if(CMAKE_SYSTEM_NAME STREQUAL Windows)
+    target_compile_options(
+      "${target_name}" PUBLIC "$<$<CXX_COMPILER_ID:GNU>:-finput-charset=utf-8>"
+                              "$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
+  endif()
+
   if(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
     target_compile_options(
       "${target_name}"
