@@ -4,7 +4,7 @@
 #include "base/type_aliases.hpp"
 #include "base/type_traits/trivial.hpp"
 
-namespace base {
+namespace base::threads {
 
 enum class MemoryOrder : u8 {
   Relaxed = __ATOMIC_RELAXED,
@@ -16,7 +16,7 @@ enum class MemoryOrder : u8 {
 };
 
 template <typename T>
-  requires TriviallyCopyable<T>
+  requires type_traits::TriviallyCopyable<T>
 class Atomic {
 public:
   constexpr Atomic() noexcept = default;
@@ -31,7 +31,7 @@ public:
   Atomic& operator=(this Atomic& self, Atomic&&) noexcept = delete;
 
   [[nodiscard]] T load(this Atomic const& self, MemoryOrder order) noexcept {
-    StackStorage<T> ret{};
+    containers::StackStorage<T> ret{};
     __atomic_load(&self.value_, &*ret, static_cast<int>(order));
     return *ret;
   }
@@ -48,7 +48,7 @@ public:
   }
 
   T exchange(this Atomic& self, T value, MemoryOrder order) noexcept {
-    StackStorage<T> ret;
+    containers::StackStorage<T> ret;
     __atomic_exchange(&self.value_, &value, &*ret, static_cast<int>(order));
     return *ret;
   }
@@ -84,4 +84,4 @@ private:
   T value_ = T();
 };
 
-} // namespace base
+} // namespace base::threads

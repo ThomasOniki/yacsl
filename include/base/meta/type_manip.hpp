@@ -2,7 +2,7 @@
 
 #include "base/type_aliases.hpp"
 
-namespace base::internal {
+namespace base::meta::internal {
 template <bool Cond, typename If, typename Else> struct ConditionalTypeImpl {
   using Type = If;
 };
@@ -17,9 +17,9 @@ template <typename First, typename... Others>
 struct NthTypeImpl<0, First, Others...> {
   using Type = First;
 };
-} // namespace base::internal
+} // namespace base::meta::internal
 
-namespace base {
+namespace base::meta {
 
 template <bool Cond, typename If, typename Else>
 using ConditionalT = internal::ConditionalTypeImpl<Cond, If, Else>::Type;
@@ -28,4 +28,4 @@ using NthType = internal::NthTypeImpl<N, Ts...>::Type;
 
 template <typename... Ts> using LastType = NthType<sizeof...(Ts) - 1, Ts...>;
 
-} // namespace base
+} // namespace base::meta

@@ -15,7 +15,7 @@
 #include "base/type_traits/sign.hpp"
 #include <string.h>
 
-namespace base {
+namespace base::format {
 
 struct PaddingOptions {
   alignas(8) u32 width;
@@ -23,7 +23,8 @@ struct PaddingOptions {
   FormatStringParser::Align align;
 };
 
-template <Character C> void pad_char(String& buf, C chr, PaddingOptions opts) {
+template <type_traits::Character C>
+void pad_char(containers::String& buf, C chr, PaddingOptions opts) {
   u32 const len = char_len(chr);
   if (len >= opts.width) {
     write_char(buf.grow(len), chr);
@@ -43,8 +44,8 @@ template <Character C> void pad_char(String& buf, C chr, PaddingOptions opts) {
   }
 }
 
-template <Character C>
-void pad_debug_char(String& buf, C chr, PaddingOptions opts) {
+template <type_traits::Character C>
+void pad_debug_char(containers::String& buf, C chr, PaddingOptions opts) {
   u32 const len = debug_char_len(chr);
   // +2 for the quotes
   if (len + 2 >= opts.width) {
@@ -80,9 +81,10 @@ void pad_debug_char(String& buf, C chr, PaddingOptions opts) {
   }
 }
 
-template <bool IsDebug, Character C>
-void pad_string_left_aligned(String& buf, BasicStringView<C, usize> str,
-                             PaddingOptions opts) noexcept {
+template <bool IsDebug, type_traits::Character C>
+void pad_string_left_aligned(containers::String&               buf,
+                             ranges::BasicStringView<C, usize> str,
+                             PaddingOptions                    opts) noexcept {
   usize const original_size = buf.size();
   write_maybe_debug_string<IsDebug>(buf, str);
 
@@ -96,9 +98,10 @@ void pad_string_left_aligned(String& buf, BasicStringView<C, usize> str,
   memset(buf.grow(pad_amount), opts.fill, pad_amount);
 }
 
-template <bool IsDebug, Character C>
-void pad_string_right_aligned(String& buf, BasicStringView<C, usize> str,
-                              PaddingOptions opts) noexcept {
+template <bool IsDebug, type_traits::Character C>
+void pad_string_right_aligned(containers::String&               buf,
+                              ranges::BasicStringView<C, usize> str,
+                              PaddingOptions                    opts) noexcept {
   usize const real_len = maybe_debug_string_len<IsDebug>(str);
   if (opts.width <= real_len) {
     write_maybe_debug_string<IsDebug>(buf, str);
@@ -110,8 +113,9 @@ void pad_string_right_aligned(String& buf, BasicStringView<C, usize> str,
   write_maybe_debug_string<IsDebug>(begin + pad, str);
 }
 
-template <bool IsDebug, Character C>
-void pad_string_middle_aligned(String& buf, BasicStringView<C, usize> str,
+template <bool IsDebug, type_traits::Character C>
+void pad_string_middle_aligned(containers::String&               buf,
+                               ranges::BasicStringView<C, usize> str,
                                PaddingOptions opts) noexcept {
   usize const real_len = maybe_debug_string_len<IsDebug>(str);
   if (opts.width <= real_len) {
@@ -124,8 +128,8 @@ void pad_string_middle_aligned(String& buf, BasicStringView<C, usize> str,
   write_maybe_debug_string<IsDebug>(begin + pad / 2, str);
 }
 
-template <bool IsDebug = false, Character C>
-void pad_string(String& buf, BasicStringView<C, usize> str,
+template <bool IsDebug = false, type_traits::Character C>
+void pad_string(containers::String& buf, ranges::BasicStringView<C, usize> str,
                 PaddingOptions opts) noexcept {
   if constexpr (IsDebug) {
     // + 2 for the 2 quotes
@@ -149,36 +153,38 @@ void pad_string(String& buf, BasicStringView<C, usize> str,
   }
 }
 
-template <u32 Base, usize Offset, UnsignedIntegral T>
-constexpr StackArray<T, 129 + Offset> gen_powers() noexcept {
-  StackArray<T, 129 + Offset> ret = {};
-  T                           pow = Base;
+template <u32 Base, usize Offset, type_traits::UnsignedIntegral T>
+constexpr containers::StackArray<T, 129 + Offset> gen_powers() noexcept {
+  containers::StackArray<T, 129 + Offset> ret = {};
+  T                                       pow = Base;
 
   for (u32 i = Offset + 1; i < ret.size(); ++i) {
     ret[i] = pow;
-    if (pow <= Limits<T>::MAX / Base) {
+    if (pow <= type_traits::Limits<T>::MAX / Base) {
       pow = static_cast<T>(pow * Base);
     } else {
-      pow = Limits<T>::MAX;
+      pow = type_traits::Limits<T>::MAX;
     }
   }
   return ret;
 }
 
-template <NTTPString Charset = "0123456789", NTTPString Prefix = "",
-          UnsignedIntegral T>
-void pad_integral(String& buf, T value, PaddingOptions opts) noexcept {
+template <containers::NTTPString Charset = "0123456789",
+          containers::NTTPString Prefix  = "", type_traits::UnsignedIntegral T>
+void pad_integral(containers::String& buf, T value,
+                  PaddingOptions opts) noexcept {
   // Prefix.size() zeroes, 0, Base, Base^2, Base^3... Base^128
-  static constexpr StackArray<T, 129 + Prefix.size()> powers =
+  static constexpr containers::StackArray<T, 129 + Prefix.size()> powers =
       gen_powers<Charset.size(), Prefix.size(), T>();
 
-  constexpr u32 max_len = count_digits(Limits<T>::MAX, Charset.size());
+  constexpr u32 max_len =
+      count_digits(type_traits::Limits<T>::MAX, Charset.size());
 
   // If value >= powers[opts.width], value has width or more digits. If it does,
   // you should skip padding and just use itoa.
   if (opts.width < max_len && value >= powers[opts.width]) {
     char* str = buf.grow(count_digits(value, Charset.size()) + Prefix.size());
-    copy(Prefix.slice(), str);
+    memory::copy(Prefix.slice(), str);
     itoa_from_end(buf.end(), value, Charset.view());
     return;
   }
@@ -187,11 +193,11 @@ void pad_integral(String& buf, T value, PaddingOptions opts) noexcept {
   if (opts.align == FormatStringParser::Align::Right) {
     char* prefix_begin =
         itoa_from_end(buf.end(), value, Charset.view()) - Prefix.size();
-    copy(Prefix.slice(), prefix_begin);
+    memory::copy(Prefix.slice(), prefix_begin);
     memset(begin, opts.fill, static_cast<usize>(prefix_begin - begin));
   } else if (opts.align == FormatStringParser::Align::Left) {
     usize const len = count_digits(value, Charset.size());
-    copy(Prefix.slice(), begin);
+    memory::copy(Prefix.slice(), begin);
     char* num_end = begin + Prefix.size() + len;
     itoa_from_end(num_end, value, Charset.view());
     memset(num_end, opts.fill, static_cast<usize>(buf.end() - num_end));
@@ -200,20 +206,22 @@ void pad_integral(String& buf, T value, PaddingOptions opts) noexcept {
     usize const len     = count_digits(value, Charset.size());
     usize       padding = opts.width - (len + Prefix.size());
     padding /= 2;
-    copy(Prefix.slice(), begin + padding);
+    memory::copy(Prefix.slice(), begin + padding);
     itoa_from_end(begin + padding + Prefix.size() + len, value, Charset.view());
   }
 }
 
-template <NTTPString Charset, NTTPString Prefix = "", SignedIntegral T>
-void pad_integral(String& buf, T value, PaddingOptions opts) noexcept {
+template <containers::NTTPString Charset, containers::NTTPString Prefix = "",
+          type_traits::SignedIntegral T>
+void pad_integral(containers::String& buf, T value,
+                  PaddingOptions opts) noexcept {
   if (value >= 0) {
-    pad_integral<Charset, Prefix>(buf, static_cast<MakeUnsigned<T>>(value),
-                                  opts);
+    pad_integral<Charset, Prefix>(
+        buf, static_cast<type_traits::MakeUnsigned<T>>(value), opts);
     return;
   }
-  pad_integral<Charset, cat_nttpstrings<Prefix, "-">>(
-      buf, static_cast<MakeUnsigned<T>>(-value), opts);
+  pad_integral<Charset, containers::cat_nttpstrings<Prefix, "-">>(
+      buf, static_cast<type_traits::MakeUnsigned<T>>(-value), opts);
 }
 
-} // namespace base
+} // namespace base::format

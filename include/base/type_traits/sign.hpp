@@ -3,25 +3,26 @@
 #include "base/type_traits/categories.hpp"
 
 #ifdef __clang__
-namespace base {
+namespace base::type_traits {
 template <Integral T> using MakeUnsigned = __make_unsigned(T);
 template <Integral T> using MakeSigned   = __make_signed(T);
-} // namespace base
+} // namespace base::type_traits
 #else
 
 #include "base/meta/first_of_size.hpp"
 #include "base/utils/extended_types.hpp"
 
-namespace base::internal {
+namespace base::type_traits {
+namespace internal {
 
 template <typename T> struct MakeUnsignedImpl {
   using Type =
-      FirstOfSize<sizeof(T), unsigned char, unsigned short, unsigned int,
-                  unsigned long, unsigned long long, u128>::Type;
+      meta::FirstOfSize<sizeof(T), unsigned char, unsigned short, unsigned int,
+                        unsigned long, unsigned long long, utils::u128>::Type;
 };
 template <typename T> struct MakeSignedImpl {
-  using Type = FirstOfSize<sizeof(T), signed char, short, int, long, long long,
-                           i128>::Type;
+  using Type = meta::FirstOfSize<sizeof(T), signed char, short, int, long,
+                                 long long, utils::i128>::Type;
 };
 
 template <typename T> struct MakeUnsignedImpl<T const> {
@@ -61,13 +62,11 @@ template <> struct MakeSignedImpl<unsigned long long> {
   using Type = long long;
 };
 
-} // namespace base::internal
-
-namespace base {
+} // namespace internal
 
 template <Integral T> using MakeUnsigned = internal::MakeUnsignedImpl<T>::Type;
 template <Integral T> using MakeSigned   = internal::MakeSignedImpl<T>::Type;
 
-} // namespace base
+} // namespace base::type_traits
 
 #endif

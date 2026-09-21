@@ -11,10 +11,10 @@
 #include "base/type_traits/categories.hpp"
 #include "base/type_traits/qualifiers.hpp"
 
-namespace base {
+namespace base::containers {
 
-template <Character Char, usize N = 0,
-          AllocatorType Allocator = MainArenaAllocator, Integral SizeT = usize>
+template <type_traits::Character Char, usize N = 0,
+          type_traits::AllocatorType Allocator = memory::MainArenaAllocator, type_traits::Integral SizeT = usize>
 class BasicString {
 public:
   constexpr BasicString() noexcept = default;
@@ -25,17 +25,17 @@ public:
 
   constexpr BasicString(Char const*      cstr,
                         Allocator const& allocator = Allocator()) noexcept
-      : data_(BasicStringView<Char, usize>(cstr), allocator) {}
+      : data_(ranges::BasicStringView<Char, usize>(cstr), allocator) {}
 
   constexpr BasicString(Char const* data, SizeT len,
                         Allocator const& allocator = Allocator()) noexcept
-      : data_(BasicStringView<Char, usize>(data, len), allocator) {}
+      : data_(ranges::BasicStringView<Char, usize>(data, len), allocator) {}
 
   constexpr BasicString(Char const* begin, Char const* end,
                         Allocator const& allocator = Allocator()) noexcept
-      : data_(BasicStringView<Char, usize>(begin, end), allocator) {}
+      : data_(ranges::BasicStringView<Char, usize>(begin, end), allocator) {}
 
-  constexpr BasicString(BasicStringView<Char, SizeT> str,
+  constexpr BasicString(ranges::BasicStringView<Char, SizeT> str,
                         Allocator const& allocator = Allocator()) noexcept
       : data_(str, allocator) {}
 
@@ -43,7 +43,7 @@ public:
       : data_(other.data_) {}
 
   constexpr BasicString(BasicString&& other) noexcept
-      : data_(base::move(other.data_)) {}
+      : data_(memory::move(other.data_)) {}
 
   constexpr BasicString& operator=(this BasicString& self BASE_LIFETIMEBOUND,
                                    BasicString const&     other) noexcept {
@@ -53,14 +53,14 @@ public:
 
   constexpr BasicString& operator=(this BasicString& self BASE_LIFETIMEBOUND,
                                    BasicString&&          other) noexcept {
-    self.data_ = base::move(other.data_);
+    self.data_ = memory::move(other.data_);
     return self;
   }
 
   // NOLINTNEXTLINE(misc-no-recursion)
   constexpr BasicString& append(this BasicString& self BASE_LIFETIMEBOUND,
                                 Char const* ptr, SizeT len) noexcept {
-    copy({ptr, len}, self.grow(len));
+    memory::copy({ptr, len}, self.grow(len));
     return self;
   }
   constexpr BasicString& append(this BasicString& self BASE_LIFETIMEBOUND,
@@ -69,12 +69,12 @@ public:
   }
   // NOLINTNEXTLINE(misc-no-recursion)
   constexpr BasicString& append(this BasicString& self       BASE_LIFETIMEBOUND,
-                                BasicStringView<Char, SizeT> str) noexcept {
+                                ranges::BasicStringView<Char, SizeT> str) noexcept {
     return self.append(str.data(), str.size());
   }
   constexpr BasicString& append(this BasicString& self BASE_LIFETIMEBOUND,
                                 Char const*            cstr) noexcept {
-    return self.append(BasicStringView<Char, usize>(cstr));
+    return self.append(ranges::BasicStringView<Char, usize>(cstr));
   }
   constexpr BasicString& append(this BasicString& self BASE_LIFETIMEBOUND,
                                 BasicString const&     other) noexcept {
@@ -89,7 +89,7 @@ public:
 
   // NOLINTNEXTLINE(misc-no-recursion)
   constexpr BasicString& operator+=(this BasicString& self BASE_LIFETIMEBOUND,
-                                    BasicStringView<Char, SizeT> str) {
+                                    ranges::BasicStringView<Char, SizeT> str) {
     return self.append(str);
   }
   constexpr BasicString& operator+=(this BasicString& self BASE_LIFETIMEBOUND,
@@ -107,23 +107,23 @@ public:
 
   template <typename Self>
   constexpr BasicString operator+(this Self&& self, BasicString const& rhs) {
-    BasicString lhs = base::forward<Self>(self);
+    BasicString lhs = memory::forward<Self>(self);
     return lhs += rhs;
   }
   template <typename Self>
   constexpr BasicString operator+(this Self&&                  self,
-                                  BasicStringView<Char, SizeT> rhs) {
-    BasicString lhs = base::forward<Self>(self);
+                                  ranges::BasicStringView<Char, SizeT> rhs) {
+    BasicString lhs = memory::forward<Self>(self);
     return lhs += rhs;
   }
   template <typename Self>
   constexpr BasicString operator+(this Self&& self, Char const* cstr) {
-    BasicString lhs = base::forward<Self>(self);
+    BasicString lhs = memory::forward<Self>(self);
     return lhs += cstr;
   }
   template <typename Self>
   constexpr BasicString operator+(this Self&& self, Char chr) {
-    BasicString lhs = base::forward<Self>(self);
+    BasicString lhs = memory::forward<Self>(self);
     return lhs += chr;
   }
 
@@ -157,7 +157,7 @@ public:
   c_str(this Self&& self BASE_LIFETIMEBOUND) noexcept {
     self.data_.reserve(self.data_.size() + 1);
     self.data_[self.data_.size()] = '\0';
-    return base::forward<Self>(self).data_.data();
+    return memory::forward<Self>(self).data_.data();
   }
 
   [[nodiscard]] constexpr SizeT size(this BasicString const& self) noexcept {
@@ -171,7 +171,7 @@ public:
   template <typename Self>
   [[nodiscard]] constexpr auto&& operator[](this Self&& self BASE_LIFETIMEBOUND,
                                             SizeT            index) noexcept {
-    return base::forward<Self>(self).data_[index];
+    return memory::forward<Self>(self).data_[index];
   }
 
   [[nodiscard]] constexpr bool operator==(this BasicString const& self,
@@ -180,49 +180,49 @@ public:
   }
   [[nodiscard]] constexpr bool
   operator==(this BasicString const&             self,
-             BasicStringView<Char, SizeT> const& rhs) noexcept {
+             ranges::BasicStringView<Char, SizeT> const& rhs) noexcept {
     return self.view() == rhs;
   }
   [[nodiscard]] constexpr bool operator==(this BasicString const& self,
                                           Char const* cstr) noexcept {
-    return self.view() == BasicStringView(cstr);
+    return self.view() == ranges::BasicStringView(cstr);
   }
 
-  [[nodiscard]] constexpr BasicStringView<Char, SizeT>
+  [[nodiscard]] constexpr ranges::BasicStringView<Char, SizeT>
   view(this BasicString const& self BASE_LIFETIMEBOUND) noexcept {
     return {self.data_.data(), self.data_.size()};
   }
   template <typename Self>
-  [[nodiscard]] constexpr Slice<CopyCV<Self, Char>, SizeT>
+  [[nodiscard]] constexpr ranges::Slice<type_traits::CopyCV<Self, Char>, SizeT>
   slice(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    return base::forward<Self>(self).data_.slice();
+    return memory::forward<Self>(self).data_.slice();
   }
   template <typename Self>
-  [[nodiscard]] constexpr ReversedSlice<CopyCV<Self, Char>, SizeT>
+  [[nodiscard]] constexpr ranges::ReversedSlice<type_traits::CopyCV<Self, Char>, SizeT>
   reversed_slice(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    return base::forward<Self>(self).data_.reversed_slice();
+    return memory::forward<Self>(self).data_.reversed_slice();
   }
   template <typename Self>
   [[nodiscard]] constexpr auto
   bytes(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    return base::forward<Self>(self).data_.bytes();
+    return memory::forward<Self>(self).data_.bytes();
   }
 
   template <typename Self>
   [[nodiscard]] constexpr auto
   data(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    return base::forward<Self>(self).data_.data();
+    return memory::forward<Self>(self).data_.data();
   }
 
   template <typename Self>
   [[nodiscard]] constexpr auto
   begin(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    return base::forward<Self>(self).data_.begin();
+    return memory::forward<Self>(self).data_.begin();
   }
   template <typename Self>
   [[nodiscard]] constexpr auto
   end(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    return base::forward<Self>(self).data_.end();
+    return memory::forward<Self>(self).data_.end();
   }
 
 private:
@@ -251,4 +251,4 @@ operator""_s(char32_t const* cstr BASE_LIFETIMEBOUND, usize len) {
   return {cstr, len};
 }
 
-} // namespace base
+} // namespace base::containers

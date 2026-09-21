@@ -12,7 +12,7 @@
 #include <windows.h>
 #include <winnt.h>
 
-namespace base {
+namespace base::os {
 
 StackTrace StackTrace::current() noexcept {
   StackTrace ret;
@@ -30,7 +30,7 @@ StackTrace StackTrace::current() noexcept {
   return ret;
 }
 
-Vector<StackTraceEntry, 16> const&
+containers::Vector<StackTraceEntry, 16> const&
 StackTrace::compute_entries(this StackTrace& self) noexcept {
   if (self.entries_.size() == self.addresses_.size()) {
     return self.entries_;
@@ -42,7 +42,7 @@ StackTrace::compute_entries(this StackTrace& self) noexcept {
                                         static_cast<LPCSTR>(self.addresses_[i]),
                                         &module));
 
-    String module_name;
+    containers::String module_name;
     module_name.resize(128);
     DWORD len = GetModuleFileNameA(module, module_name.data(),
                                    static_cast<DWORD>(module_name.size()));
@@ -52,7 +52,7 @@ StackTrace::compute_entries(this StackTrace& self) noexcept {
                                static_cast<DWORD>(module_name.size()));
     }
     module_name.resize(len);
-    panic_if(len == 0, "GetModuleFileNameA failed(): {}", win32_err_str());
+    debug::panic_if(len == 0, "GetModuleFileNameA failed(): {}", win32_err_str());
 
     MODULEINFO info = {};
     GetModuleInformation(GetCurrentProcess(), module, &info,
@@ -61,8 +61,8 @@ StackTrace::compute_entries(this StackTrace& self) noexcept {
     FreeLibrary(module);
 
     self.entries_[i] = {
-        .caller       = String(),
-        .object       = base::move(module_name),
+        .caller       = containers::String(),
+        .object       = memory::move(module_name),
         .base_address = info.lpBaseOfDll,
         .address      = self.addresses_[i],
     };
@@ -70,6 +70,6 @@ StackTrace::compute_entries(this StackTrace& self) noexcept {
   return self.entries_;
 }
 
-} // namespace base
+} // namespace base::os
 
 #endif

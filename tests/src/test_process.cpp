@@ -24,7 +24,7 @@
 #define TRY_SYSCALL_WIN32(syscall)                                             \
   do {                                                                         \
     if ((syscall) == FALSE) [[unlikely]] {                                     \
-      base::panic(#syscall " failed: {}", GetLastError());                     \
+      base::debug::panic(#syscall " failed: {}", GetLastError());              \
     }                                                                          \
   } while (false)
 
@@ -41,7 +41,7 @@
     return _result;                                                            \
   }()
 
-using base::Process;
+using base::os::Process;
 using Stdio = Process::Stdio;
 
 namespace {
@@ -58,21 +58,21 @@ struct IoTypes {
   Type error;
 };
 struct IoStorage {
-  alignas(128) base::StackStorage<Stdio> input;
-  base::StackStorage<Stdio> output;
-  base::StackStorage<Stdio> error;
+  alignas(128) base::containers::StackStorage<Stdio> input;
+  base::containers::StackStorage<Stdio> output;
+  base::containers::StackStorage<Stdio> error;
 };
 struct Pipes {
 #ifdef _WIN32
-  alignas(128) base::StackArray<HANDLE, 3> original = {};
-  base::StackArray<HANDLE, 2> input                 = {};
-  base::StackArray<HANDLE, 2> output                = {};
-  base::StackArray<HANDLE, 2> error                 = {};
+  alignas(128) base::containers::StackArray<HANDLE, 3> original = {};
+  base::containers::StackArray<HANDLE, 2> input                 = {};
+  base::containers::StackArray<HANDLE, 2> output                = {};
+  base::containers::StackArray<HANDLE, 2> error                 = {};
 #else
-  alignas(64) base::StackArray<int, 3> original;
-  base::StackArray<int, 2> input  = {};
-  base::StackArray<int, 2> output = {};
-  base::StackArray<int, 2> error  = {};
+  alignas(64) base::containers::StackArray<int, 3> original;
+  base::containers::StackArray<int, 2> input  = {};
+  base::containers::StackArray<int, 2> output = {};
+  base::containers::StackArray<int, 2> error  = {};
 #endif
 
   Pipes()
@@ -150,7 +150,7 @@ struct Pipes {
 template <typename T>
 static T create_io(Type type, char const* path, auto& pipe) noexcept {
   if (type == Type::File) {
-    return T(path, base::File::Flags::Create);
+    return T(path, base::os::File::Flags::Create);
   }
   if (type == Type::OtherPipe) {
     return pipe;
@@ -158,8 +158,9 @@ static T create_io(Type type, char const* path, auto& pipe) noexcept {
   return static_cast<Process::StdioType>(type);
 }
 
-static void create_other_pipes(base::StackArray<Process, 3>& processes,
-                               IoTypes                       types) {
+static void
+create_other_pipes(base::containers::StackArray<Process, 3>& processes,
+                   IoTypes                                   types) {
   if (types.input == Type::OtherPipe) {
     Process::Stdio const stdio = {
         .input  = Process::Input::Inherit,
@@ -188,14 +189,14 @@ static constexpr char const* CHILD_STDOUT_FILE_PATH =
 static constexpr char const* CHILD_STDERR_FILE_PATH =
     BASE_TESTS_DIR "/share/test_process/child_stderr.txt";
 
-static constexpr base::StringView INPUT_DATA = "hello world\n";
+static constexpr base::ranges::StringView INPUT_DATA = "hello world\n";
 
 static void write_input(Type type, Process* proc, Pipes* pipes) {
   if (type == Type::Inherit) {
 #ifdef _WIN32
     DWORD written = 0;
     TRY_SYSCALL_WIN32(WriteFile(pipes->input[1], INPUT_DATA.data(),
-                                INPUT_DATA.size(), &written, nullptr));
+                                    INPUT_DATA.size(), &written, nullptr));
 #else
     ::write(pipes->input[1], INPUT_DATA.data(), INPUT_DATA.size());
 #endif
@@ -204,12 +205,12 @@ static void write_input(Type type, Process* proc, Pipes* pipes) {
   }
 }
 
-static base::String get_pipe_output(Process::Output* output,
-                                    base::StringView expected) {
-  base::String str;
+static base::containers::String
+get_pipe_output(Process::Output* output, base::ranges::StringView expected) {
+  base::containers::String str;
   str.resize(expected.size() + 256);
-  base::Slice<base::uchar> bytes      = str.bytes();
-  base::usize              total_read = output->read(bytes);
+  base::ranges::Slice<base::uchar> bytes      = str.bytes();
+  base::usize                      total_read = output->read(bytes);
   while (total_read < expected.size()) {
     total_read +=
         output->read({bytes.data() + total_read, bytes.size() - total_read});
@@ -218,13 +219,13 @@ static base::String get_pipe_output(Process::Output* output,
   return str;
 }
 
-static int check_file(char const* path, base::StringView expected) {
+static int check_file(char const* path, base::ranges::StringView expected) {
   int ret = 0;
 
   int const fildes =
       TRY_SYSCALL(open(path, O_RDWR | O_CREAT | O_CLOEXEC, 0644));
 
-  base::String buf;
+  base::containers::String buf;
 
   ssize_t result = ::read(fildes, buf.grow(64), 64);
 
@@ -271,8 +272,9 @@ static int check_file_output(IoTypes types) noexcept {
   return ret;
 }
 
-static int check_other_pipe_output(base::StackArray<Process, 3>& processes,
-                                   IoTypes types) noexcept {
+static int
+check_other_pipe_output(base::containers::StackArray<Process, 3>& processes,
+                        IoTypes types) noexcept {
   int ret = 0;
   if (types.output == Type::OtherPipe) {
     Process::ExitStatus const status = processes[1].wait();
@@ -297,19 +299,19 @@ static int check_other_pipe_output(base::StackArray<Process, 3>& processes,
 }
 
 #ifdef _WIN32
-static int check_fd_output(HANDLE file, base::StringView expected) {
+static int check_fd_output(HANDLE file, base::ranges::StringView expected) {
 #else
-static int check_fd_output(int file, base::StringView expected) {
+static int check_fd_output(int file, base::ranges::StringView expected) {
 #endif
-  int          ret = 0;
-  base::String output;
+  int                      ret = 0;
+  base::containers::String output;
 #ifdef _WIN32
   DWORD   result  = 0;
   WINBOOL success = ReadFile(file, output.grow(512), 512, &result, nullptr);
   if (success == FALSE) [[unlikely]] {
     DWORD err = GetLastError();
     if (err != ERROR_BROKEN_PIPE) {
-      base::panic("ReadFile() failed: {}", err);
+      base::debug::panic("ReadFile() failed: {}", err);
     }
   }
 #else
@@ -317,12 +319,12 @@ static int check_fd_output(int file, base::StringView expected) {
 #endif
 #ifdef _WIN32
   while (result > 0) {
-    success = ReadFile(file, output.grow(static_cast<base::usize>(result)), 512,
-                       &result, nullptr);
+    success = ReadFile(file, output.grow(static_cast<base::usize>(result)),
+                           512, &result, nullptr);
     if (success == FALSE) [[unlikely]] {
       DWORD err = GetLastError();
       if (err != ERROR_BROKEN_PIPE) {
-        base::panic("ReadFile() failed: {}", err);
+        base::debug::panic("ReadFile() failed: {}", err);
       }
     }
   }
@@ -361,8 +363,8 @@ static int check_inherited_output(IoTypes types, Pipes const& pipes) {
 
 namespace {
 struct RuntimeOutput {
-  base::StringView out;
-  base::StringView err;
+  base::ranges::StringView out;
+  base::ranges::StringView err;
 };
 } // namespace
 
@@ -414,7 +416,7 @@ static int test_run_c(IoTypes types) {
 
   Pipes pipes;
 
-  base::StackArray<Process, 3> other_pipes;
+  base::containers::StackArray<Process, 3> other_pipes;
   create_other_pipes(other_pipes, types);
 
   Process::Stdio const stdio = {
@@ -433,7 +435,7 @@ static int test_run_c(IoTypes types) {
 
   write_input(types.input, &process, &pipes);
 
-  base::String piped_output;
+  base::containers::String piped_output;
   if (types.output == Type::Pipe) {
     if (types.input == Type::Pipe || types.input == Type::Inherit) {
       piped_output =
@@ -451,7 +453,7 @@ static int test_run_c(IoTypes types) {
     }
   }
 
-  base::String piped_error;
+  base::containers::String piped_error;
   if (types.error == Type::Pipe) {
     if (types.input == Type::Pipe || types.input == Type::Inherit) {
       piped_error =
@@ -506,24 +508,26 @@ int main() {
   EXPECT(written == INPUT_DATA.size());
   EXPECT(close(file) == 0);
 
-  (void)base::Logger::get_default_instance();
+  (void)base::debug::Logger::get_default_instance();
 
-  base::StackArray<Type, 5> const types = {
+  base::containers::StackArray<Type, 5> const types = {
       Type::Null, Type::Inherit, Type::Pipe, Type::File, Type::OtherPipe,
   };
   for (Type stdin_type : types) {
     for (Type stdout_type : types) {
       for (Type stderr_type : types) {
-        base::log_info("calling test_run_c() with input type {}, output type "
-                       "{} and error type {}",
-                       stdin_type, stdout_type, stderr_type);
-        base::Logger::get_default_instance().flush();
+        base::debug::log_info(
+            "calling test_run_c() with input type {}, output type "
+            "{} and error type {}",
+            stdin_type, stdout_type, stderr_type);
+        base::debug::Logger::get_default_instance().flush();
         if (test_run_c({.input  = stdin_type,
                         .output = stdout_type,
                         .error  = stderr_type}) != 0) {
-          base::log_error("test_run_c() failed with input type {}, output type "
-                          "{} and error type {}",
-                          stdin_type, stdout_type, stderr_type);
+          base::debug::log_error(
+              "test_run_c() failed with input type {}, output type "
+              "{} and error type {}",
+              stdin_type, stdout_type, stderr_type);
           ret = 1;
         }
       }
@@ -532,7 +536,7 @@ int main() {
 
   EXPECT(remove(CHILD_STDIN_FILE_PATH) == 0);
 
-  base::Logger::get_default_instance().flush();
+  base::debug::Logger::get_default_instance().flush();
 
   return ret;
 }
@@ -542,7 +546,8 @@ int main() {
 #include "base/debug/log.hpp"
 
 int main() {
-  base::log_info("test_process does nothing when compiling with emscripten.");
+  base::debug::log_info(
+      "test_process does nothing when compiling with emscripten.");
 }
 
 #endif

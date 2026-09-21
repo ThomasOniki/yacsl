@@ -23,11 +23,11 @@ static void check(char const* expected) {
   size_t const            expected_len = strlen(expected);
 
   assert(expected_len - 2 < buf_size);
-  base::StackArray<char, buf_size, size_t> buf = {};
+  base::containers::StackArray<char, buf_size, size_t> buf = {};
   memcpy(buf.data(), expected, expected_len);
   buf[expected_len] = '\n';
 
-  base::StackArray<char, buf_size> logs = {};
+  base::containers::StackArray<char, buf_size> logs = {};
   // NOLINTNEXTLINE(android-cloexec-fopen)
   FILE* file = fopen("test_logs.txt", "rb");
   assert(file);
@@ -64,19 +64,20 @@ enum class EnumClass : base::u16 {
 } // namespace test_ns
 
 template <typename... Args>
-static void log_to_file(base::Logger::Level                lvl,
-                        base::FormatString<Args...> const& fmt,
+static void log_to_file(base::debug::Logger::Level                 lvl,
+                        base::format::FormatString<Args...> const& fmt,
                         Args&&... args) {
-  base::File::Flags const flags = base::File::Flags::Write |
-                                  base::File::Flags::Create |
-                                  base::File::Flags::Trunc;
-  base::Logger logger(base::File::open("test_logs.txt", flags).expect_ok(),
-                      base::File::open("test_logs.txt", flags).expect_ok(),
-                      base::Logger::Level::Trace3);
-  logger.log(lvl, fmt, base::forward<Args>(args)...);
+  base::os::File::Flags const flags = base::os::File::Flags::Write |
+                                      base::os::File::Flags::Create |
+                                      base::os::File::Flags::Trunc;
+  base::debug::Logger         logger(
+      base::os::File::open("test_logs.txt", flags).expect_ok(),
+      base::os::File::open("test_logs.txt", flags).expect_ok(),
+      base::debug::Logger::Level::Trace3);
+  logger.log(lvl, fmt, base::memory::forward<Args>(args)...);
 }
 
-using enum base::Logger::Level;
+using enum base::debug::Logger::Level;
 
 int main() {
   log_to_file(Trace3, "Hello, {}", "world!");
@@ -105,8 +106,8 @@ int main() {
         "**-0xaf**");
 
   log_to_file(Warning, "int list: {}, hex int list: {08x}",
-              base::InitializerList<int>{0, -1, 20, -35},
-              base::InitializerList<int>{0xF, -0x1a, 0x1, 0x0});
+              base::ranges::InitializerList<int>{0, -1, 20, -35},
+              base::ranges::InitializerList<int>{0xF, -0x1a, 0x1, 0x0});
   check("[WARNING] int list: [0, -1, 20, -35], hex int list: [0000000f, "
         "00000-1a, 00000001, "
         "00000000]");
@@ -121,7 +122,7 @@ int main() {
   {
     int var = 0;
     log_to_file(Info, "pointer: {}", &var);
-    base::StackArray<char, 256> buf = {};
+    base::containers::StackArray<char, 256> buf = {};
     // the %p format is implementation defined
     [[maybe_unused]] int const printed =
         snprintf(buf.data(), 256, "[INFO] pointer: %#" PRIxPTR,
@@ -135,11 +136,16 @@ int main() {
   check("[INFO] unicode char: 😁, debug wstring with unicode: \"nerd emoji: "
         "🤓\"");
 
-  log_to_file(Info, "char16_t string range: {*^10}",
-              base::InitializerList<base::BasicStringView<char16_t>>{
-                  u"foo", u"bar", u"🤓", u"⭐",
-                  u"The emoji aren't padded correctly because they use 4 UTF-8 "
-                  u"chars."});
+  log_to_file(
+      Info, "char16_t string range: {*^10}",
+      base::ranges::InitializerList<base::ranges::BasicStringView<char16_t>>{
+          u"foo",
+          u"bar",
+          u"🤓",
+          u"⭐",
+          u"The emoji aren't padded correctly because they use 4 UTF-8 "
+          u"chars.",
+      });
   check("[INFO] char16_t string range: [***foo****, ***bar****, ***🤓***, "
         "***⭐****, "
         "The emoji aren't padded correctly because they use 4 UTF-8 chars.]");
@@ -153,8 +159,8 @@ int main() {
   check("[INFO] enum format: test_ns::Zero");
   log_to_file(Info, "values >= 256 are formatted as casted ints: {}",
               test_ns::Enum1::FiveHundred);
-  check(
-      "[INFO] values >= 256 are formatted as casted ints: (test_ns::Enum1)500");
+  check("[INFO] values >= 256 are formatted as casted ints: "
+        "(test_ns::Enum1)500");
   log_to_file(Info, "Same for unamed values: {}", test_ns::Enum1{1});
   check("[INFO] Same for unamed values: (test_ns::Enum1)1");
 

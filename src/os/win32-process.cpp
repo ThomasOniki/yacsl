@@ -20,7 +20,7 @@
 #include <winerror.h>
 #include <winnt.h>
 
-namespace base {
+namespace base::os {
 
 using Type = Process::StdioType;
 using enum Type;
@@ -32,14 +32,14 @@ namespace {
 struct State {
   STARTUPINFOA          info;
   Process::Stdio const* stdio;
-  StackArray<HANDLE, 2> stdin_pipe;
-  StackArray<HANDLE, 2> stdout_pipe;
-  StackArray<HANDLE, 2> stderr_pipe;
+  containers::StackArray<HANDLE, 2> stdin_pipe;
+  containers::StackArray<HANDLE, 2> stdout_pipe;
+  containers::StackArray<HANDLE, 2> stderr_pipe;
 };
 } // namespace
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-usize Process::Output::read(this Output& self, Slice<uchar> buffer) noexcept {
+usize Process::Output::read(this Output& self, ranges::Slice<uchar> buffer) noexcept {
   DWORD   ret    = 0;
   WINBOOL result = ReadFile(self.handle_, buffer.data(),
                             static_cast<DWORD>(buffer.size()), &ret, nullptr);
@@ -48,13 +48,13 @@ usize Process::Output::read(this Output& self, Slice<uchar> buffer) noexcept {
     if (err == ERROR_BROKEN_PIPE) {
       return 0;
     }
-    panic("ReadFile() failed: {}", win32_err_str(err));
+    debug::panic("ReadFile() failed: {}", win32_err_str(err));
   }
   return static_cast<usize>(ret);
 }
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void Process::Input::write(this Input&        self,
-                           Slice<uchar const> bytes) noexcept {
+                           ranges::Slice<uchar const> bytes) noexcept {
   usize to_write = bytes.size();
   while (to_write > 0) {
     DWORD written = 0;
@@ -105,8 +105,8 @@ void Process::open_files(this Process& self, void* pvoid_state) noexcept {
   }
 }
 
-static StackArray<HANDLE, 2> create_pipe() {
-  StackArray<HANDLE, 2> handles = {};
+static containers::StackArray<HANDLE, 2> create_pipe() {
+  containers::StackArray<HANDLE, 2> handles = {};
   SECURITY_ATTRIBUTES   security_attr{
       .nLength              = sizeof(SECURITY_ATTRIBUTES),
       .lpSecurityDescriptor = nullptr,
@@ -181,11 +181,11 @@ void Process::cleanup_after_spawn(this Process& self,
   }
 }
 
-static String make_command_line_string(char const* const* argv) {
-  String str;
+static containers::String make_command_line_string(char const* const* argv) {
+  containers::String str;
 
   for (char const* const* it = argv; *it != nullptr; ++it) {
-    auto arg = StringView(*it, strlen(*it));
+    auto arg = ranges::StringView(*it, strlen(*it));
     str += '"';
     usize backslash_count = 0;
 
@@ -218,7 +218,7 @@ static String make_command_line_string(char const* const* argv) {
   return str;
 }
 
-Result<Process, Process::SpawnError>
+containers::Result<Process, Process::SpawnError>
 Process::spawn(char const* const* argv, Stdio const& stdio) noexcept {
   Process spawned;
   spawned.stdin_type_  = stdio.input.type_;
@@ -264,7 +264,7 @@ Process::spawn(char const* const* argv, Stdio const& stdio) noexcept {
 
   PROCESS_INFORMATION proc_info{};
 
-  String cmdline = make_command_line_string(argv);
+  containers::String cmdline = make_command_line_string(argv);
 
   if (CreateProcessA(nullptr, cmdline.c_str(), nullptr, nullptr, TRUE,
                      CREATE_NEW_PROCESS_GROUP, nullptr, nullptr, &state.info,
@@ -273,7 +273,7 @@ Process::spawn(char const* const* argv, Stdio const& stdio) noexcept {
     if (err == ERROR_FILE_NOT_FOUND) {
       return SpawnError::FileNotFound;
     }
-    panic("CreateProcessA() failed: {}", win32_err_str(err));
+    debug::panic("CreateProcessA() failed: {}", win32_err_str(err));
   }
 
   BASE_TRY_SYSCALL(CloseHandle(proc_info.hThread));
@@ -284,13 +284,13 @@ Process::spawn(char const* const* argv, Stdio const& stdio) noexcept {
   return spawned;
 }
 
-static String drain_pipe(Process::Output* output) noexcept {
+static containers::String drain_pipe(Process::Output* output) noexcept {
   static constexpr usize read_size = 1024;
-  String                 data;
-  Slice<uchar> bytes  = Slice<char>(data.grow(read_size), read_size).bytes();
+  containers::String                 data;
+  ranges::Slice<uchar> bytes  = ranges::Slice<char>(data.grow(read_size), read_size).bytes();
   usize        result = output->read(bytes);
   while (result != 0) {
-    bytes  = Slice<char>(data.grow(result), read_size).bytes();
+    bytes  = ranges::Slice<char>(data.grow(result), read_size).bytes();
     result = output->read(bytes);
   }
   return data.resize(data.size() - read_size);
@@ -332,7 +332,7 @@ Process::ExitStatus Process::wait(this Process& self) noexcept {
 
   self.cleanup_before_wait(&status);
 
-  panic_if(WaitForSingleObject(self.handle_, INFINITE) != WAIT_OBJECT_0,
+  debug::panic_if(WaitForSingleObject(self.handle_, INFINITE) != WAIT_OBJECT_0,
            "WaitForSingleObject failed: {}", win32_err_str());
 
   DWORD code = 0;
@@ -355,6 +355,6 @@ void Process::send_signal(this Process& self, Signal signal) noexcept {
   self.handle_ = nullptr;
 }
 
-} // namespace base
+} // namespace base::os
 
 #endif

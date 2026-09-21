@@ -3,10 +3,11 @@
 #include "base/debug/log.hpp"
 #include "base/ranges/string_view.hpp"
 
-namespace base {
+namespace base::format {
 
-void FormatStringParser::log_error_no_deps(StringView msg) noexcept {
-  Logger::get_default_instance().log(Logger::Level::Error, String(msg));
+void FormatStringParser::log_error_no_deps(ranges::StringView msg) noexcept {
+  debug::Logger::get_default_instance().log(debug::Logger::Level::Error,
+                                            containers::String(msg));
 }
 
-} // namespace base
+} // namespace base::format

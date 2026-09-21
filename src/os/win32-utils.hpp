@@ -11,7 +11,7 @@
 #include <windef.h>
 #include <winnt.h>
 
-namespace base {
+namespace base::os {
 
 inline bool strip_file_open_flag(File::Flags* flags,
                                  File::Flags  flag) noexcept {
@@ -28,19 +28,19 @@ struct OpenedFile {
   usize cursor_pos;
 };
 
-StringView        win32_err_str(DWORD err) noexcept;
-inline StringView win32_err_str() noexcept {
+ranges::StringView        win32_err_str(DWORD err) noexcept;
+inline ranges::StringView win32_err_str() noexcept {
   return win32_err_str(GetLastError());
 }
 
 // SeekEnd will be ignored
-Result<HANDLE, File::OpenError> open_file_handle(char const* path,
+containers::Result<HANDLE, File::OpenError> open_file_handle(char const* path,
                                                  File::Flags flags);
 
-} // namespace base
+} // namespace base::os
 
 #define BASE_TRY_SYSCALL(syscall)                                              \
   if ((syscall) == FALSE) [[unlikely]]                                         \
-  panic(#syscall " failed: {}", win32_err_str())
+  debug::panic(#syscall " failed: {}", win32_err_str())
 
 #endif

@@ -41,14 +41,15 @@ struct TestStruct {
 };
 } // namespace
 
-template <> class base::Formatter<Counts> {
+template <> class base::format::Formatter<Counts> {
 public:
   static constexpr char const* parse(char const* fmt) {
-    base::FormatStringParser parser(fmt);
+    base::format::FormatStringParser parser(fmt);
     return parser.end_parse();
   }
-  [[maybe_unused]] static void format(base::String& buf, Counts const& counts) {
-    base::format_to(
+  [[maybe_unused]] static void format(base::containers::String& buf,
+                                      Counts const&             counts) {
+    base::format::format_to(
         buf,
         "constructors: {}, copy_constructors: {}, move_contructors: {}, "
         "destructors: {}",
@@ -70,12 +71,12 @@ public:
     return true;
   }
 
-  template <typename T> base::Slice<T, SizeT> allocate(SizeT count) {
+  template <typename T> base::ranges::Slice<T, SizeT> allocate(SizeT count) {
     ++allocate_call_count;
     // NOLINTNEXTLINE(cppcoreguidelines-no-malloc)
     return {static_cast<T*>(malloc(sizeof(T) * count)), count};
   }
-  template <typename T> void free(base::Slice<T, SizeT> mem) {
+  template <typename T> void free(base::ranges::Slice<T, SizeT> mem) {
     ++free_call_count;
     // NOLINTNEXTLINE(cppcoreguidelines-no-malloc)
     ::free(mem.data());
@@ -92,9 +93,9 @@ public:
   } while (false)
 
 static int test_function_running() {
-  int                    ret = 0;
-  bool                   ran = false;
-  base::Function<void()> func([&ran]() { ran = true; });
+  int                                ret = 0;
+  bool                               ran = false;
+  base::containers::Function<void()> func([&ran]() { ran = true; });
 
   EXPECT(!ran);
   func();
@@ -113,7 +114,8 @@ static int test_moved_lambda() {
 
     CHECK_COUNTS(.constructor_call_count = 1);
 
-    base::Function<int(int)> func([test](int value) { return value * 2; });
+    base::containers::Function<int(int)> func(
+        [test](int value) { return value * 2; });
 
     CHECK_COUNTS(.copy_constructor_call_count = 1,
                  .move_constructor_call_count = 1, .destructor_call_count = 1);
@@ -133,7 +135,7 @@ static int test_copied_lambda() {
     TestStruct const test;
     CHECK_COUNTS(.constructor_call_count = 1);
 
-    base::Function<void(), 0, TestAllocator> const func(
+    base::containers::Function<void(), 0, TestAllocator> const func(
         [&test]() { (void)test; });
 
     CHECK_COUNTS(0);
@@ -160,7 +162,7 @@ static int test_ref_capture_lamdba() {
     auto lambda = [test]() {};
     CHECK_COUNTS(.copy_constructor_call_count = 1);
 
-    base::Function<void()> const func(lambda);
+    base::containers::Function<void()> const func(lambda);
     CHECK_COUNTS(.copy_constructor_call_count = 1);
   }
   CHECK_COUNTS(.destructor_call_count = 3);
@@ -174,6 +176,6 @@ int main() {
   EXPECT(test_moved_lambda() == 0);
   EXPECT(test_copied_lambda() == 0);
   EXPECT(test_ref_capture_lamdba() == 0);
-  base::Logger::get_default_instance().flush();
+  base::debug::Logger::get_default_instance().flush();
   return ret;
 }

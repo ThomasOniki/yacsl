@@ -11,15 +11,15 @@ struct Counts {
 } // namespace
 
 #ifdef BASE_LSP_ONLY
-using Ring = base::MPSCRingBuffer<base::usize, SLOTS>;
+using Ring = base::threads::MPSCRingBuffer<base::usize, SLOTS>;
 template <typename _>
 #else
 template <typename Ring>
 #endif
 static int test(Counts counts) noexcept {
   int                        ret   = 0;
-  base::Atomic<bool>         start = false;
-  base::Vector<base::Thread> producers;
+  base::threads::Atomic<bool>         start = false;
+  base::containers::Vector<base::threads::Thread> producers;
   Ring                       ring;
 
   for (base::usize i = 0; i < SLOTS; ++i) {
@@ -33,31 +33,31 @@ static int test(Counts counts) noexcept {
 
   for (base::usize i = 0; i < counts.producers; ++i) {
     producers.emplace_back([&ring, &start, i]() {
-      while (!start.load(base::MemoryOrder::Acquire)) {
+      while (!start.load(base::threads::MemoryOrder::Acquire)) {
       }
       ring.push(i);
     });
   }
 
-  base::Vector<base::Thread> consumers;
+  base::containers::Vector<base::threads::Thread> consumers;
 
-  base::Vector<bool> did_pop;
+  base::containers::Vector<bool> did_pop;
   did_pop.resize(counts.producers);
 
-  base::Atomic<base::usize> pop_count;
+  base::threads::Atomic<base::usize> pop_count;
 
   for (base::usize i = 0; i < counts.consumers; ++i) {
     consumers.emplace_back([&ring, &start, &did_pop, &pop_count, counts]() {
-      while (!start.load(base::MemoryOrder::Acquire)) {
+      while (!start.load(base::threads::MemoryOrder::Acquire)) {
       }
-      while (pop_count.fetch_add(1, base::MemoryOrder::Relaxed) <
+      while (pop_count.fetch_add(1, base::threads::MemoryOrder::Relaxed) <
              counts.producers) {
         did_pop[ring.pop()] = true;
       }
     });
   }
 
-  start.store(true, base::MemoryOrder::Release);
+  start.store(true, base::threads::MemoryOrder::Release);
 
   for (base::usize i = 0; i < counts.producers; ++i) {
     producers[i].join();
@@ -75,9 +75,9 @@ static int test(Counts counts) noexcept {
 
 int main() {
   int ret = 0;
-  EXPECT((test<base::MPSCRingBuffer<base::usize, SLOTS>>(
+  EXPECT((test<base::threads::MPSCRingBuffer<base::usize, SLOTS>>(
               {.producers = 50, .consumers = 1}) == 0));
-  EXPECT((test<base::MPMCRingBuffer<base::usize, SLOTS>>(
+  EXPECT((test<base::threads::MPMCRingBuffer<base::usize, SLOTS>>(
               {.producers = 50, .consumers = 50}) == 0));
   return ret;
 }

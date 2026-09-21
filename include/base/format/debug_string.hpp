@@ -9,9 +9,9 @@
 #include "base/type_traits/categories.hpp"
 #include "base/type_traits/sign.hpp"
 
-namespace base {
+namespace base::format {
 
-template <Character C> u32 debug_char_len(C chr) {
+template <type_traits::Character C> u32 debug_char_len(C chr) {
   if (chr == '\n' || chr == '\0' || chr == '\r' || chr == '\t' || chr == '\v') {
     return 2;
   }
@@ -21,8 +21,8 @@ template <Character C> u32 debug_char_len(C chr) {
   return char_len(chr);
 }
 
-template <Character C>
-usize debug_string_len(BasicStringView<C, usize> str) noexcept {
+template <type_traits::Character C>
+usize debug_string_len(ranges::BasicStringView<C, usize> str) noexcept {
   usize len = 0;
   for (C const chr : str) {
     len += debug_char_len(chr);
@@ -52,23 +52,24 @@ inline char* write_debug_char_below_0x20(BASE_LIFETIMEBOUND char* buf,
   default:
     buf[1] = 'x';
     if (chr < 0x10) {
-      static constexpr StringView hex_digits = "0123456789abcdef";
+      static constexpr ranges::StringView hex_digits = "0123456789abcdef";
       buf[2] = hex_digits[static_cast<uchar>(chr)];
       return buf + 3;
     }
-    static constexpr StringView table = "101112131415161718191a1b1c1d1e1f";
-    copy({&table[static_cast<usize>(chr - 0x10) * 2], 2}, buf + 2);
+    static constexpr ranges::StringView table =
+        "101112131415161718191a1b1c1d1e1f";
+    memory::copy({&table[static_cast<usize>(chr - 0x10) * 2], 2}, buf + 2);
     return buf + 4;
   }
 }
 
-template <Character C>
+template <type_traits::Character C>
 char* write_debug_char(BASE_LIFETIMEBOUND char* buf, C chr) {
   // For some reason clang-tidy's warning about casting [signed] char to
   // unsigned types other than uchar also applies to wchar_t, but you can't cast
   // a wchar to uchar like it suggests if you don't want to lose precision.
   // NOLINTNEXTLINE(bugprone-signed-char-misuse)
-  auto uchr = static_cast<MakeUnsigned<C>>(chr);
+  auto uchr = static_cast<type_traits::MakeUnsigned<C>>(chr);
   if (uchr >= 0x20) {
     if (uchr == 0x7F) {
       buf[0] = '\\';
@@ -82,7 +83,7 @@ char* write_debug_char(BASE_LIFETIMEBOUND char* buf, C chr) {
   return write_debug_char_below_0x20(buf, static_cast<char>(uchr));
 }
 
-inline void write_debug_char_below_0x20(String& buf, char chr) {
+inline void write_debug_char_below_0x20(containers::String& buf, char chr) {
   char* str = nullptr;
   switch (chr) {
   case '\n':
@@ -112,30 +113,33 @@ inline void write_debug_char_below_0x20(String& buf, char chr) {
     break;
   default:
     if (chr < 0x10) {
-      static constexpr StringView hex_digits = "0123456789abcdef";
-      str                                    = buf.grow(3);
-      str[0]                                 = '\\';
-      str[1]                                 = 'x';
+      static constexpr ranges::StringView hex_digits = "0123456789abcdef";
+      str                                            = buf.grow(3);
+      str[0]                                         = '\\';
+      str[1]                                         = 'x';
       str[2] = hex_digits[static_cast<uchar>(chr)];
     } else {
-      static constexpr StringView table = "101112131415161718191a1b1c1d1e1f";
-      str                               = buf.grow(4);
-      str[0]                            = '\\';
-      str[1]                            = 'x';
-      copy({&table[static_cast<usize>(chr - 0x10) * 2], 2}, str + 2);
+      static constexpr ranges::StringView table =
+          "101112131415161718191a1b1c1d1e1f";
+      str    = buf.grow(4);
+      str[0] = '\\';
+      str[1] = 'x';
+      memory::copy({&table[static_cast<usize>(chr - 0x10) * 2], 2}, str + 2);
     }
   }
 }
 
-template <Character C> void write_debug_char(String& buf, C chr) {
+template <type_traits::Character C>
+void write_debug_char(containers::String& buf, C chr) {
   // For some reason clang-tidy's warning about casting [signed] char to
   // unsigned types other than uchar also applies to wchar_t, but you can't cast
   // a wchar to uchar like it suggests if you don't want to lose precision.
   // NOLINTNEXTLINE(bugprone-signed-char-misuse)
-  auto uchr = static_cast<MakeUnsigned<C>>(chr);
+  auto uchr = static_cast<type_traits::MakeUnsigned<C>>(chr);
   if (uchr >= 0x20) {
     if (uchr == 0x7F) {
-      copy("\x7F"_sv.slice(), buf.grow(4));
+      using ranges::operator""_sv;
+      memory::copy("\x7F"_sv.slice(), buf.grow(4));
     } else {
       write_char(buf, chr);
     }
@@ -144,8 +148,8 @@ template <Character C> void write_debug_char(String& buf, C chr) {
   }
 }
 
-template <Character C>
-void write_debug_string(char* buf, BasicStringView<C, usize> str) {
+template <type_traits::Character C>
+void write_debug_string(char* buf, ranges::BasicStringView<C, usize> str) {
   *buf = '"';
   ++buf;
   for (C const chr : str) {
@@ -153,8 +157,9 @@ void write_debug_string(char* buf, BasicStringView<C, usize> str) {
   }
   *buf = '"';
 }
-template <Character C>
-void write_debug_string(String& buf, BasicStringView<C, usize> str) {
+template <type_traits::Character C>
+void write_debug_string(containers::String&               buf,
+                        ranges::BasicStringView<C, usize> str) {
   buf += '"';
   for (C const chr : str) {
     write_debug_char(buf, chr);
@@ -162,16 +167,18 @@ void write_debug_string(String& buf, BasicStringView<C, usize> str) {
   buf += '"';
 }
 
-template <bool IsDebug, Character C>
-void write_maybe_debug_string(String& buf, BasicStringView<C, usize> str) {
+template <bool IsDebug, type_traits::Character C>
+void write_maybe_debug_string(containers::String&               buf,
+                              ranges::BasicStringView<C, usize> str) {
   if constexpr (IsDebug) {
     write_debug_string(buf, str);
   } else {
     write_string(buf, str);
   }
 }
-template <bool IsDebug, Character C>
-void write_maybe_debug_string(char* buf, BasicStringView<C, usize> str) {
+template <bool IsDebug, type_traits::Character C>
+void write_maybe_debug_string(char*                             buf,
+                              ranges::BasicStringView<C, usize> str) {
   if constexpr (IsDebug) {
     write_debug_string(buf, str);
   } else {
@@ -179,8 +186,8 @@ void write_maybe_debug_string(char* buf, BasicStringView<C, usize> str) {
   }
 }
 
-template <bool IsDebug, Character C>
-usize maybe_debug_string_len(BasicStringView<C, usize> str) {
+template <bool IsDebug, type_traits::Character C>
+usize maybe_debug_string_len(ranges::BasicStringView<C, usize> str) {
   if constexpr (IsDebug) {
     return debug_string_len(str);
   } else {
@@ -188,4 +195,4 @@ usize maybe_debug_string_len(BasicStringView<C, usize> str) {
   }
 }
 
-} // namespace base
+} // namespace base::format

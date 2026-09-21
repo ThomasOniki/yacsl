@@ -20,7 +20,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-namespace base {
+namespace base::os {
 
 using Type = Process::StdioType;
 using enum Type;
@@ -32,27 +32,27 @@ namespace {
 struct State {
   alignas(64) posix_spawn_file_actions_t file_actions;
   Process::Stdio const* stdio;
-  StackArray<int, 2>    stdin_pipe;
-  StackArray<int, 2>    stdout_pipe;
-  StackArray<int, 2>    stderr_pipe;
+  containers::StackArray<int, 2>    stdin_pipe;
+  containers::StackArray<int, 2>    stdout_pipe;
+  containers::StackArray<int, 2>    stderr_pipe;
 };
 } // namespace
 
 #define CHECK_RETURN(func)                                                     \
   do {                                                                         \
     int const _result = func;                                                  \
-    panic_if(_result != 0, #func " failed: {}", errno_str(_result));           \
+    debug::panic_if(_result != 0, #func " failed: {}", errno_str(_result));           \
   } while (false)
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-usize Process::Output::read(this Output& self, Slice<uchar> buffer) noexcept {
+usize Process::Output::read(this Output& self, ranges::Slice<uchar> buffer) noexcept {
   return static_cast<usize>(
       BASE_TRY_SYSCALL(::read(self.handle_, buffer.data(), buffer.size())));
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void Process::Input::write(this Input&        self,
-                           Slice<uchar const> bytes) noexcept {
+                           ranges::Slice<uchar const> bytes) noexcept {
   usize written = static_cast<usize>(
       BASE_TRY_SYSCALL(::write(self.handle_, bytes.data(), bytes.size())));
   while (written < bytes.size()) {
@@ -178,7 +178,7 @@ void Process::cleanup_after_spawn(this Process& self,
 
 extern "C" char** environ;
 
-Result<Process, Process::SpawnError>
+containers::Result<Process, Process::SpawnError>
 Process::spawn(char const* const* argv, Stdio const& stdio) noexcept {
   Process spawned;
   spawned.stdin_type_  = stdio.input.type_;
@@ -208,19 +208,19 @@ Process::spawn(char const* const* argv, Stdio const& stdio) noexcept {
   if (result == ENOENT) {
     return SpawnError::FileNotFound;
   }
-  panic_if(result != 0, "posix_spawnp failed: {}", errno_str(result));
+  debug::panic_if(result != 0, "posix_spawnp failed: {}", errno_str(result));
   spawned.handle_ = pid;
 
   spawned.cleanup_after_spawn(&state);
   return spawned;
 }
 
-static String drain_pipe(Process::Output* output) noexcept {
-  String       data;
-  Slice<uchar> bytes  = Slice<char>(data.grow(PIPE_BUF), PIPE_BUF).bytes();
+static containers::String drain_pipe(Process::Output* output) noexcept {
+  containers::String       data;
+  ranges::Slice<uchar> bytes  = ranges::Slice<char>(data.grow(PIPE_BUF), PIPE_BUF).bytes();
   usize        result = output->read(bytes);
   while (result != 0) {
-    bytes  = Slice<char>(data.grow(result), PIPE_BUF).bytes();
+    bytes  = ranges::Slice<char>(data.grow(result), PIPE_BUF).bytes();
     result = output->read(bytes);
   }
   return data.resize(data.size() - PIPE_BUF);
@@ -279,13 +279,13 @@ Process::ExitStatus Process::wait(this Process& self) noexcept {
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void Process::send_signal(this Process& self, Signal signal) noexcept {
-  debug_panic_if(self.handle_ == -1,
+  debug::debug_panic_if(self.handle_ == -1,
                  "Tried to send_signal to a Process that isn't running.");
   BASE_TRY_SYSCALL(
       kill(static_cast<pid_t>(self.handle_), static_cast<int>(signal)));
   self.handle_ = -1;
 }
 
-} // namespace base
+} // namespace base::os
 
 #endif

@@ -10,7 +10,7 @@
 #include "base/utils/nil.hpp"
 #include <sched.h>
 
-namespace base {
+namespace base::threads {
 
 template <typename T, usize N> class MPSCRingBuffer {
 public:
@@ -34,13 +34,13 @@ public:
     while (self.slots_[index].epoch.load(MemoryOrder::Acquire) != write) {
       sched_yield();
     }
-    self.slots_[index].value.construct(base::forward<Args>(args)...);
+    self.slots_[index].value.construct(memory::forward<Args>(args)...);
     self.slots_[index].epoch.store(write + 1, MemoryOrder::Release);
     return *self.slots_[index].value;
   }
 
   T& push(this MPSCRingBuffer& self, T&& value) {
-    return self.emplace(base::move(value));
+    return self.emplace(memory::move(value));
   }
   T& push(this MPSCRingBuffer& self, T const& value) {
     return self.emplace(value);
@@ -52,7 +52,7 @@ public:
            self.read_ + 1) {
       sched_yield();
     }
-    T ret(base::move(*self.slots_[index].value));
+    T ret(memory::move(*self.slots_[index].value));
     self.slots_[index].value.destruct();
     self.slots_[index].epoch.store(self.read_ + N, MemoryOrder::Release);
     ++self.read_;
@@ -69,7 +69,7 @@ public:
       if (diff == 0) {
         if (self.write_.compare_exchange_weak(
                 write, write + 1, MemoryOrder::Relaxed, MemoryOrder::Relaxed)) {
-          self.slots_[index].value.construct(base::forward<Args>(args)...);
+          self.slots_[index].value.construct(memory::forward<Args>(args)...);
           self.slots_[index].epoch.store(write + 1, MemoryOrder::Release);
           return true;
         }
@@ -80,12 +80,12 @@ public:
       // Since usize has a finite precision and wraps to 0 on overflow and max
       // on underflow, there is no way to truly know if the write pointer is
       // ahead of the epoch. This assumes that there are less than
-      // Limits<usize>::MAX/2 threads. If the assumption holds and diff > max/2,
+      // type_traits::Limits<usize>::MAX/2 threads. If the assumption holds and diff > max/2,
       // then the true signed infinite precision difference must be negative and
       // have wrapped around to become a big number. Otherwise it must be
       // positive. If the true difference is negative, epoch < write. This means
       // that the slot hasn't been poped yet; the queue is full.
-      if (diff > Limits<usize>::MAX / 2) {
+      if (diff > type_traits::Limits<usize>::MAX / 2) {
         return false;
       }
       // If epoch > write, another producer changed the epoch between
@@ -94,16 +94,16 @@ public:
   }
 
   bool try_push(this MPSCRingBuffer& self, T&& value) {
-    return self.try_emplace(base::move(value));
+    return self.try_emplace(memory::move(value));
   }
   bool try_push(this MPSCRingBuffer& self, T const& value) {
     return self.try_emplace(value);
   }
 
-  Option<T> try_pop(this MPSCRingBuffer& self) noexcept {
+  containers::Option<T> try_pop(this MPSCRingBuffer& self) noexcept {
     usize const index = self.read_ % N;
     if (self.slots_[index].epoch.load(MemoryOrder::Acquire) != self.read_ + 1) {
-      return NIL;
+      return utils::NIL;
     }
     T ret(*self.slots_[index].value);
     self.slots_[index].value.destruct();
@@ -114,12 +114,12 @@ public:
 
 private:
   struct Slot {
-    StackStorage<T> value;
+    containers::StackStorage<T> value;
     Atomic<usize>   epoch;
   };
-  StackArray<Slot, N, usize> slots_;
+  containers::StackArray<Slot, N, usize> slots_;
   alignas(128) Atomic<usize> write_ = 0;
   alignas(128) usize read_          = 0;
 };
 
-} // namespace base
+} // namespace base::threads

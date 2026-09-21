@@ -4,7 +4,7 @@
 #include "base/type_traits/categories.hpp"
 #include "base/type_traits/sign.hpp"
 
-namespace base {
+namespace base::type_traits {
 
 template <Arithmetic T> struct Limits;
 
@@ -24,4 +24,4 @@ struct Limits<T> {
   static constexpr u32 MAX_BITS = sizeof(T) * 8;
 };
 
-} // namespace base
+} // namespace base::type_traits

@@ -6,11 +6,11 @@
 #include "base/debug/log.hpp"
 #include "base/type_aliases.hpp"
 
-namespace base {
+namespace base::os {
 
 struct StackTraceEntry {
-  alignas(64) String caller;
-  String object;
+  alignas(64) containers::String caller;
+  containers::String object;
   void*  base_address = nullptr;
   void*  address      = nullptr;
 };
@@ -22,28 +22,28 @@ struct StackTrace {
   // Only call this when you actually need it. Computing the entries is non
   // trivial and can be done at any time as long as this->ptrs_ was gotten at
   // the right time.
-  Vector<StackTraceEntry, 16> const&
+  containers::Vector<StackTraceEntry, 16> const&
   compute_entries(this StackTrace& self BASE_LIFETIMEBOUND) noexcept;
 
-  Vector<StackTraceEntry, 16> const&
+  containers::Vector<StackTraceEntry, 16> const&
   compute_entries(this StackTrace&& self BASE_LIFETIMEBOUND) noexcept {
     self.compute_entries();
-    return base::move(self).entries_;
+    return memory::move(self).entries_;
   }
 
   template <typename Self>
-  void print(this Self&& self, Logger::Level lvl) noexcept {
-    base::forward<Self>(self).compute_entries();
+  void print(this Self&& self, debug::Logger::Level lvl) noexcept {
+    memory::forward<Self>(self).compute_entries();
     for (usize i = 0; i < self.entries_.size(); ++i) {
-      base::log(lvl, "#{} {} in {} ({}+{#x})", i, self.entries_[i].address,
+      base::debug::log(lvl, "#{} {} in {} ({}+{#x})", i, self.entries_[i].address,
                 self.entries_[i].caller, self.entries_[i].object,
                 static_cast<uchar*>(self.entries_[i].address) -
                     static_cast<uchar*>(self.entries_[i].base_address));
     }
   }
 
-  alignas(128) Vector<StackTraceEntry, 16> entries_;
-  Vector<void*, 21> addresses_;
+  alignas(128) containers::Vector<StackTraceEntry, 16> entries_;
+  containers::Vector<void*, 21> addresses_;
 };
 
-} // namespace base
+} // namespace base::os

@@ -9,7 +9,7 @@
 #include "base/type_traits/qualifiers.hpp"
 #include <pthread.h>
 
-namespace base::internal {
+namespace base::threads::internal {
 template <typename T> struct StorableFunctionType {
   using Type = T;
 };
@@ -17,9 +17,9 @@ template <typename Ret, typename... Args>
 struct StorableFunctionType<Ret(Args...)> {
   using Type = Ret (*)(Args...);
 };
-} // namespace base::internal
+} // namespace base::threads::internal
 
-namespace base {
+namespace base::threads {
 
 class Thread {
 public:
@@ -27,7 +27,7 @@ public:
 
   template <typename Func, typename... Args>
   explicit Thread(Func&& func, Args&&... args) {
-    start(base::forward<Func>(func), base::forward<Args>(args)...);
+    start(memory::forward<Func>(func), memory::forward<Args>(args)...);
   }
 
   Thread(void* func(void*), void* arg) {
@@ -50,16 +50,16 @@ public:
   template <typename Func, typename... Args>
   void start(this Thread& self, Func&& func, Args&&... args) {
     self.join();
-    static_assert(SameAs<void, decltype(func(base::forward<Args>(args)...))>);
+    static_assert(type_traits::SameAs<void, decltype(func(memory::forward<Args>(args)...))>);
 
     using StoredFunction =
-        internal::StorableFunctionType<RemoveReference<Func>>::Type;
-    using Pack         = Tuple<StoredFunction, Atomic<bool>&, Args...>;
+        internal::StorableFunctionType<type_traits::RemoveReference<Func>>::Type;
+    using Pack         = containers::Tuple<StoredFunction, Atomic<bool>&, Args...>;
     Atomic<bool> ready = false;
-    Pack pack = Pack(forward<Func>(func), ready, base::forward<Args>(args)...);
+    Pack pack = Pack(memory::forward<Func>(func), ready, memory::forward<Args>(args)...);
     pthread_create(
         &self.handle_, nullptr,
-        Callback<Func, IndexSequenceToN<sizeof...(Args)>, Args...>::callback,
+        Callback<Func, meta::IndexSequenceToN<sizeof...(Args)>, Args...>::callback,
         &pack);
     while (!ready.load(MemoryOrder::Acquire)) {
     }
@@ -96,17 +96,17 @@ private:
   template <typename Func, typename Indices, typename... Args> struct Callback;
 
   template <typename Func, usize... Indices, typename... Args>
-  struct Callback<Func, IndexSequence<Indices...>, Args...> {
+  struct Callback<Func, meta::IndexSequence<Indices...>, Args...> {
     static void* callback(void* data) {
       using StoredFunction =
-          internal::StorableFunctionType<RemoveReference<Func>>::Type;
-      using Pack = Tuple<StoredFunction, Atomic<bool>&, Args...>;
-      Pack pack(base::move(*static_cast<Pack*>(data)));
+          internal::StorableFunctionType<type_traits::RemoveReference<Func>>::Type;
+      using Pack = containers::Tuple<StoredFunction, Atomic<bool>&, Args...>;
+      Pack pack(memory::move(*static_cast<Pack*>(data)));
 
       pack.template get<1>().store(true, MemoryOrder::Release);
 
       pack.template get<0>()(
-          base::forward<Args>(pack.template get<Indices + 2>())...);
+          memory::forward<Args>(pack.template get<Indices + 2>())...);
       return nullptr;
     }
   };
@@ -117,4 +117,4 @@ private:
   pthread_t handle_ = NIL_PTHREAD;
 };
 
-} // namespace base
+} // namespace base::threads

@@ -20,40 +20,42 @@
 }
 #endif
 
-namespace base {
+namespace base::memory {
 
 namespace _export_placement_new {
 using ::operator new;
 } // namespace _export_placement_new
 
-template <typename T> // NOLINTNEXTLINE(cppcoreguidelines-missing-std-forward)
-[[nodiscard]] constexpr RemoveReference<T>&&
+template <typename T>
+[[nodiscard]] constexpr type_traits::RemoveReference<T>&&
+// NOLINTNEXTLINE(cppcoreguidelines-missing-std-forward)
 move(BASE_LIFETIMEBOUND T&& value) {
-  return static_cast<RemoveReference<T>&&>(value);
+  return static_cast<type_traits::RemoveReference<T>&&>(value);
 }
 
-template <
-    typename T> // NOLINTNEXTLINE(cppcoreguidelines-rvalue-reference-param-not-moved)
+template <typename T>
 [[nodiscard]] constexpr T&&
-forward(BASE_LIFETIMEBOUND RemoveReference<T>&& value) {
+// NOLINTNEXTLINE(cppcoreguidelines-rvalue-reference-param-not-moved)
+forward(BASE_LIFETIMEBOUND type_traits::RemoveReference<T>&& value) {
   return static_cast<T&&>(value);
 }
 template <typename T>
 [[nodiscard]] constexpr T&&
-forward(BASE_LIFETIMEBOUND RemoveReference<T>& value) {
+forward(BASE_LIFETIMEBOUND type_traits::RemoveReference<T>& value) {
   return static_cast<T&&>(value);
 }
 
 template <typename T, typename... Args>
 constexpr T* construct_at(T* location BASE_LIFETIMEBOUND, Args&&... args) {
-  return ::new (location) T(base::forward<Args>(args)...);
+  return ::new (location) T(memory::forward<Args>(args)...);
 }
 
-template <MutableType T>
-constexpr Slice<T> copy(Slice<TypeIdentity<T> const> src,
-                        Slice<T> dst BASE_LIFETIMEBOUND) noexcept {
+template <type_traits::MutableType T>
+constexpr ranges::Slice<T>
+copy(ranges::Slice<meta::TypeIdentity<T> const> src,
+     ranges::Slice<T> dst                       BASE_LIFETIMEBOUND) noexcept {
   usize const size = dst.size() < src.size() ? dst.size() : src.size();
-  if (!is_constant_evaluated() && TriviallyCopyable<T>) {
+  if (!utils::is_constant_evaluated() && type_traits::TriviallyCopyable<T>) {
     return {
         static_cast<T*>(::memcpy(dst.data(), src.data(), size * sizeof(T))),
         size,
@@ -64,10 +66,10 @@ constexpr Slice<T> copy(Slice<TypeIdentity<T> const> src,
   }
   return {dst.data(), size};
 }
-template <MutableType T>
-constexpr Slice<T> copy(Slice<TypeIdentity<T> const> src,
-                        T* dst BASE_LIFETIMEBOUND) noexcept {
-  if (!is_constant_evaluated() && TriviallyCopyable<T>) {
+template <type_traits::MutableType T>
+constexpr ranges::Slice<T> copy(ranges::Slice<meta::TypeIdentity<T> const> src,
+                                T* dst BASE_LIFETIMEBOUND) noexcept {
+  if (!utils::is_constant_evaluated() && type_traits::TriviallyCopyable<T>) {
     return {
         static_cast<T*>(::memcpy(dst, src.data(), src.size() * sizeof(T))),
         src.size(),
@@ -79,4 +81,4 @@ constexpr Slice<T> copy(Slice<TypeIdentity<T> const> src,
   return {dst, src.size()};
 }
 
-} // namespace base
+} // namespace base::memory

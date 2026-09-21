@@ -58,9 +58,9 @@ CheckOptions:
   - key: modernize-loop-convert.MinConfidence
     value: reasonable
   - key: cppcoreguidelines-missing-std-forward.ForwardFunction
-    value: ::base::forward
+    value: ::base::memory::forward
   - key: cppcoreguidelines-rvalue-reference-param-not-moved.MoveFunction
-    value: ::base::move
+    value: ::base::memory::move
   - key: readability-identifier-length.IgnoredVariableNames
     value: _
   - key: cppcoreguidelines-avoid-do-while.IgnoreMacros

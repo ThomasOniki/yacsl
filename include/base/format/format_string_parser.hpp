@@ -6,7 +6,7 @@
 #include "base/ranges/string_view.hpp"
 #include "base/type_aliases.hpp"
 
-namespace base {
+namespace base::format {
 
 class FormatStringParser {
 public:
@@ -32,11 +32,11 @@ public:
 
   [[nodiscard]] constexpr char check_option(this FormatStringParser& self,
                                             char       default_option,
-                                            StringView possibilities);
+                                            ranges::StringView possibilities);
 
   [[nodiscard]] constexpr char const* end_parse(this FormatStringParser& self);
 
-  static void log_error_no_deps(StringView msg) noexcept;
+  static void log_error_no_deps(ranges::StringView msg) noexcept;
 
 private:
   alignas(16) char const* fmt_ = nullptr;
@@ -108,7 +108,7 @@ FormatStringParser::check_sign(this FormatStringParser& self) {
 
 constexpr u32 FormatStringParser::check_width(this FormatStringParser& self) {
   char const* begin = self.fmt_;
-  self.fmt_         = num_end(self.fmt_);
+  self.fmt_         = format::num_end(self.fmt_);
   return atoi<u32>(begin, self.fmt_);
 }
 
@@ -123,7 +123,7 @@ FormatStringParser::check_precision(this FormatStringParser& self) {
 
 constexpr char FormatStringParser::check_option(this FormatStringParser& self,
                                                 char       default_option,
-                                                StringView possibilities) {
+                                                ranges::StringView possibilities) {
   for (char const possibility : possibilities) {
     if (self.skip(possibility)) {
       return possibility;
@@ -145,4 +145,4 @@ FormatStringParser::end_parse(this FormatStringParser& self) {
   return self.fmt_;
 }
 
-} // namespace base
+} // namespace base::format

@@ -1,6 +1,6 @@
 #pragma once
 
-namespace base {
+namespace base::type_traits {
 
 #ifdef __clang__
 template <typename T>
@@ -13,4 +13,4 @@ concept TriviallyDestructible = __has_trivial_destructor(T);
 template <typename T>
 concept TriviallyCopyable = __is_trivially_copyable(T);
 
-} // namespace base
+} // namespace base::type_traits

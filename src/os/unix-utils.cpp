@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-namespace base {
+namespace base::os {
 
 int unix_flags(File::Flags flags) noexcept {
   unsigned int ret = 0;
@@ -34,7 +34,7 @@ int unix_flags(File::Flags flags) noexcept {
 
 // NOLINTNEXTLINE(google-readability-function-size,
 // readability-function-cognitive-complexity)
-StringView errno_str(int err) noexcept {
+ranges::StringView errno_str(int err) noexcept {
   // clang-format off
   if (err == 0) { return "Success"; }	
 #ifdef EPERM
@@ -149,7 +149,7 @@ StringView errno_str(int err) noexcept {
   if (err == ENOLCK) { return "ENOLCK No locks available"; }
 #endif
 #ifdef ENOSYS
-  if (err == ENOSYS) { return "ENOSYS Function not implemented"; }
+  if (err == ENOSYS) { return "ENOSYS containers::Function not implemented"; }
 #endif
 #ifdef ENOTEMPTY
   if (err == ENOTEMPTY) { return "ENOTEMPTY Directory not empty"; }
@@ -458,6 +458,6 @@ StringView errno_str(int err) noexcept {
   return "Unkown error";
 }
 
-} // namespace base
+} // namespace base::os
 
 #endif

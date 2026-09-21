@@ -2,9 +2,10 @@
 
 #include "base/containers/nttp_string.hpp"
 
-namespace base {
+namespace base::memory {
 
-template <typename Allocator, NTTPString Name, bool ThreadLocal = true>
+template <typename Allocator, containers::NTTPString Name,
+          bool ThreadLocal = true>
 class SingletonAllocator {
 public:
   using SizeT = Allocator::SizeT;
@@ -23,12 +24,13 @@ public:
   }
 
   template <typename T>
-  [[nodiscard]] Slice<T, SizeT> allocate(this SingletonAllocator /*self*/,
-                                         SizeT count) noexcept {
+  [[nodiscard]] ranges::Slice<T, SizeT>
+  allocate(this SingletonAllocator /*self*/, SizeT count) noexcept {
     return get().template allocate<T>(count);
   }
   template <typename T>
-  void free(this SingletonAllocator /*self*/, Slice<T, SizeT> mem) noexcept {
+  void free(this SingletonAllocator /*self*/,
+            ranges::Slice<T, SizeT> mem) noexcept {
     get().template free<T>(mem);
   }
 
@@ -38,4 +40,4 @@ public:
   }
 };
 
-} // namespace base
+} // namespace base::memory

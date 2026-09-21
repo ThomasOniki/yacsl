@@ -12,10 +12,11 @@
 #include "base/type_traits/qualifiers.hpp"
 #include "base/utils/implicit_cast.hpp"
 
-namespace base {
+namespace base::containers {
 
 template <typename T, usize N,
-          Integral SizeT = ConditionalT<(N > Limits<u32>::MAX), usize, u32>>
+          type_traits::Integral SizeT =
+              meta::ConditionalT<(N > type_traits::Limits<u32>::MAX), usize, u32>>
 class StackArray {
 public:
   [[nodiscard]] constexpr SizeT size(this StackArray const& /*self*/) noexcept {
@@ -25,33 +26,33 @@ public:
   template <typename Self>
   [[nodiscard]] constexpr auto
   data(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    return base::forward<Self>(self).data_;
+    return memory::forward<Self>(self).data_;
   }
   template <typename Self>
   [[nodiscard]] constexpr auto&& operator[](this Self&& self BASE_LIFETIMEBOUND,
                                             SizeT            index) noexcept {
-    return base::forward<Self>(self).data_[index];
+    return memory::forward<Self>(self).data_[index];
   }
 
   template <typename Self>
   [[nodiscard]] constexpr auto
   slice(this Self&& self BASE_LIFETIMEBOUND) noexcept
-      -> Slice<CopyCV<Self, T>, SizeT> {
-    return {base::forward<Self>(self).data_, static_cast<SizeT>(N)};
+      -> ranges::Slice<type_traits::CopyCV<Self, T>, SizeT> {
+    return {memory::forward<Self>(self).data_, static_cast<SizeT>(N)};
   }
   template <typename Self>
   [[nodiscard]] constexpr auto
   reversed_slice(this Self&& self BASE_LIFETIMEBOUND) noexcept
-      -> ReversedSlice<CopyCV<Self, T>, SizeT> {
-    return {base::forward<Self>(self).data_, static_cast<SizeT>(N)};
+      -> ranges::ReversedSlice<type_traits::CopyCV<Self, T>, SizeT> {
+    return {memory::forward<Self>(self).data_, static_cast<SizeT>(N)};
   }
   template <typename Self>
   [[nodiscard]] constexpr auto
   bytes(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    return base::forward<Self>(self).slice().bytes();
+    return memory::forward<Self>(self).slice().bytes();
   }
 
-  [[nodiscard]] constexpr IntegerRange<SizeT>
+  [[nodiscard]] constexpr ranges::IntegerRange<SizeT>
   indices(this StackArray const& /*self*/) noexcept {
     return {0, N};
   }
@@ -59,29 +60,29 @@ public:
   template <typename Self>
   [[nodiscard]] constexpr auto&&
   front(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    return base::forward<Self>(self).data_[0];
+    return memory::forward<Self>(self).data_[0];
   }
   template <typename Self>
   [[nodiscard]] constexpr auto&&
   back(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    return base::forward<Self>(self).data_[N - 1];
+    return memory::forward<Self>(self).data_[N - 1];
   }
 
   template <typename Self>
   [[nodiscard]] constexpr auto
   begin(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    return base::forward<Self>(self).data_;
+    return memory::forward<Self>(self).data_;
   }
   template <typename Self>
   [[nodiscard]] constexpr auto
   end(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    return base::forward<Self>(self).data_ + N;
+    return memory::forward<Self>(self).data_ + N;
   }
 
   template <usize I, typename Self>
   [[nodiscard]] constexpr auto&&
   get(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    return base::forward<Self>(self).data_[I];
+    return memory::forward<Self>(self).data_[I];
   }
 
   constexpr bool operator==(this StackArray const& self,
@@ -91,7 +92,8 @@ public:
   T data_[N];
 };
 
-template <typename T, Integral SizeT> class StackArray<T, 0, SizeT> {
+template <typename T, type_traits::Integral SizeT>
+class StackArray<T, 0, SizeT> {
 public:
   [[nodiscard]] constexpr SizeT size(this StackArray const& /*self*/) noexcept {
     return 0;
@@ -99,66 +101,68 @@ public:
 
   template <typename Self>
   [[nodiscard]] constexpr auto data(this Self&& /*self*/) noexcept {
-    return implicit_cast<CopyCV<Self, T>*>(nullptr);
+    return utils::implicit_cast<type_traits::CopyCV<Self, T>*>(nullptr);
   }
   template <typename Self>
   [[nodiscard]] constexpr auto&& operator[](this Self&& /*self*/,
                                             SizeT /*index*/) noexcept {
-    return implicit_cast<CopyCV<Self, T>*>(nullptr)[0];
+    return utils::implicit_cast<type_traits::CopyCV<Self, T>*>(nullptr)[0];
   }
 
   template <typename Self>
   [[nodiscard]] constexpr auto slice(this Self&& /*self*/) noexcept {
-    return Slice<CopyCV<Self, T>, SizeT>{nullptr, 0};
+    return ranges::Slice<type_traits::CopyCV<Self, T>, SizeT>{nullptr, 0};
   }
   template <typename Self>
   [[nodiscard]] constexpr auto reversed_slice(this Self&& /*self*/) noexcept {
-    return ReversedSlice<CopyCV<Self, T>, SizeT>{nullptr, 0};
+    return ranges::ReversedSlice<type_traits::CopyCV<Self, T>, SizeT>{nullptr,
+                                                                      0};
   }
   template <typename Self>
   [[nodiscard]] constexpr auto bytes(this Self&& /*self*/) noexcept {
-    return ReversedSlice<CopyCV<Self, uchar>, SizeT>{nullptr, 0};
+    return ranges::ReversedSlice<type_traits::CopyCV<Self, uchar>, SizeT>{
+        nullptr, 0};
   }
 
-  [[nodiscard]] constexpr IntegerRange<SizeT>
+  [[nodiscard]] constexpr ranges::IntegerRange<SizeT>
   indices(this StackArray const& /*self*/) noexcept {
     return {0, 0};
   }
 
   template <typename Self>
   [[nodiscard]] constexpr auto&& front(this Self&& /*self*/) noexcept {
-    return implicit_cast<CopyCV<Self, T>*>(nullptr)[0];
+    return utils::implicit_cast<type_traits::CopyCV<Self, T>*>(nullptr)[0];
   }
   template <typename Self>
   [[nodiscard]] constexpr auto&& back(this Self&& /*self*/) noexcept {
-    return implicit_cast<CopyCV<Self, T>*>(nullptr)[0];
+    return utils::implicit_cast<type_traits::CopyCV<Self, T>*>(nullptr)[0];
   }
 
   template <typename Self>
   [[nodiscard]] constexpr auto begin(this Self&& /*self*/) noexcept {
-    return implicit_cast<CopyCV<Self, T>*>(nullptr);
+    return utils::implicit_cast<type_traits::CopyCV<Self, T>*>(nullptr);
   }
   template <typename Self>
   [[nodiscard]] constexpr auto end(this Self&& /*self */) noexcept {
-    return implicit_cast<CopyCV<Self, T>*>(nullptr);
+    return utils::implicit_cast<type_traits::CopyCV<Self, T>*>(nullptr);
   }
   template <usize I, typename Self>
   [[nodiscard]] constexpr auto&& get(this Self&& /*self*/) noexcept {
-    return implicit_cast<CopyCV<Self, T>*>(nullptr)[0];
+    return utils::implicit_cast<type_traits::CopyCV<Self, T>*>(nullptr)[0];
   }
 
   constexpr bool operator==(this StackArray const& self,
                             StackArray const&      other) noexcept = default;
 };
 
-template <typename T, usize N, Integral SizeT>
+template <typename T, usize N, type_traits::Integral SizeT>
 struct TupleSize<StackArray<T, N, SizeT>> {
   static constexpr usize value = N;
 };
 
-template <typename T, usize N, Integral SizeT, usize I>
+template <typename T, usize N, type_traits::Integral SizeT, usize I>
 struct TupleElement<StackArray<T, N, SizeT>, I> {
   using Type = T;
 };
 
-} // namespace base
+} // namespace base::containers

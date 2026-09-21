@@ -5,32 +5,32 @@
 #include "base/format/format_string.hpp"
 #include "base/memory/lifetimes.hpp"
 
-namespace base {
+namespace base::debug {
 
 [[noreturn]] void
-panic(String const&  formatted,
-      SourceLocation location = SourceLocation::current()) noexcept;
+panic(containers::String const& formatted,
+      SourceLocation            location = SourceLocation::current()) noexcept;
 
 template <typename... Args>
 [[noreturn]] // NOLINTNEXTLINE(misc-no-recursion)
-void panic(FormatString<Args...> const& fmt, Args&&... args) noexcept {
-  String buf;
-  format_to(buf, fmt, base::forward<Args>(args)...);
+void panic(format::FormatString<Args...> const& fmt, Args&&... args) noexcept {
+  containers::String buf;
+  format::format_to(buf, fmt, memory::forward<Args>(args)...);
   panic(buf, fmt.source_location());
 }
 
 template <typename... Args> // NOLINTNEXTLINE(misc-no-recursion)
-void panic_if(bool condition, FormatString<Args...> const& fmt,
+void panic_if(bool condition, format::FormatString<Args...> const& fmt,
               Args&&... args) noexcept {
   if (condition) [[unlikely]] {
-    panic(fmt, base::forward<Args>(args)...);
+    panic(fmt, memory::forward<Args>(args)...);
   }
 }
 
 #ifdef NDEBUG
 template <typename... Args>
 [[noreturn]]
-void debug_panic(FormatString<Args...> const& /*fmt*/,
+void debug_panic(format::FormatString<Args...> const& /*fmt*/,
                  Args&&... /*args*/) noexcept {
   __builtin_unreachable();
 }
@@ -38,18 +38,19 @@ void debug_panic(FormatString<Args...> const& /*fmt*/,
 #else
 template <typename... Args>
 [[noreturn]]
-void debug_panic(FormatString<Args...> const& fmt, Args&&... args) noexcept {
-  panic(fmt, base::forward<Args>(args)...);
+void debug_panic(format::FormatString<Args...> const& fmt,
+                 Args&&... args) noexcept {
+  panic(fmt, memory::forward<Args>(args)...);
 }
 
 #endif
 
 template <typename... Args>
-void debug_panic_if(bool condition, FormatString<Args...> const& fmt,
+void debug_panic_if(bool condition, format::FormatString<Args...> const& fmt,
                     Args&&... args) noexcept {
   if (condition) [[unlikely]] {
-    debug_panic(fmt, base::forward<Args>(args)...);
+    debug_panic(fmt, memory::forward<Args>(args)...);
   }
 }
 
-} // namespace base
+} // namespace base::debug
