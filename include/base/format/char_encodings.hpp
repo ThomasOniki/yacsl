@@ -86,7 +86,8 @@ inline char* write_low_surrogate(BASE_LIFETIMEBOUND char* buf, char32_t high,
 // Unicode - 0x10000 = yyyyyyyyyyxxxxxxxxxx
 // W1 = 0xD800 + yyyyyyyyyy = 110110yyyyyyyyyy
 // W2 = 0xDC00 + xxxxxxxxxx = 110111xxxxxxxxxx
-template <type_traits::Character C> char* write_char(BASE_LIFETIMEBOUND char* buf, C chr) {
+template <type_traits::Character C>
+char* write_char(BASE_LIFETIMEBOUND char* buf, C chr) {
   if (sizeof(C) == 1 || chr < 0x80) {
     return write_char1(buf, static_cast<char8_t>(chr));
   }
@@ -107,7 +108,8 @@ template <type_traits::Character C> char* write_char(BASE_LIFETIMEBOUND char* bu
   return write_char4(buf, static_cast<char32_t>(chr));
 }
 
-template <type_traits::Character C> void write_char(containers::String& buf, C chr) {
+template <type_traits::Character C>
+void write_char(containers::String& buf, C chr) {
   if (sizeof(C) == 1 || chr < 0x80) {
     write_char1(buf.grow(1), static_cast<char8_t>(chr));
   } else if (chr < 0x800) {
@@ -156,7 +158,8 @@ template <type_traits::Character C> u32 char_len(C chr) {
   return 4;
 }
 
-template <type_traits::Character C> usize real_string_len(ranges::BasicStringView<C, usize> str) {
+template <type_traits::Character C>
+usize real_string_len(ranges::BasicStringView<C, usize> str) {
   if constexpr (sizeof(C) == 1) {
     return str.size();
   }
@@ -179,7 +182,8 @@ void write_string(char* buf, ranges::BasicStringView<C, usize> str) {
 }
 
 template <type_traits::Character C>
-void write_string(containers::String& buf, ranges::BasicStringView<C, usize> str) {
+void write_string(containers::String&               buf,
+                  ranges::BasicStringView<C, usize> str) {
   if constexpr (sizeof(C) == 1) {
     memory::copy(str.bytes(), reinterpret_cast<uchar*>(buf.grow(str.size())));
     return;

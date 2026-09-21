@@ -18,7 +18,9 @@ template <type_traits::Integral T> constexpr T pow10(u32 exp) noexcept {
   return ret;
 }
 
-template <type_traits::Integral T> constexpr T pow2(u32 exp) noexcept { return 1 << exp; }
+template <type_traits::Integral T> constexpr T pow2(u32 exp) noexcept {
+  return 1 << exp;
+}
 template <type_traits::Integral T> constexpr T pow4(u32 exp) noexcept {
   return 1 << 2 * exp;
 }

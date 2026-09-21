@@ -7,8 +7,9 @@
 #define EXPECT_EQ(lhs, rhs)                                                    \
   do {                                                                         \
     if ((lhs) != (rhs)) {                                                      \
-      base::debug::log_error("EXPECT_EQ failed. Expected {} == {}, got {} and {}.",   \
-                      #lhs, #rhs, lhs, rhs);                                   \
+      base::debug::log_error(                                                  \
+          "EXPECT_EQ failed. Expected {} == {}, got {} and {}.", #lhs, #rhs,   \
+          lhs, rhs);                                                           \
       ret = 1;                                                                 \
     }                                                                          \
   } while (false)
@@ -16,7 +17,7 @@
 #define EXPECT_SVEQ(lhs, rhs)                                                  \
   do {                                                                         \
     if ((lhs) != (rhs)) {                                                      \
-      base::debug::log_error(                                                         \
+      base::debug::log_error(                                                  \
           "EXPECT_SVEQ failed. Expected {} == {}, got {?} and {?}.", #lhs,     \
           #rhs, lhs, rhs);                                                     \
       ret = 1;                                                                 \
@@ -28,10 +29,10 @@
     char const* _lhs_v = lhs;                                                  \
     char const* _rhs_v = rhs;                                                  \
     if (strcmp(_lhs_v, _rhs_v) != 0) {                                         \
-      base::debug::log_error("EXPECT_STREQ failed. Expected " #lhs " == " #rhs        \
-                      ", got {?} and {?}.",                                    \
-                      base::ranges::StringView(lhs, strlen(lhs)),                      \
-                      base::ranges::StringView(rhs, strlen(rhs)));                     \
+      base::debug::log_error("EXPECT_STREQ failed. Expected " #lhs " == " #rhs \
+                             ", got {?} and {?}.",                             \
+                             base::ranges::StringView(lhs, strlen(lhs)),       \
+                             base::ranges::StringView(rhs, strlen(rhs)));      \
       ret = 1;                                                                 \
     }                                                                          \
   } while (false)
@@ -40,7 +41,7 @@
   do {                                                                         \
     bool const _expected = cond;                                               \
     if (!_expected) {                                                          \
-      base::debug::log_error("EXPECT failed. " #cond " is false.");                   \
+      base::debug::log_error("EXPECT failed. " #cond " is false.");            \
       ret = 1;                                                                 \
     }                                                                          \
   } while (false)
@@ -49,7 +50,7 @@
   do {                                                                         \
     bool const _result = cond;                                                 \
     if (!_result) {                                                            \
-      base::debug::log_error("ASSERT failed. " #cond " is false.");                   \
+      base::debug::log_error("ASSERT failed. " #cond " is false.");            \
       return -1;                                                               \
     }                                                                          \
   } while (false)

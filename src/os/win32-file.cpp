@@ -10,8 +10,8 @@
 
 namespace base::os {
 
-containers::Result<File, File::OpenError> File::open(char const* path,
-                                         File::Flags flags) noexcept {
+containers::Result<File, File::OpenError>
+File::open(char const* path, File::Flags flags) noexcept {
   containers::Result<HANDLE, OpenError> handle = open_file_handle(path, flags);
   if (handle.is_err()) [[unlikely]] {
     return handle.assert_err();
@@ -23,7 +23,8 @@ containers::Result<File, File::OpenError> File::open(char const* path,
     LONG high = 0;
     opened.cursor_pos_ =
         static_cast<usize>(SetFilePointer(opened.handle_, 0, &high, FILE_END));
-    opened.cursor_pos_ += static_cast<usize>(high) * type_traits::Limits<LONG>::MAX;
+    opened.cursor_pos_ +=
+        static_cast<usize>(high) * type_traits::Limits<LONG>::MAX;
     if (opened.cursor_pos_ == static_cast<usize>(INVALID_SET_FILE_POINTER)) {
       DWORD const err = GetLastError();
       if (err != NO_ERROR) {
@@ -81,7 +82,8 @@ void File::seek_begin(this File& self, utils::isize offset) noexcept {
       debug::panic("SetFilePointer failed: {}", win32_err_str(err));
     }
   }
-  self.cursor_pos_ = static_cast<usize>(high) * type_traits::Limits<LONG>::MAX + pos_low;
+  self.cursor_pos_ =
+      static_cast<usize>(high) * type_traits::Limits<LONG>::MAX + pos_low;
 }
 void File::seek_end(this File& self, utils::isize offset) noexcept {
   auto  low     = static_cast<LONG>(offset);
@@ -93,7 +95,8 @@ void File::seek_end(this File& self, utils::isize offset) noexcept {
       debug::panic("SetFilePointer failed: {}", win32_err_str(err));
     }
   }
-  self.cursor_pos_ = static_cast<usize>(high) * type_traits::Limits<LONG>::MAX + pos_low;
+  self.cursor_pos_ =
+      static_cast<usize>(high) * type_traits::Limits<LONG>::MAX + pos_low;
 }
 void File::seek_cursor(this File& self, utils::isize offset) noexcept {
   auto  low     = static_cast<LONG>(offset);
@@ -105,7 +108,8 @@ void File::seek_cursor(this File& self, utils::isize offset) noexcept {
       debug::panic("SetFilePointer failed: {}", win32_err_str(err));
     }
   }
-  self.cursor_pos_ = static_cast<usize>(high) * type_traits::Limits<LONG>::MAX + pos_low;
+  self.cursor_pos_ =
+      static_cast<usize>(high) * type_traits::Limits<LONG>::MAX + pos_low;
 }
 // NOLINTEND(readability-make-member-function-const)
 

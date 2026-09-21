@@ -9,8 +9,9 @@
 namespace base::format {
 
 template <type_traits::UnsignedIntegral T>
-constexpr char* itoa_from_end(BASE_LIFETIMEBOUND char* buf_end, T value,
-                              ranges::StringView charset = "0123456789") noexcept {
+constexpr char*
+itoa_from_end(BASE_LIFETIMEBOUND char* buf_end, T value,
+              ranges::StringView charset = "0123456789") noexcept {
   u32 const base = static_cast<u32>(charset.size());
   while (value >= base) {
     *--buf_end = charset[static_cast<u32>(value % base)];
@@ -21,13 +22,15 @@ constexpr char* itoa_from_end(BASE_LIFETIMEBOUND char* buf_end, T value,
 }
 
 template <type_traits::SignedIntegral T>
-constexpr char* itoa_from_end(BASE_LIFETIMEBOUND char* buf_end, T value,
-                              ranges::StringView charset = "0123456789") noexcept {
+constexpr char*
+itoa_from_end(BASE_LIFETIMEBOUND char* buf_end, T value,
+              ranges::StringView charset = "0123456789") noexcept {
   if (value >= 0) {
-    return itoa_from_end(buf_end, static_cast<type_traits::MakeUnsigned<T>>(value), charset);
+    return itoa_from_end(
+        buf_end, static_cast<type_traits::MakeUnsigned<T>>(value), charset);
   }
-  buf_end =
-      itoa_from_end(buf_end, static_cast<type_traits::MakeUnsigned<T>>(-value), charset);
+  buf_end = itoa_from_end(
+      buf_end, static_cast<type_traits::MakeUnsigned<T>>(-value), charset);
   *--buf_end = '-';
   return buf_end;
 }
@@ -46,7 +49,8 @@ constexpr u32 count_digits(T value, u32 base = 10) noexcept {
   if (value >= 0) {
     return count_digits(static_cast<type_traits::MakeUnsigned<T>>(value), base);
   }
-  return count_digits(static_cast<type_traits::MakeUnsigned<T>>(-value), base) + 1;
+  return count_digits(static_cast<type_traits::MakeUnsigned<T>>(-value), base) +
+         1;
 }
 
 template <type_traits::Integral T>
@@ -63,7 +67,8 @@ constexpr void itoa(containers::String& buf, T value,
   itoa_from_end(buf.end(), value, charset);
 }
 template <type_traits::Integral T>
-constexpr containers::String itoa(T value, ranges::StringView charset = "0123456789") noexcept {
+constexpr containers::String
+itoa(T value, ranges::StringView charset = "0123456789") noexcept {
   containers::String buf;
   itoa(buf, value, charset);
   return buf;

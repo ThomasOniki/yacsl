@@ -30,8 +30,8 @@ static constexpr auto TYPE_OTHER_PIPE = Type{255};
 
 namespace {
 struct State {
-  STARTUPINFOA          info;
-  Process::Stdio const* stdio;
+  STARTUPINFOA                      info;
+  Process::Stdio const*             stdio;
   containers::StackArray<HANDLE, 2> stdin_pipe;
   containers::StackArray<HANDLE, 2> stdout_pipe;
   containers::StackArray<HANDLE, 2> stderr_pipe;
@@ -39,7 +39,8 @@ struct State {
 } // namespace
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-usize Process::Output::read(this Output& self, ranges::Slice<uchar> buffer) noexcept {
+usize Process::Output::read(this Output&         self,
+                            ranges::Slice<uchar> buffer) noexcept {
   DWORD   ret    = 0;
   WINBOOL result = ReadFile(self.handle_, buffer.data(),
                             static_cast<DWORD>(buffer.size()), &ret, nullptr);
@@ -53,7 +54,7 @@ usize Process::Output::read(this Output& self, ranges::Slice<uchar> buffer) noex
   return static_cast<usize>(ret);
 }
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void Process::Input::write(this Input&        self,
+void Process::Input::write(this Input&                self,
                            ranges::Slice<uchar const> bytes) noexcept {
   usize to_write = bytes.size();
   while (to_write > 0) {
@@ -107,7 +108,7 @@ void Process::open_files(this Process& self, void* pvoid_state) noexcept {
 
 static containers::StackArray<HANDLE, 2> create_pipe() {
   containers::StackArray<HANDLE, 2> handles = {};
-  SECURITY_ATTRIBUTES   security_attr{
+  SECURITY_ATTRIBUTES               security_attr{
       .nLength              = sizeof(SECURITY_ATTRIBUTES),
       .lpSecurityDescriptor = nullptr,
       .bInheritHandle       = TRUE,
@@ -286,9 +287,10 @@ Process::spawn(char const* const* argv, Stdio const& stdio) noexcept {
 
 static containers::String drain_pipe(Process::Output* output) noexcept {
   static constexpr usize read_size = 1024;
-  containers::String                 data;
-  ranges::Slice<uchar> bytes  = ranges::Slice<char>(data.grow(read_size), read_size).bytes();
-  usize        result = output->read(bytes);
+  containers::String     data;
+  ranges::Slice<uchar>   bytes =
+      ranges::Slice<char>(data.grow(read_size), read_size).bytes();
+  usize result = output->read(bytes);
   while (result != 0) {
     bytes  = ranges::Slice<char>(data.grow(result), read_size).bytes();
     result = output->read(bytes);
@@ -333,7 +335,7 @@ Process::ExitStatus Process::wait(this Process& self) noexcept {
   self.cleanup_before_wait(&status);
 
   debug::panic_if(WaitForSingleObject(self.handle_, INFINITE) != WAIT_OBJECT_0,
-           "WaitForSingleObject failed: {}", win32_err_str());
+                  "WaitForSingleObject failed: {}", win32_err_str());
 
   DWORD code = 0;
   BASE_TRY_SYSCALL(GetExitCodeProcess(self.handle_, &code));

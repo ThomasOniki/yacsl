@@ -10,7 +10,8 @@
 
 namespace base::containers {
 
-template <usize N, type_traits::Character C = char, type_traits::Integral SizeT = usize>
+template <usize N, type_traits::Character C = char,
+          type_traits::Integral SizeT = usize>
 class NTTPString {
 public:
   constexpr NTTPString(C const (&str)[N + 1]) noexcept {
@@ -77,7 +78,8 @@ public:
   StackArray<C, N, SizeT> data_ = {'\0'};
 };
 
-template <type_traits::Character C, type_traits::Integral SizeT> class NTTPString<0, C, SizeT> {
+template <type_traits::Character C, type_traits::Integral SizeT>
+class NTTPString<0, C, SizeT> {
 public:
   constexpr NTTPString(C const (& /*str*/)[1]) noexcept {}
   constexpr NTTPString() noexcept = default;

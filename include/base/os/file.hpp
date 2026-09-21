@@ -25,10 +25,10 @@ public:
   enum class OpenError : u8 {
     FileNotFound = 1,
   };
-  [[nodiscard]] static containers::Result<File, OpenError> open(char const* path,
-                                                    Flags       flags) noexcept;
-  [[nodiscard]] static containers::Result<File, OpenError> open(ranges::StringView path,
-                                                    Flags      flags) noexcept {
+  [[nodiscard]] static containers::Result<File, OpenError>
+  open(char const* path, Flags flags) noexcept;
+  [[nodiscard]] static containers::Result<File, OpenError>
+  open(ranges::StringView path, Flags flags) noexcept {
     return open(containers::String(path).c_str(), flags);
   }
 

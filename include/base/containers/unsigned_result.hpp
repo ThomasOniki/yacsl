@@ -37,7 +37,7 @@ public:
   }
 
   template <typename... Args>
-  [[nodiscard]] constexpr Ok expect_ok(this UnsignedResult   self,
+  [[nodiscard]] constexpr Ok expect_ok(this UnsignedResult           self,
                                        format::FormatString<Args...> fmt,
                                        Args&&... args) noexcept {
     if (self.is_error()) [[unlikely]] {
@@ -48,11 +48,12 @@ public:
   }
   [[nodiscard]] constexpr Ok expect_ok(this UnsignedResult self) noexcept {
     return self.expect_ok("UnsignedResult<{}, {}> is error {}.",
-                          type_traits::TYPE_STRING<Ok>, type_traits::TYPE_STRING<Err>, self.error());
+                          type_traits::TYPE_STRING<Ok>,
+                          type_traits::TYPE_STRING<Err>, self.error());
   }
 
   template <typename... Args>
-  [[nodiscard]] constexpr Ok assert_ok(this UnsignedResult   self,
+  [[nodiscard]] constexpr Ok assert_ok(this UnsignedResult           self,
                                        format::FormatString<Args...> fmt,
                                        Args&&... args) noexcept {
     debug::debug_panic_if(self.is_error(), fmt, memory::forward<Args>(args)...);
@@ -60,7 +61,8 @@ public:
   }
   [[nodiscard]] constexpr Ok assert_ok(this UnsignedResult self) noexcept {
     return self.assert_ok("UnsignedResult<{}, {}> is error {}.",
-                          type_traits::TYPE_STRING<Ok>, type_traits::TYPE_STRING<Err>, self.error());
+                          type_traits::TYPE_STRING<Ok>,
+                          type_traits::TYPE_STRING<Err>, self.error());
   }
 
 private:

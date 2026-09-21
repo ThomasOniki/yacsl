@@ -27,7 +27,7 @@ public:
   }
 
   template <typename... Args>
-  constexpr void expect_nil(this Error                   self,
+  constexpr void expect_nil(this Error                           self,
                             format::FormatString<Args...> const& error_fmt,
                             Args&&... args) {
     if (self.value_ != Err(0)) [[unlikely]] {
@@ -39,7 +39,7 @@ public:
   }
 
   template <typename... Args>
-  constexpr void assert_nil(this Error                   self,
+  constexpr void assert_nil(this Error                           self,
                             format::FormatString<Args...> const& error_fmt,
                             Args&&... args) {
     if (self.value_ != Err(0)) [[unlikely]] {

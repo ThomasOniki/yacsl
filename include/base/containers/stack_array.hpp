@@ -15,8 +15,8 @@
 namespace base::containers {
 
 template <typename T, usize N,
-          type_traits::Integral SizeT =
-              meta::ConditionalT<(N > type_traits::Limits<u32>::MAX), usize, u32>>
+          type_traits::Integral SizeT = meta::ConditionalT<
+              (N > type_traits::Limits<u32>::MAX), usize, u32>>
 class StackArray {
 public:
   [[nodiscard]] constexpr SizeT size(this StackArray const& /*self*/) noexcept {

@@ -9,7 +9,8 @@
 
 namespace base::ranges {
 
-template <typename T, type_traits::Integral SizeT = usize, bool Reversed = false>
+template <typename T, type_traits::Integral SizeT = usize,
+          bool Reversed = false>
 class Slice {
 public:
   friend class Slice<T const, SizeT>;
@@ -30,22 +31,24 @@ public:
       : data_(Reversed ? other.end() - 1 : other.end() + 1),
         size_(other.size() + 1) {}
 
-  constexpr Slice(Slice<type_traits::RemoveConst<T>, SizeT> const& mutable_slice) noexcept
+  constexpr Slice(
+      Slice<type_traits::RemoveConst<T>, SizeT> const& mutable_slice) noexcept
       : data_(mutable_slice.data_), size_(mutable_slice.size_) {}
   // NOLINTNEXTLINE(bugprone-unhandled-self-assignment)
-  constexpr Slice&
-  operator=(Slice<type_traits::RemoveConst<T>, SizeT> const& mutable_slice) noexcept {
+  constexpr Slice& operator=(
+      Slice<type_traits::RemoveConst<T>, SizeT> const& mutable_slice) noexcept {
     data_ = mutable_slice.data_;
     size_ = mutable_slice.size_;
     return *this;
   }
 
-  // The memory::move and memory::forward functions are in lifetimes.hpp which includes this
-  // file, so they cannot be used here.
+  // The memory::move and memory::forward functions are in lifetimes.hpp which
+  // includes this file, so they cannot be used here.
   // NOLINTBEGIN(cppcoreguidelines-missing-std-memory::forward)
   // NOLINTBEGIN(cppcoreguidelines-rvalue-reference-param-not-memory::moved)
   template <typename Self>
-  [[nodiscard]] constexpr type_traits::CopyCV<Self, T>* data(this Self&& self) noexcept {
+  [[nodiscard]] constexpr type_traits::CopyCV<Self, T>*
+  data(this Self&& self) noexcept {
     return self.data_;
   }
   [[nodiscard]] constexpr SizeT size(this Slice const& self) noexcept {
@@ -106,11 +109,13 @@ public:
   }
 
   template <typename Self>
-  [[nodiscard]] constexpr type_traits::CopyCV<Self, T>* begin(this Self&& self) noexcept {
+  [[nodiscard]] constexpr type_traits::CopyCV<Self, T>*
+  begin(this Self&& self) noexcept {
     return self.data_;
   }
   template <typename Self>
-  [[nodiscard]] constexpr type_traits::CopyCV<Self, T>* end(this Self&& self) noexcept {
+  [[nodiscard]] constexpr type_traits::CopyCV<Self, T>*
+  end(this Self&& self) noexcept {
     return self.data_ + self.size_;
   }
   // NOLINTEND(cppcoreguidelines-rvalue-reference-param-not-memory::moved)

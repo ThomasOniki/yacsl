@@ -50,7 +50,10 @@ private:
     constexpr StdioInit(ranges::StringView path, File::Flags flags) noexcept
         : type_(TYPE_FILE),
           file_info_{
-              .path  = containers::BasicString<char, 0, memory::MainArenaAllocator>(path).c_str(),
+              .path =
+                  containers::BasicString<char, 0, memory::MainArenaAllocator>(
+                      path)
+                      .c_str(),
               .flags = flags,
           } {}
 
@@ -65,7 +68,7 @@ private:
     union {
       FileInfo     file_info_;
       File::Handle other_pipe_handle_;
-      utils::Nil          dummy_ = utils::NIL;
+      utils::Nil   dummy_ = utils::NIL;
     };
 
     static constexpr auto TYPE_FILE       = StdioType{254};
@@ -135,8 +138,9 @@ public:
 
   Process& operator=(this Process& self BASE_LIFETIMEBOUND,
                      Process&&          other) noexcept {
-    debug::debug_panic_if(self.handle_ != NIL_PROCESS_HANDLE,
-                   "Tried to memory::move assign an active Process instance.");
+    debug::debug_panic_if(
+        self.handle_ != NIL_PROCESS_HANDLE,
+        "Tried to memory::move assign an active Process instance.");
     self.handle_        = other.handle_;
     self.stdin_type_    = other.stdin_type_;
     self.stdout_type_   = other.stdout_type_;
@@ -162,7 +166,8 @@ public:
   spawn(char const* const* argv, Stdio const& stdio) noexcept;
 
   [[nodiscard]] static containers::Result<Process, SpawnError>
-  spawn(ranges::InitializerList<char const*> argv, Stdio const& stdio) noexcept {
+  spawn(ranges::InitializerList<char const*> argv,
+        Stdio const&                         stdio) noexcept {
     containers::Vector<char const*, 6> cstrs;
     cstrs.reserve(argv.size());
     for (char const* str : argv) {
@@ -173,7 +178,8 @@ public:
   }
 
   [[nodiscard]] static containers::Result<Process, SpawnError>
-  spawn(ranges::InitializerList<ranges::StringView> argv, Stdio const& stdio) noexcept {
+  spawn(ranges::InitializerList<ranges::StringView> argv,
+        Stdio const&                                stdio) noexcept {
     return spawn<ranges::InitializerList<ranges::StringView>>(argv, stdio);
   }
 
@@ -181,7 +187,7 @@ public:
   [[nodiscard]] static containers::Result<Process, SpawnError>
   spawn(Range const& argv, Stdio const& stdio) noexcept {
     containers::Vector<containers::BasicString<char, 16>, 6> cstrs(argv);
-    containers::Vector<char const*, 6>           cstr_ptrs;
+    containers::Vector<char const*, 6>                       cstr_ptrs;
     cstr_ptrs.reserve(cstrs.size() + 1);
     for (auto& cstr : cstrs) {
       cstr_ptrs.push_back(cstr.c_str());
@@ -233,9 +239,9 @@ public:
   struct ExitStatus {
     alignas(64) containers::String unread_stdout;
     containers::String unread_stderr;
-    u32    exit_code;
-    Signal signal;
-    Signal stopped;
+    u32                exit_code;
+    Signal             signal;
+    Signal             stopped;
   };
 
   ExitStatus wait(this Process& self) noexcept;

@@ -6,7 +6,8 @@ namespace base::debug {
 
 struct SourceLocation {
   static consteval SourceLocation
-  current(u32 line = __builtin_LINE(), ranges::StringView file = __builtin_FILE(),
+  current(u32                line     = __builtin_LINE(),
+          ranges::StringView file     = __builtin_FILE(),
           ranges::StringView function = __builtin_FUNCTION()) noexcept {
     return SourceLocation{
         .line     = line,
@@ -15,7 +16,7 @@ struct SourceLocation {
     };
   }
 
-  u32        line = 0;
+  u32                line = 0;
   ranges::StringView file;
   ranges::StringView function;
 };

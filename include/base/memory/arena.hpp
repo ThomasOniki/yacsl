@@ -97,7 +97,7 @@ private:
 template <type_traits::TriviallyDestructible T, typename... Args>
 T& Arena::push(this Arena& self, Args&&... args) {
   return *memory::construct_at(self.allocate<T>(1).data(),
-                                     memory::forward<Args>(args)...);
+                               memory::forward<Args>(args)...);
 }
 
 template <type_traits::TriviallyDestructible T>

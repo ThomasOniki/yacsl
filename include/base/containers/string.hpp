@@ -14,7 +14,8 @@
 namespace base::containers {
 
 template <type_traits::Character Char, usize N = 0,
-          type_traits::AllocatorType Allocator = memory::MainArenaAllocator, type_traits::Integral SizeT = usize>
+          type_traits::AllocatorType Allocator = memory::MainArenaAllocator,
+          type_traits::Integral      SizeT     = usize>
 class BasicString {
 public:
   constexpr BasicString() noexcept = default;
@@ -68,8 +69,9 @@ public:
     return self.append(begin, static_cast<SizeT>(end - begin));
   }
   // NOLINTNEXTLINE(misc-no-recursion)
-  constexpr BasicString& append(this BasicString& self       BASE_LIFETIMEBOUND,
-                                ranges::BasicStringView<Char, SizeT> str) noexcept {
+  constexpr BasicString&
+  append(this BasicString& self               BASE_LIFETIMEBOUND,
+         ranges::BasicStringView<Char, SizeT> str) noexcept {
     return self.append(str.data(), str.size());
   }
   constexpr BasicString& append(this BasicString& self BASE_LIFETIMEBOUND,
@@ -111,7 +113,7 @@ public:
     return lhs += rhs;
   }
   template <typename Self>
-  constexpr BasicString operator+(this Self&&                  self,
+  constexpr BasicString operator+(this Self&&                          self,
                                   ranges::BasicStringView<Char, SizeT> rhs) {
     BasicString lhs = memory::forward<Self>(self);
     return lhs += rhs;
@@ -179,7 +181,7 @@ public:
     return self.view() == other.view();
   }
   [[nodiscard]] constexpr bool
-  operator==(this BasicString const&             self,
+  operator==(this BasicString const&                     self,
              ranges::BasicStringView<Char, SizeT> const& rhs) noexcept {
     return self.view() == rhs;
   }
@@ -198,7 +200,8 @@ public:
     return memory::forward<Self>(self).data_.slice();
   }
   template <typename Self>
-  [[nodiscard]] constexpr ranges::ReversedSlice<type_traits::CopyCV<Self, Char>, SizeT>
+  [[nodiscard]] constexpr ranges::ReversedSlice<type_traits::CopyCV<Self, Char>,
+                                                SizeT>
   reversed_slice(this Self&& self BASE_LIFETIMEBOUND) noexcept {
     return memory::forward<Self>(self).data_.reversed_slice();
   }
