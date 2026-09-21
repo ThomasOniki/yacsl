@@ -3,7 +3,7 @@
 #include "base/attributes.hpp"
 #include <pthread.h>
 
-namespace base {
+namespace base::threads {
 
 class Mutex {
 public:
@@ -53,4 +53,4 @@ private:
   Mutex* mutex_;
 };
 
-} // namespace base
+} // namespace base::threads

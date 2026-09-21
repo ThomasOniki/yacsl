@@ -1,6 +1,6 @@
 #pragma once
 
-namespace base {
+namespace base::meta {
 
 namespace internal {
 template <typename T> struct TypeIdentityImpl {
@@ -10,4 +10,4 @@ template <typename T> struct TypeIdentityImpl {
 
 template <typename T> using TypeIdentity = internal::TypeIdentityImpl<T>::Type;
 
-} // namespace base
+} // namespace base::meta

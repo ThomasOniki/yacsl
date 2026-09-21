@@ -6,13 +6,13 @@
 #include "base/ranges/string_view.hpp"
 #include "base/type_aliases.hpp"
 
-namespace base {
+namespace base::utils {
 
 namespace {
 class Demangler {
 public:
-  String const& demangle(this Demangler& self,
-                         StringView      mangled_func) noexcept {
+  containers::String const& demangle(this Demangler&    self,
+                                     ranges::StringView mangled_func) noexcept {
     self.mangled_       = mangled_func.begin();
     self.has_templates_ = false;
     self.demangled_.clear();
@@ -26,14 +26,14 @@ public:
     // There is no substitute for the whole function name for some reason.
     self.substitutes_.pop_back();
 
-    String return_type;
+    containers::String return_type;
 
     bool const has_templates = self.has_templates_;
 
     if (has_templates) {
-      String const func = base::move(self.demangled_);
+      containers::String const func = memory::move(self.demangled_);
       self.demangle_type();
-      return_type     = base::move(self.demangled_);
+      return_type     = memory::move(self.demangled_);
       self.demangled_ = func;
     }
 
@@ -53,8 +53,8 @@ public:
     self.demangled_ += ')';
 
     if (has_templates) {
-      String const func = base::move(self.demangled_);
-      self.demangled_   = base::move(return_type);
+      containers::String const func = memory::move(self.demangled_);
+      self.demangled_               = memory::move(return_type);
       self.demangled_ += ' ';
       self.demangled_ += func;
     }
@@ -81,13 +81,14 @@ private:
       } else {
         self.skip('L');
 
-        char const* end = num_end(self.mangled_);
-        auto const  len = atoi<usize>(self.mangled_, end);
+        char const* end = format::num_end(self.mangled_);
+        auto const  len = format::atoi<usize>(self.mangled_, end);
 
-        StringView const     chunk(end, len);
-        constexpr StringView anonymous_ns = "_GLOBAL__N_";
+        ranges::StringView const     chunk(end, len);
+        constexpr ranges::StringView anonymous_ns = "_GLOBAL__N_";
         if (chunk.size() >= anonymous_ns.size() &&
-            StringView(chunk.data(), anonymous_ns.size()) == anonymous_ns) {
+            ranges::StringView(chunk.data(), anonymous_ns.size()) ==
+                anonymous_ns) {
           self.demangled_ += "(anonymous namespace)";
         } else {
           self.demangled_ += chunk;
@@ -125,7 +126,7 @@ private:
 
   // NOLINTNEXTLINE(misc-no-recursion)
   void demangle_type(this Demangler& self) noexcept {
-    StringView const qualifiers = self.get_mangled_qualifiers();
+    ranges::StringView const qualifiers = self.get_mangled_qualifiers();
 
     if (self.mangled_[0] == 'D' && self.mangled_[1] == 'p') {
       self.demangle_template_parameter_pack(qualifiers);
@@ -140,8 +141,8 @@ private:
       usize       index = 0;
       char const* end   = self.mangled_;
       if (*self.mangled_ != '_') {
-        end   = num_end(self.mangled_);
-        index = atoi<usize>(self.mangled_, end) + 1;
+        end   = format::num_end(self.mangled_);
+        index = format::atoi<usize>(self.mangled_, end) + 1;
       }
       if (index < self.template_args_.size()) {
         self.demangled_.append(
@@ -159,9 +160,10 @@ private:
     self.demangle_type_qualifiers(qualifiers);
   }
 
-  // NOLINTNEXTLINE(misc-no-recursion)
-  void demangle_template_parameter_pack(this Demangler& self,
-                                        StringView      qualifiers) noexcept {
+  void // NOLINTNEXTLINE(misc-no-recursion)
+  demangle_template_parameter_pack(this Demangler&    self,
+                                   ranges::StringView qualifiers) noexcept {
+    using base::ranges::operator""_sv;
     self.mangled_ += "Dp"_sv.size();
     if (*self.mangled_ == 'T') {
       self.demangle_type();
@@ -174,27 +176,27 @@ private:
   }
 
   // NOLINTNEXTLINE(misc-no-recursion)
-  void demangle_array_type(this Demangler& self,
-                           StringView      qualifiers) noexcept {
+  void demangle_array_type(this Demangler&    self,
+                           ranges::StringView qualifiers) noexcept {
     ++self.mangled_;
-    char const*      end = num_end(self.mangled_);
-    StringView const arr_len(self.mangled_, end);
+    char const*              end = format::num_end(self.mangled_);
+    ranges::StringView const arr_len(self.mangled_, end);
     self.mangled_ = end + 1;
     self.demangle_type();
-    StringView prefix = " [";
+    ranges::StringView prefix = " [";
     if (qualifiers.size() > 0) {
       self.demangled_ += " (";
       self.demangle_type_qualifiers(qualifiers);
       prefix = ") [";
     }
     char* data = self.demangled_.grow(prefix.size() + arr_len.size() + 1);
-    copy(prefix.slice(), data);
-    copy(arr_len.slice(), data + prefix.size());
+    memory::copy(prefix.slice(), data);
+    memory::copy(arr_len.slice(), data + prefix.size());
     data[prefix.size() + arr_len.size()] = ']';
   }
 
-  void demangle_type_qualifiers(this Demangler& self,
-                                StringView      mangled) noexcept {
+  void demangle_type_qualifiers(this Demangler&    self,
+                                ranges::StringView mangled) noexcept {
     for (char const* it = mangled.end() - 1; it != mangled.begin() - 1; --it) {
       switch (*it) {
       case 'K':
@@ -218,7 +220,7 @@ private:
     }
   }
 
-  StringView get_mangled_qualifiers(this Demangler& self) noexcept {
+  ranges::StringView get_mangled_qualifiers(this Demangler& self) noexcept {
     char const* begin = self.mangled_;
     while (*self.mangled_ == 'K' || *self.mangled_ == 'V' ||
            *self.mangled_ == 'P' || *self.mangled_ == 'R' ||
@@ -330,7 +332,7 @@ private:
     while (*self.mangled_ != 'E') {
       ++self.mangled_;
     }
-    self.demangled_ += StringView{begin, self.mangled_};
+    self.demangled_ += ranges::StringView{begin, self.mangled_};
     ++self.mangled_;
   }
 
@@ -372,7 +374,7 @@ private:
             (self.mangled_[1] >= 'A' && self.mangled_[1] <= 'Z'));
   }
 
-  [[nodiscard]] StringView substitution(this Demangler& self) noexcept {
+  [[nodiscard]] ranges::StringView substitution(this Demangler& self) noexcept {
     self.skip('S');
 
     usize index = 0;
@@ -403,32 +405,32 @@ private:
       alignas(16) usize end;
       bool is_substitution = false;
     };
-    String            module_string;
-    Vector<Submodule> submodules;
+    containers::String            module_string;
+    containers::Vector<Submodule> submodules;
   };
 
   // NOLINTNEXTLINE(misc-no-recursion)
   Modules demangle_modules(this Demangler& self) noexcept {
     Modules ret;
     for (;;) {
-      StringView to_add;
-      bool const is_substituted = !self.skip('W');
+      ranges::StringView to_add;
+      bool const         is_substituted = !self.skip('W');
       if (is_substituted) {
         if (!self.is_substitution()) {
           break;
         }
-        char const*      before_sub = self.mangled_;
-        StringView const sub        = self.substitution();
+        char const*              before_sub = self.mangled_;
+        ranges::StringView const sub        = self.substitution();
         if (sub.data() == self.demangled_.data() || sub.data()[-1] != '@') {
           self.mangled_ = before_sub;
           break;
         }
         to_add = sub;
       } else {
-        char const* end = num_end(self.mangled_);
-        auto const  len = atoi<usize>(self.mangled_, end);
+        char const* end = format::num_end(self.mangled_);
+        auto const  len = format::atoi<usize>(self.mangled_, end);
         self.mangled_   = end + len;
-        to_add          = StringView(end, self.mangled_);
+        to_add          = ranges::StringView(end, self.mangled_);
       }
 
       char* bytes = ret.module_string.grow(to_add.size() + 1);
@@ -439,7 +441,7 @@ private:
         bytes[0] = '.';
       }
 
-      copy(to_add.slice(), bytes + 1);
+      memory::copy(to_add.slice(), bytes + 1);
       ret.submodules.emplace_back(ret.module_string.size(), is_substituted);
     }
     return ret;
@@ -447,6 +449,7 @@ private:
 
   // NOLINTNEXTLINE(google-readability-function-size)
   void demangle_builtin_type_id(this Demangler& self) noexcept {
+    using base::ranges::operator""_sv;
     switch (*self.mangled_) {
     case 'v':
       self.demangled_ += "void";
@@ -563,8 +566,8 @@ private:
     return false;
   }
 
-  bool skip(this Demangler& self, StringView str) noexcept {
-    if (StringView(self.mangled_, self.mangled_ + str.size()) == str) {
+  bool skip(this Demangler& self, ranges::StringView str) noexcept {
+    if (ranges::StringView(self.mangled_, self.mangled_ + str.size()) == str) {
       self.mangled_ += str.size();
       return true;
     }
@@ -572,15 +575,15 @@ private:
   }
 
 private:
-  String demangled_;
+  containers::String demangled_;
   struct Range {
     alignas(16) usize begin;
     usize end;
   };
-  Vector<Range> substitutes_;
-  Vector<usize> substitute_beginings_;
-  Vector<Range> template_args_;
-  char const*   mangled_ = nullptr;
+  containers::Vector<Range> substitutes_;
+  containers::Vector<usize> substitute_beginings_;
+  containers::Vector<Range> template_args_;
+  char const*               mangled_ = nullptr;
 
   usize template_nesting_level_ = 0;
 
@@ -588,9 +591,9 @@ private:
 };
 } // namespace
 
-String demangle(StringView mangled) {
+containers::String demangle(ranges::StringView mangled) {
   Demangler demangler;
   return demangler.demangle(mangled);
 }
 
-} // namespace base
+} // namespace base::utils

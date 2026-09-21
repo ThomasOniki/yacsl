@@ -8,7 +8,7 @@
 #include <dlfcn.h>
 #include <execinfo.h>
 
-namespace base {
+namespace base::os {
 
 StackTrace StackTrace::current() noexcept {
   StackTrace ret;
@@ -24,7 +24,7 @@ StackTrace StackTrace::current() noexcept {
   return ret;
 }
 
-Vector<StackTraceEntry, 16> const&
+containers::Vector<StackTraceEntry, 16> const&
 StackTrace::compute_entries(this StackTrace& self) noexcept {
   if (self.entries_.size() == self.addresses_.size()) {
     return self.entries_;
@@ -34,8 +34,8 @@ StackTrace::compute_entries(this StackTrace& self) noexcept {
     Dl_info info;
     dladdr(self.addresses_[i], &info);
     self.entries_[i] = {
-        .caller       = demangle(info.dli_sname),
-        .object       = StringView(info.dli_fname),
+        .caller       = utils::demangle(info.dli_sname),
+        .object       = ranges::StringView(info.dli_fname),
         .base_address = info.dli_fbase,
         .address      = self.addresses_[i],
     };
@@ -43,6 +43,6 @@ StackTrace::compute_entries(this StackTrace& self) noexcept {
   return self.entries_;
 }
 
-} // namespace base
+} // namespace base::os
 
 #endif

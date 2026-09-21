@@ -1,6 +1,6 @@
 #pragma once
 
-namespace base {
+namespace base::meta {
 
 using usize = decltype(sizeof(int));
 
@@ -25,4 +25,4 @@ struct FirstOfSizeImpl<Size, First, Others...> {
 template <usize Size, typename... Ts>
 using FirstOfSize = internal::FirstOfSizeImpl<Size, Ts...>;
 
-} // namespace base
+} // namespace base::meta

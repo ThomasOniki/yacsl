@@ -45,8 +45,8 @@ private:
 
 #endif
 
-namespace base {
+namespace base::ranges {
 
 template <typename T> using InitializerList = std::initializer_list<T>;
 
-} // namespace base
+} // namespace base::ranges

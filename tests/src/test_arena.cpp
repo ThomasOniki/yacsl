@@ -26,7 +26,7 @@ static int test_ctors() {
 
   CtorCounter* ptrs[iteration_count] = {};
   for (uint32_t i = 0; i < iteration_count; ++i) {
-    ptrs[i] = &base::MainArenaAllocator::get().push<CtorCounter>(i);
+    ptrs[i] = &base::memory::MainArenaAllocator::get().push<CtorCounter>(i);
   }
 
   EXPECT_EQ(CtorCounter::ctor_call_count, iteration_count);
@@ -38,7 +38,7 @@ static int test_ctors() {
   CtorCounter::ctor_call_count = 0;
 
   for (auto& ptr : ptrs) {
-    ptr = base::MainArenaAllocator::get().push_array<CtorCounter>(10).data();
+    ptr = base::memory::MainArenaAllocator::get().push_array<CtorCounter>(10).data();
   }
 
   EXPECT_EQ(CtorCounter::ctor_call_count, iteration_count * 10);
@@ -58,15 +58,15 @@ static bool is_aligned(Aligned* ptr) {
 
 static int test_align() {
   int ret = 0;
-  (void)base::MainArenaAllocator::get().push_array<char>(15);
+  (void)base::memory::MainArenaAllocator::get().push_array<char>(15);
 
-  Aligned* aligned = &base::MainArenaAllocator::get().push<Aligned>();
+  Aligned* aligned = &base::memory::MainArenaAllocator::get().push<Aligned>();
 
   EXPECT(is_aligned(aligned));
 
-  (void)base::MainArenaAllocator::get().push_array<char>(15);
+  (void)base::memory::MainArenaAllocator::get().push_array<char>(15);
 
-  aligned = base::MainArenaAllocator::get().push_array<Aligned>(10).data();
+  aligned = base::memory::MainArenaAllocator::get().push_array<Aligned>(10).data();
 
   EXPECT(is_aligned(aligned));
 
@@ -76,24 +76,24 @@ static int test_align() {
 static int test_rewind() {
   int ret = 0;
   {
-    base::Arena::Scope const scope(
-        base::MainArenaAllocator::get()); // test scope with ptr_ = 0
+    base::memory::Arena::Scope const scope(
+        base::memory::MainArenaAllocator::get()); // test scope with ptr_ = 0
   }
   // Calls malloc so that the rewind test uses the same memory in and outside of
   // the scope.
-  (void)base::MainArenaAllocator::get().push<int>();
+  (void)base::memory::MainArenaAllocator::get().push<int>();
   char const* ptr = nullptr;
   {
-    base::Arena::Scope const scope(base::MainArenaAllocator::get());
+    base::memory::Arena::Scope const scope(base::memory::MainArenaAllocator::get());
 
-    ptr = base::MainArenaAllocator::get().push_array<char>(10).data();
+    ptr = base::memory::MainArenaAllocator::get().push_array<char>(10).data();
 
     test_align();
     test_ctors();
   }
 
-  EXPECT(base::MainArenaAllocator::get().push_array<char>(1).data() == ptr &&
-         "Arena didn't rewind");
+  EXPECT(base::memory::MainArenaAllocator::get().push_array<char>(1).data() == ptr &&
+         "memory::Arena didn't rewind");
   return ret;
 }
 
@@ -102,6 +102,6 @@ int main() {
   EXPECT(test_align() == 0);
   EXPECT(test_ctors() == 0);
   EXPECT(test_rewind() == 0);
-  base::Logger::get_default_instance().flush();
+  base::debug::Logger::get_default_instance().flush();
   return ret;
 }

@@ -7,7 +7,7 @@
 #include "base/type_aliases.hpp"
 #include "base/type_traits/categories.hpp"
 
-namespace base {
+namespace base::format {
 
 constexpr u32 utf8_char_len(uchar utf8) noexcept {
   if (utf8 <= 127) {
@@ -86,7 +86,7 @@ inline char* write_low_surrogate(BASE_LIFETIMEBOUND char* buf, char32_t high,
 // Unicode - 0x10000 = yyyyyyyyyyxxxxxxxxxx
 // W1 = 0xD800 + yyyyyyyyyy = 110110yyyyyyyyyy
 // W2 = 0xDC00 + xxxxxxxxxx = 110111xxxxxxxxxx
-template <Character C> char* write_char(BASE_LIFETIMEBOUND char* buf, C chr) {
+template <type_traits::Character C> char* write_char(BASE_LIFETIMEBOUND char* buf, C chr) {
   if (sizeof(C) == 1 || chr < 0x80) {
     return write_char1(buf, static_cast<char8_t>(chr));
   }
@@ -107,7 +107,7 @@ template <Character C> char* write_char(BASE_LIFETIMEBOUND char* buf, C chr) {
   return write_char4(buf, static_cast<char32_t>(chr));
 }
 
-template <Character C> void write_char(String& buf, C chr) {
+template <type_traits::Character C> void write_char(containers::String& buf, C chr) {
   if (sizeof(C) == 1 || chr < 0x80) {
     write_char1(buf.grow(1), static_cast<char8_t>(chr));
   } else if (chr < 0x800) {
@@ -126,7 +126,7 @@ template <Character C> void write_char(String& buf, C chr) {
   }
 }
 
-template <Character C> u32 char_len(C chr) {
+template <type_traits::Character C> u32 char_len(C chr) {
   if constexpr (sizeof(C) == 1) {
     return 1;
   }
@@ -156,7 +156,7 @@ template <Character C> u32 char_len(C chr) {
   return 4;
 }
 
-template <Character C> usize real_string_len(BasicStringView<C, usize> str) {
+template <type_traits::Character C> usize real_string_len(ranges::BasicStringView<C, usize> str) {
   if constexpr (sizeof(C) == 1) {
     return str.size();
   }
@@ -167,10 +167,10 @@ template <Character C> usize real_string_len(BasicStringView<C, usize> str) {
   return ret;
 }
 
-template <Character C>
-void write_string(char* buf, BasicStringView<C, usize> str) {
+template <type_traits::Character C>
+void write_string(char* buf, ranges::BasicStringView<C, usize> str) {
   if constexpr (sizeof(C) == 1) {
-    copy(str.bytes(), reinterpret_cast<uchar*>(buf));
+    memory::copy(str.bytes(), reinterpret_cast<uchar*>(buf));
     return;
   }
   for (C const chr : str) {
@@ -178,10 +178,10 @@ void write_string(char* buf, BasicStringView<C, usize> str) {
   }
 }
 
-template <Character C>
-void write_string(String& buf, BasicStringView<C, usize> str) {
+template <type_traits::Character C>
+void write_string(containers::String& buf, ranges::BasicStringView<C, usize> str) {
   if constexpr (sizeof(C) == 1) {
-    copy(str.bytes(), reinterpret_cast<uchar*>(buf.grow(str.size())));
+    memory::copy(str.bytes(), reinterpret_cast<uchar*>(buf.grow(str.size())));
     return;
   }
   for (C const chr : str) {
@@ -189,4 +189,4 @@ void write_string(String& buf, BasicStringView<C, usize> str) {
   }
 }
 
-} // namespace base
+} // namespace base::format

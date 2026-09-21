@@ -7,16 +7,17 @@
 #include "base/type_traits/categories.hpp"
 #include "base/type_traits/comparaison.hpp"
 
-namespace base {
+namespace base::ranges {
 
-template <Character T, Integral SizeT = usize> class BasicStringView {
+template <type_traits::Character T, type_traits::Integral SizeT = usize>
+class BasicStringView {
 public:
   constexpr BasicStringView() = default;
   constexpr BasicStringView(T const* data BASE_LIFETIMEBOUND, SizeT size)
       : data_(data), size_(size) {}
 
   constexpr BasicStringView(T const* cstr BASE_LIFETIMEBOUND) : data_(cstr) {
-    if constexpr (SameAs<char, T>) {
+    if constexpr (type_traits::SameAs<char, T>) {
       if !consteval {
         size_ = static_cast<SizeT>(strlen(cstr));
         return;
@@ -96,11 +97,11 @@ private:
   SizeT    size_ = 0;
 };
 
-template <Character Char, Integral SizeT>
+template <type_traits::Character Char, type_traits::Integral SizeT>
 BasicStringView(Char const*, SizeT) -> BasicStringView<Char, SizeT>;
-template <Character Char>
+template <type_traits::Character Char>
 BasicStringView(Char const*) -> BasicStringView<Char, usize>;
-template <Character Char>
+template <type_traits::Character Char>
 BasicStringView(Char const*, Char const*) -> BasicStringView<Char, usize>;
 
 using StringView = BasicStringView<char>;
@@ -126,4 +127,4 @@ operator""_sv(char32_t const* cstr BASE_LIFETIMEBOUND, usize len) {
   return {cstr, len};
 }
 
-} // namespace base
+} // namespace base::ranges

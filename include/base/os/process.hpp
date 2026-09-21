@@ -13,7 +13,7 @@
 #include "base/type_traits/range_like.hpp"
 #include "base/utils/nil.hpp"
 
-namespace base {
+namespace base::os {
 
 class Process {
 public:
@@ -47,10 +47,10 @@ private:
 
     constexpr StdioInit(char const* path, File::Flags flags) noexcept
         : type_(TYPE_FILE), file_info_{.path = path, .flags = flags} {}
-    constexpr StdioInit(StringView path, File::Flags flags) noexcept
+    constexpr StdioInit(ranges::StringView path, File::Flags flags) noexcept
         : type_(TYPE_FILE),
           file_info_{
-              .path  = BasicString<char, 0, MainArenaAllocator>(path).c_str(),
+              .path  = containers::BasicString<char, 0, memory::MainArenaAllocator>(path).c_str(),
               .flags = flags,
           } {}
 
@@ -65,7 +65,7 @@ private:
     union {
       FileInfo     file_info_;
       File::Handle other_pipe_handle_;
-      Nil          dummy_ = NIL;
+      utils::Nil          dummy_ = utils::NIL;
     };
 
     static constexpr auto TYPE_FILE       = StdioType{254};
@@ -75,7 +75,7 @@ private:
 public:
   class Input {
   public:
-    void write(this Input& self, Slice<uchar const> bytes) noexcept;
+    void write(this Input& self, ranges::Slice<uchar const> bytes) noexcept;
 
     ~Input() noexcept = default;
 
@@ -100,7 +100,7 @@ public:
     ~Output() noexcept = default;
 
     // returns 0 on EOF, between 1 and buffer.size() when sucessful.
-    usize read(this Output& self, Slice<uchar> buffer) noexcept;
+    usize read(this Output& self, ranges::Slice<uchar> buffer) noexcept;
 
     using Init = StdioInit<false>;
     using enum StdioType;
@@ -127,23 +127,23 @@ public:
   Process(Process&& other) noexcept
       : handle_(other.handle_), stdin_type_(other.stdin_type_),
         stdout_type_(other.stdout_type_), stderr_type_(other.stderr_type_),
-        stdin_input_(base::move(other.stdin_input_)),
-        stdout_output_(base::move(other.stdout_output_)),
-        stderr_output_(base::move(other.stderr_output_)) {
+        stdin_input_(memory::move(other.stdin_input_)),
+        stdout_output_(memory::move(other.stdout_output_)),
+        stderr_output_(memory::move(other.stderr_output_)) {
     other.handle_ = NIL_PROCESS_HANDLE;
   }
 
   Process& operator=(this Process& self BASE_LIFETIMEBOUND,
                      Process&&          other) noexcept {
-    debug_panic_if(self.handle_ != NIL_PROCESS_HANDLE,
-                   "Tried to move assign an active Process instance.");
+    debug::debug_panic_if(self.handle_ != NIL_PROCESS_HANDLE,
+                   "Tried to memory::move assign an active Process instance.");
     self.handle_        = other.handle_;
     self.stdin_type_    = other.stdin_type_;
     self.stdout_type_   = other.stdout_type_;
     self.stderr_type_   = other.stderr_type_;
-    self.stdin_input_   = base::move(other.stdin_input_);
-    self.stdout_output_ = base::move(other.stdout_output_);
-    self.stderr_output_ = base::move(other.stderr_output_);
+    self.stdin_input_   = memory::move(other.stdin_input_);
+    self.stdout_output_ = memory::move(other.stdout_output_);
+    self.stderr_output_ = memory::move(other.stderr_output_);
     other.handle_       = NIL_PROCESS_HANDLE;
     return self;
   }
@@ -158,12 +158,12 @@ public:
     Output::Init error;
   };
 
-  [[nodiscard]] static Result<Process, SpawnError>
+  [[nodiscard]] static containers::Result<Process, SpawnError>
   spawn(char const* const* argv, Stdio const& stdio) noexcept;
 
-  [[nodiscard]] static Result<Process, SpawnError>
-  spawn(InitializerList<char const*> argv, Stdio const& stdio) noexcept {
-    Vector<char const*, 6> cstrs;
+  [[nodiscard]] static containers::Result<Process, SpawnError>
+  spawn(ranges::InitializerList<char const*> argv, Stdio const& stdio) noexcept {
+    containers::Vector<char const*, 6> cstrs;
     cstrs.reserve(argv.size());
     for (char const* str : argv) {
       cstrs.push_back(str);
@@ -172,16 +172,16 @@ public:
     return spawn(cstrs.data(), stdio);
   }
 
-  [[nodiscard]] static Result<Process, SpawnError>
-  spawn(InitializerList<StringView> argv, Stdio const& stdio) noexcept {
-    return spawn<InitializerList<StringView>>(argv, stdio);
+  [[nodiscard]] static containers::Result<Process, SpawnError>
+  spawn(ranges::InitializerList<ranges::StringView> argv, Stdio const& stdio) noexcept {
+    return spawn<ranges::InitializerList<ranges::StringView>>(argv, stdio);
   }
 
-  template <RangeOf<StringView> Range>
-  [[nodiscard]] static Result<Process, SpawnError>
+  template <type_traits::RangeOf<ranges::StringView> Range>
+  [[nodiscard]] static containers::Result<Process, SpawnError>
   spawn(Range const& argv, Stdio const& stdio) noexcept {
-    Vector<BasicString<char, 16>, 6> cstrs(argv);
-    Vector<char const*, 6>           cstr_ptrs;
+    containers::Vector<containers::BasicString<char, 16>, 6> cstrs(argv);
+    containers::Vector<char const*, 6>           cstr_ptrs;
     cstr_ptrs.reserve(cstrs.size() + 1);
     for (auto& cstr : cstrs) {
       cstr_ptrs.push_back(cstr.c_str());
@@ -231,8 +231,8 @@ public:
     SigUsr2  = 31, // terminate process    User defined signal 2
   };
   struct ExitStatus {
-    alignas(64) String unread_stdout;
-    String unread_stderr;
+    alignas(64) containers::String unread_stdout;
+    containers::String unread_stderr;
     u32    exit_code;
     Signal signal;
     Signal stopped;
@@ -244,15 +244,15 @@ public:
 
   template <typename Self>
   auto&& get_stdin(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    return base::forward<Self>(self).stdin_input_;
+    return memory::forward<Self>(self).stdin_input_;
   }
   template <typename Self>
   auto&& get_stdout(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    return base::forward<Self>(self).stdout_output_;
+    return memory::forward<Self>(self).stdout_output_;
   }
   template <typename Self>
   auto&& get_stderr(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    return base::forward<Self>(self).stderr_output_;
+    return memory::forward<Self>(self).stderr_output_;
   }
 
 private:
@@ -284,6 +284,6 @@ private:
 #endif
 };
 
-} // namespace base
+} // namespace base::os
 
 #endif

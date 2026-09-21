@@ -7,7 +7,7 @@
 #include "base/type_aliases.hpp"
 #include "base/utils/isize.hpp"
 
-namespace base {
+namespace base::os {
 
 class File {
 public:
@@ -25,11 +25,11 @@ public:
   enum class OpenError : u8 {
     FileNotFound = 1,
   };
-  [[nodiscard]] static Result<File, OpenError> open(char const* path,
+  [[nodiscard]] static containers::Result<File, OpenError> open(char const* path,
                                                     Flags       flags) noexcept;
-  [[nodiscard]] static Result<File, OpenError> open(StringView path,
+  [[nodiscard]] static containers::Result<File, OpenError> open(ranges::StringView path,
                                                     Flags      flags) noexcept {
-    return open(String(path).c_str(), flags);
+    return open(containers::String(path).c_str(), flags);
   }
 
   ~File() noexcept { close(); }
@@ -58,8 +58,8 @@ public:
   [[nodiscard]] static File open_stdout() noexcept;
   [[nodiscard]] static File open_stderr() noexcept;
 
-  usize write(this File& self, Slice<uchar const> data) noexcept;
-  usize read(this File& self, Slice<uchar> buffer) noexcept;
+  usize write(this File& self, ranges::Slice<uchar const> data) noexcept;
+  usize read(this File& self, ranges::Slice<uchar> buffer) noexcept;
 
   [[nodiscard]] usize get_cursor(this File const& self) noexcept {
     return self.cursor_pos_;
@@ -70,9 +70,9 @@ public:
     self.is_tty_ = IsTtyFlag::NotComputed;
   }
 
-  void seek_begin(this File& self, isize offset) noexcept;
-  void seek_end(this File& self, isize offset) noexcept;
-  void seek_cursor(this File& self, isize offset) noexcept;
+  void seek_begin(this File& self, utils::isize offset) noexcept;
+  void seek_end(this File& self, utils::isize offset) noexcept;
+  void seek_cursor(this File& self, utils::isize offset) noexcept;
 
 #ifdef _WIN32
   using Handle                       = void*;
@@ -113,4 +113,4 @@ constexpr File::Flags operator~(File::Flags flags) noexcept {
   return File::Flags(~static_cast<u8>(flags));
 }
 
-} // namespace base
+} // namespace base::os

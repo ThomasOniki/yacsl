@@ -8,23 +8,24 @@
 #include "base/type_aliases.hpp"
 #include "base/type_traits/comparaison.hpp"
 
-namespace base::internal {
+namespace base::containers {
+namespace internal {
 
 template <usize Index, typename T> class TupleLeaf {
 public:
   constexpr TupleLeaf() = default;
 
   template <typename Arg>
-  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
+  // NOLINTNEXTLINE(bugprone-memory::forwarding-reference-overload)
   explicit constexpr TupleLeaf(Arg&& other) noexcept
-    requires(!SameAs<T, T&&>)
-      : value_(base::forward<Arg>(other)) {}
+    requires(!type_traits::SameAs<T, T&&>)
+      : value_(memory::forward<Arg>(other)) {}
 
   template <typename Arg>
-  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
+  // NOLINTNEXTLINE(bugprone-memory::forwarding-reference-overload)
   explicit constexpr TupleLeaf(BASE_LIFETIMEBOUND Arg&& other) noexcept
-    requires SameAs<T, T&&>
-      : value_(base::forward<Arg>(other)) {}
+    requires type_traits::SameAs<T, T&&>
+      : value_(memory::forward<Arg>(other)) {}
 
   [[nodiscard]] constexpr T&
   get(this TupleLeaf& self BASE_LIFETIMEBOUND) noexcept {
@@ -32,7 +33,7 @@ public:
   }
   [[nodiscard]] constexpr T&&
   get(this TupleLeaf&& self BASE_LIFETIMEBOUND) noexcept {
-    return base::move(self).value_;
+    return memory::move(self).value_;
   }
   [[nodiscard]] constexpr T const&
   get(this TupleLeaf const& self BASE_LIFETIMEBOUND) noexcept {
@@ -40,7 +41,7 @@ public:
   }
   [[nodiscard]] constexpr T const&&
   get(this TupleLeaf const&& self BASE_LIFETIMEBOUND) noexcept {
-    return base::move(self).value_;
+    return memory::move(self).value_;
   }
 
 private:
@@ -50,8 +51,9 @@ private:
 
 template <typename Indices, typename... Ts> class TupleImpl;
 template <usize... Indices, typename... Ts>
-class TupleImpl<IndexSequence<Indices...>, Ts...> : TupleLeaf<Indices, Ts>... {
-  template <usize I> using Leaf = TupleLeaf<I, NthType<I, Ts...>>;
+class TupleImpl<meta::IndexSequence<Indices...>, Ts...>
+    : TupleLeaf<Indices, Ts>... {
+  template <usize I> using Leaf = TupleLeaf<I, meta::NthType<I, Ts...>>;
 
 public:
   constexpr TupleImpl() noexcept : Leaf<Indices>()... {}
@@ -59,7 +61,7 @@ public:
   template <typename... Args>
   constexpr TupleImpl(Args&&... args)
     requires(sizeof...(Args) == sizeof...(Ts))
-      : TupleLeaf<Indices, Ts>(base::forward<Args>(args))... {}
+      : TupleLeaf<Indices, Ts>(memory::forward<Args>(args))... {}
 
   constexpr usize size(this TupleImpl const& /*self*/) noexcept {
     return sizeof...(Ts);
@@ -68,22 +70,20 @@ public:
   template <usize I, typename Self>
   [[nodiscard]] constexpr auto&&
   get(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    return base::forward<Self>(self).Leaf<I>::get();
+    return memory::forward<Self>(self).Leaf<I>::get();
   }
 };
 
-} // namespace base::internal
-
-namespace base {
+} // namespace internal
 
 template <typename... Ts>
-using Tuple = internal::TupleImpl<IndexSequenceToN<sizeof...(Ts)>, Ts...>;
+using Tuple = internal::TupleImpl<meta::IndexSequenceToN<sizeof...(Ts)>, Ts...>;
 
 template <typename... Ts> struct TupleSize<Tuple<Ts...>> {
   static constexpr usize value = sizeof...(Ts);
 };
-template <typename... Ts, usize I> struct TupleElement<base::Tuple<Ts...>, I> {
-  using Type = NthType<I, Ts...>;
+template <typename... Ts, usize I> struct TupleElement<Tuple<Ts...>, I> {
+  using Type = meta::NthType<I, Ts...>;
 };
 
-} // namespace base
+} // namespace base::containers

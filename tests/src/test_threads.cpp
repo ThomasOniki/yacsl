@@ -7,16 +7,17 @@
 #include <stdint.h>
 
 static int test_atomic(uint32_t thread_count) {
-  int                        ret = 0;
-  base::Vector<base::Thread> threads;
-  base::Atomic<uint32_t>     count = 0;
+  int                                             ret = 0;
+  base::containers::Vector<base::threads::Thread> threads;
+  base::threads::Atomic<uint32_t>                 count = 0;
 
   {
-    EXPECT_EQ(count.load(base::MemoryOrder::Relaxed), 0);
+    EXPECT_EQ(count.load(base::threads::MemoryOrder::Relaxed), 0);
 
     for (uint32_t i = 0; i < thread_count; ++i) {
       threads.emplace_back(
-          [](base::Atomic<uint32_t>& lambda_count) { ++lambda_count; }, count);
+          [](base::threads::Atomic<uint32_t>& lambda_count) { ++lambda_count; },
+          count);
     }
   }
 
@@ -24,16 +25,16 @@ static int test_atomic(uint32_t thread_count) {
     threads[i].join();
   }
 
-  EXPECT_EQ(count.load(base::MemoryOrder::Relaxed), thread_count);
+  EXPECT_EQ(count.load(base::threads::MemoryOrder::Relaxed), thread_count);
   return ret;
 }
 
 static int test_mutex(uint32_t thread_count) {
-  int                        ret = 0;
-  base::Vector<base::Thread> threads;
-  uint32_t                   count = 0;
+  int                                             ret = 0;
+  base::containers::Vector<base::threads::Thread> threads;
+  uint32_t                                        count = 0;
 
-  base::Mutex mutex;
+  base::threads::Mutex mutex;
 
   {
     EXPECT_EQ(count, 0);
@@ -41,7 +42,7 @@ static int test_mutex(uint32_t thread_count) {
     for (uint32_t i = 0; i < thread_count; ++i) {
       threads.emplace_back(
           [&mutex](uint32_t& lambda_count) {
-            base::MutexLock const lock(mutex);
+            base::threads::MutexLock const lock(mutex);
             ++lambda_count;
           },
           count);
@@ -62,6 +63,6 @@ int main() {
   EXPECT(test_atomic(100) == 0);
   EXPECT(test_mutex(1) == 0);
   EXPECT(test_mutex(100) == 0);
-  base::Logger::get_default_instance().flush();
+  base::debug::Logger::get_default_instance().flush();
   return ret;
 }

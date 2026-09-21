@@ -11,18 +11,18 @@
 using SMFCall  = std::string;
 using SMFCalls = std::vector<std::string>;
 
-template <> class base::Formatter<std::string> {
+template <> class base::format::Formatter<std::string> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
     return self.impl_.parse(fmt);
   }
-  void format(this Formatter const& self, String& buf,
+  void format(this Formatter const& self, containers::String& buf,
               std::string const& str) noexcept {
     self.impl_.format(buf, {str.data(), str.size()});
   }
 
 private:
-  base::Formatter<base::StringView> impl_;
+  base::format::Formatter<base::ranges::StringView> impl_;
 };
 
 namespace {
@@ -34,25 +34,26 @@ public:
   }
   SMFTracker(SMFTracker const& other) : name_(other.name_ + " (copied)") {
 
-    calls.push_back("copy constructed " + name_);
+    calls.push_back("memory::copy constructed " + name_);
   }
-  SMFTracker(SMFTracker&& other) noexcept : name_(other.name_ + " (moved)") {
+  SMFTracker(SMFTracker&& other) noexcept
+      : name_(other.name_ + " (memory::moved)") {
 
-    calls.push_back("move constructed " + name_);
+    calls.push_back("memory::move constructed " + name_);
   }
   ~SMFTracker() noexcept { calls.push_back("destructed " + name_); }
   SMFTracker& operator=(SMFTracker const& other) {
     if (&other == this) {
       return *this;
     }
-    name_ = other.name_ + " (copy assigned)";
+    name_ = other.name_ + " (memory::copy assigned)";
 
-    calls.push_back("copy assigned " + name_);
+    calls.push_back("memory::copy assigned " + name_);
     return *this;
   }
   [[maybe_unused]] SMFTracker& operator=(SMFTracker&& other) noexcept {
-    name_ = other.name_ + " (move assigned)";
-    calls.push_back("move assigned " + name_);
+    name_ = other.name_ + " (memory::move assigned)";
+    calls.push_back("memory::move assigned " + name_);
     return *this;
   }
 
@@ -87,7 +88,8 @@ public:
     return &self == &other;
   }
 
-  template <typename T> base::Slice<T, SizeT> allocate(SizeT count) noexcept {
+  template <typename T>
+  base::ranges::Slice<T, SizeT> allocate(SizeT count) noexcept {
     void* ret = ::operator new(count * sizeof(T), std::align_val_t{alignof(T)});
     if (freed.contains(ret)) {
       freed.erase(ret);
@@ -101,14 +103,14 @@ public:
     return {static_cast<T*>(ret), count};
   }
 
-  template <typename T> void free(base::Slice<T, SizeT> mem) noexcept {
+  template <typename T> void free(base::ranges::Slice<T, SizeT> mem) noexcept {
     if (mem.data()) {
       if (freed.contains(mem.data())) {
-        base::log_error("double free");
+        base::debug::log_error("double free");
         return;
       }
       if (!allocated.contains(mem.data())) {
-        base::log_error("unallocated free");
+        base::debug::log_error("unallocated free");
         return;
       }
 
@@ -131,7 +133,7 @@ private:
 };
 
 using TestAllocatorSingleton =
-    base::SingletonAllocator<TestAllocator, "main", true>;
+    base::memory::SingletonAllocator<TestAllocator, "main", true>;
 
 } // namespace
 
@@ -164,8 +166,8 @@ static int test_allocator() {
 int main() {
   int ret = 0;
   EXPECT(test_allocator() == 0);
-  base::log_warning("TODO: vector tests");
-  base::Logger::get_default_instance().flush();
+  base::debug::log_warning("TODO: vector tests");
+  base::debug::Logger::get_default_instance().flush();
   return ret;
 }
 

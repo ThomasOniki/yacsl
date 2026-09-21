@@ -1,6 +1,6 @@
 #pragma once
 
-namespace base {
+namespace base::utils {
 
 struct Nil {
   template <typename T>
@@ -20,4 +20,4 @@ struct Nil {
 
 constexpr Nil NIL;
 
-} // namespace base
+} // namespace base::utils

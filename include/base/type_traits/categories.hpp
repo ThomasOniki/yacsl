@@ -3,7 +3,7 @@
 #include "base/type_traits/comparaison.hpp"
 #include "base/type_traits/qualifiers.hpp"
 
-namespace base {
+namespace base::type_traits {
 
 #if __has_builtin(__is_integral)
 template <typename T>
@@ -52,4 +52,4 @@ concept UnsignedIntegral = Integral<T> && T(-1) > T(0);
 template <typename T>
 concept Enum = __is_enum(T);
 
-} // namespace base
+} // namespace base::type_traits
