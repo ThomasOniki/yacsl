@@ -1,10 +1,10 @@
 #if !defined(_WIN32) && !defined(__EMSCRIPTEN__)
 
 #include "base/containers/vector.hpp"
+#include "base/debug/demangle.hpp"
 #include "base/os/stack_trace.hpp"
 #include "base/ranges/string_view.hpp"
 #include "base/type_aliases.hpp"
-#include "base/utils/demangle.hpp"
 #include <dlfcn.h>
 #include <execinfo.h>
 
@@ -34,7 +34,7 @@ StackTrace::compute_entries(this StackTrace& self) noexcept {
     Dl_info info;
     dladdr(self.addresses_[i], &info);
     self.entries_[i] = {
-        .caller       = utils::demangle(info.dli_sname),
+        .caller       = debug::demangle(info.dli_sname),
         .object       = ranges::StringView(info.dli_fname),
         .base_address = info.dli_fbase,
         .address      = self.addresses_[i],

@@ -1,4 +1,4 @@
-#include "base/utils/demangle.hpp"
+#include "base/debug/demangle.hpp"
 #include "base/containers/string.hpp"
 #include "base/containers/vector.hpp"
 #include "base/format/atoi.hpp"
@@ -6,7 +6,7 @@
 #include "base/ranges/string_view.hpp"
 #include "base/type_aliases.hpp"
 
-namespace base::utils {
+namespace base::debug {
 
 namespace {
 class Demangler {
@@ -596,4 +596,4 @@ containers::String demangle(ranges::StringView mangled) {
   return demangler.demangle(mangled);
 }
 
-} // namespace base::utils
+} // namespace base::debug
