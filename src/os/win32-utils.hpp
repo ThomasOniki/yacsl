@@ -35,12 +35,12 @@ inline ranges::StringView win32_err_str() noexcept {
 
 // SeekEnd will be ignored
 containers::Result<HANDLE, File::OpenError> open_file_handle(char const* path,
-                                                 File::Flags flags);
+                                                             File::Flags flags);
 
 } // namespace base::os
 
 #define BASE_TRY_SYSCALL(syscall)                                              \
   if ((syscall) == FALSE) [[unlikely]]                                         \
-  debug::panic(#syscall " failed: {}", win32_err_str())
+  debug::panic(#syscall " failed: {}", base::os::win32_err_str())
 
 #endif

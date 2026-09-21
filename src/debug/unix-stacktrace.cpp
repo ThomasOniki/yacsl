@@ -2,13 +2,13 @@
 
 #include "base/containers/vector.hpp"
 #include "base/debug/demangle.hpp"
-#include "base/os/stack_trace.hpp"
+#include "base/debug/stack_trace.hpp"
 #include "base/ranges/string_view.hpp"
 #include "base/type_aliases.hpp"
 #include <dlfcn.h>
 #include <execinfo.h>
 
-namespace base::os {
+namespace base::debug {
 
 StackTrace StackTrace::current() noexcept {
   StackTrace ret;
@@ -43,6 +43,6 @@ StackTrace::compute_entries(this StackTrace& self) noexcept {
   return self.entries_;
 }
 
-} // namespace base::os
+} // namespace base::debug
 
 #endif
