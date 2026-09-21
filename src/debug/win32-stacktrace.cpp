@@ -1,18 +1,18 @@
 #ifdef _WIN32
 
+#include "../os/win32-utils.hpp"
 #include "base/containers/string.hpp"
 #include "base/containers/vector.hpp"
+#include "base/debug/stack_trace.hpp"
 #include "base/memory/lifetimes.hpp"
-#include "base/os/stack_trace.hpp"
 #include "base/type_aliases.hpp"
-#include "win32-utils.hpp"
 #include <libloaderapi.h>
 #include <processthreadsapi.h>
 #include <psapi.h>
 #include <windows.h>
 #include <winnt.h>
 
-namespace base::os {
+namespace base::debug {
 
 StackTrace StackTrace::current() noexcept {
   StackTrace ret;
@@ -52,7 +52,7 @@ StackTrace::compute_entries(this StackTrace& self) noexcept {
                                static_cast<DWORD>(module_name.size()));
     }
     module_name.resize(len);
-    debug::panic_if(len == 0, "GetModuleFileNameA failed(): {}", win32_err_str());
+    panic_if(len == 0, "GetModuleFileNameA failed(): {}", os::win32_err_str());
 
     MODULEINFO info = {};
     GetModuleInformation(GetCurrentProcess(), module, &info,
@@ -70,6 +70,6 @@ StackTrace::compute_entries(this StackTrace& self) noexcept {
   return self.entries_;
 }
 
-} // namespace base::os
+} // namespace base::debug
 
 #endif

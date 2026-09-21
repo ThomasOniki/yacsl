@@ -1,6 +1,6 @@
 #include "base/containers/string.hpp"
 #include "base/debug/log.hpp"
-#include "base/os/stack_trace.hpp"
+#include "base/debug/stack_trace.hpp"
 #include <stdlib.h>
 
 namespace base::debug {
@@ -10,7 +10,7 @@ namespace base::debug {
   Logger::get_default_instance().log(Logger::Level::Panic, "panicked at {}",
                                      location);
   Logger::get_default_instance().log(Logger::Level::Panic, formatted);
-  os::StackTrace::current().print(Logger::Level::Panic);
+  StackTrace::current().print(Logger::Level::Panic);
   Logger::get_default_instance().flush();
   abort();
 }

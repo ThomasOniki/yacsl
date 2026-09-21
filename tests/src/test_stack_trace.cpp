@@ -1,6 +1,6 @@
 #include "base/attributes.hpp"
 #include "base/debug/log.hpp"
-#include "base/os/stack_trace.hpp"
+#include "base/debug/stack_trace.hpp"
 #include "base/ranges/string_view.hpp"
 #include "test_utils.hpp"
 
@@ -10,8 +10,8 @@
             base::ranges::StringView(expected_caller))
 
 BASE_NOINLINE static int f1(bool /*unused*/, char /*unused*/) {
-  int              ret         = 0;
-  base::os::StackTrace stack_trace = base::os::StackTrace::current();
+  int                     ret         = 0;
+  base::debug::StackTrace stack_trace = base::debug::StackTrace::current();
   stack_trace.compute_entries();
   CHECK_ENTRY(0, "base::os::StackTrace::current()");
   CHECK_ENTRY(1, "f1(bool, char)");
