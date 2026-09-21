@@ -31,7 +31,7 @@ public:
   [[nodiscard]] constexpr u32  check_precision(this FormatStringParser& self);
 
   [[nodiscard]] constexpr char check_option(this FormatStringParser& self,
-                                            char       default_option,
+                                            char               default_option,
                                             ranges::StringView possibilities);
 
   [[nodiscard]] constexpr char const* end_parse(this FormatStringParser& self);
@@ -121,9 +121,10 @@ FormatStringParser::check_precision(this FormatStringParser& self) {
   return 0;
 }
 
-constexpr char FormatStringParser::check_option(this FormatStringParser& self,
-                                                char       default_option,
-                                                ranges::StringView possibilities) {
+constexpr char
+FormatStringParser::check_option(this FormatStringParser& self,
+                                 char                     default_option,
+                                 ranges::StringView       possibilities) {
   for (char const possibility : possibilities) {
     if (self.skip(possibility)) {
       return possibility;

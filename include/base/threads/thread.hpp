@@ -50,17 +50,20 @@ public:
   template <typename Func, typename... Args>
   void start(this Thread& self, Func&& func, Args&&... args) {
     self.join();
-    static_assert(type_traits::SameAs<void, decltype(func(memory::forward<Args>(args)...))>);
+    static_assert(
+        type_traits::SameAs<void,
+                            decltype(func(memory::forward<Args>(args)...))>);
 
-    using StoredFunction =
-        internal::StorableFunctionType<type_traits::RemoveReference<Func>>::Type;
-    using Pack         = containers::Tuple<StoredFunction, Atomic<bool>&, Args...>;
+    using StoredFunction = internal::StorableFunctionType<
+        type_traits::RemoveReference<Func>>::Type;
+    using Pack = containers::Tuple<StoredFunction, Atomic<bool>&, Args...>;
     Atomic<bool> ready = false;
-    Pack pack = Pack(memory::forward<Func>(func), ready, memory::forward<Args>(args)...);
-    pthread_create(
-        &self.handle_, nullptr,
-        Callback<Func, meta::IndexSequenceToN<sizeof...(Args)>, Args...>::callback,
-        &pack);
+    Pack         pack  = Pack(memory::forward<Func>(func), ready,
+                              memory::forward<Args>(args)...);
+    pthread_create(&self.handle_, nullptr,
+                   Callback<Func, meta::IndexSequenceToN<sizeof...(Args)>,
+                            Args...>::callback,
+                   &pack);
     while (!ready.load(MemoryOrder::Acquire)) {
     }
   }
@@ -98,8 +101,8 @@ private:
   template <typename Func, usize... Indices, typename... Args>
   struct Callback<Func, meta::IndexSequence<Indices...>, Args...> {
     static void* callback(void* data) {
-      using StoredFunction =
-          internal::StorableFunctionType<type_traits::RemoveReference<Func>>::Type;
+      using StoredFunction = internal::StorableFunctionType<
+          type_traits::RemoveReference<Func>>::Type;
       using Pack = containers::Tuple<StoredFunction, Atomic<bool>&, Args...>;
       Pack pack(memory::move(*static_cast<Pack*>(data)));
 

@@ -17,10 +17,10 @@ template <typename _>
 template <typename Ring>
 #endif
 static int test(Counts counts) noexcept {
-  int                        ret   = 0;
-  base::threads::Atomic<bool>         start = false;
+  int                                             ret   = 0;
+  base::threads::Atomic<bool>                     start = false;
   base::containers::Vector<base::threads::Thread> producers;
-  Ring                       ring;
+  Ring                                            ring;
 
   for (base::usize i = 0; i < SLOTS; ++i) {
     EXPECT(ring.try_push(i));

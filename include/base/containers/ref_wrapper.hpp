@@ -12,12 +12,14 @@ public:
   template <typename Self>
   [[nodiscard]] constexpr auto&&
   get(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    return memory::forward<type_traits::CopyCVRef<Self&&, T>>(*memory::forward<Self>(self).ptr_);
+    return memory::forward<type_traits::CopyCVRef<Self&&, T>>(
+        *memory::forward<Self>(self).ptr_);
   }
   template <typename Self>
   [[nodiscard]] constexpr auto&&
   operator*(this Self&& self BASE_LIFETIMEBOUND) {
-    return memory::forward<type_traits::CopyCVRef<Self&&, T>>(*memory::forward<Self>(self).ptr_);
+    return memory::forward<type_traits::CopyCVRef<Self&&, T>>(
+        *memory::forward<Self>(self).ptr_);
   }
   template <typename Self>
   [[nodiscard]] constexpr type_traits::CopyCV<Self, T>*

@@ -14,7 +14,8 @@ template <typename F, usize BufSz = 8,
           type_traits::AllocatorType Allocator = memory::MainArenaAllocator>
 class Function;
 
-template <typename Ret, typename... Args, usize BufSz, type_traits::AllocatorType Allocator>
+template <typename Ret, typename... Args, usize BufSz,
+          type_traits::AllocatorType Allocator>
 class Function<Ret(Args...), BufSz, Allocator> {
 public:
   Function(auto&& func);
@@ -29,7 +30,7 @@ public:
 
   template <typename Self> Ret operator()(this Self&& self, Args... args) {
     return memory::forward<Self>(self).call_(self.data_,
-                                           memory::forward<Args>(args)...);
+                                             memory::forward<Args>(args)...);
   }
 
   [[nodiscard]] auto const& get_allocator() const noexcept {
@@ -48,7 +49,8 @@ private:
   Ret (*call_)(void* func, Args... args)         = nullptr;
 };
 
-template <typename Ret, typename... Args, usize BufSz, type_traits::AllocatorType Allocator>
+template <typename Ret, typename... Args, usize BufSz,
+          type_traits::AllocatorType Allocator>
 Function<Ret(Args...), BufSz, Allocator>::Function(auto&& func) {
   using Func = type_traits::RemoveReference<decltype(func)>;
 
@@ -66,7 +68,7 @@ Function<Ret(Args...), BufSz, Allocator>::Function(auto&& func) {
   }
 
   memory::construct_at(static_cast<Func*>(data_),
-                     memory::forward<decltype(func)>(func));
+                       memory::forward<decltype(func)>(func));
 
   call_ = [](void* data, Args... args) {
     return (*static_cast<Func*>(data))(memory::forward<Args>(args)...);

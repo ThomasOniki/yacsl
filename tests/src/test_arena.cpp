@@ -38,7 +38,9 @@ static int test_ctors() {
   CtorCounter::ctor_call_count = 0;
 
   for (auto& ptr : ptrs) {
-    ptr = base::memory::MainArenaAllocator::get().push_array<CtorCounter>(10).data();
+    ptr = base::memory::MainArenaAllocator::get()
+              .push_array<CtorCounter>(10)
+              .data();
   }
 
   EXPECT_EQ(CtorCounter::ctor_call_count, iteration_count * 10);
@@ -66,7 +68,8 @@ static int test_align() {
 
   (void)base::memory::MainArenaAllocator::get().push_array<char>(15);
 
-  aligned = base::memory::MainArenaAllocator::get().push_array<Aligned>(10).data();
+  aligned =
+      base::memory::MainArenaAllocator::get().push_array<Aligned>(10).data();
 
   EXPECT(is_aligned(aligned));
 
@@ -84,7 +87,8 @@ static int test_rewind() {
   (void)base::memory::MainArenaAllocator::get().push<int>();
   char const* ptr = nullptr;
   {
-    base::memory::Arena::Scope const scope(base::memory::MainArenaAllocator::get());
+    base::memory::Arena::Scope const scope(
+        base::memory::MainArenaAllocator::get());
 
     ptr = base::memory::MainArenaAllocator::get().push_array<char>(10).data();
 
@@ -92,7 +96,8 @@ static int test_rewind() {
     test_ctors();
   }
 
-  EXPECT(base::memory::MainArenaAllocator::get().push_array<char>(1).data() == ptr &&
+  EXPECT(base::memory::MainArenaAllocator::get().push_array<char>(1).data() ==
+             ptr &&
          "memory::Arena didn't rewind");
   return ret;
 }

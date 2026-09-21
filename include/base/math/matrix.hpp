@@ -9,7 +9,8 @@
 
 namespace base::math {
 
-template <type_traits::Arithmetic T, usize Rows, usize Cols, type_traits::Integral SizeT = usize>
+template <type_traits::Arithmetic T, usize Rows, usize Cols,
+          type_traits::Integral SizeT = usize>
 class Matrix {
 public:
   template <typename Self>
@@ -23,8 +24,8 @@ public:
   }
 
   template <typename Self>
-  [[nodiscard]] constexpr type_traits::CopyCVRef<Self&&, T> operator[](this Self&& self,
-                                                          SizeT column) noexcept
+  [[nodiscard]] constexpr type_traits::CopyCVRef<Self&&, T>
+  operator[](this Self&& self, SizeT column) noexcept
     requires(Cols == 1)
   {
     return memory::forward<Self>(self).data_[column];
@@ -73,7 +74,8 @@ public:
 
 public:
   meta::ConditionalT<Cols == 1, containers::StackArray<T, Rows, SizeT>,
-               containers::StackArray<containers::StackArray<T, Cols, SizeT>, Rows, SizeT>>
+                     containers::StackArray<
+                         containers::StackArray<T, Cols, SizeT>, Rows, SizeT>>
       data_;
 };
 

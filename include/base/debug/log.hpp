@@ -69,11 +69,10 @@ public:
         level_(lvl) {}
   Logger(os::File&& output, os::File&& error,
          LevelStrings log_level_strings) noexcept
-      : Logger(memory::move(output), memory::move(error),
-               DEFAULT_LOG_LEVEL, log_level_strings) {}
+      : Logger(memory::move(output), memory::move(error), DEFAULT_LOG_LEVEL,
+               log_level_strings) {}
   Logger(os::File&& output, os::File&& error) noexcept
-      : Logger(memory::move(output), memory::move(error),
-               DEFAULT_LOG_LEVEL) {}
+      : Logger(memory::move(output), memory::move(error), DEFAULT_LOG_LEVEL) {}
 
   Logger(Level lvl, LevelStrings log_level_strings) noexcept
       : output_(os::File::open_stdout()), error_(os::File::open_stderr()),
@@ -241,9 +240,9 @@ private:
     Flush = 1,
     Stop  = 2,
   };
-  threads::Thread worker_{work, static_cast<void*>(this)};
-  threads::Atomic<Work>    work_  = Work::Spin;
-  Level           level_ = DEFAULT_LOG_LEVEL;
+  threads::Thread       worker_{work, static_cast<void*>(this)};
+  threads::Atomic<Work> work_  = Work::Spin;
+  Level                 level_ = DEFAULT_LOG_LEVEL;
 };
 
 // lvl is used to determine if it needs to output to the output file or error
@@ -255,8 +254,7 @@ inline void log(Logger::Level             lvl,
 template <typename... Args>
 void log(Logger::Level lvl, format::FormatString<Args...> const& fmt,
          Args&&... args) noexcept {
-  Logger::get_default_instance().log(lvl, fmt,
-                                     memory::forward<Args>(args)...);
+  Logger::get_default_instance().log(lvl, fmt, memory::forward<Args>(args)...);
 }
 
 inline void log_trace3(containers::String const& formatted) noexcept {

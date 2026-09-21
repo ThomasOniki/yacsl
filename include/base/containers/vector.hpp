@@ -314,7 +314,7 @@ constexpr T& Vector<T, N, Allocator, SizeT>::emplace_back(this Vector& self,
     self.definitely_reserve(static_cast<SizeT>(self.capacity_ * 2 + 1));
   }
   return *memory::construct_at(self.data_ + self.size_++,
-                                     memory::forward<Args>(args)...);
+                               memory::forward<Args>(args)...);
 }
 
 template <typename T, usize N, type_traits::AllocatorType Allocator,
@@ -432,7 +432,7 @@ void Vector<T, N, Allocator, SizeT>::move(this Vector& self, T* data) {
   if constexpr (type_traits::TriviallyCopyable<T>) {
     if (self.size_ > 0) {
       memory::copy(ranges::Slice{data, static_cast<usize>(self.size_)},
-                         self.data_);
+                   self.data_);
     }
   } else {
     for (SizeT i = 0; i < self.size_; ++i) {

@@ -121,27 +121,29 @@ public:
 
   template <typename Self, typename... Args>
   [[nodiscard]] constexpr auto&&
-  expect_value(this Self&& self             BASE_LIFETIMEBOUND,
-               format::FormatString<Args...> const& fmt, Args&&... args) noexcept {
+  expect_value(this Self&& self                     BASE_LIFETIMEBOUND,
+               format::FormatString<Args...> const& fmt,
+               Args&&... args) noexcept {
     debug::panic_if(!self.is_value_, fmt, memory::forward<Args>(args)...);
     return *memory::forward<Self>(self).value_;
   }
   template <typename Self>
   [[nodiscard]] constexpr auto&& expect_value(this Self&& self) noexcept {
-    return memory::forward<Self>(self).expect_value("Option<{}> is nil.",
-                                                  type_traits::TYPE_STRING<T>);
+    return memory::forward<Self>(self).expect_value(
+        "Option<{}> is nil.", type_traits::TYPE_STRING<T>);
   }
   template <typename Self, typename... Args>
   [[nodiscard]] constexpr auto&&
-  assert_value(this Self&& self             BASE_LIFETIMEBOUND,
-               format::FormatString<Args...> const& fmt, Args&&... args) noexcept {
+  assert_value(this Self&& self                     BASE_LIFETIMEBOUND,
+               format::FormatString<Args...> const& fmt,
+               Args&&... args) noexcept {
     debug::debug_panic_if(!self.is_value_, fmt, memory::forward<Args>(args)...);
     return *memory::forward<Self>(self).value_;
   }
   template <typename Self>
   [[nodiscard]] constexpr auto&& assert_value(this Self&& self) noexcept {
-    return memory::forward<Self>(self).assert_value("Option<{}> is nil.",
-                                                  type_traits::TYPE_STRING<T>);
+    return memory::forward<Self>(self).assert_value(
+        "Option<{}> is nil.", type_traits::TYPE_STRING<T>);
   }
 
 private:
@@ -199,30 +201,35 @@ public:
 
   template <typename Self, typename... Args>
   [[nodiscard]] constexpr auto&&
-  expect_value(this Self&& self             BASE_LIFETIMEBOUND,
-               format::FormatString<Args...> const& fmt, Args&&... args) noexcept {
+  expect_value(this Self&& self                     BASE_LIFETIMEBOUND,
+               format::FormatString<Args...> const& fmt,
+               Args&&... args) noexcept {
     debug::panic_if(self.ptr_ == nullptr, fmt, memory::forward<Args>(args)...);
-    return memory::forward<type_traits::CopyCVRef<Self&&, T>>(*memory::forward<Self>(self).ptr_);
+    return memory::forward<type_traits::CopyCVRef<Self&&, T>>(
+        *memory::forward<Self>(self).ptr_);
   }
   template <typename Self>
   [[nodiscard]] constexpr auto&&
   expect_value(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    return memory::forward<Self>(self).expect_value("Option<{}> is nil.",
-                                                  type_traits::TYPE_STRING<T>);
+    return memory::forward<Self>(self).expect_value(
+        "Option<{}> is nil.", type_traits::TYPE_STRING<T>);
   }
 
   template <typename Self, typename... Args>
   [[nodiscard]] constexpr auto&&
-  assert_value(this Self&& self             BASE_LIFETIMEBOUND,
-               format::FormatString<Args...> const& fmt, Args&&... args) noexcept {
-    debug::debug_panic_if(self.ptr_ == nullptr, fmt, memory::forward<Args>(args)...);
-    return memory::forward<type_traits::CopyCVRef<Self&&, T>>(*memory::forward<Self>(self).ptr_);
+  assert_value(this Self&& self                     BASE_LIFETIMEBOUND,
+               format::FormatString<Args...> const& fmt,
+               Args&&... args) noexcept {
+    debug::debug_panic_if(self.ptr_ == nullptr, fmt,
+                          memory::forward<Args>(args)...);
+    return memory::forward<type_traits::CopyCVRef<Self&&, T>>(
+        *memory::forward<Self>(self).ptr_);
   }
   template <typename Self>
   [[nodiscard]] constexpr auto&&
   assert_value(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    return memory::forward<Self>(self).assert_value("Option<{}> is nil.",
-                                                  type_traits::TYPE_STRING<T>);
+    return memory::forward<Self>(self).assert_value(
+        "Option<{}> is nil.", type_traits::TYPE_STRING<T>);
   }
 
 private:
