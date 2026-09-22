@@ -2,6 +2,7 @@
 
 #ifndef _WIN32
 
+#include "base/debug/assert.hpp"
 #include "base/os/file.hpp"
 #include "base/ranges/string_view.hpp"
 #include "base/type_aliases.hpp"
@@ -32,7 +33,7 @@ inline ranges::StringView errno_str() noexcept { return errno_str(errno); }
 #define BASE_TRY_SYSCALL(syscall)                                              \
   [&]() {                                                                      \
     auto result = syscall;                                                     \
-    debug::panic_if(result == -1, #syscall " failed: {}", errno_str());        \
+    debug::assert_true(result != -1, #syscall " failed: {}", errno_str());     \
     return result;                                                             \
   }()
 

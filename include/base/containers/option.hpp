@@ -1,7 +1,7 @@
 #pragma once
 
 #include "base/containers/stack_storage.hpp"
-#include "base/debug/panic.hpp"
+#include "base/debug/assert.hpp"
 #include "base/format/format_string.hpp"
 #include "base/memory/lifetimes.hpp"
 #include "base/type_traits/type_string.hpp"
@@ -124,7 +124,7 @@ public:
   expect_value(this Self&& self                     BASE_LIFETIMEBOUND,
                format::FormatString<Args...> const& fmt,
                Args&&... args) noexcept {
-    debug::panic_if(!self.is_value_, fmt, memory::forward<Args>(args)...);
+    debug::assert_true(self.is_value_, fmt, memory::forward<Args>(args)...);
     return *memory::forward<Self>(self).value_;
   }
   template <typename Self>
@@ -137,7 +137,8 @@ public:
   assert_value(this Self&& self                     BASE_LIFETIMEBOUND,
                format::FormatString<Args...> const& fmt,
                Args&&... args) noexcept {
-    debug::debug_panic_if(!self.is_value_, fmt, memory::forward<Args>(args)...);
+    debug::assert_true_unchecked(self.is_value_, fmt,
+                                 memory::forward<Args>(args)...);
     return *memory::forward<Self>(self).value_;
   }
   template <typename Self>
@@ -204,7 +205,8 @@ public:
   expect_value(this Self&& self                     BASE_LIFETIMEBOUND,
                format::FormatString<Args...> const& fmt,
                Args&&... args) noexcept {
-    debug::panic_if(self.ptr_ == nullptr, fmt, memory::forward<Args>(args)...);
+    debug::assert_true(self.ptr_ != nullptr, fmt,
+                       memory::forward<Args>(args)...);
     return memory::forward<type_traits::CopyCVRef<Self&&, T>>(
         *memory::forward<Self>(self).ptr_);
   }
@@ -220,8 +222,8 @@ public:
   assert_value(this Self&& self                     BASE_LIFETIMEBOUND,
                format::FormatString<Args...> const& fmt,
                Args&&... args) noexcept {
-    debug::debug_panic_if(self.ptr_ == nullptr, fmt,
-                          memory::forward<Args>(args)...);
+    debug::assert_true_unchecked(self.ptr_ == nullptr, fmt,
+                                 memory::forward<Args>(args)...);
     return memory::forward<type_traits::CopyCVRef<Self&&, T>>(
         *memory::forward<Self>(self).ptr_);
   }
