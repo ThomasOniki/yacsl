@@ -167,7 +167,7 @@ create_other_pipes(base::containers::StackArray<Process, 3>& processes,
         .output = Process::Output::Pipe,
         .error  = Process::Output::Inherit,
     };
-    processes[0] = Process::spawn({HELLO_WORLD_EXECUTABLE}, stdio).expect_ok();
+    processes[0] = Process::spawn({HELLO_WORLD_EXECUTABLE}, stdio).value();
   }
   Process::Stdio const stdio = {
       .input  = Process::Input::Pipe,
@@ -175,10 +175,10 @@ create_other_pipes(base::containers::StackArray<Process, 3>& processes,
       .error  = Process::Output::Inherit,
   };
   if (types.output == Type::OtherPipe) {
-    processes[1] = Process::spawn({CAT_EXECUTABLE}, stdio).expect_ok();
+    processes[1] = Process::spawn({CAT_EXECUTABLE}, stdio).value();
   }
   if (types.error == Type::OtherPipe) {
-    processes[2] = Process::spawn({CAT_EXECUTABLE}, stdio).expect_ok();
+    processes[2] = Process::spawn({CAT_EXECUTABLE}, stdio).value();
   }
 }
 
@@ -431,7 +431,7 @@ static int test_run_c(IoTypes types) {
   auto process = Process::spawn({STD_STREAMS_EXECUTABLE, "arg1", "arg2",
                                  "argument with spaces"},
                                 stdio)
-                     .expect_ok();
+                     .value();
 
   write_input(types.input, &process, &pipes);
 

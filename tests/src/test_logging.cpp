@@ -71,8 +71,8 @@ static void log_to_file(base::debug::Logger::Level                 lvl,
                                       base::os::File::Flags::Create |
                                       base::os::File::Flags::Trunc;
   base::debug::Logger         logger(
-      base::os::File::open("test_logs.txt", flags).expect_ok(),
-      base::os::File::open("test_logs.txt", flags).expect_ok(),
+      base::os::File::open("test_logs.txt", flags).value(),
+      base::os::File::open("test_logs.txt", flags).value(),
       base::debug::Logger::Level::Trace3);
   logger.log(lvl, fmt, base::memory::forward<Args>(args)...);
 }
