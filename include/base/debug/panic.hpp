@@ -19,18 +19,10 @@ void panic(format::FormatString<Args...> const& fmt, Args&&... args) noexcept {
   panic(buf, fmt.source_location());
 }
 
-template <typename... Args> // NOLINTNEXTLINE(misc-no-recursion)
-void panic_if(bool condition, format::FormatString<Args...> const& fmt,
-              Args&&... args) noexcept {
-  if (condition) [[unlikely]] {
-    panic(fmt, memory::forward<Args>(args)...);
-  }
-}
-
 #ifdef NDEBUG
 template <typename... Args>
 [[noreturn]]
-void debug_panic(format::FormatString<Args...> const& /*fmt*/,
+void unreachable(format::FormatString<Args...> const& /*fmt*/,
                  Args&&... /*args*/) noexcept {
   __builtin_unreachable();
 }
@@ -38,19 +30,11 @@ void debug_panic(format::FormatString<Args...> const& /*fmt*/,
 #else
 template <typename... Args>
 [[noreturn]]
-void debug_panic(format::FormatString<Args...> const& fmt,
+void unreachable(format::FormatString<Args...> const& fmt,
                  Args&&... args) noexcept {
   panic(fmt, memory::forward<Args>(args)...);
 }
 
 #endif
-
-template <typename... Args>
-void debug_panic_if(bool condition, format::FormatString<Args...> const& fmt,
-                    Args&&... args) noexcept {
-  if (condition) [[unlikely]] {
-    debug_panic(fmt, memory::forward<Args>(args)...);
-  }
-}
 
 } // namespace base::debug

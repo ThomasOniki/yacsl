@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/attributes.hpp"
+#include "base/debug/assert.hpp"
 #include "base/debug/panic.hpp"
 #include "base/format/format_string.hpp"
 #include "base/memory/lifetimes.hpp"
@@ -25,9 +25,8 @@ public:
   [[nodiscard]] constexpr Err error(this UnsignedResult self) noexcept {
     if (self.value_ >= 0) [[likely]] {
       return Err(0);
-    } else {
-      return Err(-self.value_);
     }
+    return Err(-self.value_);
   }
   [[nodiscard]] constexpr bool is_ok(this UnsignedResult self) noexcept {
     return self.value_ >= 0;
@@ -56,7 +55,7 @@ public:
   [[nodiscard]] constexpr Ok assert_ok(this UnsignedResult           self,
                                        format::FormatString<Args...> fmt,
                                        Args&&... args) noexcept {
-    debug::debug_panic_if(self.is_error(), fmt, memory::forward<Args>(args)...);
+    debug::assert_true(self.is_ok(), fmt, memory::forward<Args>(args)...);
     return static_cast<Ok>(self.value_);
   }
   [[nodiscard]] constexpr Ok assert_ok(this UnsignedResult self) noexcept {

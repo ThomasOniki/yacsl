@@ -5,6 +5,7 @@
 #include "base/containers/result.hpp"
 #include "base/containers/string.hpp"
 #include "base/containers/vector.hpp"
+#include "base/debug/assert.hpp"
 #include "base/os/file.hpp"
 #include "base/ranges/initializer_list.hpp"
 #include "base/ranges/slice.hpp"
@@ -138,8 +139,8 @@ public:
 
   Process& operator=(this Process& self BASE_LIFETIMEBOUND,
                      Process&&          other) noexcept {
-    debug::debug_panic_if(
-        self.handle_ != NIL_PROCESS_HANDLE,
+    debug::assert_true(
+        self.handle_ == NIL_PROCESS_HANDLE,
         "Tried to memory::move assign an active Process instance.");
     self.handle_        = other.handle_;
     self.stdin_type_    = other.stdin_type_;

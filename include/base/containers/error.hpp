@@ -43,7 +43,7 @@ public:
                             format::FormatString<Args...> const& error_fmt,
                             Args&&... args) {
     if (self.value_ != Err(0)) [[unlikely]] {
-      debug::debug_panic(error_fmt, memory::forward<Args>(args)...);
+      debug::unreachable(error_fmt, memory::forward<Args>(args)...);
     }
   }
   constexpr void assert_nil(this Error self) {
