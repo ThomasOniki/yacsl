@@ -97,10 +97,10 @@ public:
             format::FormatString<Args...> const& error_fmt,
             Args&&... error_fmt_args) noexcept {
     if (self.is_err_) [[unlikely]] {
-      debug::debug_panic("Result<{}, {}> is error {}.",
+      debug::unreachable("Result<{}, {}> is error {}.",
                          type_traits::TYPE_STRING<Ok>,
                          type_traits::TYPE_STRING<Err>, self.err_);
-      debug::debug_panic(error_fmt, memory::forward<Args>(error_fmt_args)...);
+      debug::unreachable(error_fmt, memory::forward<Args>(error_fmt_args)...);
     }
     return memory::forward<Self>(self).ok_;
   }
@@ -108,7 +108,7 @@ public:
   [[nodiscard]] constexpr auto&&
   assert_ok(this Self&& self BASE_LIFETIMEBOUND) noexcept {
     if (self.is_err_) [[unlikely]] {
-      debug::debug_panic("Result<{}, {}> is error {}.",
+      debug::unreachable("Result<{}, {}> is error {}.",
                          type_traits::TYPE_STRING<Ok>,
                          type_traits::TYPE_STRING<Err>, self.err_);
     }
@@ -143,10 +143,10 @@ public:
              format::FormatString<Args...> const& error_fmt,
              Args&&... error_fmt_args) noexcept {
     if (!self.is_err_) [[unlikely]] {
-      debug::debug_panic("Result<{}, {}> is ok {}.",
+      debug::unreachable("Result<{}, {}> is ok {}.",
                          type_traits::TYPE_STRING<Ok>,
                          type_traits::TYPE_STRING<Err>, self.ok_);
-      debug::debug_panic(error_fmt, memory::forward<Args>(error_fmt_args)...);
+      debug::unreachable(error_fmt, memory::forward<Args>(error_fmt_args)...);
     }
     return memory::forward<Self>(self).err_;
   }
@@ -154,7 +154,7 @@ public:
   [[nodiscard]] constexpr auto&&
   assert_err(this Self&& self BASE_LIFETIMEBOUND) noexcept {
     if (!self.is_err_) [[unlikely]] {
-      debug::debug_panic("Result<{}, {}> is ok {}.",
+      debug::unreachable("Result<{}, {}> is ok {}.",
                          type_traits::TYPE_STRING<Ok>,
                          type_traits::TYPE_STRING<Err>, self.ok_);
     }

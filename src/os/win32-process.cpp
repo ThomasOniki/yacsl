@@ -1,6 +1,7 @@
 #ifdef _WIN32
 
 #include "base/containers/string.hpp"
+#include "base/debug/assert.hpp"
 #include "base/debug/panic.hpp"
 #include "base/os/process.hpp"
 #include "base/ranges/slice.hpp"
@@ -334,8 +335,9 @@ Process::ExitStatus Process::wait(this Process& self) noexcept {
 
   self.cleanup_before_wait(&status);
 
-  debug::panic_if(WaitForSingleObject(self.handle_, INFINITE) != WAIT_OBJECT_0,
-                  "WaitForSingleObject failed: {}", win32_err_str());
+  debug::assert_true(WaitForSingleObject(self.handle_, INFINITE) ==
+                         WAIT_OBJECT_0,
+                     "WaitForSingleObject failed: {}", win32_err_str());
 
   DWORD code = 0;
   BASE_TRY_SYSCALL(GetExitCodeProcess(self.handle_, &code));
