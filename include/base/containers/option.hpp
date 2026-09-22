@@ -119,32 +119,17 @@ public:
     return self.is_value_;
   }
 
-  template <typename Self, typename... Args>
-  [[nodiscard]] constexpr auto&&
-  expect_value(this Self&& self                     BASE_LIFETIMEBOUND,
-               format::FormatString<Args...> const& fmt,
-               Args&&... args) noexcept {
-    debug::assert_true(self.is_value_, fmt, memory::forward<Args>(args)...);
+  template <typename Self>
+  [[nodiscard]] constexpr auto&& value(this Self&& self) noexcept {
+    debug::assert_true(self.is_value_, "Option<{}> is nil.",
+                       type_traits::TYPE_STRING<T>);
     return *memory::forward<Self>(self).value_;
   }
   template <typename Self>
-  [[nodiscard]] constexpr auto&& expect_value(this Self&& self) noexcept {
-    return memory::forward<Self>(self).expect_value(
-        "Option<{}> is nil.", type_traits::TYPE_STRING<T>);
-  }
-  template <typename Self, typename... Args>
-  [[nodiscard]] constexpr auto&&
-  assert_value(this Self&& self                     BASE_LIFETIMEBOUND,
-               format::FormatString<Args...> const& fmt,
-               Args&&... args) noexcept {
-    debug::assert_true_unchecked(self.is_value_, fmt,
-                                 memory::forward<Args>(args)...);
+  [[nodiscard]] constexpr auto&& value_unchecked(this Self&& self) noexcept {
+    debug::assert_true_unchecked(self.is_value_, "Option<{}> is nil.",
+                                 type_traits::TYPE_STRING<T>);
     return *memory::forward<Self>(self).value_;
-  }
-  template <typename Self>
-  [[nodiscard]] constexpr auto&& assert_value(this Self&& self) noexcept {
-    return memory::forward<Self>(self).assert_value(
-        "Option<{}> is nil.", type_traits::TYPE_STRING<T>);
   }
 
 private:
@@ -219,9 +204,9 @@ public:
 
   template <typename Self, typename... Args>
   [[nodiscard]] constexpr auto&&
-  assert_value(this Self&& self                     BASE_LIFETIMEBOUND,
-               format::FormatString<Args...> const& fmt,
-               Args&&... args) noexcept {
+  value_unchecked(this Self&& self                     BASE_LIFETIMEBOUND,
+                  format::FormatString<Args...> const& fmt,
+                  Args&&... args) noexcept {
     debug::assert_true_unchecked(self.ptr_ == nullptr, fmt,
                                  memory::forward<Args>(args)...);
     return memory::forward<type_traits::CopyCVRef<Self&&, T>>(
@@ -229,8 +214,8 @@ public:
   }
   template <typename Self>
   [[nodiscard]] constexpr auto&&
-  assert_value(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    return memory::forward<Self>(self).assert_value(
+  value_unchecked(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+    return memory::forward<Self>(self).value_unchecked(
         "Option<{}> is nil.", type_traits::TYPE_STRING<T>);
   }
 

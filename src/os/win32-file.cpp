@@ -13,11 +13,11 @@ namespace base::os {
 containers::Result<File, File::OpenError>
 File::open(char const* path, File::Flags flags) noexcept {
   containers::Result<HANDLE, OpenError> handle = open_file_handle(path, flags);
-  if (handle.is_err()) [[unlikely]] {
-    return handle.assert_err();
+  if (handle.is_error()) [[unlikely]] {
+    return handle.error_unchecked();
   }
   File opened;
-  opened.handle_ = handle.assert_ok();
+  opened.handle_ = handle.value_unchecked();
 
   if (strip_file_open_flag(&flags, File::Flags::SeekEnd)) {
     LONG high = 0;
