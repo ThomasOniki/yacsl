@@ -11,24 +11,25 @@
 
 namespace base::containers {
 
-template <type_traits::UnsignedIntegral Ok, type_traits::Enum Err>
-  requires(sizeof(Err) <= sizeof(Ok) &&
-           type_traits::UnsignedIntegral<type_traits::UnderlyingEnumType<Err>>)
+template <type_traits::UnsignedIntegral Value, type_traits::Enum Error>
+  requires(
+      sizeof(Error) <= sizeof(Value) &&
+      type_traits::UnsignedIntegral<type_traits::UnderlyingEnumType<Error>>)
 class UnsignedResult {
 public:
-  constexpr UnsignedResult(Ok expected) noexcept
+  constexpr UnsignedResult(Value expected) noexcept
       : value_(static_cast<Signed>(expected)) {}
 
-  constexpr UnsignedResult(Err error) noexcept
+  constexpr UnsignedResult(Error error) noexcept
       : value_(-static_cast<Signed>(error)) {}
 
-  [[nodiscard]] constexpr Err error(this UnsignedResult self) noexcept {
+  [[nodiscard]] constexpr Error error(this UnsignedResult self) noexcept {
     if (self.value_ >= 0) [[likely]] {
-      return Err(0);
+      return Error(0);
     }
-    return Err(-self.value_);
+    return Error(-self.value_);
   }
-  [[nodiscard]] constexpr bool is_ok(this UnsignedResult self) noexcept {
+  [[nodiscard]] constexpr bool is_value(this UnsignedResult self) noexcept {
     return self.value_ >= 0;
   }
   [[nodiscard]] constexpr bool is_error(this UnsignedResult self) noexcept {
@@ -36,36 +37,37 @@ public:
   }
 
   template <typename... Args>
-  [[nodiscard]] constexpr Ok expect_ok(this UnsignedResult           self,
-                                       format::FormatString<Args...> fmt,
-                                       Args&&... args) noexcept {
+  [[nodiscard]] constexpr Value value(this UnsignedResult           self,
+                                      format::FormatString<Args...> fmt,
+                                      Args&&... args) noexcept {
     if (self.is_error()) [[unlikely]] {
-      debug::panic("UnsignedResult<{}, {}> is error {}.", Err(-self.value_));
+      debug::panic("UnsignedResult<{}, {}> is error {}.", Error(-self.value_));
       debug::panic(fmt, memory::forward<Args>(args)...);
     }
-    return static_cast<Ok>(self.value_);
+    return static_cast<Value>(self.value_);
   }
-  [[nodiscard]] constexpr Ok expect_ok(this UnsignedResult self) noexcept {
-    return self.expect_ok("UnsignedResult<{}, {}> is error {}.",
-                          type_traits::TYPE_STRING<Ok>,
-                          type_traits::TYPE_STRING<Err>, self.error());
+  [[nodiscard]] constexpr Value value(this UnsignedResult self) noexcept {
+    return self.value("UnsignedResult<{}, {}> is error {}.",
+                      type_traits::TYPE_STRING<Value>,
+                      type_traits::TYPE_STRING<Error>, self.error());
   }
 
   template <typename... Args>
-  [[nodiscard]] constexpr Ok assert_ok(this UnsignedResult           self,
-                                       format::FormatString<Args...> fmt,
-                                       Args&&... args) noexcept {
-    debug::assert_true(self.is_ok(), fmt, memory::forward<Args>(args)...);
-    return static_cast<Ok>(self.value_);
+  [[nodiscard]] constexpr Value
+  value_unchecked(this UnsignedResult self, format::FormatString<Args...> fmt,
+                  Args&&... args) noexcept {
+    debug::assert_true(self.is_value(), fmt, memory::forward<Args>(args)...);
+    return static_cast<Value>(self.value_);
   }
-  [[nodiscard]] constexpr Ok assert_ok(this UnsignedResult self) noexcept {
-    return self.assert_ok("UnsignedResult<{}, {}> is error {}.",
-                          type_traits::TYPE_STRING<Ok>,
-                          type_traits::TYPE_STRING<Err>, self.error());
+  [[nodiscard]] constexpr Value
+  value_unchecked(this UnsignedResult self) noexcept {
+    return self.value_unchecked("UnsignedResult<{}, {}> is error {}.",
+                                type_traits::TYPE_STRING<Value>,
+                                type_traits::TYPE_STRING<Error>, self.error());
   }
 
 private:
-  using Signed = type_traits::MakeSigned<Ok>;
+  using Signed = type_traits::MakeSigned<Value>;
   Signed value_;
 };
 

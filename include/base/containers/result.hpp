@@ -2,7 +2,6 @@
 
 #include "base/attributes.hpp"
 #include "base/debug/panic.hpp"
-#include "base/format/format_string.hpp"
 #include "base/memory/lifetimes.hpp"
 #include "base/type_traits/categories.hpp"
 #include "base/type_traits/qualifiers.hpp"
@@ -11,27 +10,27 @@
 
 namespace base::containers {
 
-template <typename Ok, type_traits::Enum Err> class Result {
+template <typename Value, type_traits::Enum Error> class Result {
 public:
-  template <type_traits::MaybeCVRef<Err> E>
-  Result(E&& err) : err_(memory::forward<E>(err)), is_err_(true) {}
+  template <type_traits::MaybeCVRef<Error> E>
+  Result(E&& error) : error_(memory::forward<E>(error)), is_error_(true) {}
   template <typename... Args>
-  Result(Args&&... args) : ok_(memory::forward<Args>(args)...) {}
+  Result(Args&&... args) : value_(memory::forward<Args>(args)...) {}
 
   ~Result() noexcept { destroy(); }
 
-  constexpr Result(Result const& other) noexcept : is_err_(other.is_err_) {
-    if (other.is_err_) [[unlikely]] {
-      memory::construct_at(&err_, other.err_);
+  constexpr Result(Result const& other) noexcept : is_error_(other.is_error_) {
+    if (other.is_error_) [[unlikely]] {
+      memory::construct_at(&error_, other.error_);
     } else {
-      memory::construct_at(&ok_, other.ok_);
+      memory::construct_at(&value_, other.value_);
     }
   }
-  constexpr Result(Result&& other) noexcept : is_err_(other.is_err_) {
-    if (other.is_err_) [[unlikely]] {
-      memory::construct_at(&err_, memory::move(other.err_));
+  constexpr Result(Result&& other) noexcept : is_error_(other.is_error_) {
+    if (other.is_error_) [[unlikely]] {
+      memory::construct_at(&error_, memory::move(other.error_));
     } else {
-      memory::construct_at(&ok_, memory::move(other.ok_));
+      memory::construct_at(&value_, memory::move(other.value_));
     }
   }
 
@@ -41,11 +40,11 @@ public:
       return self;
     }
     self.destroy();
-    self.is_err_ = other.is_err_;
-    if (other.is_err_) [[unlikely]] {
-      memory::construct_at(&self.err_, other.err_);
+    self.is_error_ = other.is_error_;
+    if (other.is_error_) [[unlikely]] {
+      memory::construct_at(&self.error_, other.error_);
     } else {
-      memory::construct_at(&self.ok_, other.ok_);
+      memory::construct_at(&self.value_, other.value_);
     }
     return self;
   }
@@ -53,129 +52,79 @@ public:
   constexpr Result& operator=(this Result& self BASE_LIFETIMEBOUND,
                               Result&&          other) noexcept {
     self.destroy();
-    self.is_err_ = other.is_err_;
-    if (other.is_err_) [[unlikely]] {
-      memory::construct_at(&self.err_, memory::move(other.err_));
+    self.is_error_ = other.is_error_;
+    if (other.is_error_) [[unlikely]] {
+      memory::construct_at(&self.error_, memory::move(other.error_));
     } else {
-      memory::construct_at(&self.ok_, memory::move(other.ok_));
+      memory::construct_at(&self.value_, memory::move(other.value_));
     }
     return self;
   }
 
-  [[nodiscard]] constexpr bool is_ok(this Result const& self) noexcept {
-    return !self.is_err_;
+  [[nodiscard]] constexpr bool is_value(this Result const& self) noexcept {
+    return !self.is_error_;
   }
-  [[nodiscard]] constexpr bool is_err(this Result const& self) noexcept {
-    return self.is_err_;
+  [[nodiscard]] constexpr bool is_error(this Result const& self) noexcept {
+    return self.is_error_;
   }
 
-  template <typename Self, typename... Args>
+  template <typename Self>
   [[nodiscard]] constexpr auto&&
-  expect_ok(this Self&& self                     BASE_LIFETIMEBOUND,
-            format::FormatString<Args...> const& error_fmt,
-            Args&&... error_fmt_args) noexcept {
-    if (self.is_err_) [[unlikely]] {
-      debug::panic("Result<{}, {}> is error {}.", type_traits::TYPE_STRING<Ok>,
-                   type_traits::TYPE_STRING<Err>, self.err_);
-      debug::panic(error_fmt, memory::forward<Args>(error_fmt_args)...);
+  value(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+    if (self.is_error_) [[unlikely]] {
+      debug::panic("Result<{}, {}> is error {}.",
+                   type_traits::TYPE_STRING<Value>,
+                   type_traits::TYPE_STRING<Error>, self.error_);
     }
-    return memory::forward<Self>(self).ok_;
+    return memory::forward<Self>(self).value_;
   }
   template <typename Self>
   [[nodiscard]] constexpr auto&&
-  expect_ok(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    if (self.is_err_) [[unlikely]] {
-      debug::panic("Result<{}, {}> is error {}.", type_traits::TYPE_STRING<Ok>,
-                   type_traits::TYPE_STRING<Err>, self.err_);
-    }
-    return memory::forward<Self>(self).ok_;
-  }
-
-  template <typename Self, typename... Args>
-  [[nodiscard]] constexpr auto&&
-  assert_ok(this Self&& self                     BASE_LIFETIMEBOUND,
-            format::FormatString<Args...> const& error_fmt,
-            Args&&... error_fmt_args) noexcept {
-    if (self.is_err_) [[unlikely]] {
+  value_unchecked(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+    if (self.is_error_) [[unlikely]] {
       debug::unreachable("Result<{}, {}> is error {}.",
-                         type_traits::TYPE_STRING<Ok>,
-                         type_traits::TYPE_STRING<Err>, self.err_);
-      debug::unreachable(error_fmt, memory::forward<Args>(error_fmt_args)...);
+                         type_traits::TYPE_STRING<Value>,
+                         type_traits::TYPE_STRING<Error>, self.error_);
     }
-    return memory::forward<Self>(self).ok_;
-  }
-  template <typename Self>
-  [[nodiscard]] constexpr auto&&
-  assert_ok(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    if (self.is_err_) [[unlikely]] {
-      debug::unreachable("Result<{}, {}> is error {}.",
-                         type_traits::TYPE_STRING<Ok>,
-                         type_traits::TYPE_STRING<Err>, self.err_);
-    }
-    return memory::forward<Self>(self).ok_;
+    return memory::forward<Self>(self).value_;
   }
 
-  template <typename Self, typename... Args>
+  template <typename Self>
   [[nodiscard]] constexpr auto&&
-  expect_err(this Self&& self                     BASE_LIFETIMEBOUND,
-             format::FormatString<Args...> const& error_fmt,
-             Args&&... error_fmt_args) noexcept {
-    if (!self.is_err_) [[unlikely]] {
-      debug::panic("Result<{}, {}> is ok {}.", type_traits::TYPE_STRING<Ok>,
-                   type_traits::TYPE_STRING<Err>, self.ok_);
-      debug::panic(error_fmt, memory::forward<Args>(error_fmt_args)...);
+  error(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+    if (!self.is_error_) [[unlikely]] {
+      debug::panic("Result<{}, {}> is value {}.",
+                   type_traits::TYPE_STRING<Value>,
+                   type_traits::TYPE_STRING<Error>, self.value_);
     }
-    return memory::forward<Self>(self).err_;
+    return memory::forward<Self>(self).error_;
   }
   template <typename Self>
   [[nodiscard]] constexpr auto&&
-  expect_err(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    if (!self.is_err_) [[unlikely]] {
-      debug::panic("Result<{}, {}> is ok {}.", type_traits::TYPE_STRING<Ok>,
-                   type_traits::TYPE_STRING<Err>, self.ok_);
+  error_unchecked(this Self&& self BASE_LIFETIMEBOUND) noexcept {
+    if (!self.is_error_) [[unlikely]] {
+      debug::unreachable("Result<{}, {}> is value {}.",
+                         type_traits::TYPE_STRING<Value>,
+                         type_traits::TYPE_STRING<Error>, self.value_);
     }
-    return memory::forward<Self>(self).err_;
-  }
-
-  template <typename Self, typename... Args>
-  [[nodiscard]] constexpr auto&&
-  assert_err(this Self&& self                     BASE_LIFETIMEBOUND,
-             format::FormatString<Args...> const& error_fmt,
-             Args&&... error_fmt_args) noexcept {
-    if (!self.is_err_) [[unlikely]] {
-      debug::unreachable("Result<{}, {}> is ok {}.",
-                         type_traits::TYPE_STRING<Ok>,
-                         type_traits::TYPE_STRING<Err>, self.ok_);
-      debug::unreachable(error_fmt, memory::forward<Args>(error_fmt_args)...);
-    }
-    return memory::forward<Self>(self).err_;
-  }
-  template <typename Self>
-  [[nodiscard]] constexpr auto&&
-  assert_err(this Self&& self BASE_LIFETIMEBOUND) noexcept {
-    if (!self.is_err_) [[unlikely]] {
-      debug::unreachable("Result<{}, {}> is ok {}.",
-                         type_traits::TYPE_STRING<Ok>,
-                         type_traits::TYPE_STRING<Err>, self.ok_);
-    }
-    return memory::forward<Self>(self).err_;
+    return memory::forward<Self>(self).error_;
   }
 
 private:
   template <typename Self> void destroy(this Self&& self) noexcept {
-    if (self.is_err_) [[unlikely]] {
-      memory::forward<Self>(self).err_.~Err();
-    } else if constexpr (!type_traits::TriviallyDestructible<Ok>) {
-      memory::forward<Self>(self).ok_.~Ok();
+    if (self.is_error_) [[unlikely]] {
+      memory::forward<Self>(self).error_.~Error();
+    } else if constexpr (!type_traits::TriviallyDestructible<Value>) {
+      memory::forward<Self>(self).value_.~Value();
     }
   }
 
 private:
   union {
-    Ok  ok_;
-    Err err_;
+    Value value_;
+    Error error_;
   };
-  bool is_err_ = false;
+  bool is_error_ = false;
 };
 
 } // namespace base::containers

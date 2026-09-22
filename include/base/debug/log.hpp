@@ -216,7 +216,7 @@ private:
       } else {
         for (containers::Option<Message> option = self.ring_.try_pop();
              option.is_value(); option          = self.ring_.try_pop()) {
-          self.write_message(option.assert_value());
+          self.write_message(option.value_unchecked());
         }
 
         if (work == Work::Stop) {
