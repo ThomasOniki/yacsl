@@ -13,7 +13,7 @@ BASE_NOINLINE static int f1(bool /*unused*/, char /*unused*/) {
   int                     ret         = 0;
   base::debug::StackTrace stack_trace = base::debug::StackTrace::current();
   stack_trace.compute_entries();
-  CHECK_ENTRY(0, "base::os::StackTrace::current()");
+  CHECK_ENTRY(0, "base::debug::StackTrace::current()");
   CHECK_ENTRY(1, "f1(bool, char)");
   CHECK_ENTRY(2, "ns1::ns2::f2(void*)");
   CHECK_ENTRY(
