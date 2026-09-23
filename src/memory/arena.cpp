@@ -36,7 +36,7 @@ void Arena::reserve(this Arena& self, usize capacity) noexcept {
   __lsan_ignore_object(self.begin_);
 #endif
 
-  debug::assert_true(self.begin_ != nullptr, "[Arena] malloc failed.");
+  debug::assert_(self.begin_ != nullptr, "[Arena] malloc failed.");
   construct_at(reinterpret_cast<Metadata*>(self.begin_), metadata);
 }
 

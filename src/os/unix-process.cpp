@@ -42,7 +42,7 @@ struct State {
 #define CHECK_RETURN(func)                                                     \
   do {                                                                         \
     int const _result = func;                                                  \
-    debug::assert_true(_result == 0, #func " failed: {}", errno_str(_result)); \
+    debug::assert_(_result == 0, #func " failed: {}", errno_str(_result)); \
   } while (false)
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -210,7 +210,7 @@ Process::spawn(char const* const* argv, Stdio const& stdio) noexcept {
   if (result == ENOENT) {
     return SpawnError::FileNotFound;
   }
-  debug::assert_true(result == 0, "posix_spawnp failed: {}", errno_str(result));
+  debug::assert_(result == 0, "posix_spawnp failed: {}", errno_str(result));
   spawned.handle_ = pid;
 
   spawned.cleanup_after_spawn(&state);
@@ -282,7 +282,7 @@ Process::ExitStatus Process::wait(this Process& self) noexcept {
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void Process::send_signal(this Process& self, Signal signal) noexcept {
-  debug::assert_true(self.handle_ == -1,
+  debug::assert_(self.handle_ == -1,
                      "Tried to send_signal to a Process that isn't running.");
   BASE_TRY_SYSCALL(
       kill(static_cast<pid_t>(self.handle_), static_cast<int>(signal)));

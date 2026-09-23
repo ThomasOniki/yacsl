@@ -52,7 +52,7 @@ StackTrace::compute_entries(this StackTrace& self) noexcept {
                                static_cast<DWORD>(module_name.size()));
     }
     module_name.resize(len);
-    assert_true(len > 0, "GetModuleFileNameA failed(): {}",
+    assert_(len > 0, "GetModuleFileNameA failed(): {}",
                 os::win32_err_str());
 
     MODULEINFO info = {};
