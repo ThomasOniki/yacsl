@@ -56,7 +56,7 @@ public:
   [[nodiscard]] constexpr Value
   value_unchecked(this UnsignedResult self, format::FormatString<Args...> fmt,
                   Args&&... args) noexcept {
-    debug::assert_true(self.is_value(), fmt, memory::forward<Args>(args)...);
+    debug::assert_(self.is_value(), fmt, memory::forward<Args>(args)...);
     return static_cast<Value>(self.value_);
   }
   [[nodiscard]] constexpr Value

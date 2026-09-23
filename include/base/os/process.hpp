@@ -139,7 +139,7 @@ public:
 
   Process& operator=(this Process& self BASE_LIFETIMEBOUND,
                      Process&&          other) noexcept {
-    debug::assert_true(
+    debug::assert_(
         self.handle_ == NIL_PROCESS_HANDLE,
         "Tried to memory::move assign an active Process instance.");
     self.handle_        = other.handle_;
