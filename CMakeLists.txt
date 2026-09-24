@@ -14,6 +14,7 @@ add_warnings(base)
 set_utf8(base)
 set_hidden_visibility(base)
 link_threads(base)
+target_compile_features(base PUBLIC cxx_std_23)
 
 option(BASE_WERROR "Treat warnings as errors." ON)
 option(BASE_NO_LIBCPP "Don't link with the c++ standard library." OFF)
@@ -26,12 +27,7 @@ if(BASE_NO_LIBCPP)
   target_compile_definitions(base PUBLIC BASE_NO_LIBCPP)
 endif()
 
-file(GLOB_RECURSE BASE_SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
-target_sources(base PRIVATE "${BASE_SOURCES}")
-
 target_precompile_headers(base PUBLIC "${PROJECT_SOURCE_DIR}/src/pch.hpp")
-
-target_compile_features(base PUBLIC cxx_std_23)
 
 if(PROJECT_IS_TOP_LEVEL)
   add_subdirectory("${PROJECT_SOURCE_DIR}/tests")
