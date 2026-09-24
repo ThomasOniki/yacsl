@@ -3,14 +3,12 @@
 #include "base/attributes.hpp"
 #include "base/debug/panic.hpp"
 #include "base/memory/lifetimes.hpp"
-#include "base/type_traits/categories.hpp"
 #include "base/type_traits/qualifiers.hpp"
-#include "base/type_traits/trivial.hpp"
 #include "base/type_traits/type_string.hpp"
 
 namespace base::containers {
 
-template <typename Value, type_traits::Enum Error> class Result {
+template <typename Value, typename Error> class Result {
 public:
   template <type_traits::MaybeCVRef<Error> E>
   Result(E&& error) : error_(memory::forward<E>(error)), is_error_(true) {}
@@ -114,7 +112,7 @@ private:
   template <typename Self> void destroy(this Self&& self) noexcept {
     if (self.is_error_) [[unlikely]] {
       memory::forward<Self>(self).error_.~Error();
-    } else if constexpr (!type_traits::TriviallyDestructible<Value>) {
+    } else {
       memory::forward<Self>(self).value_.~Value();
     }
   }
