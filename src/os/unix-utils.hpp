@@ -33,7 +33,7 @@ inline ranges::StringView errno_str() noexcept { return errno_str(errno); }
 #define BASE_TRY_SYSCALL(syscall)                                              \
   [&]() {                                                                      \
     auto result = syscall;                                                     \
-    debug::assert_(result != -1, #syscall " failed: {}", errno_str());     \
+    debug::assert_(result != -1, #syscall " failed: {}", errno_str());         \
     return result;                                                             \
   }()
 

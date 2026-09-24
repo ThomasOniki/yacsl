@@ -1,6 +1,7 @@
 #pragma once
 
 #include "base/attributes.hpp"
+#include "base/export.hpp"
 #include "base/memory/lifetimes.hpp"
 #include "base/memory/singleton_allocator.hpp"
 #include "base/ranges/slice.hpp"
@@ -74,7 +75,7 @@ public:
         : arena_(arena), ptr_(arena.ptr_) {}
     Scope(Scope const&)     = delete;
     Scope(Scope&&) noexcept = delete;
-    ~Scope() noexcept;
+    ~Scope() noexcept BASE_API;
     Scope& operator=(Scope const&)     = delete;
     Scope& operator=(Scope&&) noexcept = delete;
 
@@ -84,8 +85,8 @@ public:
   };
 
 private:
-  void reserve(this Arena& self, usize capacity) noexcept;
-  void free_all(this Arena& self) noexcept;
+  void reserve(this Arena& self, usize capacity) noexcept BASE_API;
+  void free_all(this Arena& self) noexcept BASE_API;
 
 private:
   uchar* begin_            = nullptr;
