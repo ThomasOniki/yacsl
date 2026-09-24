@@ -335,9 +335,8 @@ Process::ExitStatus Process::wait(this Process& self) noexcept {
 
   self.cleanup_before_wait(&status);
 
-  debug::assert_(WaitForSingleObject(self.handle_, INFINITE) ==
-                         WAIT_OBJECT_0,
-                     "WaitForSingleObject failed: {}", win32_err_str());
+  debug::assert_(WaitForSingleObject(self.handle_, INFINITE) == WAIT_OBJECT_0,
+                 "WaitForSingleObject failed: {}", win32_err_str());
 
   DWORD code = 0;
   BASE_TRY_SYSCALL(GetExitCodeProcess(self.handle_, &code));

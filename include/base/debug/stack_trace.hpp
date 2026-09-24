@@ -4,6 +4,7 @@
 #include "base/containers/string.hpp"
 #include "base/containers/vector.hpp"
 #include "base/debug/log.hpp"
+#include "base/export.hpp"
 #include "base/type_aliases.hpp"
 
 namespace base::debug {
@@ -17,13 +18,13 @@ struct StackTraceEntry {
 
 struct StackTrace {
 
-  BASE_NOINLINE static StackTrace current() noexcept;
+  BASE_NOINLINE static StackTrace current() noexcept BASE_API;
 
   // Only call this when you actually need it. Computing the entries is non
   // trivial and can be done at any time as long as this->ptrs_ was gotten at
   // the right time.
   containers::Vector<StackTraceEntry, 16> const&
-  compute_entries(this StackTrace& self BASE_LIFETIMEBOUND) noexcept;
+  compute_entries(this StackTrace& self BASE_LIFETIMEBOUND) noexcept BASE_API;
 
   containers::Vector<StackTraceEntry, 16> const&
   compute_entries(this StackTrace&& self BASE_LIFETIMEBOUND) noexcept {

@@ -2,6 +2,7 @@
 
 #include "base/containers/string.hpp"
 #include "base/debug/source_location.hpp"
+#include "base/export.hpp"
 #include "base/format/format_string.hpp"
 #include "base/memory/lifetimes.hpp"
 
@@ -9,7 +10,7 @@ namespace base::debug {
 
 [[noreturn]] void
 panic(containers::String const& formatted,
-      SourceLocation            location = SourceLocation::current()) noexcept;
+      SourceLocation location = SourceLocation::current()) noexcept BASE_API;
 
 template <typename... Args>
 [[noreturn]] // NOLINTNEXTLINE(misc-no-recursion)

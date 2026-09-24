@@ -4,7 +4,6 @@
 #include "base/containers/stack_array.hpp"
 #include "base/containers/string.hpp"
 #include "base/debug/assert.hpp"
-#include "base/debug/panic.hpp"
 #include "base/os/file.hpp"
 #include "base/os/process.hpp"
 #include "base/ranges/slice.hpp"
@@ -42,7 +41,7 @@ struct State {
 #define CHECK_RETURN(func)                                                     \
   do {                                                                         \
     int const _result = func;                                                  \
-    debug::assert_(_result == 0, #func " failed: {}", errno_str(_result)); \
+    debug::assert_(_result == 0, #func " failed: {}", errno_str(_result));     \
   } while (false)
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -283,7 +282,7 @@ Process::ExitStatus Process::wait(this Process& self) noexcept {
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void Process::send_signal(this Process& self, Signal signal) noexcept {
   debug::assert_(self.handle_ == -1,
-                     "Tried to send_signal to a Process that isn't running.");
+                 "Tried to send_signal to a Process that isn't running.");
   BASE_TRY_SYSCALL(
       kill(static_cast<pid_t>(self.handle_), static_cast<int>(signal)));
   self.handle_ = -1;

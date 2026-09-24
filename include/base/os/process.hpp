@@ -6,6 +6,7 @@
 #include "base/containers/string.hpp"
 #include "base/containers/vector.hpp"
 #include "base/debug/assert.hpp"
+#include "base/export.hpp"
 #include "base/os/file.hpp"
 #include "base/ranges/initializer_list.hpp"
 #include "base/ranges/slice.hpp"
@@ -79,7 +80,8 @@ private:
 public:
   class Input {
   public:
-    void write(this Input& self, ranges::Slice<uchar const> bytes) noexcept;
+    void write(this Input&                self,
+               ranges::Slice<uchar const> bytes) noexcept BASE_API;
 
     ~Input() noexcept = default;
 
@@ -104,7 +106,8 @@ public:
     ~Output() noexcept = default;
 
     // returns 0 on EOF, between 1 and buffer.size() when sucessful.
-    usize read(this Output& self, ranges::Slice<uchar> buffer) noexcept;
+    usize read(this Output&         self,
+               ranges::Slice<uchar> buffer) noexcept BASE_API;
 
     using Init = StdioInit<false>;
     using enum StdioType;
@@ -139,9 +142,8 @@ public:
 
   Process& operator=(this Process& self BASE_LIFETIMEBOUND,
                      Process&&          other) noexcept {
-    debug::assert_(
-        self.handle_ == NIL_PROCESS_HANDLE,
-        "Tried to memory::move assign an active Process instance.");
+    debug::assert_(self.handle_ == NIL_PROCESS_HANDLE,
+                   "Tried to memory::move assign an active Process instance.");
     self.handle_        = other.handle_;
     self.stdin_type_    = other.stdin_type_;
     self.stdout_type_   = other.stdout_type_;
@@ -164,7 +166,7 @@ public:
   };
 
   [[nodiscard]] static containers::Result<Process, SpawnError>
-  spawn(char const* const* argv, Stdio const& stdio) noexcept;
+  spawn(char const* const* argv, Stdio const& stdio) noexcept BASE_API;
 
   [[nodiscard]] static containers::Result<Process, SpawnError>
   spawn(ranges::InitializerList<char const*> argv,
@@ -245,9 +247,9 @@ public:
     Signal             stopped;
   };
 
-  ExitStatus wait(this Process& self) noexcept;
+  ExitStatus wait(this Process& self) noexcept BASE_API;
 
-  void send_signal(this Process& self, Signal signal) noexcept;
+  void send_signal(this Process& self, Signal signal) noexcept BASE_API;
 
   template <typename Self>
   auto&& get_stdin(this Self&& self BASE_LIFETIMEBOUND) noexcept {

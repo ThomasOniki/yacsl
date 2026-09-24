@@ -2,6 +2,7 @@
 
 #include "base/containers/option.hpp"
 #include "base/containers/string.hpp"
+#include "base/export.hpp"
 #include "base/format/format_string.hpp"
 #include "base/memory/lifetimes.hpp"
 #include "base/os/file.hpp"
@@ -96,7 +97,7 @@ public:
   Logger& operator=(Logger const&) = delete;
   Logger& operator=(Logger&&)      = delete;
 
-  [[nodiscard]] static Logger& get_default_instance() noexcept;
+  [[nodiscard]] static Logger& get_default_instance() noexcept BASE_API;
 
   [[nodiscard]] Level level(this Logger const& self) noexcept {
     return self.level_;

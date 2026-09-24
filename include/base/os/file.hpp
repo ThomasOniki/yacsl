@@ -2,6 +2,7 @@
 
 #include "base/containers/result.hpp"
 #include "base/containers/string.hpp"
+#include "base/export.hpp"
 #include "base/ranges/slice.hpp"
 #include "base/ranges/string_view.hpp"
 #include "base/type_aliases.hpp"
@@ -25,8 +26,9 @@ public:
   enum class OpenError : u8 {
     FileNotFound = 1,
   };
+
   [[nodiscard]] static containers::Result<File, OpenError>
-  open(char const* path, Flags flags) noexcept;
+  open(char const* path, Flags flags) noexcept BASE_API;
   [[nodiscard]] static containers::Result<File, OpenError>
   open(ranges::StringView path, Flags flags) noexcept {
     return open(containers::String(path).c_str(), flags);
@@ -54,25 +56,26 @@ public:
 
   // seek/close don't do anything. This doesn't duplicate the standard streams,
   // it just sets handle_.
-  [[nodiscard]] static File open_stdin() noexcept;
-  [[nodiscard]] static File open_stdout() noexcept;
-  [[nodiscard]] static File open_stderr() noexcept;
+  [[nodiscard]] static File open_stdin() noexcept BASE_API;
+  [[nodiscard]] static File open_stdout() noexcept BASE_API;
+  [[nodiscard]] static File open_stderr() noexcept BASE_API;
 
-  usize write(this File& self, ranges::Slice<uchar const> data) noexcept;
-  usize read(this File& self, ranges::Slice<uchar> buffer) noexcept;
+  usize write(this File&                 self,
+              ranges::Slice<uchar const> data) noexcept BASE_API;
+  usize read(this File& self, ranges::Slice<uchar> buffer) noexcept BASE_API;
 
   [[nodiscard]] usize get_cursor(this File const& self) noexcept {
     return self.cursor_pos_;
   }
 
-  [[nodiscard]] bool is_tty(this File const& self) noexcept;
+  [[nodiscard]] bool is_tty(this File const& self) noexcept BASE_API;
   void               invalidate_is_tty_cache(this File& self) noexcept {
     self.is_tty_ = IsTtyFlag::NotComputed;
   }
 
-  void seek_begin(this File& self, utils::isize offset) noexcept;
-  void seek_end(this File& self, utils::isize offset) noexcept;
-  void seek_cursor(this File& self, utils::isize offset) noexcept;
+  void seek_begin(this File& self, utils::isize offset) noexcept BASE_API;
+  void seek_end(this File& self, utils::isize offset) noexcept BASE_API;
+  void seek_cursor(this File& self, utils::isize offset) noexcept BASE_API;
 
 #ifdef _WIN32
   using Handle                       = void*;
@@ -87,7 +90,7 @@ public:
   }
 
 private:
-  void close(this File& self) noexcept;
+  void close(this File& self) noexcept BASE_API;
 
 private:
   Handle handle_     = NIL_HANDLE;
