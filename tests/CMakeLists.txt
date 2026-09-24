@@ -1,6 +1,6 @@
 include(CTest)
 
-file(GLOB_RECURSE BASE_TESTS "${PROJECT_SOURCE_DIR}/tests/src/*.cpp")
+file(GLOB_RECURSE BASE_TESTS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 foreach(path IN LISTS BASE_TESTS)
   get_filename_component(name "${path}" NAME_WE)
 
@@ -14,18 +14,18 @@ foreach(path IN LISTS BASE_TESTS)
   add_warnings("${name}")
 
   target_compile_definitions(
-    "${name}" PRIVATE "BASE_TESTS_DIR=\"${PROJECT_SOURCE_DIR}/tests\"")
+    "${name}" PRIVATE "BASE_TESTS_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}\"")
 
   target_link_libraries("${name}" PRIVATE base)
   add_test(NAME "${name}" COMMAND "${name}")
 endforeach()
 
 add_executable(test_process_cat
-               "${PROJECT_SOURCE_DIR}/tests/share/test_process/cat.c")
+               "${CMAKE_CURRENT_SOURCE_DIR}/share/test_process/cat.c")
 add_executable(test_process_std_streams
-               "${PROJECT_SOURCE_DIR}/tests/share/test_process/std_streams.c")
+               "${CMAKE_CURRENT_SOURCE_DIR}/share/test_process/std_streams.c")
 add_executable(test_process_hello_world
-               "${PROJECT_SOURCE_DIR}/tests/share/test_process/hello_world.c")
+               "${CMAKE_CURRENT_SOURCE_DIR}/share/test_process/hello_world.c")
 
 target_compile_definitions(
   test_process
