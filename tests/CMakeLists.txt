@@ -11,7 +11,7 @@ foreach(path IN LISTS BASE_TESTS)
   message(STATUS "Added test ${name} (${path})")
 
   add_executable("${name}" "${path}")
-  init_target("${name}")
+  add_warnings("${name}")
 
   target_compile_definitions(
     "${name}" PRIVATE "BASE_TESTS_DIR=\"${PROJECT_SOURCE_DIR}/tests\"")
