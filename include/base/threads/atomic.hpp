@@ -47,6 +47,13 @@ public:
     return __atomic_fetch_sub(&self.value_, value, static_cast<int>(order));
   }
 
+  T add_fetch(this Atomic& self, T value, MemoryOrder order) noexcept {
+    return __atomic_add_fetch(&self.value_, value, static_cast<int>(order));
+  }
+  T sub_fetch(this Atomic& self, T value, MemoryOrder order) noexcept {
+    return __atomic_sub_fetch(&self.value_, value, static_cast<int>(order));
+  }
+
   T exchange(this Atomic& self, T value, MemoryOrder order) noexcept {
     containers::StackStorage<T> ret;
     __atomic_exchange(&self.value_, &value, &*ret, static_cast<int>(order));
@@ -68,13 +75,13 @@ public:
   }
 
   T operator++(this Atomic& self) noexcept {
-    return self.fetch_add(1, MemoryOrder::SeqCst) + 1;
+    return self.add_fetch(1, MemoryOrder::SeqCst);
   }
   T operator++(this Atomic& self, int) noexcept {
     return self.fetch_add(1, MemoryOrder::SeqCst);
   }
   T operator--(this Atomic& self) noexcept {
-    return self.fetch_sub(1, MemoryOrder::SeqCst) - 1;
+    return self.sub_fetch(1, MemoryOrder::SeqCst);
   }
   T operator--(this Atomic& self, int) noexcept {
     return self.fetch_sub(1, MemoryOrder::SeqCst);
