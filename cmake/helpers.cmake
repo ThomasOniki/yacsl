@@ -91,14 +91,14 @@ endfunction()
 
 function(gen_export_header target path public_api_macro)
   target_sources(
-    "${target}" PUBLIC FILE_SET HEADERS BASE_DIRS "${CMAKE_BINARY_DIR}" FILES
-                       "${CMAKE_BINARY_DIR}/${path}")
+    "${target}" PUBLIC FILE_SET HEADERS BASE_DIRS "${CMAKE_CURRENT_BINARY_DIR}" FILES
+                       "${CMAKE_CURRENT_BINARY_DIR}/${path}")
   include(GenerateExportHeader)
   generate_export_header("${target}" EXPORT_FILE_NAME "${path}"
                          EXPORT_MACRO_NAME "${public_api_macro}")
 
   target_include_directories(
-    "${target}" PUBLIC "$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>"
+    "${target}" PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>"
                        "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
 endfunction()
 
@@ -124,12 +124,12 @@ function(install_library project)
   include(GNUInstallDirs)
 
   configure_package_config_file(
-    "${PROJECT_SOURCE_DIR}/cmake/${project}-config.cmake.in"
-    "${PROJECT_BINARY_DIR}/${project}-config.cmake"
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/${project}-config.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/${project}-config.cmake"
     INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${project}")
 
   write_basic_package_version_file(
-    "${PROJECT_BINARY_DIR}/${project}-config-version.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/${project}-config-version.cmake"
     VERSION 1.0.0
     COMPATIBILITY SameMajorVersion)
 
@@ -150,7 +150,7 @@ function(install_library project)
     NAMESPACE "${project}::"
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${project}")
 
-  install(FILES "${PROJECT_BINARY_DIR}/${project}-config.cmake"
-                "${PROJECT_BINARY_DIR}/${project}-config-version.cmake"
+  install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${project}-config.cmake"
+                "${CMAKE_CURRENT_BINARY_DIR}/${project}-config-version.cmake"
           DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${project}")
 endfunction()
