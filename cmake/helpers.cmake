@@ -89,12 +89,13 @@ function(link_threads target)
   endif()
 endfunction()
 
-function(gen_export_header target path)
+function(gen_export_header target path public_api_macro)
   target_sources(
     "${target}" PUBLIC FILE_SET HEADERS BASE_DIRS "${CMAKE_BINARY_DIR}" FILES
                        "${CMAKE_BINARY_DIR}/${path}")
   include(GenerateExportHeader)
-  generate_export_header("${target}" EXPORT_FILE_NAME "${path}")
+  generate_export_header("${target}" EXPORT_FILE_NAME "${path}"
+                         EXPORT_MACRO_NAME "${public_api_macro}")
 
   target_include_directories(
     "${target}" PUBLIC "$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>"

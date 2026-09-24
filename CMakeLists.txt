@@ -8,7 +8,7 @@ add_library(base::base ALIAS base)
 
 source_directory(base "${PROJECT_SOURCE_DIR}/src")
 public_include_directory(base "${PROJECT_SOURCE_DIR}/include")
-gen_export_header(base "base/export.hpp")
+gen_export_header(base "base/export.hpp" "BASE_API")
 
 add_warnings(base)
 set_utf8(base)
