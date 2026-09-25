@@ -1,13 +1,13 @@
 #if !defined(__EMSCRIPTEN__) && !defined(_WIN32)
 
-#include "base/containers/result.hpp"
-#include "base/containers/stack_array.hpp"
-#include "base/containers/string.hpp"
-#include "base/debug/assert.hpp"
-#include "base/os/file.hpp"
-#include "base/os/process.hpp"
-#include "base/ranges/slice.hpp"
-#include "base/type_aliases.hpp"
+#include "yacsl/containers/result.hpp"
+#include "yacsl/containers/stack_array.hpp"
+#include "yacsl/containers/string.hpp"
+#include "yacsl/debug/assert.hpp"
+#include "yacsl/os/file.hpp"
+#include "yacsl/os/process.hpp"
+#include "yacsl/ranges/slice.hpp"
+#include "yacsl/type_aliases.hpp"
 #include "unix-utils.hpp"
 #include <errno.h>
 #include <fcntl.h>
@@ -20,7 +20,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-namespace base::os {
+namespace yacsl::os {
 
 using Type = Process::StdioType;
 using enum Type;
@@ -48,16 +48,16 @@ struct State {
 usize Process::Output::read(this Output&         self,
                             ranges::Slice<uchar> buffer) noexcept {
   return static_cast<usize>(
-      BASE_TRY_SYSCALL(::read(self.handle_, buffer.data(), buffer.size())));
+      YACSL_TRY_SYSCALL(::read(self.handle_, buffer.data(), buffer.size())));
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void Process::Input::write(this Input&                self,
                            ranges::Slice<uchar const> bytes) noexcept {
   usize written = static_cast<usize>(
-      BASE_TRY_SYSCALL(::write(self.handle_, bytes.data(), bytes.size())));
+      YACSL_TRY_SYSCALL(::write(self.handle_, bytes.data(), bytes.size())));
   while (written < bytes.size()) {
-    written += static_cast<usize>(BASE_TRY_SYSCALL(
+    written += static_cast<usize>(YACSL_TRY_SYSCALL(
         ::write(self.handle_, &bytes[written], bytes.size() - written)));
   }
 }
@@ -105,7 +105,7 @@ void Process::create_pipes(this Process& self, void* pvoid_state) noexcept {
   // NOLINTBEGIN(android-cloexec-pipe)
   State& state = *static_cast<State*>(pvoid_state);
   if (self.stdin_type_ == Pipe) {
-    BASE_TRY_SYSCALL(::pipe(state.stdin_pipe.data()));
+    YACSL_TRY_SYSCALL(::pipe(state.stdin_pipe.data()));
     self.stdin_input_.handle_ = state.stdin_pipe[1];
     CHECK_RETURN(posix_spawn_file_actions_adddup2(
         &state.file_actions, state.stdin_pipe[0], STDIN_FILENO));
@@ -121,7 +121,7 @@ void Process::create_pipes(this Process& self, void* pvoid_state) noexcept {
         &state.file_actions, state.stdio->input.other_pipe_handle_));
   }
   if (self.stdout_type_ == Pipe) {
-    BASE_TRY_SYSCALL(::pipe(state.stdout_pipe.data()));
+    YACSL_TRY_SYSCALL(::pipe(state.stdout_pipe.data()));
     self.stdout_output_.handle_ = state.stdout_pipe[0];
     CHECK_RETURN(posix_spawn_file_actions_adddup2(
         &state.file_actions, state.stdout_pipe[1], STDOUT_FILENO));
@@ -137,7 +137,7 @@ void Process::create_pipes(this Process& self, void* pvoid_state) noexcept {
         &state.file_actions, state.stdio->output.other_pipe_handle_));
   }
   if (self.stderr_type_ == Pipe) {
-    BASE_TRY_SYSCALL(::pipe(state.stderr_pipe.data()));
+    YACSL_TRY_SYSCALL(::pipe(state.stderr_pipe.data()));
     self.stderr_output_.handle_ = state.stderr_pipe[0];
     CHECK_RETURN(posix_spawn_file_actions_adddup2(
         &state.file_actions, state.stderr_pipe[1], STDERR_FILENO));
@@ -161,19 +161,19 @@ void Process::cleanup_after_spawn(this Process& self,
   CHECK_RETURN(posix_spawn_file_actions_destroy(&state.file_actions));
 
   if (self.stdin_type_ == Pipe) {
-    BASE_TRY_SYSCALL(close(state.stdin_pipe[0]));
+    YACSL_TRY_SYSCALL(close(state.stdin_pipe[0]));
   } else if (self.stdin_type_ == TYPE_OTHER_PIPE) {
-    BASE_TRY_SYSCALL(close(state.stdio->input.other_pipe_handle_));
+    YACSL_TRY_SYSCALL(close(state.stdio->input.other_pipe_handle_));
   }
   if (self.stdout_type_ == Pipe) {
-    BASE_TRY_SYSCALL(close(state.stdout_pipe[1]));
+    YACSL_TRY_SYSCALL(close(state.stdout_pipe[1]));
   } else if (self.stdout_type_ == TYPE_OTHER_PIPE) {
-    BASE_TRY_SYSCALL(close(state.stdio->output.other_pipe_handle_));
+    YACSL_TRY_SYSCALL(close(state.stdio->output.other_pipe_handle_));
   }
   if (self.stderr_type_ == Pipe) {
-    BASE_TRY_SYSCALL(close(state.stderr_pipe[1]));
+    YACSL_TRY_SYSCALL(close(state.stderr_pipe[1]));
   } else if (self.stderr_type_ == TYPE_OTHER_PIPE) {
-    BASE_TRY_SYSCALL(close(state.stdio->error.other_pipe_handle_));
+    YACSL_TRY_SYSCALL(close(state.stdio->error.other_pipe_handle_));
   }
 }
 
@@ -231,17 +231,17 @@ static containers::String drain_pipe(Process::Output* output) noexcept {
 void Process::cleanup_before_wait(this Process& self,
                                   ExitStatus*   status) noexcept {
   if (self.stdin_type_ == Pipe && self.stdin_input_.handle_ != -1) {
-    BASE_TRY_SYSCALL(close(self.stdin_input_.handle_));
+    YACSL_TRY_SYSCALL(close(self.stdin_input_.handle_));
     self.stdin_input_.handle_ = -1;
   }
   if (self.stdout_type_ == Pipe && self.stdout_output_.handle_ != -1) {
     status->unread_stdout = drain_pipe(&self.stdout_output_);
-    BASE_TRY_SYSCALL(close(self.stdout_output_.handle_));
+    YACSL_TRY_SYSCALL(close(self.stdout_output_.handle_));
     self.stdout_output_.handle_ = -1;
   }
   if (self.stderr_type_ == Pipe && self.stderr_output_.handle_ != -1) {
     status->unread_stderr = drain_pipe(&self.stderr_output_);
-    BASE_TRY_SYSCALL(close(self.stderr_output_.handle_));
+    YACSL_TRY_SYSCALL(close(self.stderr_output_.handle_));
     self.stderr_output_.handle_ = -1;
   }
 }
@@ -262,7 +262,7 @@ Process::ExitStatus Process::wait(this Process& self) noexcept {
   self.cleanup_before_wait(&status);
 
   int info = 0;
-  BASE_TRY_SYSCALL(waitpid(static_cast<pid_t>(self.handle_), &info, 0));
+  YACSL_TRY_SYSCALL(waitpid(static_cast<pid_t>(self.handle_), &info, 0));
 
   self.handle_ = -1;
 
@@ -283,11 +283,11 @@ Process::ExitStatus Process::wait(this Process& self) noexcept {
 void Process::send_signal(this Process& self, Signal signal) noexcept {
   debug::assert_(self.handle_ == -1,
                  "Tried to send_signal to a Process that isn't running.");
-  BASE_TRY_SYSCALL(
+  YACSL_TRY_SYSCALL(
       kill(static_cast<pid_t>(self.handle_), static_cast<int>(signal)));
   self.handle_ = -1;
 }
 
-} // namespace base::os
+} // namespace yacsl::os
 
 #endif

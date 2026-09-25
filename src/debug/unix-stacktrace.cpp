@@ -1,14 +1,14 @@
 #if !defined(_WIN32) && !defined(__EMSCRIPTEN__)
 
-#include "base/containers/vector.hpp"
-#include "base/debug/demangle.hpp"
-#include "base/debug/stack_trace.hpp"
-#include "base/ranges/string_view.hpp"
-#include "base/type_aliases.hpp"
+#include "yacsl/containers/vector.hpp"
+#include "yacsl/debug/demangle.hpp"
+#include "yacsl/debug/stack_trace.hpp"
+#include "yacsl/ranges/string_view.hpp"
+#include "yacsl/type_aliases.hpp"
 #include <dlfcn.h>
 #include <execinfo.h>
 
-namespace base::debug {
+namespace yacsl::debug {
 
 StackTrace StackTrace::current() noexcept {
   StackTrace ret;
@@ -43,6 +43,6 @@ StackTrace::compute_entries(this StackTrace& self) noexcept {
   return self.entries_;
 }
 
-} // namespace base::debug
+} // namespace yacsl::debug
 
 #endif

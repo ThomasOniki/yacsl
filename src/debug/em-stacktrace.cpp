@@ -1,9 +1,9 @@
 #ifdef __EMSCRIPTEN__
 
-#include "base/containers/vector.hpp"
-#include "base/debug/stack_trace.hpp"
+#include "yacsl/containers/vector.hpp"
+#include "yacsl/debug/stack_trace.hpp"
 
-namespace base::debug {
+namespace yacsl::debug {
 
 StackTrace StackTrace::current() noexcept { return StackTrace(); }
 containers::Vector<StackTraceEntry, 16> const&
@@ -12,6 +12,6 @@ StackTrace::compute_entries(this StackTrace& self) noexcept {
   return self.entries_;
 }
 
-} // namespace base::debug
+} // namespace yacsl::debug
 
 #endif

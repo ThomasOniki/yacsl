@@ -1,5 +1,5 @@
-#include "base/debug/log.hpp"
-#include "base/memory/arena.hpp"
+#include "yacsl/debug/log.hpp"
+#include "yacsl/memory/arena.hpp"
 #include "test_utils.hpp"
 #include <stddef.h>
 #include <stdint.h>
@@ -26,7 +26,7 @@ static int test_ctors() {
 
   CtorCounter* ptrs[iteration_count] = {};
   for (uint32_t i = 0; i < iteration_count; ++i) {
-    ptrs[i] = &base::memory::MainArenaAllocator::get().push<CtorCounter>(i);
+    ptrs[i] = &yacsl::memory::MainArenaAllocator::get().push<CtorCounter>(i);
   }
 
   EXPECT_EQ(CtorCounter::ctor_call_count, iteration_count);
@@ -38,7 +38,7 @@ static int test_ctors() {
   CtorCounter::ctor_call_count = 0;
 
   for (auto& ptr : ptrs) {
-    ptr = base::memory::MainArenaAllocator::get()
+    ptr = yacsl::memory::MainArenaAllocator::get()
               .push_array<CtorCounter>(10)
               .data();
   }
@@ -60,16 +60,16 @@ static bool is_aligned(Aligned* ptr) {
 
 static int test_align() {
   int ret = 0;
-  (void)base::memory::MainArenaAllocator::get().push_array<char>(15);
+  (void)yacsl::memory::MainArenaAllocator::get().push_array<char>(15);
 
-  Aligned* aligned = &base::memory::MainArenaAllocator::get().push<Aligned>();
+  Aligned* aligned = &yacsl::memory::MainArenaAllocator::get().push<Aligned>();
 
   EXPECT(is_aligned(aligned));
 
-  (void)base::memory::MainArenaAllocator::get().push_array<char>(15);
+  (void)yacsl::memory::MainArenaAllocator::get().push_array<char>(15);
 
   aligned =
-      base::memory::MainArenaAllocator::get().push_array<Aligned>(10).data();
+      yacsl::memory::MainArenaAllocator::get().push_array<Aligned>(10).data();
 
   EXPECT(is_aligned(aligned));
 
@@ -79,24 +79,24 @@ static int test_align() {
 static int test_rewind() {
   int ret = 0;
   {
-    base::memory::Arena::Scope const scope(
-        base::memory::MainArenaAllocator::get()); // test scope with ptr_ = 0
+    yacsl::memory::Arena::Scope const scope(
+        yacsl::memory::MainArenaAllocator::get()); // test scope with ptr_ = 0
   }
   // Calls malloc so that the rewind test uses the same memory in and outside of
   // the scope.
-  (void)base::memory::MainArenaAllocator::get().push<int>();
+  (void)yacsl::memory::MainArenaAllocator::get().push<int>();
   char const* ptr = nullptr;
   {
-    base::memory::Arena::Scope const scope(
-        base::memory::MainArenaAllocator::get());
+    yacsl::memory::Arena::Scope const scope(
+        yacsl::memory::MainArenaAllocator::get());
 
-    ptr = base::memory::MainArenaAllocator::get().push_array<char>(10).data();
+    ptr = yacsl::memory::MainArenaAllocator::get().push_array<char>(10).data();
 
     test_align();
     test_ctors();
   }
 
-  EXPECT(base::memory::MainArenaAllocator::get().push_array<char>(1).data() ==
+  EXPECT(yacsl::memory::MainArenaAllocator::get().push_array<char>(1).data() ==
              ptr &&
          "memory::Arena didn't rewind");
   return ret;
@@ -107,6 +107,6 @@ int main() {
   EXPECT(test_align() == 0);
   EXPECT(test_ctors() == 0);
   EXPECT(test_rewind() == 0);
-  base::debug::Logger::get_default_instance().flush();
+  yacsl::debug::Logger::get_default_instance().flush();
   return ret;
 }

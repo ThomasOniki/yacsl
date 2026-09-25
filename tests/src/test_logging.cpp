@@ -1,11 +1,11 @@
-#include "base/containers/stack_array.hpp"
-#include "base/debug/log.hpp"
-#include "base/format/format_string.hpp"
-#include "base/memory/lifetimes.hpp"
-#include "base/os/file.hpp"
-#include "base/ranges/initializer_list.hpp"
-#include "base/ranges/string_view.hpp"
-#include "base/type_aliases.hpp"
+#include "yacsl/containers/stack_array.hpp"
+#include "yacsl/debug/log.hpp"
+#include "yacsl/format/format_string.hpp"
+#include "yacsl/memory/lifetimes.hpp"
+#include "yacsl/os/file.hpp"
+#include "yacsl/ranges/initializer_list.hpp"
+#include "yacsl/ranges/string_view.hpp"
+#include "yacsl/type_aliases.hpp"
 #include <assert.h>
 #include <inttypes.h>
 #include <stddef.h>
@@ -23,11 +23,11 @@ static void check(char const* expected) {
   size_t const            expected_len = strlen(expected);
 
   assert(expected_len - 2 < buf_size);
-  base::containers::StackArray<char, buf_size, size_t> buf = {};
+  yacsl::containers::StackArray<char, buf_size, size_t> buf = {};
   memcpy(buf.data(), expected, expected_len);
   buf[expected_len] = '\n';
 
-  base::containers::StackArray<char, buf_size> logs = {};
+  yacsl::containers::StackArray<char, buf_size> logs = {};
   // NOLINTNEXTLINE(android-cloexec-fopen)
   FILE* file = fopen("test_logs.txt", "rb");
   assert(file);
@@ -52,32 +52,32 @@ static void check(char const* expected) {
 
 namespace test_ns {
 // NOLINTNEXTLINE(cppcoreguidelines-use-enum-class, misc-use-internal-linkage)
-enum Enum1 : base::u16 {
+enum Enum1 : yacsl::u16 {
   Zero        = 0,
   FiveHundred = 500,
 };
 // NOLINTNEXTLINE(misc-use-internal-linkage)
-enum class EnumClass : base::u16 {
+enum class EnumClass : yacsl::u16 {
   Zero        = 0,
   FiveHundred = 500,
 };
 } // namespace test_ns
 
 template <typename... Args>
-static void log_to_file(base::debug::Logger::Level                 lvl,
-                        base::format::FormatString<Args...> const& fmt,
+static void log_to_file(yacsl::debug::Logger::Level                 lvl,
+                        yacsl::format::FormatString<Args...> const& fmt,
                         Args&&... args) {
-  base::os::File::Flags const flags = base::os::File::Flags::Write |
-                                      base::os::File::Flags::Create |
-                                      base::os::File::Flags::Trunc;
-  base::debug::Logger         logger(
-      base::os::File::open("test_logs.txt", flags).value(),
-      base::os::File::open("test_logs.txt", flags).value(),
-      base::debug::Logger::Level::Trace3);
-  logger.log(lvl, fmt, base::memory::forward<Args>(args)...);
+  yacsl::os::File::Flags const flags = yacsl::os::File::Flags::Write |
+                                      yacsl::os::File::Flags::Create |
+                                      yacsl::os::File::Flags::Trunc;
+  yacsl::debug::Logger         logger(
+      yacsl::os::File::open("test_logs.txt", flags).value(),
+      yacsl::os::File::open("test_logs.txt", flags).value(),
+      yacsl::debug::Logger::Level::Trace3);
+  logger.log(lvl, fmt, yacsl::memory::forward<Args>(args)...);
 }
 
-using enum base::debug::Logger::Level;
+using enum yacsl::debug::Logger::Level;
 
 int main() {
   log_to_file(Trace3, "Hello, {}", "world!");
@@ -106,8 +106,8 @@ int main() {
         "**-0xaf**");
 
   log_to_file(Warning, "int list: {}, hex int list: {08x}",
-              base::ranges::InitializerList<int>{0, -1, 20, -35},
-              base::ranges::InitializerList<int>{0xF, -0x1a, 0x1, 0x0});
+              yacsl::ranges::InitializerList<int>{0, -1, 20, -35},
+              yacsl::ranges::InitializerList<int>{0xF, -0x1a, 0x1, 0x0});
   check("[WARNING] int list: [0, -1, 20, -35], hex int list: [0000000f, "
         "00000-1a, 00000001, "
         "00000000]");
@@ -122,7 +122,7 @@ int main() {
   {
     int var = 0;
     log_to_file(Info, "pointer: {}", &var);
-    base::containers::StackArray<char, 256> buf = {};
+    yacsl::containers::StackArray<char, 256> buf = {};
     // the %p format is implementation defined
     [[maybe_unused]] int const printed =
         snprintf(buf.data(), 256, "[INFO] pointer: %#" PRIxPTR,
@@ -138,7 +138,7 @@ int main() {
 
   log_to_file(
       Info, "char16_t string range: {*^10}",
-      base::ranges::InitializerList<base::ranges::BasicStringView<char16_t>>{
+      yacsl::ranges::InitializerList<yacsl::ranges::BasicStringView<char16_t>>{
           u"foo",
           u"bar",
           u"🤓",

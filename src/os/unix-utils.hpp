@@ -2,13 +2,13 @@
 
 #ifndef _WIN32
 
-#include "base/debug/assert.hpp"
-#include "base/os/file.hpp"
-#include "base/ranges/string_view.hpp"
-#include "base/type_aliases.hpp"
+#include "yacsl/debug/assert.hpp"
+#include "yacsl/os/file.hpp"
+#include "yacsl/ranges/string_view.hpp"
+#include "yacsl/type_aliases.hpp"
 #include <errno.h>
 
-namespace base::os {
+namespace yacsl::os {
 
 inline bool strip_file_open_flag(File::Flags* flags,
                                  File::Flags  flag) noexcept {
@@ -28,9 +28,9 @@ struct OpenedFile {
 int                       unix_flags(File::Flags flags) noexcept;
 ranges::StringView        errno_str(int err) noexcept;
 inline ranges::StringView errno_str() noexcept { return errno_str(errno); }
-} // namespace base::os
+} // namespace yacsl::os
 
-#define BASE_TRY_SYSCALL(syscall)                                              \
+#define YACSL_TRY_SYSCALL(syscall)                                              \
   [&]() {                                                                      \
     auto result = syscall;                                                     \
     debug::assert_(result != -1, #syscall " failed: {}", errno_str());         \

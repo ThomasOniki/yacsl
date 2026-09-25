@@ -1,12 +1,12 @@
 #ifdef _WIN32
 
-#include "base/containers/string.hpp"
-#include "base/debug/assert.hpp"
-#include "base/debug/panic.hpp"
-#include "base/os/process.hpp"
-#include "base/ranges/slice.hpp"
-#include "base/type_aliases.hpp"
-#include "base/utils/nil.hpp"
+#include "yacsl/containers/string.hpp"
+#include "yacsl/debug/assert.hpp"
+#include "yacsl/debug/panic.hpp"
+#include "yacsl/os/process.hpp"
+#include "yacsl/ranges/slice.hpp"
+#include "yacsl/type_aliases.hpp"
+#include "yacsl/utils/nil.hpp"
 #include "win32-utils.hpp"
 #include <consoleapi.h>
 #include <consoleapi2.h>
@@ -21,7 +21,7 @@
 #include <winerror.h>
 #include <winnt.h>
 
-namespace base::os {
+namespace yacsl::os {
 
 using Type = Process::StdioType;
 using enum Type;
@@ -60,7 +60,7 @@ void Process::Input::write(this Input&                self,
   usize to_write = bytes.size();
   while (to_write > 0) {
     DWORD written = 0;
-    BASE_TRY_SYSCALL(WriteFile(self.handle_, bytes.data(),
+    YACSL_TRY_SYSCALL(WriteFile(self.handle_, bytes.data(),
                                static_cast<DWORD>(bytes.size()), &written,
                                nullptr));
     to_write -= static_cast<usize>(written);
@@ -114,7 +114,7 @@ static containers::StackArray<HANDLE, 2> create_pipe() {
       .lpSecurityDescriptor = nullptr,
       .bInheritHandle       = TRUE,
   };
-  BASE_TRY_SYSCALL(CreatePipe(handles.data(), &handles[1], &security_attr, 0));
+  YACSL_TRY_SYSCALL(CreatePipe(handles.data(), &handles[1], &security_attr, 0));
   return handles;
 }
 
@@ -123,35 +123,35 @@ void Process::create_pipes(this Process& self, void* pvoid_state) noexcept {
 
   if (self.stdin_type_ == Pipe) {
     state.stdin_pipe = create_pipe();
-    BASE_TRY_SYSCALL(
+    YACSL_TRY_SYSCALL(
         SetHandleInformation(state.stdin_pipe[1], HANDLE_FLAG_INHERIT, 0));
     state.info.hStdInput      = state.stdin_pipe[0];
     self.stdin_input_.handle_ = state.stdin_pipe[1];
   } else if (self.stdin_type_ == TYPE_OTHER_PIPE) {
     state.info.hStdInput = state.stdio->input.other_pipe_handle_;
-    BASE_TRY_SYSCALL(SetHandleInformation(
+    YACSL_TRY_SYSCALL(SetHandleInformation(
         state.info.hStdInput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT));
   }
   if (self.stdout_type_ == Pipe) {
     state.stdout_pipe = create_pipe();
-    BASE_TRY_SYSCALL(
+    YACSL_TRY_SYSCALL(
         SetHandleInformation(state.stdout_pipe[0], HANDLE_FLAG_INHERIT, 0));
     state.info.hStdOutput       = state.stdout_pipe[1];
     self.stdout_output_.handle_ = state.stdout_pipe[0];
   } else if (self.stdout_type_ == TYPE_OTHER_PIPE) {
     state.info.hStdOutput = state.stdio->output.other_pipe_handle_;
-    BASE_TRY_SYSCALL(SetHandleInformation(
+    YACSL_TRY_SYSCALL(SetHandleInformation(
         state.info.hStdOutput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT));
   }
   if (self.stderr_type_ == Pipe) {
     state.stderr_pipe = create_pipe();
-    BASE_TRY_SYSCALL(
+    YACSL_TRY_SYSCALL(
         SetHandleInformation(state.stderr_pipe[0], HANDLE_FLAG_INHERIT, 0));
     state.info.hStdError        = state.stderr_pipe[1];
     self.stderr_output_.handle_ = state.stderr_pipe[0];
   } else if (self.stderr_type_ == TYPE_OTHER_PIPE) {
     state.info.hStdError = state.stdio->error.other_pipe_handle_;
-    BASE_TRY_SYSCALL(SetHandleInformation(
+    YACSL_TRY_SYSCALL(SetHandleInformation(
         state.info.hStdError, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT));
   }
 }
@@ -161,25 +161,25 @@ void Process::cleanup_after_spawn(this Process& self,
   State& state = *static_cast<State*>(pvoid_state);
 
   if (self.stdin_type_ == TYPE_FILE || self.stdin_type_ == Type::Null) {
-    BASE_TRY_SYSCALL(CloseHandle(state.info.hStdInput));
+    YACSL_TRY_SYSCALL(CloseHandle(state.info.hStdInput));
   } else if (self.stdin_type_ == Pipe) {
-    BASE_TRY_SYSCALL(CloseHandle(state.stdin_pipe[0]));
+    YACSL_TRY_SYSCALL(CloseHandle(state.stdin_pipe[0]));
   } else if (self.stdin_type_ == TYPE_OTHER_PIPE) {
-    BASE_TRY_SYSCALL(CloseHandle(state.stdio->input.other_pipe_handle_));
+    YACSL_TRY_SYSCALL(CloseHandle(state.stdio->input.other_pipe_handle_));
   }
   if (self.stdout_type_ == TYPE_FILE || self.stdout_type_ == Type::Null) {
-    BASE_TRY_SYSCALL(CloseHandle(state.info.hStdOutput));
+    YACSL_TRY_SYSCALL(CloseHandle(state.info.hStdOutput));
   } else if (self.stdout_type_ == Pipe) {
-    BASE_TRY_SYSCALL(CloseHandle(state.stdout_pipe[1]));
+    YACSL_TRY_SYSCALL(CloseHandle(state.stdout_pipe[1]));
   } else if (self.stdout_type_ == TYPE_OTHER_PIPE) {
-    BASE_TRY_SYSCALL(CloseHandle(state.stdio->output.other_pipe_handle_));
+    YACSL_TRY_SYSCALL(CloseHandle(state.stdio->output.other_pipe_handle_));
   }
   if (self.stderr_type_ == TYPE_FILE || self.stderr_type_ == Type::Null) {
-    BASE_TRY_SYSCALL(CloseHandle(state.info.hStdError));
+    YACSL_TRY_SYSCALL(CloseHandle(state.info.hStdError));
   } else if (self.stderr_type_ == Pipe) {
-    BASE_TRY_SYSCALL(CloseHandle(state.stderr_pipe[1]));
+    YACSL_TRY_SYSCALL(CloseHandle(state.stderr_pipe[1]));
   } else if (self.stderr_type_ == TYPE_OTHER_PIPE) {
-    BASE_TRY_SYSCALL(CloseHandle(state.stdio->error.other_pipe_handle_));
+    YACSL_TRY_SYSCALL(CloseHandle(state.stdio->error.other_pipe_handle_));
   }
 }
 
@@ -278,7 +278,7 @@ Process::spawn(char const* const* argv, Stdio const& stdio) noexcept {
     debug::panic("CreateProcessA() failed: {}", win32_err_str(err));
   }
 
-  BASE_TRY_SYSCALL(CloseHandle(proc_info.hThread));
+  YACSL_TRY_SYSCALL(CloseHandle(proc_info.hThread));
   spawned.handle_ = proc_info.hProcess;
   spawned.group_  = proc_info.dwProcessId;
 
@@ -303,19 +303,19 @@ void Process::cleanup_before_wait(this Process& self,
                                   ExitStatus*   status) noexcept {
   if (self.stdin_type_ == Pipe &&
       self.stdin_input_.handle_ != File::NIL_HANDLE) {
-    BASE_TRY_SYSCALL(CloseHandle(self.stdin_input_.handle_));
+    YACSL_TRY_SYSCALL(CloseHandle(self.stdin_input_.handle_));
     self.stdin_input_.handle_ = File::NIL_HANDLE;
   }
   if (self.stdout_type_ == Pipe &&
       self.stdout_output_.handle_ != File::NIL_HANDLE) {
     status->unread_stdout = drain_pipe(&self.stdout_output_);
-    BASE_TRY_SYSCALL(CloseHandle(self.stdout_output_.handle_));
+    YACSL_TRY_SYSCALL(CloseHandle(self.stdout_output_.handle_));
     self.stdout_output_.handle_ = File::NIL_HANDLE;
   }
   if (self.stderr_type_ == Pipe &&
       self.stderr_output_.handle_ != File::NIL_HANDLE) {
     status->unread_stderr = drain_pipe(&self.stderr_output_);
-    BASE_TRY_SYSCALL(CloseHandle(self.stderr_output_.handle_));
+    YACSL_TRY_SYSCALL(CloseHandle(self.stderr_output_.handle_));
     self.stderr_output_.handle_ = File::NIL_HANDLE;
   }
 }
@@ -339,10 +339,10 @@ Process::ExitStatus Process::wait(this Process& self) noexcept {
                  "WaitForSingleObject failed: {}", win32_err_str());
 
   DWORD code = 0;
-  BASE_TRY_SYSCALL(GetExitCodeProcess(self.handle_, &code));
+  YACSL_TRY_SYSCALL(GetExitCodeProcess(self.handle_, &code));
   status.exit_code = static_cast<u32>(code);
 
-  BASE_TRY_SYSCALL(CloseHandle(self.handle_));
+  YACSL_TRY_SYSCALL(CloseHandle(self.handle_));
   self.handle_ = NIL_PROCESS_HANDLE;
 
   return status;
@@ -351,13 +351,13 @@ Process::ExitStatus Process::wait(this Process& self) noexcept {
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void Process::send_signal(this Process& self, Signal signal) noexcept {
   if (signal == Signal::SigInt) {
-    BASE_TRY_SYSCALL(GenerateConsoleCtrlEvent(CTRL_C_EVENT, self.group_));
+    YACSL_TRY_SYSCALL(GenerateConsoleCtrlEvent(CTRL_C_EVENT, self.group_));
   } else {
-    BASE_TRY_SYSCALL(TerminateProcess(self.handle_, 1));
+    YACSL_TRY_SYSCALL(TerminateProcess(self.handle_, 1));
   }
   self.handle_ = nullptr;
 }
 
-} // namespace base::os
+} // namespace yacsl::os
 
 #endif

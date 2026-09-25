@@ -1,19 +1,19 @@
-#include "base/attributes.hpp"
-#include "base/debug/log.hpp"
-#include "base/debug/stack_trace.hpp"
-#include "base/ranges/string_view.hpp"
+#include "yacsl/attributes.hpp"
+#include "yacsl/debug/log.hpp"
+#include "yacsl/debug/stack_trace.hpp"
+#include "yacsl/ranges/string_view.hpp"
 #include "test_utils.hpp"
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define CHECK_ENTRY(entry_idx, expected_caller)                                \
   EXPECT_EQ(stack_trace.entries_[entry_idx].caller.view(),                     \
-            base::ranges::StringView(expected_caller))
+            yacsl::ranges::StringView(expected_caller))
 
-BASE_NOINLINE static int f1(bool /*unused*/, char /*unused*/) {
+YACSL_NOINLINE static int f1(bool /*unused*/, char /*unused*/) {
   int                     ret         = 0;
-  base::debug::StackTrace stack_trace = base::debug::StackTrace::current();
+  yacsl::debug::StackTrace stack_trace = yacsl::debug::StackTrace::current();
   stack_trace.compute_entries();
-  CHECK_ENTRY(0, "base::debug::StackTrace::current()");
+  CHECK_ENTRY(0, "yacsl::debug::StackTrace::current()");
   CHECK_ENTRY(1, "f1(bool, char)");
   CHECK_ENTRY(2, "ns1::ns2::f2(void*)");
   CHECK_ENTRY(
@@ -26,14 +26,14 @@ BASE_NOINLINE static int f1(bool /*unused*/, char /*unused*/) {
 }
 
 namespace ns1::ns2 {
-BASE_NOINLINE static int f2(void* /*unused*/) {
+YACSL_NOINLINE static int f2(void* /*unused*/) {
   volatile const int result = ::f1(true, 'a');
   return result;
 }
 
 namespace {
 template <typename T = void, int I = 0> struct S {
-  template <typename U = void, int J = 15> BASE_NOINLINE static int f3() {
+  template <typename U = void, int J = 15> YACSL_NOINLINE static int f3() {
     volatile const int result = f2(nullptr);
     return result;
   }
@@ -46,7 +46,7 @@ template <typename T = void, int I = 0> struct S {
 
 namespace {
 // NOLINTNEXTLINE(llvm-prefer-static-over-anonymous-namespace)
-template <ns1::ns2::S<> S = ns1::ns2::S<>{}> BASE_NOINLINE int f4() noexcept {
+template <ns1::ns2::S<> S = ns1::ns2::S<>{}> YACSL_NOINLINE int f4() noexcept {
   volatile const int result = ns1::ns2::S<>::f3();
   return result;
 }
@@ -55,6 +55,6 @@ template <ns1::ns2::S<> S = ns1::ns2::S<>{}> BASE_NOINLINE int f4() noexcept {
 int main() {
   int ret = 0;
   EXPECT(f4() == 0);
-  base::debug::Logger::get_default_instance().flush();
+  yacsl::debug::Logger::get_default_instance().flush();
   return ret;
 }

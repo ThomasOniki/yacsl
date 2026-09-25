@@ -1,18 +1,18 @@
 #ifdef _WIN32
 
 #include "../os/win32-utils.hpp"
-#include "base/containers/string.hpp"
-#include "base/containers/vector.hpp"
-#include "base/debug/stack_trace.hpp"
-#include "base/memory/lifetimes.hpp"
-#include "base/type_aliases.hpp"
+#include "yacsl/containers/string.hpp"
+#include "yacsl/containers/vector.hpp"
+#include "yacsl/debug/stack_trace.hpp"
+#include "yacsl/memory/lifetimes.hpp"
+#include "yacsl/type_aliases.hpp"
 #include <libloaderapi.h>
 #include <processthreadsapi.h>
 #include <psapi.h>
 #include <windows.h>
 #include <winnt.h>
 
-namespace base::debug {
+namespace yacsl::debug {
 
 StackTrace StackTrace::current() noexcept {
   StackTrace ret;
@@ -38,7 +38,7 @@ StackTrace::compute_entries(this StackTrace& self) noexcept {
   self.entries_.resize(self.addresses_.size());
   for (usize i = 0; i < self.addresses_.size(); ++i) {
     HMODULE module = nullptr;
-    BASE_TRY_SYSCALL(GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+    YACSL_TRY_SYSCALL(GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
                                         static_cast<LPCSTR>(self.addresses_[i]),
                                         &module));
 
@@ -70,6 +70,6 @@ StackTrace::compute_entries(this StackTrace& self) noexcept {
   return self.entries_;
 }
 
-} // namespace base::debug
+} // namespace yacsl::debug
 
 #endif

@@ -2,16 +2,16 @@
 
 #ifdef _WIN32
 
-#include "base/containers/result.hpp"
-#include "base/os/file.hpp"
-#include "base/ranges/string_view.hpp"
-#include "base/type_aliases.hpp"
+#include "yacsl/containers/result.hpp"
+#include "yacsl/os/file.hpp"
+#include "yacsl/ranges/string_view.hpp"
+#include "yacsl/type_aliases.hpp"
 #include <errhandlingapi.h>
 #include <intsafe.h>
 #include <windef.h>
 #include <winnt.h>
 
-namespace base::os {
+namespace yacsl::os {
 
 inline bool strip_file_open_flag(File::Flags* flags,
                                  File::Flags  flag) noexcept {
@@ -37,10 +37,10 @@ inline ranges::StringView win32_err_str() noexcept {
 containers::Result<HANDLE, File::OpenError> open_file_handle(char const* path,
                                                              File::Flags flags);
 
-} // namespace base::os
+} // namespace yacsl::os
 
-#define BASE_TRY_SYSCALL(syscall)                                              \
+#define YACSL_TRY_SYSCALL(syscall)                                              \
   if ((syscall) == FALSE) [[unlikely]]                                         \
-  debug::panic(#syscall " failed: {}", base::os::win32_err_str())
+  debug::panic(#syscall " failed: {}", yacsl::os::win32_err_str())
 
 #endif

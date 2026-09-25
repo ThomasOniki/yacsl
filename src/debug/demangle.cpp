@@ -1,12 +1,12 @@
-#include "base/debug/demangle.hpp"
-#include "base/containers/string.hpp"
-#include "base/containers/vector.hpp"
-#include "base/format/atoi.hpp"
-#include "base/memory/lifetimes.hpp"
-#include "base/ranges/string_view.hpp"
-#include "base/type_aliases.hpp"
+#include "yacsl/debug/demangle.hpp"
+#include "yacsl/containers/string.hpp"
+#include "yacsl/containers/vector.hpp"
+#include "yacsl/format/atoi.hpp"
+#include "yacsl/memory/lifetimes.hpp"
+#include "yacsl/ranges/string_view.hpp"
+#include "yacsl/type_aliases.hpp"
 
-namespace base::debug {
+namespace yacsl::debug {
 
 namespace {
 class Demangler {
@@ -163,7 +163,7 @@ private:
   void // NOLINTNEXTLINE(misc-no-recursion)
   demangle_template_parameter_pack(this Demangler&    self,
                                    ranges::StringView qualifiers) noexcept {
-    using base::ranges::operator""_sv;
+    using yacsl::ranges::operator""_sv;
     self.mangled_ += "Dp"_sv.size();
     if (*self.mangled_ == 'T') {
       self.demangle_type();
@@ -449,7 +449,7 @@ private:
 
   // NOLINTNEXTLINE(google-readability-function-size)
   void demangle_builtin_type_id(this Demangler& self) noexcept {
-    using base::ranges::operator""_sv;
+    using yacsl::ranges::operator""_sv;
     switch (*self.mangled_) {
     case 'v':
       self.demangled_ += "void";
@@ -596,4 +596,4 @@ containers::String demangle(ranges::StringView mangled) {
   return demangler.demangle(mangled);
 }
 
-} // namespace base::debug
+} // namespace yacsl::debug

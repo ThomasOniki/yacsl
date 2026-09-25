@@ -1,10 +1,11 @@
-== Base
-
-Base is a general purpose c++ library designed for speed and no dependencies. It can be built with or without libc++ using the cmake build system. If you plan to use this library, know that it is not guaranteed to stable or even to have all commits tested. This project is still early in developpement and I think that it is better to wait before deciding on one stable api. If you still want try this library, look at the tests for examples.
+== Yet Another C\+\+ Standard Library
+YACSL is a C\+\+ standard library designed for ease of use and performance. It uses error enums instead of throwing exceptions. Many corners are cut and assumptions to make the code shorter and faster, but at least if you compile in debug mode, most problems should lead to a crash with a stacktrace. This project's only dependency is libc, (not libc\+\+). 
+As YACSL is still very early in development, there is no stable API yet and there will be many large refactors.
 
 :toc:
 == Dependencies
-- the latest homebrew llvm toolchain (other toolchains may work but aren't tested as of the time of writing this)
+- libc
+- a c/c++ compiler
 - cmake 3.28+
 
 == Installation

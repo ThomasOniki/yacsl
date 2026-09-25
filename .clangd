@@ -1,15 +1,15 @@
 CompileFlags:
   # for windows:
-  # Add: [-DBASE_LSP_ONLY, --target=x86_64-windows-gnu, -isystem, /opt/homebrew/opt/mingw-w64/toolchain-x86_64/mingw/include, -isystem, /opt/homebrew/opt/mingw-w64/toolchain-x86_64/mingw/include/c++/16.2.0, -isystem, /opt/homebrew/opt/mingw-w64/toolchain-x86_64/mingw/include/c++/16.2.0/x86_64-w64-mingw32]
+  # Add: [-DYACSL_LSP_ONLY, --target=x86_64-windows-gnu, -isystem, /opt/homebrew/opt/mingw-w64/toolchain-x86_64/mingw/include, -isystem, /opt/homebrew/opt/mingw-w64/toolchain-x86_64/mingw/include/c++/16.2.0, -isystem, /opt/homebrew/opt/mingw-w64/toolchain-x86_64/mingw/include/c++/16.2.0/x86_64-w64-mingw32]
   # Remove: ["-include-pch", "-arch", "-fsanitize=*"]
-  Add: [-DBASE_LSP_ONLY]
+  Add: [-DYACSL_LSP_ONLY]
   Remove: ["-include-pch"]
  
 ---
 If:
   PathMatch: ["src/.*\\.cpp", "include/.*\\.hpp"]
 CompileFlags:
-  Add: [-DBASE_NO_LIBCPP, -nostdinc++]
+  Add: [-DYACSL_NO_LIBCPP, -nostdinc++]
 --- 
 
 Diagnostics:

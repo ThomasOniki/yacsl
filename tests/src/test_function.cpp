@@ -1,10 +1,10 @@
-#include "base/containers/function.hpp"
-#include "base/containers/string.hpp"
-#include "base/debug/log.hpp"
-#include "base/format/format_string.hpp"
-#include "base/format/format_string_parser.hpp"
-#include "base/format/formatter.hpp"
-#include "base/ranges/slice.hpp"
+#include "yacsl/containers/function.hpp"
+#include "yacsl/containers/string.hpp"
+#include "yacsl/debug/log.hpp"
+#include "yacsl/format/format_string.hpp"
+#include "yacsl/format/format_string_parser.hpp"
+#include "yacsl/format/formatter.hpp"
+#include "yacsl/ranges/slice.hpp"
 #include "test_utils.hpp"
 #include <stdint.h>
 #include <stdio.h>
@@ -41,15 +41,15 @@ struct TestStruct {
 };
 } // namespace
 
-template <> class base::format::Formatter<Counts> {
+template <> class yacsl::format::Formatter<Counts> {
 public:
   static constexpr char const* parse(char const* fmt) {
-    base::format::FormatStringParser parser(fmt);
+    yacsl::format::FormatStringParser parser(fmt);
     return parser.end_parse();
   }
-  [[maybe_unused]] static void format(base::containers::String& buf,
+  [[maybe_unused]] static void format(yacsl::containers::String& buf,
                                       Counts const&             counts) {
-    base::format::format_to(
+    yacsl::format::format_to(
         buf,
         "constructors: {}, copy_constructors: {}, move_contructors: {}, "
         "destructors: {}",
@@ -71,12 +71,12 @@ public:
     return true;
   }
 
-  template <typename T> base::ranges::Slice<T, SizeT> allocate(SizeT count) {
+  template <typename T> yacsl::ranges::Slice<T, SizeT> allocate(SizeT count) {
     ++allocate_call_count;
     // NOLINTNEXTLINE(cppcoreguidelines-no-malloc)
     return {static_cast<T*>(malloc(sizeof(T) * count)), count};
   }
-  template <typename T> void free(base::ranges::Slice<T, SizeT> mem) {
+  template <typename T> void free(yacsl::ranges::Slice<T, SizeT> mem) {
     ++free_call_count;
     // NOLINTNEXTLINE(cppcoreguidelines-no-malloc)
     ::free(mem.data());
@@ -95,7 +95,7 @@ public:
 static int test_function_running() {
   int                                ret = 0;
   bool                               ran = false;
-  base::containers::Function<void()> func([&ran]() { ran = true; });
+  yacsl::containers::Function<void()> func([&ran]() { ran = true; });
 
   EXPECT(!ran);
   func();
@@ -114,7 +114,7 @@ static int test_moved_lambda() {
 
     CHECK_COUNTS(.constructor_call_count = 1);
 
-    base::containers::Function<int(int)> func(
+    yacsl::containers::Function<int(int)> func(
         [test](int value) { return value * 2; });
 
     CHECK_COUNTS(.copy_constructor_call_count = 1,
@@ -135,7 +135,7 @@ static int test_copied_lambda() {
     TestStruct const test;
     CHECK_COUNTS(.constructor_call_count = 1);
 
-    base::containers::Function<void(), 0, TestAllocator> const func(
+    yacsl::containers::Function<void(), 0, TestAllocator> const func(
         [&test]() { (void)test; });
 
     CHECK_COUNTS(0);
@@ -162,7 +162,7 @@ static int test_ref_capture_lamdba() {
     auto lambda = [test]() {};
     CHECK_COUNTS(.copy_constructor_call_count = 1);
 
-    base::containers::Function<void()> const func(lambda);
+    yacsl::containers::Function<void()> const func(lambda);
     CHECK_COUNTS(.copy_constructor_call_count = 1);
   }
   CHECK_COUNTS(.destructor_call_count = 3);
@@ -176,6 +176,6 @@ int main() {
   EXPECT(test_moved_lambda() == 0);
   EXPECT(test_copied_lambda() == 0);
   EXPECT(test_ref_capture_lamdba() == 0);
-  base::debug::Logger::get_default_instance().flush();
+  yacsl::debug::Logger::get_default_instance().flush();
   return ret;
 }
