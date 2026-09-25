@@ -1,4 +1,4 @@
-#include "yacsl/base.hpp"
+#include "yacsl/yacsl.hpp"
 #include "test_utils.hpp"
 
 static constexpr yacsl::usize SLOTS = 64;
