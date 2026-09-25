@@ -1,7 +1,7 @@
-#include "base/containers/stack_storage.hpp"
-#include "base/debug/log.hpp"
+#include "yacsl/containers/stack_storage.hpp"
+#include "yacsl/debug/log.hpp"
 
-namespace base::debug {
+namespace yacsl::debug {
 
 [[nodiscard]] Logger& Logger::get_default_instance() noexcept {
   static containers::StackStorage<Logger> storage;
@@ -9,4 +9,4 @@ namespace base::debug {
   return reference;
 }
 
-} // namespace base::debug
+} // namespace yacsl::debug

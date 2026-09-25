@@ -1,14 +1,14 @@
 #ifdef _WIN32
 
-#include "base/type_aliases.hpp"
-#include "base/type_traits/limits.hpp"
-#include "base/utils/isize.hpp"
+#include "yacsl/type_aliases.hpp"
+#include "yacsl/type_traits/limits.hpp"
+#include "yacsl/utils/isize.hpp"
 #include "win32-utils.hpp"
 #include <fileapi.h>
 #include <intsafe.h>
 #include <windows.h>
 
-namespace base::os {
+namespace yacsl::os {
 
 containers::Result<File, File::OpenError>
 File::open(char const* path, File::Flags flags) noexcept {
@@ -38,7 +38,7 @@ File::open(char const* path, File::Flags flags) noexcept {
 
 void File::close(this File& self) noexcept {
   if (self.handle_ != NIL_HANDLE) {
-    BASE_TRY_SYSCALL(CloseHandle(self.handle_));
+    YACSL_TRY_SYSCALL(CloseHandle(self.handle_));
   }
 }
 
@@ -61,13 +61,13 @@ File File::open_stderr() noexcept {
 // NOLINTBEGIN(readability-make-member-function-const)
 usize File::write(this File& self, ranges::Slice<uchar const> data) noexcept {
   DWORD ret = 0;
-  BASE_TRY_SYSCALL(WriteFile(self.handle_, data.data(),
+  YACSL_TRY_SYSCALL(WriteFile(self.handle_, data.data(),
                              static_cast<DWORD>(data.size()), &ret, nullptr));
   return static_cast<usize>(ret);
 }
 usize File::read(this File& self, ranges::Slice<uchar> buffer) noexcept {
   DWORD ret = 0;
-  BASE_TRY_SYSCALL(ReadFile(self.handle_, buffer.data(),
+  YACSL_TRY_SYSCALL(ReadFile(self.handle_, buffer.data(),
                             static_cast<DWORD>(buffer.size()), &ret, nullptr));
   return static_cast<usize>(ret);
 }
@@ -121,6 +121,6 @@ bool File::is_tty(this File const& self) noexcept {
   return static_cast<bool>(self.is_tty_);
 }
 
-} // namespace base::os
+} // namespace yacsl::os
 
 #endif

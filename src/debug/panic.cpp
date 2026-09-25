@@ -1,9 +1,9 @@
-#include "base/containers/string.hpp"
-#include "base/debug/log.hpp"
-#include "base/debug/stack_trace.hpp"
+#include "yacsl/containers/string.hpp"
+#include "yacsl/debug/log.hpp"
+#include "yacsl/debug/stack_trace.hpp"
 #include <stdlib.h>
 
-namespace base::debug {
+namespace yacsl::debug {
 
 [[noreturn]] void panic(containers::String const& formatted,
                         SourceLocation            location) noexcept {
@@ -15,4 +15,4 @@ namespace base::debug {
   abort();
 }
 
-} // namespace base::debug
+} // namespace yacsl::debug

@@ -1,14 +1,14 @@
 #ifndef _WIN32
 
 #include "unix-utils.hpp"
-#include "base/os/file.hpp"
-#include "base/ranges/string_view.hpp"
+#include "yacsl/os/file.hpp"
+#include "yacsl/ranges/string_view.hpp"
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
 
-namespace base::os {
+namespace yacsl::os {
 
 int unix_flags(File::Flags flags) noexcept {
   unsigned int ret = 0;
@@ -458,6 +458,6 @@ ranges::StringView errno_str(int err) noexcept {
   return "Unkown error";
 }
 
-} // namespace base::os
+} // namespace yacsl::os
 
 #endif

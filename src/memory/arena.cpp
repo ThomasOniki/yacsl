@@ -1,14 +1,14 @@
-#include "base/memory/arena.hpp"
-#include "base/debug/assert.hpp"
-#include "base/memory/lifetimes.hpp"
-#include "base/type_aliases.hpp"
+#include "yacsl/memory/arena.hpp"
+#include "yacsl/debug/assert.hpp"
+#include "yacsl/memory/lifetimes.hpp"
+#include "yacsl/type_aliases.hpp"
 #include <stdlib.h>
 
 #if __has_feature(leak_sanitizer) || __has_feature(address_sanitizer)
 #include <sanitizer/lsan_interface.h>
 #endif
 
-namespace base::memory {
+namespace yacsl::memory {
 
 namespace {
 struct Metadata {
@@ -62,4 +62,4 @@ Arena::Scope::~Scope() noexcept {
   arena_.ptr_ = ptr_;
 }
 
-} // namespace base::memory
+} // namespace yacsl::memory
