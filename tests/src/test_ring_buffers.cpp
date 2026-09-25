@@ -1,68 +1,68 @@
-#include "base/base.hpp"
+#include "yacsl/base.hpp"
 #include "test_utils.hpp"
 
-static constexpr base::usize SLOTS = 64;
+static constexpr yacsl::usize SLOTS = 64;
 
 namespace {
 struct Counts {
-  base::usize producers;
-  base::usize consumers;
+  yacsl::usize producers;
+  yacsl::usize consumers;
 };
 } // namespace
 
-#ifdef BASE_LSP_ONLY
-using Ring = base::threads::MPSCRingBuffer<base::usize, SLOTS>;
+#ifdef YACSL_LSP_ONLY
+using Ring = yacsl::threads::MPSCRingBuffer<yacsl::usize, SLOTS>;
 template <typename _>
 #else
 template <typename Ring>
 #endif
 static int test(Counts counts) noexcept {
   int                                             ret   = 0;
-  base::threads::Atomic<bool>                     start = false;
-  base::containers::Vector<base::threads::Thread> producers;
+  yacsl::threads::Atomic<bool>                     start = false;
+  yacsl::containers::Vector<yacsl::threads::Thread> producers;
   Ring                                            ring;
 
-  for (base::usize i = 0; i < SLOTS; ++i) {
+  for (yacsl::usize i = 0; i < SLOTS; ++i) {
     EXPECT(ring.try_push(i));
   }
   EXPECT(!ring.try_push(0));
-  for (base::usize i = 0; i < SLOTS; ++i) {
+  for (yacsl::usize i = 0; i < SLOTS; ++i) {
     EXPECT(ring.try_pop() == i);
   }
   EXPECT(ring.try_pop().is_nil());
 
-  for (base::usize i = 0; i < counts.producers; ++i) {
+  for (yacsl::usize i = 0; i < counts.producers; ++i) {
     producers.emplace_back([&ring, &start, i]() {
-      while (!start.load(base::threads::MemoryOrder::Acquire)) {
+      while (!start.load(yacsl::threads::MemoryOrder::Acquire)) {
       }
       ring.push(i);
     });
   }
 
-  base::containers::Vector<base::threads::Thread> consumers;
+  yacsl::containers::Vector<yacsl::threads::Thread> consumers;
 
-  base::containers::Vector<bool> did_pop;
+  yacsl::containers::Vector<bool> did_pop;
   did_pop.resize(counts.producers);
 
-  base::threads::Atomic<base::usize> pop_count;
+  yacsl::threads::Atomic<yacsl::usize> pop_count;
 
-  for (base::usize i = 0; i < counts.consumers; ++i) {
+  for (yacsl::usize i = 0; i < counts.consumers; ++i) {
     consumers.emplace_back([&ring, &start, &did_pop, &pop_count, counts]() {
-      while (!start.load(base::threads::MemoryOrder::Acquire)) {
+      while (!start.load(yacsl::threads::MemoryOrder::Acquire)) {
       }
-      while (pop_count.fetch_add(1, base::threads::MemoryOrder::Relaxed) <
+      while (pop_count.fetch_add(1, yacsl::threads::MemoryOrder::Relaxed) <
              counts.producers) {
         did_pop[ring.pop()] = true;
       }
     });
   }
 
-  start.store(true, base::threads::MemoryOrder::Release);
+  start.store(true, yacsl::threads::MemoryOrder::Release);
 
-  for (base::usize i = 0; i < counts.producers; ++i) {
+  for (yacsl::usize i = 0; i < counts.producers; ++i) {
     producers[i].join();
   }
-  for (base::usize i = 0; i < counts.consumers; ++i) {
+  for (yacsl::usize i = 0; i < counts.consumers; ++i) {
     consumers[i].join();
   }
 
@@ -75,9 +75,9 @@ static int test(Counts counts) noexcept {
 
 int main() {
   int ret = 0;
-  EXPECT((test<base::threads::MPSCRingBuffer<base::usize, SLOTS>>(
+  EXPECT((test<yacsl::threads::MPSCRingBuffer<yacsl::usize, SLOTS>>(
               {.producers = 50, .consumers = 1}) == 0));
-  EXPECT((test<base::threads::MPMCRingBuffer<base::usize, SLOTS>>(
+  EXPECT((test<yacsl::threads::MPMCRingBuffer<yacsl::usize, SLOTS>>(
               {.producers = 50, .consumers = 50}) == 0));
   return ret;
 }

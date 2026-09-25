@@ -1,0 +1,13 @@
+#pragma once
+
+namespace yacsl::meta {
+
+namespace internal {
+template <typename T> struct TypeIdentityImpl {
+  using Type = T;
+};
+} // namespace internal
+
+template <typename T> using TypeIdentity = internal::TypeIdentityImpl<T>::Type;
+
+} // namespace yacsl::meta

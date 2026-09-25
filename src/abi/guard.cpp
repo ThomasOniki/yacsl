@@ -1,9 +1,9 @@
-#ifdef BASE_NO_LIBCPP
+#ifdef YACSL_NO_LIBCPP
 
-#include "base/type_aliases.hpp"
+#include "yacsl/type_aliases.hpp"
 #include <sched.h>
 
-namespace base {
+namespace yacsl {
 
 #if defined(__arm__) || defined(__wasm32__) || defined(__ARM64_ARCH_8_32__)
 using Guard = u32;
@@ -33,6 +33,6 @@ extern "C" void __cxa_guard_abort(Guard* guard) noexcept {
 
 // NOLINTEND(bugprone-reserved-identifier)
 
-} // namespace base
+} // namespace yacsl
 
 #endif

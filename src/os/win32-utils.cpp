@@ -1,12 +1,12 @@
 #ifdef _WIN32
 
 #include "win32-utils.hpp"
-#include "base/ranges/string_view.hpp"
+#include "yacsl/ranges/string_view.hpp"
 #include <fileapi.h>
 #include <intsafe.h>
 #include <winerror.h>
 
-namespace base::os {
+namespace yacsl::os {
 
 containers::Result<HANDLE, File::OpenError>
 open_file_handle(char const* path, File::Flags flags) {
@@ -2815,6 +2815,6 @@ ranges::StringView win32_err_str(DWORD err) noexcept {
   }
 }
 
-} // namespace base::os
+} // namespace yacsl::os
 
 #endif

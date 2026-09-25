@@ -2,16 +2,16 @@
 #include <unordered_set>
 #include <vector>
 
-#include "base/debug/log.hpp"
-#include "base/format/formatter.hpp"
-#include "base/ranges/slice.hpp"
-#include "base/type_aliases.hpp"
+#include "yacsl/debug/log.hpp"
+#include "yacsl/format/formatter.hpp"
+#include "yacsl/ranges/slice.hpp"
+#include "yacsl/type_aliases.hpp"
 #include "test_utils.hpp"
 
 using SMFCall  = std::string;
 using SMFCalls = std::vector<std::string>;
 
-template <> class base::format::Formatter<std::string> {
+template <> class yacsl::format::Formatter<std::string> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
     return self.impl_.parse(fmt);
@@ -22,7 +22,7 @@ public:
   }
 
 private:
-  base::format::Formatter<base::ranges::StringView> impl_;
+  yacsl::format::Formatter<yacsl::ranges::StringView> impl_;
 };
 
 namespace {
@@ -66,7 +66,7 @@ public:
 class TestAllocator {
 public:
   struct Event {
-    enum class Kind : base::u8 {
+    enum class Kind : yacsl::u8 {
       Alloc,
       Free,
     };
@@ -89,7 +89,7 @@ public:
   }
 
   template <typename T>
-  base::ranges::Slice<T, SizeT> allocate(SizeT count) noexcept {
+  yacsl::ranges::Slice<T, SizeT> allocate(SizeT count) noexcept {
     void* ret = ::operator new(count * sizeof(T), std::align_val_t{alignof(T)});
     if (freed.contains(ret)) {
       freed.erase(ret);
@@ -103,14 +103,14 @@ public:
     return {static_cast<T*>(ret), count};
   }
 
-  template <typename T> void free(base::ranges::Slice<T, SizeT> mem) noexcept {
+  template <typename T> void free(yacsl::ranges::Slice<T, SizeT> mem) noexcept {
     if (mem.data()) {
       if (freed.contains(mem.data())) {
-        base::debug::log_error("double free");
+        yacsl::debug::log_error("double free");
         return;
       }
       if (!allocated.contains(mem.data())) {
-        base::debug::log_error("unallocated free");
+        yacsl::debug::log_error("unallocated free");
         return;
       }
 
@@ -133,7 +133,7 @@ private:
 };
 
 using TestAllocatorSingleton =
-    base::memory::SingletonAllocator<TestAllocator, "main", true>;
+    yacsl::memory::SingletonAllocator<TestAllocator, "main", true>;
 
 } // namespace
 
@@ -166,8 +166,8 @@ static int test_allocator() {
 int main() {
   int ret = 0;
   EXPECT(test_allocator() == 0);
-  base::debug::log_warning("TODO: vector tests");
-  base::debug::Logger::get_default_instance().flush();
+  yacsl::debug::log_warning("TODO: vector tests");
+  yacsl::debug::Logger::get_default_instance().flush();
   return ret;
 }
 

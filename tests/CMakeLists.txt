@@ -1,10 +1,10 @@
 include(CTest)
 
-file(GLOB_RECURSE BASE_TESTS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
-foreach(path IN LISTS BASE_TESTS)
+file(GLOB_RECURSE YACSL_TESTS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
+foreach(path IN LISTS YACSL_TESTS)
   get_filename_component(name "${path}" NAME_WE)
 
-  if("${name}" STREQUAL "test_vector" AND BASE_NO_LIBCPP)
+  if("${name}" STREQUAL "test_vector" AND YACSL_NO_LIBCPP)
     continue()
   endif()
 
@@ -14,9 +14,9 @@ foreach(path IN LISTS BASE_TESTS)
   add_warnings("${name}")
 
   target_compile_definitions(
-    "${name}" PRIVATE "BASE_TESTS_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}\"")
+    "${name}" PRIVATE "YACSL_TESTS_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}\"")
 
-  target_link_libraries("${name}" PRIVATE base)
+  target_link_libraries("${name}" PRIVATE yacsl)
   add_test(NAME "${name}" COMMAND "${name}")
 endforeach()
 

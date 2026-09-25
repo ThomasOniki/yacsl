@@ -47,7 +47,7 @@ Checks: >
 
 WarningsAsErrors: ""
 FormatStyle: none
-ExtraArgsBefore: ["-DBASE_LSP_ONLY"]
+ExtraArgsBefore: ["-DYACSL_LSP_ONLY"]
 RemovedArgs: ["-include-pch", "-emit-pch", "-Xclang"]
 
 CheckOptions:
@@ -58,9 +58,9 @@ CheckOptions:
   - key: modernize-loop-convert.MinConfidence
     value: reasonable
   - key: cppcoreguidelines-missing-std-forward.ForwardFunction
-    value: ::base::memory::forward
+    value: ::yacsl::memory::forward
   - key: cppcoreguidelines-rvalue-reference-param-not-moved.MoveFunction
-    value: ::base::memory::move
+    value: ::yacsl::memory::move
   - key: readability-identifier-length.IgnoredVariableNames
     value: _
   - key: cppcoreguidelines-avoid-do-while.IgnoreMacros
@@ -72,4 +72,4 @@ CheckOptions:
   - key: misc-include-cleaner.IgnoreHeaders
     value: 'sys/fcntl\.h;sys/types\.h;sys/_types/.*\.h;_abort\.h;sys/syslimits\.h;_stdio\.h;stdio\.h'
   - key: performance-unnecessary-value-param.AllowedTypes
-    value: "base::Slice.*"
+    value: "yacsl::Slice.*"

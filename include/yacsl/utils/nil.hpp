@@ -1,0 +1,23 @@
+#pragma once
+
+namespace yacsl::utils {
+
+struct Nil {
+  template <typename T>
+  constexpr bool operator==(T const& /*non nil*/) const noexcept {
+    return false;
+  }
+
+  constexpr bool operator==(Nil /*nil*/) const noexcept { return true; }
+  constexpr bool operator==(decltype(nullptr) /*null*/) const noexcept {
+    return true;
+  }
+
+  template <typename T> constexpr operator T*() const noexcept {
+    return nullptr;
+  }
+};
+
+constexpr Nil NIL;
+
+} // namespace yacsl::utils
