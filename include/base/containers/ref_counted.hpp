@@ -1,5 +1,6 @@
 #pragma once
 
+#include "base/attributes.hpp"
 #include "base/memory/lifetimes.hpp"
 #include "base/threads/atomic.hpp"
 #include "base/type_traits/allocator.hpp"
@@ -77,9 +78,9 @@ private:
 
 private:
   struct Data {
-    T         value;
-    SizeT     count;
-    Allocator alloc;
+    T                                value;
+    SizeT                            count;
+    BASE_NO_UNIQUE_ADDRESS Allocator alloc;
   };
   Data* ptr_;
 };
