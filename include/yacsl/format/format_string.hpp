@@ -110,4 +110,11 @@ void format_to(containers::String& buf, FormatString<Args...> const& fmt,
   FormatString<Args...>::format_to(buf, fmt, memory::forward<Args>(args)...);
 }
 
+template <typename... Args>
+containers::String format(FormatString<Args...> const& fmt, Args&&... args) {
+  containers::String buf;
+  FormatString<Args...>::format_to(buf, fmt, memory::forward<Args>(args)...);
+  return buf;
+}
+
 } // namespace yacsl::format
