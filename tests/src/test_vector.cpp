@@ -1,12 +1,14 @@
+#include <stddef.h>
+#include <stdint.h>
 #include <string>
 #include <unordered_set>
 #include <vector>
 
+#include "test_utils.hpp"
 #include "yacsl/debug/log.hpp"
 #include "yacsl/format/formatter.hpp"
 #include "yacsl/ranges/slice.hpp"
 #include "yacsl/type_aliases.hpp"
-#include "test_utils.hpp"
 
 using SMFCall  = std::string;
 using SMFCalls = std::vector<std::string>;
