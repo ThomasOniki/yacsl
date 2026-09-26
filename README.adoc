@@ -1,6 +1,8 @@
 = Yet Another C++ Standard Library
 
-YACSL is a C\++ standard library designed for ease of use and performance. It uses error enums instead of throwing exceptions. Many corners are cut and assumptions are made to make the code shorter and faster, but at least if you compile in debug mode, most problems should lead to a crash with a stacktrace. This project's only dependency is libc, (not libc++). 
+YACSL is a minimal C++ standard library designed for ease of use and performance.
+This project's only dependency is libc, (not libc++).
+It uses error enums instead of throwing exceptions. There are many edge cases where the library panics(crashes) because is it designed to be smaller and less extensive alternative that has faster hot paths.
 As YACSL is still very early in development, there is no stable API yet and there will be many large refactors.
 
 :toc:
@@ -9,7 +11,7 @@ As YACSL is still very early in development, there is no stable API yet and ther
 - a c/c++ compiler
 - cmake 3.28+
 
-== Installation
+== Building
 [source,sh]
 ----
 git clone https://codeberg.org/ThomasReal/base.git
