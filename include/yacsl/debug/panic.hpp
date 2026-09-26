@@ -15,9 +15,8 @@ panic(containers::String const& formatted,
 template <typename... Args>
 [[noreturn]] // NOLINTNEXTLINE(misc-no-recursion)
 void panic(format::FormatString<Args...> const& fmt, Args&&... args) noexcept {
-  containers::String buf;
-  format::format_to(buf, fmt, memory::forward<Args>(args)...);
-  panic(buf, fmt.source_location());
+  panic(format::format(fmt, memory::forward<Args>(args)...),
+        fmt.source_location());
 }
 
 #ifdef NDEBUG

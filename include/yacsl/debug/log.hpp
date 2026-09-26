@@ -171,9 +171,7 @@ public:
     if (lvl < self.level_) {
       return;
     }
-    containers::String buf;
-    format::format_to(buf, fmt, memory::forward<Args>(args)...);
-    self.log(lvl, buf);
+    self.log(lvl, format::format(fmt, memory::forward<Args>(args)...));
   }
 
 private:
