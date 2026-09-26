@@ -1,7 +1,8 @@
 function(add_warnings target)
   if(MSVC)
     target_compile_options("${target}" PRIVATE "/W4")
-  else()
+  elseif(CMAKE_CXX_COMPILER_ID STREQUAL Clang OR CMAKE_CXX_COMPILER_ID STREQUAL
+                                                 GNU)
     target_compile_options(
       "${target}"
       PRIVATE "-Wall"
