@@ -5,6 +5,8 @@
 #include "yacsl/containers/vector.hpp"
 #include "yacsl/debug/log.hpp"
 #include "yacsl/export.hpp"
+#include "yacsl/format/format_string_parser.hpp"
+#include "yacsl/format/formatter.hpp"
 #include "yacsl/type_aliases.hpp"
 
 namespace yacsl::debug {
@@ -17,7 +19,6 @@ struct StackTraceEntry {
 };
 
 struct StackTrace {
-
   YACSL_NOINLINE static StackTrace current() noexcept YACSL_API;
 
   // Only call this when you actually need it. Computing the entries is non
@@ -32,15 +33,24 @@ struct StackTrace {
     return memory::move(self).entries_;
   }
 
-  template <typename Self>
-  void print(this Self&& self, Logger::Level lvl) noexcept {
-    memory::forward<Self>(self).compute_entries();
-    for (usize i = 0; i < self.entries_.size(); ++i) {
-      log(lvl, "#{} {} in {} ({}+{#x})", i, self.entries_[i].address,
-          self.entries_[i].caller, self.entries_[i].object,
-          static_cast<uchar*>(self.entries_[i].address) -
-              static_cast<uchar*>(self.entries_[i].base_address));
+  void format_to(this StackTrace const& self,
+                 containers::String&    buf) noexcept {
+    for (usize i = 1; i < self.entries_.size(); ++i) {
+      format::format_to(buf, "#{} {} in {} ({}+{#x})\n", i,
+                        self.entries_[i].address, self.entries_[i].caller,
+                        self.entries_[i].object,
+                        static_cast<uchar*>(self.entries_[i].address) -
+                            static_cast<uchar*>(self.entries_[i].base_address));
     }
+  }
+  containers::String format(this StackTrace const& self) noexcept {
+    containers::String buf;
+    self.format_to(buf);
+    return buf;
+  }
+
+  void print(this StackTrace const& self, Logger::Level lvl) noexcept {
+    log(lvl, self.format());
   }
 
   alignas(128) containers::Vector<StackTraceEntry, 16> entries_;
@@ -48,3 +58,20 @@ struct StackTrace {
 };
 
 } // namespace yacsl::debug
+
+namespace yacsl::format {
+
+template <> class Formatter<debug::StackTrace> {
+public:
+  constexpr char const* parse(this Formatter /*self*/, char const* fmt) {
+    format::FormatStringParser parser(fmt);
+    return parser.end_parse();
+  }
+
+  void format(this Formatter /*self*/, containers::String& buffer,
+              debug::StackTrace const& stacktrace) {
+    stacktrace.format_to(buffer);
+  }
+};
+
+} // namespace yacsl::format
