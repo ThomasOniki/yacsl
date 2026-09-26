@@ -1,30 +1,25 @@
 #pragma once
 
-#include <stdint.h>
-
 namespace yacsl {
 
-using u8  = uint8_t;
-using u16 = uint16_t;
-using u32 = uint32_t;
-using u64 = uint64_t;
+using u8  = __UINT8_TYPE__;
+using u16 = __UINT16_TYPE__;
+using u32 = __UINT32_TYPE__;
+using u64 = __UINT64_TYPE__;
 
-using i8  = int8_t;
-using i16 = int16_t;
-using i32 = int32_t;
-using i64 = int64_t;
+using i8  = __INT8_TYPE__;
+using i16 = __INT16_TYPE__;
+using i32 = __INT32_TYPE__;
+using i64 = __INT64_TYPE__;
 
 using f32 = float;
 using f64 = double;
 
 using uchar = unsigned char;
 
-using usize = decltype(sizeof(int));
-using uptr  = uintptr_t;
-using iptr  = intptr_t;
-
-// containers::String litterals are pointers, you can get ptrdiff by
-// substracting them.
-using ptrdiff = decltype("" - "");
+using usize   = __SIZE_TYPE__;
+using uptr    = __UINTPTR_TYPE__;
+using iptr    = __INTPTR_TYPE__;
+using ptrdiff = __PTRDIFF_TYPE__;
 
 } // namespace yacsl
