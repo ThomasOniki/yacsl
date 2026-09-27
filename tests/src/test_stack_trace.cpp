@@ -1,16 +1,16 @@
+#include "test_utils.hpp"
 #include "yacsl/attributes.hpp"
 #include "yacsl/debug/log.hpp"
 #include "yacsl/debug/stack_trace.hpp"
 #include "yacsl/ranges/string_view.hpp"
-#include "test_utils.hpp"
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define CHECK_ENTRY(entry_idx, expected_caller)                                \
-  EXPECT_EQ(stack_trace.entries_[entry_idx].caller.view(),                     \
+  EXPECT_EQ(stack_trace.entries()[entry_idx].caller.view(),                    \
             yacsl::ranges::StringView(expected_caller))
 
 YACSL_NOINLINE static int f1(bool /*unused*/, char /*unused*/) {
-  int                     ret         = 0;
+  int                      ret         = 0;
   yacsl::debug::StackTrace stack_trace = yacsl::debug::StackTrace::current();
   stack_trace.compute_entries();
   CHECK_ENTRY(0, "yacsl::debug::StackTrace::current()");

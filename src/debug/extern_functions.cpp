@@ -2,13 +2,15 @@
 #include "yacsl/debug/log.hpp"
 #include "yacsl/debug/panic.hpp"
 #include "yacsl/debug/source_location.hpp"
+#include "yacsl/debug/stack_trace.hpp"
 
 namespace yacsl::debug::internal {
 
 void extern_log_error(ranges::StringView msg) { log_error(msg); }
 
 void extern_panic(ranges::StringView msg, SourceLocation location) noexcept {
-  panic(msg, location);
+  panic_impl(format::format("panic at {}\n{}\nstacktrace: {}", location, msg,
+                            StackTrace::current()));
 }
 
 } // namespace yacsl::debug::internal
