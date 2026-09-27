@@ -1,7 +1,7 @@
 #pragma once
 
 #include "yacsl/attributes.hpp"
-#include "yacsl/debug/extern_functions.hpp"
+#include "yacsl/debug/_extern_functions.hpp"
 #include "yacsl/format/atoi.hpp"
 #include "yacsl/ranges/string_view.hpp"
 #include "yacsl/type_aliases.hpp"
@@ -42,14 +42,14 @@ private:
 
 constexpr FormatStringParser::FormatStringParser(char const* fmt) : fmt_(fmt) {
   if (*fmt_ != '{') {
-    debug::extern_log_error(
+    debug::internal::extern_log_error(
         "FormatStringParser called on a string that doesn't start with '{'.");
   }
 
   ++fmt_;
 
   if (*fmt_ == '\0') {
-    debug::extern_log_error("'{' without '}' in format string.");
+    debug::internal::extern_log_error("'{' without '}' in format string.");
   }
 }
 
@@ -134,10 +134,10 @@ FormatStringParser::check_option(this FormatStringParser& self,
 constexpr char const*
 FormatStringParser::end_parse(this FormatStringParser& self) {
   if (*self.fmt_ == '\0') {
-    debug::extern_log_error("Expected '}' before '\\0' in format string.");
+    debug::internal::extern_log_error("Expected '}' before '\\0' in format string.");
   }
   if (*self.fmt_ != '}') {
-    debug::extern_log_error("Invalid format string.");
+    debug::internal::extern_log_error("Invalid format string.");
   }
 
   ++self.fmt_;
