@@ -2,14 +2,14 @@
 
 #include "yacsl/attributes.hpp"
 #include "yacsl/containers/string.hpp"
-#include "yacsl/format/char_encodings.hpp"
+#include "yacsl/fmt/char_encodings.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/ranges/string_view.hpp"
 #include "yacsl/type_aliases.hpp"
 #include "yacsl/type_traits/categories.hpp"
 #include "yacsl/type_traits/sign.hpp"
 
-namespace yacsl::format {
+namespace yacsl::fmt {
 
 template <type_traits::Character C> u32 debug_char_len(C chr) {
   if (chr == '\n' || chr == '\0' || chr == '\r' || chr == '\t' || chr == '\v') {
@@ -195,4 +195,4 @@ usize maybe_debug_string_len(ranges::BasicStringView<C, usize> str) {
   }
 }
 
-} // namespace yacsl::format
+} // namespace yacsl::fmt

@@ -5,7 +5,7 @@
 #include "yacsl/containers/containers.hpp"
 #include "yacsl/debug/debug.hpp"
 #include "yacsl/export.hpp"
-#include "yacsl/format/format.hpp"
+#include "yacsl/fmt/fmt.hpp"
 #include "yacsl/math/math.hpp"
 #include "yacsl/memory/memory.hpp"
 #include "yacsl/meta/meta.hpp"
