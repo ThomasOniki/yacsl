@@ -7,20 +7,20 @@
 
 namespace yacsl::containers {
 
-template <typename T, type_traits::AllocatorType Allocator,
+template <typename T, type_traits::AllocatorType A,
           type_traits::Integral SizeT     = usize,
           auto                  Increment = [](SizeT& count) { ++count; },
           auto Decrement = [](SizeT& count) { return --count; }>
 class RefCounted {
 public:
-  RefCounted(T const& value) : RefCounted(value, Allocator()) {}
-  RefCounted(T&& value) : RefCounted(memory::move(value), Allocator()) {}
+  RefCounted(T const& value) : RefCounted(value, A()) {}
+  RefCounted(T&& value) : RefCounted(memory::move(value), A()) {}
 
-  explicit RefCounted(T const& value, Allocator allocator)
+  explicit RefCounted(T const& value, A allocator)
       : ptr_(allocator.template allocate<Data>(1).data()) {
     memory::construct_at(ptr_, value, 1, memory::move(allocator));
   }
-  explicit RefCounted(T&& value, Allocator allocator)
+  explicit RefCounted(T&& value, A allocator)
       : ptr_(allocator.template allocate<Data>(1).data()) {
     memory::construct_at(ptr_, memory::move(value), 1, memory::move(allocator));
   }
@@ -71,7 +71,7 @@ private:
     if (Decrement(self.ptr_->count) > 0) {
       return;
     }
-    Allocator alloc = memory::move(self.ptr_->alloc);
+    A alloc = memory::move(self.ptr_->alloc);
     self.ptr_->~Data();
     alloc.template free<Data>(self.ptr_);
   }
@@ -80,15 +80,15 @@ private:
   struct Data {
     T                                value;
     SizeT                            count;
-    YACSL_NO_UNIQUE_ADDRESS Allocator alloc;
+    YACSL_NO_UNIQUE_ADDRESS A alloc;
   };
   Data* ptr_;
 };
 
-template <typename T, type_traits::AllocatorType Allocator,
+template <typename T, type_traits::AllocatorType A,
           type_traits::Integral SizeT = usize>
 using AtomicRefCounted =
-    RefCounted<T, Allocator, threads::Atomic<SizeT>,
+    RefCounted<T, A, threads::Atomic<SizeT>,
                [](threads::Atomic<SizeT>& count) {
                  count.fetch_add(1, threads::MemoryOrder::Relaxed);
                },
