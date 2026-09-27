@@ -146,6 +146,15 @@ public:
 #endif
   }
 
+  template <typename Self, typename F>
+  auto transform(this Self&& self, F&& func)
+      -> Option<decltype(func(*self.value_))> {
+    if (self.is_value_) {
+      return memory::forward<F>(func)(*memory::forward<Self>(self).value_);
+    }
+    return utils::NIL;
+  }
+
 private:
   StackStorage<T> value_;
   bool            is_value_;

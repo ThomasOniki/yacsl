@@ -108,6 +108,15 @@ public:
     return memory::forward<Self>(self).error_;
   }
 
+  template <typename Self, typename F>
+  auto transform(this Self&& self, F&& func)
+      -> Result<decltype(func(*self.value_)), Error> {
+    if (self.is_value_) {
+      return memory::forward<F>(func)(*memory::forward<Self>(self).value_);
+    }
+    return self.error_;
+  }
+
 private:
   template <typename Self> void destroy(this Self&& self) noexcept {
     if (self.is_error_) [[unlikely]] {
