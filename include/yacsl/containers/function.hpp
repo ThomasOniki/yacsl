@@ -2,6 +2,7 @@
 
 #include "yacsl/attributes.hpp"
 #include "yacsl/containers/stack_array.hpp"
+#include "yacsl/memory/alignment.hpp"
 #include "yacsl/memory/arena.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/type_aliases.hpp"
@@ -55,11 +56,11 @@ Function<Ret(Args...), BufSz, Allocator>::Function(auto&& func) {
   using Func = type_traits::RemoveReference<decltype(func)>;
 
   if constexpr (sizeof(Func) > sizeof(uchar) * BufSz || alignof(Func) > 8) {
-    data_ = allocator_.template allocate<Func>(1).data();
+    data_ = allocator_.allocate(sizeof(Func), memory::align_of<Func>).data();
 
     cleanup_ = [](void* data, Allocator& alloc) {
       static_cast<Func*>(data)->~Func();
-      alloc.template free<Func>({static_cast<Func*>(data), 1});
+      alloc.deallocate({static_cast<uchar*>(data), sizeof(Func)});
     };
   } else {
     cleanup_ = [](void* data, Allocator& /*allocator*/) {

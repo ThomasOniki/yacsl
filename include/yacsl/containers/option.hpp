@@ -1,8 +1,9 @@
 #pragma once
 
+#include "yacsl/containers/nttp_string.hpp"
 #include "yacsl/containers/stack_storage.hpp"
-#include "yacsl/debug/assert.hpp"
-#include "yacsl/format/format_string.hpp"
+#include "yacsl/debug/extern_functions.hpp"
+#include "yacsl/debug/source_location.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/type_traits/type_string.hpp"
 #include "yacsl/utils/nil.hpp"
@@ -120,16 +121,29 @@ public:
   }
 
   template <typename Self>
-  [[nodiscard]] constexpr auto&& value(this Self&& self) noexcept {
-    debug::assert_(self.is_value_, "Option<{}> is nil.",
-                   type_traits::TYPE_STRING<T>);
+  [[nodiscard]] constexpr auto&&
+  value(this Self&& self, debug::SourceLocation location =
+                              debug::SourceLocation::current()) noexcept {
+    if (!self.is_value_) [[unlikely]] {
+      debug::extern_panic(
+          cat_nttpstrings<"Option<",
+                          NTTPString<type_traits::TYPE_STRING<T>.size()>(
+                              type_traits::TYPE_STRING<T>),
+                          "> is nil.">.view(),
+          location);
+    }
     return *memory::forward<Self>(self).value_;
   }
   template <typename Self>
   [[nodiscard]] constexpr auto&& value_unchecked(this Self&& self) noexcept {
-    debug::assert_unchecked(self.is_value_, "Option<{}> is nil.",
-                            type_traits::TYPE_STRING<T>);
+#ifdef NDEBUG
+    if (!self.is_value_) [[unlikely]] {
+      __builtin_unreachable();
+    }
     return *memory::forward<Self>(self).value_;
+#else
+    return memory::forward<Self>(self).value();
+#endif
   }
 
 private:
@@ -185,37 +199,30 @@ public:
     return self.ptr_ != nullptr && self.ptr_ == &value;
   }
 
-  template <typename Self, typename... Args>
-  [[nodiscard]] constexpr auto&&
-  expect_value(this Self&& self                     YACSL_LIFETIMEBOUND,
-               format::FormatString<Args...> const& fmt,
-               Args&&... args) noexcept {
-    debug::assert_(self.ptr_ != nullptr, fmt, memory::forward<Args>(args)...);
-    return memory::forward<type_traits::CopyCVRef<Self&&, T>>(
-        *memory::forward<Self>(self).ptr_);
-  }
   template <typename Self>
   [[nodiscard]] constexpr auto&&
-  expect_value(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
-    return memory::forward<Self>(self).expect_value(
-        "Option<{}> is nil.", type_traits::TYPE_STRING<T>);
-  }
-
-  template <typename Self, typename... Args>
-  [[nodiscard]] constexpr auto&&
-  value_unchecked(this Self&& self                     YACSL_LIFETIMEBOUND,
-                  format::FormatString<Args...> const& fmt,
-                  Args&&... args) noexcept {
-    debug::assert_unchecked(self.ptr_ == nullptr, fmt,
-                            memory::forward<Args>(args)...);
-    return memory::forward<type_traits::CopyCVRef<Self&&, T>>(
-        *memory::forward<Self>(self).ptr_);
+  value(this Self&& self, debug::SourceLocation location =
+                              debug::SourceLocation::current()) noexcept {
+    if (!self.is_value_) [[unlikely]] {
+      debug::extern_panic(
+          cat_nttpstrings<"Option<",
+                          NTTPString<type_traits::TYPE_STRING<T>.size()>(
+                              type_traits::TYPE_STRING<T>),
+                          "> is nil.">.view(),
+          location);
+    }
+    return *memory::forward<Self>(self).ptr_;
   }
   template <typename Self>
-  [[nodiscard]] constexpr auto&&
-  value_unchecked(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
-    return memory::forward<Self>(self).value_unchecked(
-        "Option<{}> is nil.", type_traits::TYPE_STRING<T>);
+  [[nodiscard]] constexpr auto&& value_unchecked(this Self&& self) noexcept {
+#ifdef NDEBUG
+    if (!self.is_value_) [[unlikely]] {
+      __builtin_unreachable();
+    }
+    return *memory::forward<Self>(self).ptr_;
+#else
+    return memory::forward<Self>(self).value();
+#endif
   }
 
 private:

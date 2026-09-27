@@ -2,6 +2,7 @@
 
 #include "yacsl/attributes.hpp"
 #include "yacsl/containers/stack_array.hpp"
+#include "yacsl/memory/alignment.hpp"
 #include "yacsl/memory/arena.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/meta/type_identity.hpp"
@@ -87,8 +88,8 @@ public:
   }
 
   template <typename Self>
-  [[nodiscard]] constexpr auto&& operator[](this Self&& self YACSL_LIFETIMEBOUND,
-                                            SizeT            index) noexcept {
+  [[nodiscard]] constexpr auto&&
+  operator[](this Self&& self YACSL_LIFETIMEBOUND, SizeT index) noexcept {
     return memory::forward<type_traits::CopyCVRef<Self&&, T>>(
         memory::forward<Self>(self).data_[static_cast<usize>(index)]);
   }
@@ -368,10 +369,11 @@ void Vector<T, N, Allocator, SizeT>::maybe_alloc(this Vector& self,
                                                  SizeT        count) {
   if (N == 0 || count > static_cast<SizeT>(N)) {
     self.capacity_ = count;
-    self.data_ =
+    self.data_     = reinterpret_cast<T*>(
         self.allocator_
-            .template allocate<T>(static_cast<Allocator::SizeT>(self.capacity_))
-            .data();
+            .allocate(static_cast<Allocator::SizeT>(self.capacity_ * sizeof(T)),
+                      memory::align_of<T>)
+            .data());
   }
 }
 
@@ -380,9 +382,9 @@ template <typename T, usize N, type_traits::AllocatorType Allocator,
 void Vector<T, N, Allocator, SizeT>::free(this Vector& self) {
   self.clear();
   if (N == 0 || self.data_ != self.fixed_buffer_.data()) {
-    self.allocator_.template free<T>({
-        self.data_,
-        static_cast<Allocator::SizeT>(self.capacity_),
+    self.allocator_.deallocate({
+        reinterpret_cast<uchar*>(self.data_),
+        static_cast<Allocator::SizeT>(self.capacity_) * sizeof(T),
     });
   }
 }
@@ -392,10 +394,11 @@ template <typename T, usize N, type_traits::AllocatorType Allocator,
 void Vector<T, N, Allocator, SizeT>::definitely_reserve(this Vector& self,
                                                         SizeT        capacity) {
   T* old_data = self.data_;
-  self.data_ =
+  self.data_  = reinterpret_cast<T*>(
       self.allocator_
-          .template allocate<T>(static_cast<Allocator::SizeT>(capacity))
-          .data();
+          .allocate(static_cast<Allocator::SizeT>(capacity) * sizeof(T),
+                    memory::align_of<T>)
+          .data());
   self.move(old_data);
 
   for (SizeT i = 0; i < self.size_; ++i) {
@@ -404,15 +407,15 @@ void Vector<T, N, Allocator, SizeT>::definitely_reserve(this Vector& self,
 
   if constexpr (N > 0) {
     if (old_data != self.fixed_buffer_.data()) {
-      self.allocator_.template free<T>({
-          old_data,
-          static_cast<Allocator::SizeT>(self.capacity_),
+      self.allocator_.deallocate({
+          reinterpret_cast<uchar*>(old_data),
+          static_cast<Allocator::SizeT>(self.capacity_) * sizeof(T),
       });
     }
   } else {
-    self.allocator_.template free<T>({
-        old_data,
-        static_cast<Allocator::SizeT>(self.capacity_),
+    self.allocator_.deallocate({
+        reinterpret_cast<uchar*>(old_data),
+        static_cast<Allocator::SizeT>(self.capacity_) * sizeof(T),
     });
   }
   self.capacity_ = capacity;
@@ -445,5 +448,5 @@ void Vector<T, N, Allocator, SizeT>::move(this Vector& self, T* data) {
 
 #ifdef YACSL_LSP_ONLY
 template class yacsl::containers::Vector<int>; // Instantiates to avoid
-                                              // 'arena.hpp is unused'.
+                                               // 'arena.hpp is unused'.
 #endif
