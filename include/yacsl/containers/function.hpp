@@ -12,11 +12,11 @@
 namespace yacsl::containers {
 
 template <typename F, usize BufSz = 8,
-          type_traits::AllocatorType A = memory::MainArenaAllocator>
+          type_traits::Allocator A = memory::MainArenaAllocator>
 class Function;
 
 template <typename Ret, typename... Args, usize BufSz,
-          type_traits::AllocatorType A>
+          type_traits::Allocator A>
 class Function<Ret(Args...), BufSz, A> {
 public:
   Function(auto&& func);
@@ -51,7 +51,7 @@ private:
 };
 
 template <typename Ret, typename... Args, usize BufSz,
-          type_traits::AllocatorType A>
+          type_traits::Allocator A>
 Function<Ret(Args...), BufSz, A>::Function(auto&& func) {
   using Func = type_traits::RemoveReference<decltype(func)>;
 

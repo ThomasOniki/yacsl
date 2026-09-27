@@ -14,7 +14,7 @@
 namespace yacsl::containers {
 
 template <type_traits::Character Char, usize N = 0,
-          type_traits::AllocatorType A = memory::MainArenaAllocator,
+          type_traits::Allocator A = memory::MainArenaAllocator,
           type_traits::Integral      SizeT     = usize>
 class BasicString {
 public:

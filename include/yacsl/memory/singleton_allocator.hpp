@@ -6,7 +6,7 @@
 
 namespace yacsl::memory {
 
-template <type_traits::AllocatorType A, containers::NTTPString Name,
+template <type_traits::Allocator A, containers::NTTPString Name,
           bool ThreadLocal = true>
 class SingletonAllocator {
 public:

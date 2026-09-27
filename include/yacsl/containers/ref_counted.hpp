@@ -7,7 +7,7 @@
 
 namespace yacsl::containers {
 
-template <typename T, type_traits::AllocatorType A,
+template <typename T, type_traits::Allocator A,
           type_traits::Integral SizeT     = usize,
           auto                  Increment = [](SizeT& count) { ++count; },
           auto Decrement = [](SizeT& count) { return --count; }>
@@ -85,7 +85,7 @@ private:
   Data* ptr_;
 };
 
-template <typename T, type_traits::AllocatorType A,
+template <typename T, type_traits::Allocator A,
           type_traits::Integral SizeT = usize>
 using AtomicRefCounted =
     RefCounted<T, A, threads::Atomic<SizeT>,
