@@ -14,30 +14,30 @@
 namespace yacsl::containers {
 
 template <type_traits::Character Char, usize N = 0,
-          type_traits::AllocatorType Allocator = memory::MainArenaAllocator,
+          type_traits::AllocatorType A = memory::MainArenaAllocator,
           type_traits::Integral      SizeT     = usize>
 class BasicString {
 public:
   constexpr BasicString() noexcept = default;
-  constexpr explicit BasicString(Allocator const& allocator)
+  constexpr explicit BasicString(A const& allocator)
       : data_(allocator) {}
 
   constexpr ~BasicString() noexcept = default;
 
   constexpr BasicString(Char const*      cstr,
-                        Allocator const& allocator = Allocator()) noexcept
+                        A const& allocator = A()) noexcept
       : data_(ranges::BasicStringView<Char, usize>(cstr), allocator) {}
 
   constexpr BasicString(Char const* data, SizeT len,
-                        Allocator const& allocator = Allocator()) noexcept
+                        A const& allocator = A()) noexcept
       : data_(ranges::BasicStringView<Char, usize>(data, len), allocator) {}
 
   constexpr BasicString(Char const* begin, Char const* end,
-                        Allocator const& allocator = Allocator()) noexcept
+                        A const& allocator = A()) noexcept
       : data_(ranges::BasicStringView<Char, usize>(begin, end), allocator) {}
 
   constexpr BasicString(ranges::BasicStringView<Char, SizeT> str,
-                        Allocator const& allocator = Allocator()) noexcept
+                        A const& allocator = A()) noexcept
       : data_(str, allocator) {}
 
   constexpr BasicString(BasicString const& other) noexcept
@@ -229,7 +229,7 @@ public:
   }
 
 private:
-  Vector<Char, N, Allocator, SizeT> data_;
+  Vector<Char, N, A, SizeT> data_;
 };
 
 using String = BasicString<char>;
