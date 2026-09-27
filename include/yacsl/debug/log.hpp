@@ -3,7 +3,7 @@
 #include "yacsl/containers/option.hpp"
 #include "yacsl/containers/string.hpp"
 #include "yacsl/export.hpp"
-#include "yacsl/format/format_string.hpp"
+#include "yacsl/fmt/format_string.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/os/file.hpp"
 #include "yacsl/ranges/string_view.hpp"
@@ -112,47 +112,47 @@ public:
   }
 
   template <typename... Args>
-  void trace3(this Logger& self, format::FormatString<Args...> const& fmt,
+  void trace3(this Logger& self, fmt::FormatString<Args...> const& fmt,
               Args&&... args) {
     self.log(Level::Trace3, fmt, memory::forward<Args>(args)...);
   }
   template <typename... Args>
-  void trace2(this Logger& self, format::FormatString<Args...> const& fmt,
+  void trace2(this Logger& self, fmt::FormatString<Args...> const& fmt,
               Args&&... args) {
     self.log(Level::Trace2, fmt, memory::forward<Args>(args)...);
   }
   template <typename... Args>
-  void trace1(this Logger& self, format::FormatString<Args...> const& fmt,
+  void trace1(this Logger& self, fmt::FormatString<Args...> const& fmt,
               Args&&... args) {
     self.log(Level::Trace1, fmt, memory::forward<Args>(args)...);
   }
   template <typename... Args>
-  void debug(this Logger& self, format::FormatString<Args...> const& fmt,
+  void debug(this Logger& self, fmt::FormatString<Args...> const& fmt,
              Args&&... args) {
     self.log(Level::Debug, fmt, memory::forward<Args>(args)...);
   }
   template <typename... Args>
-  void info(this Logger& self, format::FormatString<Args...> const& fmt,
+  void info(this Logger& self, fmt::FormatString<Args...> const& fmt,
             Args&&... args) {
     self.log(Level::Info, fmt, memory::forward<Args>(args)...);
   }
   template <typename... Args>
-  void notice(this Logger& self, format::FormatString<Args...> const& fmt,
+  void notice(this Logger& self, fmt::FormatString<Args...> const& fmt,
               Args&&... args) {
     self.log(Level::Notice, fmt, memory::forward<Args>(args)...);
   }
   template <typename... Args>
-  void warn(this Logger& self, format::FormatString<Args...> const& fmt,
+  void warn(this Logger& self, fmt::FormatString<Args...> const& fmt,
             Args&&... args) {
     self.log(Level::Warning, fmt, memory::forward<Args>(args)...);
   }
   template <typename... Args>
-  void error(this Logger& self, format::FormatString<Args...> const& fmt,
+  void error(this Logger& self, fmt::FormatString<Args...> const& fmt,
              Args&&... args) {
     self.log(Level::Error, fmt, memory::forward<Args>(args)...);
   }
   template <typename... Args>
-  void panic(this Logger& self, format::FormatString<Args...> const& fmt,
+  void panic(this Logger& self, fmt::FormatString<Args...> const& fmt,
              Args&&... args) {
     self.log(Level::Panic, fmt, memory::forward<Args>(args)...);
   }
@@ -167,11 +167,11 @@ public:
 
   template <typename... Args>
   void log(this Logger& self, Level lvl,
-           format::FormatString<Args...> const& fmt, Args&&... args) {
+           fmt::FormatString<Args...> const& fmt, Args&&... args) {
     if (lvl < self.level_) {
       return;
     }
-    self.log(lvl, format::format(fmt, memory::forward<Args>(args)...));
+    self.log(lvl, fmt::format(fmt, memory::forward<Args>(args)...));
   }
 
 private:
@@ -251,7 +251,7 @@ inline void log(Logger::Level             lvl,
   Logger::get_default_instance().log(lvl, formatted);
 }
 template <typename... Args>
-void log(Logger::Level lvl, format::FormatString<Args...> const& fmt,
+void log(Logger::Level lvl, fmt::FormatString<Args...> const& fmt,
          Args&&... args) noexcept {
   Logger::get_default_instance().log(lvl, fmt, memory::forward<Args>(args)...);
 }
@@ -282,42 +282,42 @@ inline void log_error(containers::String const& formatted) noexcept {
 }
 
 template <typename... Args>
-void log_trace3(format::FormatString<Args...> const& fmt,
+void log_trace3(fmt::FormatString<Args...> const& fmt,
                 Args&&... args) noexcept {
   log(Logger::Level::Trace3, fmt, memory::forward<Args>(args)...);
 }
 template <typename... Args>
-void log_trace2(format::FormatString<Args...> const& fmt,
+void log_trace2(fmt::FormatString<Args...> const& fmt,
                 Args&&... args) noexcept {
   log(Logger::Level::Trace2, fmt, memory::forward<Args>(args)...);
 }
 template <typename... Args>
-void log_trace1(format::FormatString<Args...> const& fmt,
+void log_trace1(fmt::FormatString<Args...> const& fmt,
                 Args&&... args) noexcept {
   log(Logger::Level::Trace1, fmt, memory::forward<Args>(args)...);
 }
 template <typename... Args>
-void log_debug(format::FormatString<Args...> const& fmt,
+void log_debug(fmt::FormatString<Args...> const& fmt,
                Args&&... args) noexcept {
   log(Logger::Level::Debug, fmt, memory::forward<Args>(args)...);
 }
 template <typename... Args>
-void log_info(format::FormatString<Args...> const& fmt,
+void log_info(fmt::FormatString<Args...> const& fmt,
               Args&&... args) noexcept {
   log(Logger::Level::Info, fmt, memory::forward<Args>(args)...);
 }
 template <typename... Args>
-void log_notice(format::FormatString<Args...> const& fmt,
+void log_notice(fmt::FormatString<Args...> const& fmt,
                 Args&&... args) noexcept {
   log(Logger::Level::Notice, fmt, memory::forward<Args>(args)...);
 }
 template <typename... Args>
-void log_warning(format::FormatString<Args...> const& fmt,
+void log_warning(fmt::FormatString<Args...> const& fmt,
                  Args&&... args) noexcept {
   log(Logger::Level::Warning, fmt, memory::forward<Args>(args)...);
 }
 template <typename... Args>
-void log_error(format::FormatString<Args...> const& fmt,
+void log_error(fmt::FormatString<Args...> const& fmt,
                Args&&... args) noexcept {
   log(Logger::Level::Error, fmt, memory::forward<Args>(args)...);
 }

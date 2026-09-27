@@ -1,13 +1,13 @@
 #pragma once
 
 #include "yacsl/debug/panic.hpp"
-#include "yacsl/format/format_string.hpp"
+#include "yacsl/fmt/format_string.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 
 namespace yacsl::debug {
 
 template <typename... Args>
-constexpr void assert_(bool cond, format::FormatString<Args...> const& fmt,
+constexpr void assert_(bool cond, fmt::FormatString<Args...> const& fmt,
                        Args&&... args) {
   if (!cond) [[unlikely]] {
     panic(fmt, memory::forward<Args>(args)...);
@@ -16,7 +16,7 @@ constexpr void assert_(bool cond, format::FormatString<Args...> const& fmt,
 
 template <typename... Args>
 constexpr void assert_unchecked(bool                                 cond,
-                                format::FormatString<Args...> const& fmt,
+                                fmt::FormatString<Args...> const& fmt,
                                 Args&&... args) {
   if (!cond) [[unlikely]] {
     unreachable(fmt, memory::forward<Args>(args)...);

@@ -1,6 +1,6 @@
 #include "yacsl/containers/stack_array.hpp"
 #include "yacsl/debug/log.hpp"
-#include "yacsl/format/format_string.hpp"
+#include "yacsl/fmt/format_string.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/os/file.hpp"
 #include "yacsl/ranges/initializer_list.hpp"
@@ -65,7 +65,7 @@ enum class EnumClass : yacsl::u16 {
 
 template <typename... Args>
 static void log_to_file(yacsl::debug::Logger::Level                 lvl,
-                        yacsl::format::FormatString<Args...> const& fmt,
+                        yacsl::fmt::FormatString<Args...> const& fmt,
                         Args&&... args) {
   yacsl::os::File::Flags const flags = yacsl::os::File::Flags::Write |
                                       yacsl::os::File::Flags::Create |

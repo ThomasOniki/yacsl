@@ -4,9 +4,9 @@
 #include "yacsl/containers/stack_array.hpp"
 #include "yacsl/containers/string.hpp"
 #include "yacsl/debug/source_location.hpp"
-#include "yacsl/format/format_string_parser.hpp"
-#include "yacsl/format/itoa.hpp"
-#include "yacsl/format/padding.hpp"
+#include "yacsl/fmt/format_string_parser.hpp"
+#include "yacsl/fmt/itoa.hpp"
+#include "yacsl/fmt/padding.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/meta/declval.hpp"
 #include "yacsl/meta/integer_sequence.hpp"
@@ -19,7 +19,7 @@
 #include "yacsl/type_traits/sign.hpp"
 #include "yacsl/type_traits/type_string.hpp"
 
-namespace yacsl::format {
+namespace yacsl::fmt {
 
 template <typename T> class Formatter {
 public:
@@ -607,4 +607,4 @@ private:
   Formatter<containers::String> impl_;
 };
 
-} // namespace yacsl::format
+} // namespace yacsl::fmt

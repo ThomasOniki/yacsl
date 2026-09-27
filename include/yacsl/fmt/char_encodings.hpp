@@ -7,7 +7,7 @@
 #include "yacsl/type_aliases.hpp"
 #include "yacsl/type_traits/categories.hpp"
 
-namespace yacsl::format {
+namespace yacsl::fmt {
 
 constexpr u32 utf8_char_len(uchar utf8) noexcept {
   if (utf8 <= 127) {
@@ -193,4 +193,4 @@ void write_string(containers::String&               buf,
   }
 }
 
-} // namespace yacsl::format
+} // namespace yacsl::fmt

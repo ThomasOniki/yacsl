@@ -1,7 +1,7 @@
 #pragma once
 
 #include "yacsl/debug/panic.hpp"
-#include "yacsl/format/format_string.hpp"
+#include "yacsl/fmt/format_string.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/type_traits/categories.hpp"
 #include "yacsl/utils/nil.hpp"
@@ -28,7 +28,7 @@ public:
 
   template <typename... Args>
   constexpr void expect_nil(this Error                           self,
-                            format::FormatString<Args...> const& error_fmt,
+                            fmt::FormatString<Args...> const& error_fmt,
                             Args&&... args) {
     if (self.value_ != Err(0)) [[unlikely]] {
       debug::panic(error_fmt, memory::forward<Args>(args)...);
@@ -40,7 +40,7 @@ public:
 
   template <typename... Args>
   constexpr void assert_nil(this Error                           self,
-                            format::FormatString<Args...> const& error_fmt,
+                            fmt::FormatString<Args...> const& error_fmt,
                             Args&&... args) {
     if (self.value_ != Err(0)) [[unlikely]] {
       debug::unreachable(error_fmt, memory::forward<Args>(args)...);
