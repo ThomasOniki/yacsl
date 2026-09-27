@@ -3,9 +3,9 @@
 #include "yacsl/containers/option.hpp"
 #include "yacsl/containers/string.hpp"
 #include "yacsl/debug/log.hpp"
-#include "yacsl/format/format_string.hpp"
-#include "yacsl/format/format_string_parser.hpp"
-#include "yacsl/format/formatter.hpp"
+#include "yacsl/fmt/format_string.hpp"
+#include "yacsl/fmt/format_string_parser.hpp"
+#include "yacsl/fmt/formatter.hpp"
 #include "yacsl/memory/alignment.hpp"
 #include "yacsl/ranges/slice.hpp"
 #include "yacsl/utils/nil.hpp"
@@ -45,15 +45,15 @@ struct TestStruct {
 };
 } // namespace
 
-template <> class yacsl::format::Formatter<Counts> {
+template <> class yacsl::fmt::Formatter<Counts> {
 public:
   static constexpr char const* parse(char const* fmt) {
-    yacsl::format::FormatStringParser parser(fmt);
+    yacsl::fmt::FormatStringParser parser(fmt);
     return parser.end_parse();
   }
   [[maybe_unused]] static void format(yacsl::containers::String& buf,
                                       Counts const&              counts) {
-    yacsl::format::format_to(
+    yacsl::fmt::format_to(
         buf,
         "constructors: {}, copy_constructors: {}, move_contructors: {}, "
         "destructors: {}",

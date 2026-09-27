@@ -1,7 +1,7 @@
 #include "yacsl/debug/demangle.hpp"
 #include "yacsl/containers/string.hpp"
 #include "yacsl/containers/vector.hpp"
-#include "yacsl/format/atoi.hpp"
+#include "yacsl/fmt/atoi.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/ranges/string_view.hpp"
 #include "yacsl/type_aliases.hpp"
@@ -81,8 +81,8 @@ private:
       } else {
         self.skip('L');
 
-        char const* end = format::num_end(self.mangled_);
-        auto const  len = format::atoi<usize>(self.mangled_, end);
+        char const* end = fmt::num_end(self.mangled_);
+        auto const  len = fmt::atoi<usize>(self.mangled_, end);
 
         ranges::StringView const     chunk(end, len);
         constexpr ranges::StringView anonymous_ns = "_GLOBAL__N_";
@@ -141,8 +141,8 @@ private:
       usize       index = 0;
       char const* end   = self.mangled_;
       if (*self.mangled_ != '_') {
-        end   = format::num_end(self.mangled_);
-        index = format::atoi<usize>(self.mangled_, end) + 1;
+        end   = fmt::num_end(self.mangled_);
+        index = fmt::atoi<usize>(self.mangled_, end) + 1;
       }
       if (index < self.template_args_.size()) {
         self.demangled_.append(
@@ -179,7 +179,7 @@ private:
   void demangle_array_type(this Demangler&    self,
                            ranges::StringView qualifiers) noexcept {
     ++self.mangled_;
-    char const*              end = format::num_end(self.mangled_);
+    char const*              end = fmt::num_end(self.mangled_);
     ranges::StringView const arr_len(self.mangled_, end);
     self.mangled_ = end + 1;
     self.demangle_type();
@@ -427,8 +427,8 @@ private:
         }
         to_add = sub;
       } else {
-        char const* end = format::num_end(self.mangled_);
-        auto const  len = format::atoi<usize>(self.mangled_, end);
+        char const* end = fmt::num_end(self.mangled_);
+        auto const  len = fmt::atoi<usize>(self.mangled_, end);
         self.mangled_   = end + len;
         to_add          = ranges::StringView(end, self.mangled_);
       }

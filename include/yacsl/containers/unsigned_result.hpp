@@ -2,7 +2,7 @@
 
 #include "yacsl/debug/assert.hpp"
 #include "yacsl/debug/panic.hpp"
-#include "yacsl/format/format_string.hpp"
+#include "yacsl/fmt/format_string.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/type_traits/categories.hpp"
 #include "yacsl/type_traits/qualifiers.hpp"
@@ -38,7 +38,7 @@ public:
 
   template <typename... Args>
   [[nodiscard]] constexpr Value value(this UnsignedResult           self,
-                                      format::FormatString<Args...> fmt,
+                                      fmt::FormatString<Args...> fmt,
                                       Args&&... args) noexcept {
     if (self.is_error()) [[unlikely]] {
       debug::panic("UnsignedResult<{}, {}> is error {}.", Error(-self.value_));
@@ -54,7 +54,7 @@ public:
 
   template <typename... Args>
   [[nodiscard]] constexpr Value
-  value_unchecked(this UnsignedResult self, format::FormatString<Args...> fmt,
+  value_unchecked(this UnsignedResult self, fmt::FormatString<Args...> fmt,
                   Args&&... args) noexcept {
     debug::assert_(self.is_value(), fmt, memory::forward<Args>(args)...);
     return static_cast<Value>(self.value_);

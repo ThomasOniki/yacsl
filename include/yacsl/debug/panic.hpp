@@ -4,7 +4,7 @@
 #include "yacsl/debug/source_location.hpp"
 #include "yacsl/debug/stack_trace.hpp"
 #include "yacsl/export.hpp"
-#include "yacsl/format/format_string.hpp"
+#include "yacsl/fmt/format_string.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 #include <stdlib.h>
 
@@ -15,22 +15,22 @@ panic_impl(containers::String const& formatted) noexcept YACSL_API;
 
 [[noreturn]] inline void
 panic(SourceLocation location = SourceLocation::current()) noexcept {
-  panic_impl(format::format("panic at {}\nstacktrace: {}", location,
+  panic_impl(fmt::format("panic at {}\nstacktrace: {}", location,
                             StackTrace::current()));
 }
 
 template <typename... Args>
 [[noreturn]] // NOLINTNEXTLINE(misc-no-recursion)
-void panic(format::FormatString<Args...> const& fmt, Args&&... args) noexcept {
-  panic_impl(format::format("panic at {}\n", fmt.source_location()) +
-             format::format(fmt, memory::forward<Args>(args)...) +
-             format::format("\nstacktrace: {}", StackTrace::current()));
+void panic(fmt::FormatString<Args...> const& fmt, Args&&... args) noexcept {
+  panic_impl(fmt::format("panic at {}\n", fmt.source_location()) +
+             fmt::format(fmt, memory::forward<Args>(args)...) +
+             fmt::format("\nstacktrace: {}", StackTrace::current()));
 }
 
 #ifdef NDEBUG
 template <typename... Args>
 [[noreturn]]
-void unreachable(format::FormatString<Args...> const& /*fmt*/,
+void unreachable(fmt::FormatString<Args...> const& /*fmt*/,
                  Args&&... /*args*/) noexcept {
   __builtin_unreachable();
 }
@@ -38,7 +38,7 @@ void unreachable(format::FormatString<Args...> const& /*fmt*/,
 #else
 template <typename... Args>
 [[noreturn]]
-void unreachable(format::FormatString<Args...> const& fmt,
+void unreachable(fmt::FormatString<Args...> const& fmt,
                  Args&&... args) noexcept {
   panic(fmt, memory::forward<Args>(args)...);
 }

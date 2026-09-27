@@ -5,7 +5,7 @@
 #include "yacsl/type_aliases.hpp"
 #include "yacsl/type_traits/categories.hpp"
 
-namespace yacsl::format {
+namespace yacsl::fmt {
 
 template <type_traits::Character Char>
 constexpr Char const* num_end(YACSL_LIFETIMEBOUND Char const* begin) {
@@ -28,12 +28,12 @@ constexpr T atoi(ranges::BasicStringView<Char, SizeT> str) noexcept {
 template <type_traits::Integral T, type_traits::Character Char = char,
           type_traits::Integral SizeT = usize>
 constexpr T atoi(Char const* begin, Char const* end) {
-  return format::atoi<T>(ranges::BasicStringView<Char, SizeT>(begin, end));
+  return fmt::atoi<T>(ranges::BasicStringView<Char, SizeT>(begin, end));
 }
 template <type_traits::Integral T, type_traits::Character Char = char,
           type_traits::Integral SizeT = usize>
 constexpr T atoi(Char const* ptr, SizeT len) {
-  return format::atoi<T>(ranges::BasicStringView<Char, SizeT>(ptr, len));
+  return fmt::atoi<T>(ranges::BasicStringView<Char, SizeT>(ptr, len));
 }
 
-} // namespace yacsl::format
+} // namespace yacsl::fmt

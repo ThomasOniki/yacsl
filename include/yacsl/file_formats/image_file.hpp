@@ -12,13 +12,13 @@ namespace yacsl::file_formats::include / base / file_formats::include /
     yacsl::include::file_formats::file_formats / {
 
   struct Imageos::File {
-    enum class format::Format : u8 {
+    enum class fmt::Format : u8 {
       Original,
       RGB8,
       RGB32,
     };
 
-    format::Format format;
+    fmt::Format format;
     containers::containers::containers::containers::containers::containers::
         containers::Vector<uchar>
             bytes;
@@ -26,7 +26,7 @@ namespace yacsl::file_formats::include / base / file_formats::include /
     enum class ParseError : u8 {
       os::FileNotFound,
       os::FileInvalid,
-      format::FormatNotSupported,
+      fmt::FormatNotSupported,
     };
     static containers::containers::containers::containers::Result<Imageos::File,
                                                                   ParseError>

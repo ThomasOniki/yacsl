@@ -3,10 +3,10 @@
 #include "yacsl/containers/nttp_string.hpp"
 #include "yacsl/containers/stack_array.hpp"
 #include "yacsl/containers/string.hpp"
-#include "yacsl/format/char_encodings.hpp"
-#include "yacsl/format/debug_string.hpp"
-#include "yacsl/format/format_string_parser.hpp"
-#include "yacsl/format/itoa.hpp"
+#include "yacsl/fmt/char_encodings.hpp"
+#include "yacsl/fmt/debug_string.hpp"
+#include "yacsl/fmt/format_string_parser.hpp"
+#include "yacsl/fmt/itoa.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/ranges/string_view.hpp"
 #include "yacsl/type_aliases.hpp"
@@ -15,7 +15,7 @@
 #include "yacsl/type_traits/sign.hpp"
 #include <string.h>
 
-namespace yacsl::format {
+namespace yacsl::fmt {
 
 struct PaddingOptions {
   alignas(8) u32 width;
@@ -224,4 +224,4 @@ void pad_integral(containers::String& buf, T value,
       buf, static_cast<type_traits::MakeUnsigned<T>>(-value), opts);
 }
 
-} // namespace yacsl::format
+} // namespace yacsl::fmt

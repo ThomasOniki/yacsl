@@ -6,7 +6,7 @@
 #include "yacsl/type_traits/categories.hpp"
 #include "yacsl/type_traits/sign.hpp"
 
-namespace yacsl::format {
+namespace yacsl::fmt {
 
 template <type_traits::UnsignedIntegral T>
 constexpr char*
@@ -74,4 +74,4 @@ itoa(T value, ranges::StringView charset = "0123456789") noexcept {
   return buf;
 }
 
-} // namespace yacsl::format
+} // namespace yacsl::fmt

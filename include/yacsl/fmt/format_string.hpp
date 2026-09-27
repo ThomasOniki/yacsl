@@ -5,14 +5,14 @@
 #include "yacsl/containers/tuple.hpp"
 #include "yacsl/debug/_extern_functions.hpp"
 #include "yacsl/debug/source_location.hpp"
-#include "yacsl/format/formatter.hpp"
+#include "yacsl/fmt/formatter.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/meta/integer_sequence.hpp"
 #include "yacsl/ranges/string_view.hpp"
 #include "yacsl/type_aliases.hpp"
 #include "yacsl/type_traits/qualifiers.hpp"
 
-namespace yacsl::format::internal {
+namespace yacsl::fmt::internal {
 
 template <typename Indices, typename... Args> class FormatStringImpl;
 template <usize... Indices, typename... Args>
@@ -95,9 +95,9 @@ private:
   ranges::StringView    msg_;
 };
 
-} // namespace yacsl::format::internal
+} // namespace yacsl::fmt::internal
 
-namespace yacsl::format {
+namespace yacsl::fmt {
 
 template <typename... Args>
 using FormatString =
@@ -117,4 +117,4 @@ containers::String format(FormatString<Args...> const& fmt, Args&&... args) {
   return buf;
 }
 
-} // namespace yacsl::format
+} // namespace yacsl::fmt

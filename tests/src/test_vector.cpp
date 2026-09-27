@@ -7,7 +7,7 @@
 #include "test_utils.hpp"
 #include "yacsl/containers/option.hpp"
 #include "yacsl/debug/log.hpp"
-#include "yacsl/format/formatter.hpp"
+#include "yacsl/fmt/formatter.hpp"
 #include "yacsl/memory/alignment.hpp"
 #include "yacsl/ranges/slice.hpp"
 #include "yacsl/type_aliases.hpp"
@@ -136,7 +136,7 @@ using TestAllocatorSingleton =
 
 } // namespace
 
-template <> class yacsl::format::Formatter<std::string> {
+template <> class yacsl::fmt::Formatter<std::string> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
     return self.impl_.parse(fmt);
@@ -147,7 +147,7 @@ public:
   }
 
 private:
-  yacsl::format::Formatter<yacsl::ranges::StringView> impl_;
+  yacsl::fmt::Formatter<yacsl::ranges::StringView> impl_;
 };
 
 static int test_allocator() {

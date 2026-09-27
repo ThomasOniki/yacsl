@@ -4,9 +4,9 @@
 #include "yacsl/containers/string.hpp"
 #include "yacsl/containers/vector.hpp"
 #include "yacsl/export.hpp"
-#include "yacsl/format/format_string.hpp"
-#include "yacsl/format/format_string_parser.hpp"
-#include "yacsl/format/formatter.hpp"
+#include "yacsl/fmt/format_string.hpp"
+#include "yacsl/fmt/format_string_parser.hpp"
+#include "yacsl/fmt/formatter.hpp"
 #include "yacsl/ranges/slice.hpp"
 #include "yacsl/type_aliases.hpp"
 
@@ -44,7 +44,7 @@ public:
                  containers::String&    buf) noexcept {
     self.compute_entries();
     for (usize i = 1; i < self.entries_.size(); ++i) {
-      format::format_to(buf, "#{} {} in {} ({}+{#x})\n", i,
+      fmt::format_to(buf, "#{} {} in {} ({}+{#x})\n", i,
                         self.entries_[i].address, self.entries_[i].caller,
                         self.entries_[i].object,
                         static_cast<uchar*>(self.entries_[i].address) -
@@ -64,12 +64,12 @@ private:
 
 } // namespace yacsl::debug
 
-namespace yacsl::format {
+namespace yacsl::fmt {
 
 template <> class Formatter<debug::StackTrace> {
 public:
   constexpr char const* parse(this Formatter /*self*/, char const* fmt) {
-    format::FormatStringParser parser(fmt);
+    fmt::FormatStringParser parser(fmt);
     return parser.end_parse();
   }
 
@@ -79,4 +79,4 @@ public:
   }
 };
 
-} // namespace yacsl::format
+} // namespace yacsl::fmt

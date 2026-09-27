@@ -2,11 +2,11 @@
 
 #include "yacsl/attributes.hpp"
 #include "yacsl/debug/_extern_functions.hpp"
-#include "yacsl/format/atoi.hpp"
+#include "yacsl/fmt/atoi.hpp"
 #include "yacsl/ranges/string_view.hpp"
 #include "yacsl/type_aliases.hpp"
 
-namespace yacsl::format {
+namespace yacsl::fmt {
 
 class FormatStringParser {
 public:
@@ -106,7 +106,7 @@ FormatStringParser::check_sign(this FormatStringParser& self) {
 
 constexpr u32 FormatStringParser::check_width(this FormatStringParser& self) {
   char const* begin = self.fmt_;
-  self.fmt_         = format::num_end(self.fmt_);
+  self.fmt_         = fmt::num_end(self.fmt_);
   return atoi<u32>(begin, self.fmt_);
 }
 
@@ -144,4 +144,4 @@ FormatStringParser::end_parse(this FormatStringParser& self) {
   return self.fmt_;
 }
 
-} // namespace yacsl::format
+} // namespace yacsl::fmt
