@@ -1,7 +1,7 @@
 #pragma once
 
 #include "yacsl/attributes.hpp"
-
+#include "yacsl/debug/extern_functions.hpp"
 #include "yacsl/format/atoi.hpp"
 #include "yacsl/ranges/string_view.hpp"
 #include "yacsl/type_aliases.hpp"
@@ -36,22 +36,20 @@ public:
 
   [[nodiscard]] constexpr char const* end_parse(this FormatStringParser& self);
 
-  static void log_error_no_deps(ranges::StringView msg) noexcept;
-
 private:
   alignas(16) char const* fmt_ = nullptr;
 };
 
 constexpr FormatStringParser::FormatStringParser(char const* fmt) : fmt_(fmt) {
   if (*fmt_ != '{') {
-    log_error_no_deps(
+    debug::extern_log_error(
         "FormatStringParser called on a string that doesn't start with '{'.");
   }
 
   ++fmt_;
 
   if (*fmt_ == '\0') {
-    log_error_no_deps("'{' without '}' in format string.");
+    debug::extern_log_error("'{' without '}' in format string.");
   }
 }
 
@@ -136,10 +134,10 @@ FormatStringParser::check_option(this FormatStringParser& self,
 constexpr char const*
 FormatStringParser::end_parse(this FormatStringParser& self) {
   if (*self.fmt_ == '\0') {
-    log_error_no_deps("Expected '}' before '\\0' in format string.");
+    debug::extern_log_error("Expected '}' before '\\0' in format string.");
   }
   if (*self.fmt_ != '}') {
-    log_error_no_deps("Invalid format string.");
+    debug::extern_log_error("Invalid format string.");
   }
 
   ++self.fmt_;
