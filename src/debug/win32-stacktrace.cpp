@@ -3,6 +3,7 @@
 #include "../os/win32-utils.hpp"
 #include "yacsl/containers/string.hpp"
 #include "yacsl/containers/vector.hpp"
+#include "yacsl/debug/assert.hpp"
 #include "yacsl/debug/stack_trace.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/type_aliases.hpp"
@@ -38,9 +39,9 @@ StackTrace::compute_entries(this StackTrace& self) noexcept {
   self.entries_.resize(self.addresses_.size());
   for (usize i = 0; i < self.addresses_.size(); ++i) {
     HMODULE module = nullptr;
-    YACSL_TRY_SYSCALL(GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
-                                        static_cast<LPCSTR>(self.addresses_[i]),
-                                        &module));
+    YACSL_TRY_SYSCALL(
+        GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+                           static_cast<LPCSTR>(self.addresses_[i]), &module));
 
     containers::String module_name;
     module_name.resize(128);
