@@ -73,7 +73,7 @@ public:
   }
 
 public:
-  meta::ConditionalT<Cols == 1, containers::StackArray<T, Rows, SizeT>,
+  meta::Conditional<Cols == 1, containers::StackArray<T, Rows, SizeT>,
                      containers::StackArray<
                          containers::StackArray<T, Cols, SizeT>, Rows, SizeT>>
       data_;
