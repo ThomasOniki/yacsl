@@ -1,10 +1,12 @@
 #pragma once
 
 #include "yacsl/containers/nttp_string.hpp"
+#include "yacsl/memory/alignment.hpp"
+#include "yacsl/type_traits/allocator.hpp"
 
 namespace yacsl::memory {
 
-template <typename Allocator, containers::NTTPString Name,
+template <type_traits::AllocatorType Allocator, containers::NTTPString Name,
           bool ThreadLocal = true>
 class SingletonAllocator {
 public:
@@ -23,15 +25,17 @@ public:
     return instance;
   }
 
-  template <typename T>
-  [[nodiscard]] ranges::Slice<T, SizeT>
-  allocate(this SingletonAllocator /*self*/, SizeT count) noexcept {
-    return get().template allocate<T>(count);
+  [[nodiscard]] auto allocate(this SingletonAllocator /*self*/, SizeT size,
+                              Alignment align) noexcept {
+    return get().allocate(size, align);
   }
-  template <typename T>
-  void free(this SingletonAllocator /*self*/,
-            ranges::Slice<T, SizeT> mem) noexcept {
-    get().template free<T>(mem);
+  void deallocate(this SingletonAllocator /*self*/,
+                  ranges::Slice<uchar, SizeT> mem) noexcept {
+    get().deallocate(mem);
+  }
+  auto resize_in_place(this SingletonAllocator /*self*/,
+                       ranges::Slice<uchar, SizeT> mem, SizeT new_size) {
+    return get().resize_in_place(mem, new_size);
   }
 
   [[nodiscard]] constexpr bool operator==(this SingletonAllocator /*self*/,

@@ -37,8 +37,8 @@ public:
     return memory::forward<Self>(self).data_.data();
   }
   template <typename Self>
-  [[nodiscard]] constexpr auto&& operator[](this Self&& self YACSL_LIFETIMEBOUND,
-                                            SizeT            index) noexcept {
+  [[nodiscard]] constexpr auto&&
+  operator[](this Self&& self YACSL_LIFETIMEBOUND, SizeT index) noexcept {
     return memory::forward<Self>(self).data_[index];
   }
 
@@ -95,8 +95,8 @@ public:
   }
 
   template <typename Self>
-  [[nodiscard]] constexpr auto&& operator[](this Self&& self YACSL_LIFETIMEBOUND,
-                                            usize /*index*/) noexcept {
+  [[nodiscard]] constexpr auto&&
+  operator[](this Self&& self YACSL_LIFETIMEBOUND, usize /*index*/) noexcept {
     return memory::forward<Self>(self).char_;
   }
 
