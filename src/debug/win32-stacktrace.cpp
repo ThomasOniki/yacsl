@@ -32,7 +32,7 @@ StackTrace StackTrace::current() noexcept {
 }
 
 containers::Vector<StackTraceEntry, 16> const&
-StackTrace::compute_entries(this StackTrace& self) noexcept {
+StackTrace::compute_entries(this StackTrace const& self) noexcept {
   if (self.entries_.size() == self.addresses_.size()) {
     return self.entries_;
   }
