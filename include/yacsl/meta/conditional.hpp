@@ -13,6 +13,6 @@ struct ConditionalTypeImpl<false, If, Else> {
 } // namespace internal
 
 template <bool Cond, typename If, typename Else>
-using ConditionalT = internal::ConditionalTypeImpl<Cond, If, Else>::Type;
+using Conditional = internal::ConditionalTypeImpl<Cond, If, Else>::Type;
 
 } // namespace yacsl::meta

@@ -15,7 +15,7 @@
 namespace yacsl::containers {
 
 template <typename T, usize N,
-          type_traits::Integral SizeT = meta::ConditionalT<
+          type_traits::Integral SizeT = meta::Conditional<
               (N > type_traits::Limits<u32>::MAX), usize, u32>>
 class StackArray {
 public:
