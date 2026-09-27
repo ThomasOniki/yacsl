@@ -405,7 +405,7 @@ private:
 };
 
 template <type_traits::Character Char, usize N,
-          type_traits::AllocatorType A, type_traits::Integral SizeT>
+          type_traits::Allocator A, type_traits::Integral SizeT>
 class Formatter<containers::BasicString<Char, N, A, SizeT>> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {

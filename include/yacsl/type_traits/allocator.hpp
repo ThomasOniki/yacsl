@@ -8,7 +8,7 @@
 namespace yacsl::type_traits {
 
 template <typename A>
-concept AllocatorType =
+concept Allocator =
     requires(A allocator, A::SizeT size, memory::Alignment align,
              ranges::Slice<uchar, typename A::SizeT> slice) {
       { allocator.allocate(size, align) } -> SameAs<decltype(slice)>;
