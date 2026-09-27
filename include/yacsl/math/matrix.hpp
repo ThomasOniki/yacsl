@@ -2,7 +2,7 @@
 
 #include "yacsl/containers/stack_array.hpp"
 #include "yacsl/memory/lifetimes.hpp"
-#include "yacsl/meta/type_manip.hpp"
+#include "yacsl/meta/conditional.hpp"
 #include "yacsl/type_aliases.hpp"
 #include "yacsl/type_traits/categories.hpp"
 #include "yacsl/type_traits/qualifiers.hpp"
