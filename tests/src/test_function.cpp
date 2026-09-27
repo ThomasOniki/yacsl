@@ -1,11 +1,15 @@
+#include "test_utils.hpp"
 #include "yacsl/containers/function.hpp"
+#include "yacsl/containers/option.hpp"
 #include "yacsl/containers/string.hpp"
 #include "yacsl/debug/log.hpp"
 #include "yacsl/format/format_string.hpp"
 #include "yacsl/format/format_string_parser.hpp"
 #include "yacsl/format/formatter.hpp"
+#include "yacsl/memory/alignment.hpp"
 #include "yacsl/ranges/slice.hpp"
-#include "test_utils.hpp"
+#include "yacsl/utils/nil.hpp"
+#include <cstdlib>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,7 +52,7 @@ public:
     return parser.end_parse();
   }
   [[maybe_unused]] static void format(yacsl::containers::String& buf,
-                                      Counts const&             counts) {
+                                      Counts const&              counts) {
     yacsl::format::format_to(
         buf,
         "constructors: {}, copy_constructors: {}, move_contructors: {}, "
@@ -71,15 +75,35 @@ public:
     return true;
   }
 
-  template <typename T> yacsl::ranges::Slice<T, SizeT> allocate(SizeT count) {
+  yacsl::ranges::Slice<yacsl::uchar, SizeT>
+  allocate(this TestAllocator& /*self*/, SizeT size,
+           yacsl::memory::Alignment align) {
     ++allocate_call_count;
-    // NOLINTNEXTLINE(cppcoreguidelines-no-malloc)
-    return {static_cast<T*>(malloc(sizeof(T) * count)), count};
+#ifdef _WIN32
+    return {static_cast<yacsl::uchar*>(
+                _aligned_malloc(static_cast<size_t>(align), size)),
+            size};
+#else
+    return {static_cast<yacsl::uchar*>(
+                aligned_alloc(static_cast<size_t>(align), size)),
+            size};
+#endif
   }
-  template <typename T> void free(yacsl::ranges::Slice<T, SizeT> mem) {
+  void deallocate(this TestAllocator& /*self*/,
+                  yacsl::ranges::Slice<yacsl::uchar, SizeT> mem) {
     ++free_call_count;
-    // NOLINTNEXTLINE(cppcoreguidelines-no-malloc)
-    ::free(mem.data());
+#ifdef _WIN32
+    _aligned_free(mem.data());
+#else
+    free(mem.data());
+#endif
+  }
+
+  yacsl::containers::Option<yacsl::ranges::Slice<yacsl::uchar, SizeT>>
+  resize_in_place(this TestAllocator& /*self*/,
+                  yacsl::ranges::Slice<yacsl::uchar, SizeT> /*mem*/,
+                  SizeT /*new_size*/) {
+    return yacsl::utils::NIL;
   }
 };
 } // namespace
@@ -93,8 +117,8 @@ public:
   } while (false)
 
 static int test_function_running() {
-  int                                ret = 0;
-  bool                               ran = false;
+  int                                 ret = 0;
+  bool                                ran = false;
   yacsl::containers::Function<void()> func([&ran]() { ran = true; });
 
   EXPECT(!ran);
