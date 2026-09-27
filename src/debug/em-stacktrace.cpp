@@ -7,7 +7,7 @@ namespace yacsl::debug {
 
 StackTrace StackTrace::current() noexcept { return StackTrace(); }
 containers::Vector<StackTraceEntry, 16> const&
-StackTrace::compute_entries(this StackTrace& self) noexcept {
+StackTrace::compute_entries(this StackTrace const& self) noexcept {
   self.entries_ = {};
   return self.entries_;
 }
