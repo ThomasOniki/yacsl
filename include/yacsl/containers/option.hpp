@@ -2,7 +2,7 @@
 
 #include "yacsl/containers/nttp_string.hpp"
 #include "yacsl/containers/stack_storage.hpp"
-#include "yacsl/debug/extern_functions.hpp"
+#include "yacsl/debug/_extern_functions.hpp"
 #include "yacsl/debug/source_location.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/type_traits/type_string.hpp"
@@ -125,7 +125,7 @@ public:
   value(this Self&& self, debug::SourceLocation location =
                               debug::SourceLocation::current()) noexcept {
     if (!self.is_value_) [[unlikely]] {
-      debug::extern_panic(
+      debug::internal::extern_panic(
           cat_nttpstrings<"Option<",
                           NTTPString<type_traits::TYPE_STRING<T>.size()>(
                               type_traits::TYPE_STRING<T>),
@@ -204,7 +204,7 @@ public:
   value(this Self&& self, debug::SourceLocation location =
                               debug::SourceLocation::current()) noexcept {
     if (!self.is_value_) [[unlikely]] {
-      debug::extern_panic(
+      debug::internal::extern_panic(
           cat_nttpstrings<"Option<",
                           NTTPString<type_traits::TYPE_STRING<T>.size()>(
                               type_traits::TYPE_STRING<T>),

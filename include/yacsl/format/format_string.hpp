@@ -3,7 +3,7 @@
 #include "yacsl/containers/stack_array.hpp"
 #include "yacsl/containers/string.hpp"
 #include "yacsl/containers/tuple.hpp"
-#include "yacsl/debug/extern_functions.hpp"
+#include "yacsl/debug/_extern_functions.hpp"
 #include "yacsl/debug/source_location.hpp"
 #include "yacsl/format/formatter.hpp"
 #include "yacsl/memory/lifetimes.hpp"
@@ -26,7 +26,7 @@ public:
       char const* segment_begin = fmt;
       for (; *fmt != '{'; ++fmt) {
         if (*fmt == '\0') {
-          debug::extern_log_error(
+          debug::internal::extern_log_error(
               "Too few format specifiers for the argument count.");
         }
       }
@@ -37,7 +37,7 @@ public:
     char const* segment_begin = fmt;
     for (; *fmt != '\0'; ++fmt) {
       if (*fmt == '{') {
-        debug::extern_log_error(
+        debug::internal::extern_log_error(
             "Too many format specifiers for the arguments count.");
       }
     }
