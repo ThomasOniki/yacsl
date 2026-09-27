@@ -6,22 +6,22 @@
 
 namespace yacsl::memory {
 
-template <type_traits::AllocatorType Allocator, containers::NTTPString Name,
+template <type_traits::AllocatorType A, containers::NTTPString Name,
           bool ThreadLocal = true>
 class SingletonAllocator {
 public:
-  using SizeT = Allocator::SizeT;
+  using SizeT = A::SizeT;
 
-  static constexpr Allocator& get()
+  static constexpr A& get()
     requires ThreadLocal
   {
-    static thread_local Allocator instance;
+    static thread_local A instance;
     return instance;
   }
-  static constexpr Allocator& get()
+  static constexpr A& get()
     requires(!ThreadLocal)
   {
-    static Allocator instance;
+    static A instance;
     return instance;
   }
 

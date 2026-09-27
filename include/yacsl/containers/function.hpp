@@ -12,12 +12,12 @@
 namespace yacsl::containers {
 
 template <typename F, usize BufSz = 8,
-          type_traits::AllocatorType Allocator = memory::MainArenaAllocator>
+          type_traits::AllocatorType A = memory::MainArenaAllocator>
 class Function;
 
 template <typename Ret, typename... Args, usize BufSz,
-          type_traits::AllocatorType Allocator>
-class Function<Ret(Args...), BufSz, Allocator> {
+          type_traits::AllocatorType A>
+class Function<Ret(Args...), BufSz, A> {
 public:
   Function(auto&& func);
 
@@ -39,31 +39,31 @@ public:
   }
 
 private:
-  YACSL_NO_UNIQUE_ADDRESS Allocator allocator_;
+  YACSL_NO_UNIQUE_ADDRESS A allocator_;
 
   alignas(8)
       YACSL_NO_UNIQUE_ADDRESS StackArray<uchar, BufSz, usize> fixed_buffer_;
 
   void* data_ = fixed_buffer_.data();
 
-  void (*cleanup_)(void* func, Allocator& alloc) = nullptr;
+  void (*cleanup_)(void* func, A& alloc) = nullptr;
   Ret (*call_)(void* func, Args... args)         = nullptr;
 };
 
 template <typename Ret, typename... Args, usize BufSz,
-          type_traits::AllocatorType Allocator>
-Function<Ret(Args...), BufSz, Allocator>::Function(auto&& func) {
+          type_traits::AllocatorType A>
+Function<Ret(Args...), BufSz, A>::Function(auto&& func) {
   using Func = type_traits::RemoveReference<decltype(func)>;
 
   if constexpr (sizeof(Func) > sizeof(uchar) * BufSz || alignof(Func) > 8) {
     data_ = allocator_.allocate(sizeof(Func), memory::align_of<Func>).data();
 
-    cleanup_ = [](void* data, Allocator& alloc) {
+    cleanup_ = [](void* data, A& alloc) {
       static_cast<Func*>(data)->~Func();
       alloc.deallocate({static_cast<uchar*>(data), sizeof(Func)});
     };
   } else {
-    cleanup_ = [](void* data, Allocator& /*allocator*/) {
+    cleanup_ = [](void* data, A& /*allocator*/) {
       static_cast<Func*>(data)->~Func();
     };
   }
