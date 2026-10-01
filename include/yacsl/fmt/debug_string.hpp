@@ -31,7 +31,7 @@ usize debug_string_len(ranges::BasicStringView<C, usize> str) noexcept {
 }
 
 inline char* write_debug_char_below_0x20(YACSL_LIFETIMEBOUND char* buf,
-                                         char                     chr) {
+                                         char                      chr) {
   buf[0] = '\\';
   switch (chr) {
   case '\n':

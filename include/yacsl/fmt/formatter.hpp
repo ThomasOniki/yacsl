@@ -404,16 +404,15 @@ private:
   FormatStringParser::Align align_ : 2 = FormatStringParser::Align::Left;
 };
 
-template <type_traits::Character Char, usize N,
-          type_traits::Allocator A, type_traits::Integral SizeT>
+template <type_traits::Character Char, usize N, type_traits::Allocator A,
+          type_traits::Integral SizeT>
 class Formatter<containers::BasicString<Char, N, A, SizeT>> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
     return self.impl_.parse(fmt);
   }
-  void format(
-      this Formatter const& self, containers::String& buf,
-      containers::BasicString<Char, N, A, SizeT> const& str) noexcept {
+  void format(this Formatter const& self, containers::String& buf,
+              containers::BasicString<Char, N, A, SizeT> const& str) noexcept {
     return self.impl_.format(buf, str.view());
   }
 

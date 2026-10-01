@@ -74,8 +74,8 @@ public:
 
 public:
   meta::Conditional<Cols == 1, containers::StackArray<T, Rows, SizeT>,
-                     containers::StackArray<
-                         containers::StackArray<T, Cols, SizeT>, Rows, SizeT>>
+                    containers::StackArray<
+                        containers::StackArray<T, Cols, SizeT>, Rows, SizeT>>
       data_;
 };
 

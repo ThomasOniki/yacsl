@@ -134,7 +134,8 @@ FormatStringParser::check_option(this FormatStringParser& self,
 constexpr char const*
 FormatStringParser::end_parse(this FormatStringParser& self) {
   if (*self.fmt_ == '\0') {
-    debug::internal::extern_log_error("Expected '}' before '\\0' in format string.");
+    debug::internal::extern_log_error(
+        "Expected '}' before '\\0' in format string.");
   }
   if (*self.fmt_ != '}') {
     debug::internal::extern_log_error("Invalid format string.");

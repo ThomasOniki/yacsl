@@ -45,10 +45,10 @@ public:
     self.compute_entries();
     for (usize i = 1; i < self.entries_.size(); ++i) {
       fmt::format_to(buf, "#{} {} in {} ({}+{#x})\n", i,
-                        self.entries_[i].address, self.entries_[i].caller,
-                        self.entries_[i].object,
-                        static_cast<uchar*>(self.entries_[i].address) -
-                            static_cast<uchar*>(self.entries_[i].base_address));
+                     self.entries_[i].address, self.entries_[i].caller,
+                     self.entries_[i].object,
+                     static_cast<uchar*>(self.entries_[i].address) -
+                         static_cast<uchar*>(self.entries_[i].base_address));
     }
   }
   containers::String format(this StackTrace const& self) noexcept {

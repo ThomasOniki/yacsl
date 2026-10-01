@@ -18,8 +18,8 @@ public:
   // There are no explicit object parameters here because some compilers might
   // rely on implicit this.
   [[nodiscard]] constexpr yacsl::usize size() const noexcept { return size_; }
-  [[nodiscard]] constexpr T const*    begin() const noexcept { return data_; }
-  [[nodiscard]] constexpr T const*    end() const noexcept {
+  [[nodiscard]] constexpr T const*     begin() const noexcept { return data_; }
+  [[nodiscard]] constexpr T const*     end() const noexcept {
     return data_ + size_;
   }
 
@@ -37,7 +37,7 @@ private:
       : data_(data), size_(size) {}
 
 private:
-  T const*    data_;
+  T const*     data_;
   yacsl::usize size_;
 };
 

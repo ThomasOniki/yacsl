@@ -1,5 +1,6 @@
 #if !defined(__EMSCRIPTEN__) && !defined(_WIN32)
 
+#include "unix-utils.hpp"
 #include "yacsl/containers/result.hpp"
 #include "yacsl/containers/stack_array.hpp"
 #include "yacsl/containers/string.hpp"
@@ -8,7 +9,6 @@
 #include "yacsl/os/process.hpp"
 #include "yacsl/ranges/slice.hpp"
 #include "yacsl/type_aliases.hpp"
-#include "unix-utils.hpp"
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>

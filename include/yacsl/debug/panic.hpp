@@ -16,7 +16,7 @@ panic_impl(containers::String const& formatted) noexcept YACSL_API;
 [[noreturn]] inline void
 panic(SourceLocation location = SourceLocation::current()) noexcept {
   panic_impl(fmt::format("panic at {}\nstacktrace: {}", location,
-                            StackTrace::current()));
+                         StackTrace::current()));
 }
 
 template <typename... Args>
