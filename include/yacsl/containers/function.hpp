@@ -15,8 +15,7 @@ template <typename F, usize BufSz = 8,
           type_traits::Allocator A = memory::MainArenaAllocator>
 class Function;
 
-template <typename Ret, typename... Args, usize BufSz,
-          type_traits::Allocator A>
+template <typename Ret, typename... Args, usize BufSz, type_traits::Allocator A>
 class Function<Ret(Args...), BufSz, A> {
 public:
   Function(auto&& func);
@@ -47,11 +46,10 @@ private:
   void* data_ = fixed_buffer_.data();
 
   void (*cleanup_)(void* func, A& alloc) = nullptr;
-  Ret (*call_)(void* func, Args... args)         = nullptr;
+  Ret (*call_)(void* func, Args... args) = nullptr;
 };
 
-template <typename Ret, typename... Args, usize BufSz,
-          type_traits::Allocator A>
+template <typename Ret, typename... Args, usize BufSz, type_traits::Allocator A>
 Function<Ret(Args...), BufSz, A>::Function(auto&& func) {
   using Func = type_traits::RemoveReference<decltype(func)>;
 

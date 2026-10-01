@@ -14,18 +14,16 @@
 namespace yacsl::containers {
 
 template <type_traits::Character Char, usize N = 0,
-          type_traits::Allocator A = memory::MainArenaAllocator,
-          type_traits::Integral      SizeT     = usize>
+          type_traits::Allocator A     = memory::MainArenaAllocator,
+          type_traits::Integral  SizeT = usize>
 class BasicString {
 public:
   constexpr BasicString() noexcept = default;
-  constexpr explicit BasicString(A const& allocator)
-      : data_(allocator) {}
+  constexpr explicit BasicString(A const& allocator) : data_(allocator) {}
 
   constexpr ~BasicString() noexcept = default;
 
-  constexpr BasicString(Char const*      cstr,
-                        A const& allocator = A()) noexcept
+  constexpr BasicString(Char const* cstr, A const& allocator = A()) noexcept
       : data_(ranges::BasicStringView<Char, usize>(cstr), allocator) {}
 
   constexpr BasicString(Char const* data, SizeT len,
@@ -171,8 +169,8 @@ public:
   }
 
   template <typename Self>
-  [[nodiscard]] constexpr auto&& operator[](this Self&& self YACSL_LIFETIMEBOUND,
-                                            SizeT            index) noexcept {
+  [[nodiscard]] constexpr auto&&
+  operator[](this Self&& self YACSL_LIFETIMEBOUND, SizeT index) noexcept {
     return memory::forward<Self>(self).data_[index];
   }
 

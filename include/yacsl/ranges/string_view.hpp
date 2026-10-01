@@ -56,8 +56,10 @@ public:
   }
   [[nodiscard]] constexpr Slice<uchar const, SizeT>
   bytes(this BasicStringView self) noexcept {
-    return {reinterpret_cast<uchar const*>(self.data_),
-            static_cast<SizeT>(self.size_ * sizeof(T))};
+    return {
+        reinterpret_cast<uchar const*>(self.data_),
+        static_cast<SizeT>(self.size_ * sizeof(T)),
+    };
   }
 
   [[nodiscard]] constexpr T const&

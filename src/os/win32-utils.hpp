@@ -39,7 +39,7 @@ containers::Result<HANDLE, File::OpenError> open_file_handle(char const* path,
 
 } // namespace yacsl::os
 
-#define YACSL_TRY_SYSCALL(syscall)                                              \
+#define YACSL_TRY_SYSCALL(syscall)                                             \
   if ((syscall) == FALSE) [[unlikely]]                                         \
   debug::panic(#syscall " failed: {}", yacsl::os::win32_err_str())
 

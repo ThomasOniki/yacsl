@@ -37,7 +37,7 @@ public:
   }
 
   template <typename... Args>
-  [[nodiscard]] constexpr Value value(this UnsignedResult           self,
+  [[nodiscard]] constexpr Value value(this UnsignedResult        self,
                                       fmt::FormatString<Args...> fmt,
                                       Args&&... args) noexcept {
     if (self.is_error()) [[unlikely]] {
@@ -53,9 +53,9 @@ public:
   }
 
   template <typename... Args>
-  [[nodiscard]] constexpr Value
-  value_unchecked(this UnsignedResult self, fmt::FormatString<Args...> fmt,
-                  Args&&... args) noexcept {
+  [[nodiscard]] constexpr Value value_unchecked(this UnsignedResult        self,
+                                                fmt::FormatString<Args...> fmt,
+                                                Args&&... args) noexcept {
     debug::assert_(self.is_value(), fmt, memory::forward<Args>(args)...);
     return static_cast<Value>(self.value_);
   }

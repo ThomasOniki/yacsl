@@ -1,5 +1,6 @@
 #ifdef _WIN32
 
+#include "win32-utils.hpp"
 #include "yacsl/containers/string.hpp"
 #include "yacsl/debug/assert.hpp"
 #include "yacsl/debug/panic.hpp"
@@ -7,7 +8,6 @@
 #include "yacsl/ranges/slice.hpp"
 #include "yacsl/type_aliases.hpp"
 #include "yacsl/utils/nil.hpp"
-#include "win32-utils.hpp"
 #include <consoleapi.h>
 #include <consoleapi2.h>
 #include <errhandlingapi.h>
@@ -61,8 +61,8 @@ void Process::Input::write(this Input&                self,
   while (to_write > 0) {
     DWORD written = 0;
     YACSL_TRY_SYSCALL(WriteFile(self.handle_, bytes.data(),
-                               static_cast<DWORD>(bytes.size()), &written,
-                               nullptr));
+                                static_cast<DWORD>(bytes.size()), &written,
+                                nullptr));
     to_write -= static_cast<usize>(written);
   }
 }

@@ -78,8 +78,8 @@ private:
 
 private:
   struct Data {
-    T                                value;
-    SizeT                            count;
+    T                         value;
+    SizeT                     count;
     YACSL_NO_UNIQUE_ADDRESS A alloc;
   };
   Data* ptr_;
