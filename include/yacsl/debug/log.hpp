@@ -166,8 +166,8 @@ public:
   }
 
   template <typename... Args>
-  void log(this Logger& self, Level lvl,
-           fmt::FormatString<Args...> const& fmt, Args&&... args) {
+  void log(this Logger& self, Level lvl, fmt::FormatString<Args...> const& fmt,
+           Args&&... args) {
     if (lvl < self.level_) {
       return;
     }
@@ -297,13 +297,11 @@ void log_trace1(fmt::FormatString<Args...> const& fmt,
   log(Logger::Level::Trace1, fmt, memory::forward<Args>(args)...);
 }
 template <typename... Args>
-void log_debug(fmt::FormatString<Args...> const& fmt,
-               Args&&... args) noexcept {
+void log_debug(fmt::FormatString<Args...> const& fmt, Args&&... args) noexcept {
   log(Logger::Level::Debug, fmt, memory::forward<Args>(args)...);
 }
 template <typename... Args>
-void log_info(fmt::FormatString<Args...> const& fmt,
-              Args&&... args) noexcept {
+void log_info(fmt::FormatString<Args...> const& fmt, Args&&... args) noexcept {
   log(Logger::Level::Info, fmt, memory::forward<Args>(args)...);
 }
 template <typename... Args>
@@ -317,8 +315,7 @@ void log_warning(fmt::FormatString<Args...> const& fmt,
   log(Logger::Level::Warning, fmt, memory::forward<Args>(args)...);
 }
 template <typename... Args>
-void log_error(fmt::FormatString<Args...> const& fmt,
-               Args&&... args) noexcept {
+void log_error(fmt::FormatString<Args...> const& fmt, Args&&... args) noexcept {
   log(Logger::Level::Error, fmt, memory::forward<Args>(args)...);
 }
 
