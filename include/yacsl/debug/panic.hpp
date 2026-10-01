@@ -40,7 +40,9 @@ template <typename... Args>
 [[noreturn]]
 void unreachable(fmt::FormatString<Args...> const& fmt,
                  Args&&... args) noexcept {
-  panic(fmt, memory::forward<Args>(args)...);
+  panic_impl(fmt::format("unreachable called at {}\n", fmt.source_location()) +
+             fmt::format(fmt, memory::forward<Args>(args)...) +
+             fmt::format("\nstacktrace: {}", StackTrace::current()));
 }
 
 #endif
