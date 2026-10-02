@@ -1,6 +1,7 @@
 #pragma once
 
 #include "yacsl/attributes.hpp"
+#include "yacsl/meta/conditional.hpp"
 #include "yacsl/ranges/initializer_list.hpp"
 #include "yacsl/ranges/integer_range.hpp"
 #include "yacsl/type_aliases.hpp"
@@ -31,12 +32,21 @@ public:
       : data_(Reversed ? other.end() - 1 : other.end() + 1),
         size_(other.size() + 1) {}
 
-  constexpr Slice(
-      Slice<type_traits::RemoveConst<T>, SizeT> const& mutable_slice) noexcept
+  // If you just use RemoveConst<T> without the Conditional and the requires
+  // ConstType<T> clause is not satisfied then it deletes the copy constructor
+  // instead of not defining it.
+  constexpr Slice(Slice<meta::Conditional<type_traits::ConstType<T>,
+                                          type_traits::RemoveConst<T>, void>,
+                        SizeT> const& mutable_slice) noexcept
+    requires type_traits::ConstType<T>
       : data_(mutable_slice.data_), size_(mutable_slice.size_) {}
-  // NOLINTNEXTLINE(bugprone-unhandled-self-assignment)
-  constexpr Slice& operator=(
-      Slice<type_traits::RemoveConst<T>, SizeT> const& mutable_slice) noexcept {
+
+  constexpr Slice&
+  operator=(Slice<meta::Conditional<type_traits::ConstType<T>,
+                                    type_traits::RemoveConst<T>, void>,
+                  SizeT> const& mutable_slice) noexcept
+    requires type_traits::ConstType<T>
+  {
     data_ = mutable_slice.data_;
     size_ = mutable_slice.size_;
     return *this;
