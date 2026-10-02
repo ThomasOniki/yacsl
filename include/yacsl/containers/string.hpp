@@ -56,7 +56,7 @@ public:
     return self;
   }
 
-  // NOLINTNEXTLINE(misc-no-recursion)
+  
   constexpr BasicString& append(this BasicString& self YACSL_LIFETIMEBOUND,
                                 Char const* ptr, SizeT len) noexcept {
     memory::copy({ptr, len}, self.grow(len));
@@ -66,7 +66,7 @@ public:
                                 Char const* begin, Char const* end) noexcept {
     return self.append(begin, static_cast<SizeT>(end - begin));
   }
-  // NOLINTNEXTLINE(misc-no-recursion)
+  
   constexpr BasicString&
   append(this BasicString& self               YACSL_LIFETIMEBOUND,
          ranges::BasicStringView<Char, SizeT> str) noexcept {
@@ -87,7 +87,7 @@ public:
     return self;
   }
 
-  // NOLINTNEXTLINE(misc-no-recursion)
+  
   constexpr BasicString& operator+=(this BasicString& self YACSL_LIFETIMEBOUND,
                                     ranges::BasicStringView<Char, SizeT> str) {
     return self.append(str);

@@ -12,7 +12,7 @@ enum class MemoryOrder : u8 {
   Acquire = __ATOMIC_ACQUIRE,
   Release = __ATOMIC_RELEASE,
   AcqRel  = __ATOMIC_ACQ_REL,
-  SeqCst  = __ATOMIC_SEQ_CST
+  SeqCst  = __ATOMIC_SEQ_CST,
 };
 
 template <typename T>

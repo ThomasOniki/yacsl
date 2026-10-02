@@ -32,7 +32,7 @@ static int test(Counts counts) noexcept {
   EXPECT(ring.try_pop().is_nil());
 
   for (yacsl::usize i = 0; i < counts.producers; ++i) {
-    producers.emplace_back([&ring, &start, i]() {
+    producers.emplace_back([&ring, &start, i] {
       while (!start.load(yacsl::threads::MemoryOrder::Acquire)) {
       }
       ring.push(i);
@@ -47,7 +47,7 @@ static int test(Counts counts) noexcept {
   yacsl::threads::Atomic<yacsl::usize> pop_count;
 
   for (yacsl::usize i = 0; i < counts.consumers; ++i) {
-    consumers.emplace_back([&ring, &start, &did_pop, &pop_count, counts]() {
+    consumers.emplace_back([&ring, &start, &did_pop, &pop_count, counts] {
       while (!start.load(yacsl::threads::MemoryOrder::Acquire)) {
       }
       while (pop_count.fetch_add(1, yacsl::threads::MemoryOrder::Relaxed) <

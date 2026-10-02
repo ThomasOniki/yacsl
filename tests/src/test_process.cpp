@@ -1,5 +1,6 @@
 #ifndef __EMSCRIPTEN__
 
+#include "test_utils.hpp"
 #include "yacsl/containers/stack_array.hpp"
 #include "yacsl/containers/stack_storage.hpp"
 #include "yacsl/containers/string.hpp"
@@ -8,7 +9,6 @@
 #include "yacsl/ranges/slice.hpp"
 #include "yacsl/ranges/string_view.hpp"
 #include "yacsl/type_aliases.hpp"
-#include "test_utils.hpp"
 #include <fcntl.h>
 #include <limits.h>
 #include <stdio.h>
@@ -24,7 +24,7 @@
 #define TRY_SYSCALL_WIN32(syscall)                                             \
   do {                                                                         \
     if ((syscall) == FALSE) [[unlikely]] {                                     \
-      yacsl::debug::panic(#syscall " failed: {}", GetLastError());              \
+      yacsl::debug::panic(#syscall " failed: {}", GetLastError());             \
     }                                                                          \
   } while (false)
 
@@ -32,8 +32,8 @@
 #endif
 
 #define TRY_SYSCALL(syscall)                                                   \
-  [&]() {                                                                      \
-    auto _result = syscall;                                                    \
+  [&] {                                                                        \
+    auto const _result = syscall;                                              \
     if (_result == -1) [[unlikely]] {                                          \
       perror(#syscall);                                                        \
       abort();                                                                 \
@@ -160,7 +160,7 @@ static T create_io(Type type, char const* path, auto& pipe) noexcept {
 
 static void
 create_other_pipes(yacsl::containers::StackArray<Process, 3>& processes,
-                   IoTypes                                   types) {
+                   IoTypes                                    types) {
   if (types.input == Type::OtherPipe) {
     Process::Stdio const stdio = {
         .input  = Process::Input::Inherit,
@@ -209,8 +209,9 @@ static yacsl::containers::String
 get_pipe_output(Process::Output* output, yacsl::ranges::StringView expected) {
   yacsl::containers::String str;
   str.resize(expected.size() + 256);
+  // NOLINTNEXTLINE(misc-const-correctness)
   yacsl::ranges::Slice<yacsl::uchar> bytes      = str.bytes();
-  yacsl::usize                      total_read = output->read(bytes);
+  yacsl::usize                       total_read = output->read(bytes);
   while (total_read < expected.size()) {
     total_read +=
         output->read({bytes.data() + total_read, bytes.size() - total_read});
@@ -303,7 +304,7 @@ static int check_fd_output(HANDLE file, yacsl::ranges::StringView expected) {
 #else
 static int check_fd_output(int file, yacsl::ranges::StringView expected) {
 #endif
-  int                      ret = 0;
+  int                       ret = 0;
   yacsl::containers::String output;
 #ifdef _WIN32
   DWORD   result  = 0;
@@ -319,8 +320,8 @@ static int check_fd_output(int file, yacsl::ranges::StringView expected) {
 #endif
 #ifdef _WIN32
   while (result > 0) {
-    success = ReadFile(file, output.grow(static_cast<yacsl::usize>(result)), 512,
-                       &result, nullptr);
+    success = ReadFile(file, output.grow(static_cast<yacsl::usize>(result)),
+                       512, &result, nullptr);
     if (success == FALSE) [[unlikely]] {
       DWORD err = GetLastError();
       if (err != ERROR_BROKEN_PIPE) {
@@ -428,9 +429,14 @@ static int test_run_c(IoTypes types) {
           types.error, CHILD_STDERR_FILE_PATH, other_pipes[2].get_stdin()),
   };
 
-  auto process = Process::spawn({STD_STREAMS_EXECUTABLE, "arg1", "arg2",
-                                 "argument with spaces"},
-                                stdio)
+  auto process = Process::spawn(
+                     {
+                         STD_STREAMS_EXECUTABLE,
+                         "arg1",
+                         "arg2",
+                         "argument with spaces",
+                     },
+                     stdio)
                      .value();
 
   write_input(types.input, &process, &pipes);
@@ -521,9 +527,11 @@ int main() {
             "{} and error type {}",
             stdin_type, stdout_type, stderr_type);
         yacsl::debug::Logger::get_default_instance().flush();
-        if (test_run_c({.input  = stdin_type,
-                        .output = stdout_type,
-                        .error  = stderr_type}) != 0) {
+        if (test_run_c({
+                .input  = stdin_type,
+                .output = stdout_type,
+                .error  = stderr_type,
+            }) != 0) {
           yacsl::debug::log_error(
               "test_run_c() failed with input type {}, output type "
               "{} and error type {}",

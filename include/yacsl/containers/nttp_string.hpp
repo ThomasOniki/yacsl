@@ -140,7 +140,7 @@ template <type_traits::Character C, usize N>
 NTTPString(C const (&str)[N]) -> NTTPString<N - 1, C, usize>;
 
 template <NTTPString... Strings>
-constexpr NTTPString cat_nttpstrings = []() {
+constexpr NTTPString cat_nttpstrings = [] {
   NTTPString<(... + Strings.size())> ret;
   usize                              offset = 0;
   (..., (offset += memory::copy(Strings.slice(), ret.data() + offset).size()));

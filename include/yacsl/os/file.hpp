@@ -14,12 +14,12 @@ class File {
 public:
   enum class Flags : u8 {
     None            = 0,
-    Read            = 1 << 0,
-    Write           = 1 << 1,
-    Trunc           = 1 << 2,
-    Create          = 1 << 3,
-    SeekEnd         = 1 << 4,
-    DontCloseOnExec = 1 << 5,
+    Read            = 1U << 0U,
+    Write           = 1U << 1U,
+    Trunc           = 1U << 2U,
+    Create          = 1U << 3U,
+    SeekEnd         = 1U << 4U,
+    DontCloseOnExec = 1U << 5U,
   };
   constexpr File() noexcept = default;
 

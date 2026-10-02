@@ -7,6 +7,7 @@
 #include "yacsl/ranges/slice.hpp"
 #include "yacsl/type_aliases.hpp"
 #include "yacsl/utils/isize.hpp"
+#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -21,12 +22,10 @@ File::open(char const* path, File::Flags flags) noexcept {
   File       opened;
   opened.handle_ = ::open(path, unix_flags(flags), 0644);
   if (opened.handle_ == -1) [[unlikely]] {
-    switch (errno) {
-    case ENOENT:
+    if (errno == ENOENT) {
       return OpenError::FileNotFound;
-    default:
-      debug::panic("::open() failed: {}", errno_str());
     }
+    debug::panic("::open() failed: {}", errno_str());
   }
   if (seek_end) {
     opened.cursor_pos_ = static_cast<usize>(
