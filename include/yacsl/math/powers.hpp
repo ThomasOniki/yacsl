@@ -19,16 +19,16 @@ template <type_traits::Integral T> constexpr T pow10(u32 exp) noexcept {
 }
 
 template <type_traits::Integral T> constexpr T pow2(u32 exp) noexcept {
-  return 1 << exp;
+  return 1U << exp;
 }
 template <type_traits::Integral T> constexpr T pow4(u32 exp) noexcept {
-  return 1 << 2 * exp;
+  return 1U << 2 * exp;
 }
 template <type_traits::Integral T> constexpr T pow8(u32 exp) noexcept {
-  return 1 << 3 * exp;
+  return 1U << 3 * exp;
 }
 template <type_traits::Integral T> constexpr T pow16(u32 exp) noexcept {
-  return 1 << 4 * exp;
+  return 1U << 4 * exp;
 }
 
 } // namespace yacsl::math

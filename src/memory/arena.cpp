@@ -17,7 +17,6 @@ struct Metadata {
 };
 } // namespace
 
-// NOLINTNEXTLINE(misc-no-recursion)
 void Arena::reserve(this Arena& self, usize capacity) noexcept {
   if (self.begin_ == nullptr && capacity < self.initial_capacity_) {
     capacity = self.initial_capacity_;
@@ -27,7 +26,6 @@ void Arena::reserve(this Arena& self, usize capacity) noexcept {
       .last_begin = self.begin_,
       .last_end   = self.end_,
   };
-  // NOLINTNEXTLINE(cppcoreguidelines-no-malloc)
   self.begin_ = static_cast<uchar*>(malloc(capacity));
   self.end_   = self.begin_ + capacity;
   self.ptr_   = self.begin_ + sizeof(Metadata);
@@ -43,7 +41,6 @@ void Arena::reserve(this Arena& self, usize capacity) noexcept {
 void Arena::free_all(this Arena& self) noexcept {
   while (self.begin_ != nullptr) {
     Metadata const metadata = *reinterpret_cast<Metadata*>(self.begin_);
-    // NOLINTNEXTLINE(cppcoreguidelines-no-malloc)
     ::free(self.begin_);
     self.begin_ = metadata.last_begin;
   }
@@ -53,7 +50,6 @@ void Arena::free_all(this Arena& self) noexcept {
 Arena::Scope::~Scope() noexcept {
   while (ptr_ < arena_.begin_ || ptr_ > arena_.end_) {
     Metadata const metadata = *reinterpret_cast<Metadata*>(arena_.begin_);
-    // NOLINTNEXTLINE(cppcoreguidelines-no-malloc)
     ::free(arena_.begin_);
     arena_.begin_ = metadata.last_begin;
     arena_.end_   = metadata.last_end;

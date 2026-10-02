@@ -153,8 +153,8 @@ private:
   void definitely_reserve(this Vector& self, SizeT capacity);
 
 private:
-  YACSL_NO_UNIQUE_ADDRESS A allocator_;
-  YACSL_NO_UNIQUE_ADDRESS StackArray<T, N, SizeT> fixed_buffer_;
+  YACSL_NO_UNIQUE_ADDRESS StackArray<T, N, SizeT> fixed_buffer_ = {};
+  YACSL_NO_UNIQUE_ADDRESS A                       allocator_;
 
   T*    data_     = fixed_buffer_.data();
   SizeT size_     = 0;

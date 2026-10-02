@@ -3,6 +3,8 @@
 #include "yacsl/debug/panic.hpp"
 #include "yacsl/debug/source_location.hpp"
 #include "yacsl/debug/stack_trace.hpp"
+#include "yacsl/fmt/format_string.hpp"
+#include "yacsl/ranges/string_view.hpp"
 
 namespace yacsl::debug::internal {
 

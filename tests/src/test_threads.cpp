@@ -1,22 +1,24 @@
+#include "test_utils.hpp"
 #include "yacsl/containers/vector.hpp"
 #include "yacsl/debug/log.hpp"
 #include "yacsl/threads/atomic.hpp"
 #include "yacsl/threads/mutex.hpp"
 #include "yacsl/threads/thread.hpp"
-#include "test_utils.hpp"
 #include <stdint.h>
 
 static int test_atomic(uint32_t thread_count) {
-  int                                             ret = 0;
+  int                                               ret = 0;
   yacsl::containers::Vector<yacsl::threads::Thread> threads;
-  yacsl::threads::Atomic<uint32_t>                 count = 0;
+  yacsl::threads::Atomic<uint32_t>                  count = 0;
 
   {
     EXPECT_EQ(count.load(yacsl::threads::MemoryOrder::Relaxed), 0);
 
     for (uint32_t i = 0; i < thread_count; ++i) {
       threads.emplace_back(
-          [](yacsl::threads::Atomic<uint32_t>& lambda_count) { ++lambda_count; },
+          [](yacsl::threads::Atomic<uint32_t>& lambda_count) {
+            ++lambda_count;
+          },
           count);
     }
   }
@@ -30,9 +32,9 @@ static int test_atomic(uint32_t thread_count) {
 }
 
 static int test_mutex(uint32_t thread_count) {
-  int                                             ret = 0;
+  int                                               ret = 0;
   yacsl::containers::Vector<yacsl::threads::Thread> threads;
-  uint32_t                                        count = 0;
+  uint32_t                                          count = 0;
 
   yacsl::threads::Mutex mutex;
 

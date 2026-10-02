@@ -320,7 +320,7 @@ void Process::cleanup_before_wait(this Process& self,
   }
 }
 
-// NOLINTNEXTLINE(readability-make-member-function-const, misc-no-recursion)
+// NOLINTNEXTLINE(readability-make-member-function-const)
 Process::ExitStatus Process::wait(this Process& self) noexcept {
   ExitStatus status = {
       .unread_stdout = "",

@@ -10,8 +10,9 @@
             yacsl::ranges::StringView(expected_caller))
 
 YACSL_NOINLINE static int f1(bool /*unused*/, char /*unused*/) {
-  int                      ret         = 0;
-  yacsl::debug::StackTrace stack_trace = yacsl::debug::StackTrace::current();
+  int                            ret = 0;
+  yacsl::debug::StackTrace const stack_trace =
+      yacsl::debug::StackTrace::current();
   stack_trace.compute_entries();
   CHECK_ENTRY(0, "yacsl::debug::StackTrace::current()");
   CHECK_ENTRY(1, "f1(bool, char)");

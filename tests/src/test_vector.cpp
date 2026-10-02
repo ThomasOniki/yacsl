@@ -1,6 +1,8 @@
 #include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string>
+#include <string_view>
 #include <unordered_set>
 #include <vector>
 
@@ -9,12 +11,16 @@
 #include "yacsl/debug/log.hpp"
 #include "yacsl/fmt/formatter.hpp"
 #include "yacsl/memory/alignment.hpp"
+#include "yacsl/memory/singleton_allocator.hpp"
 #include "yacsl/ranges/slice.hpp"
+#include "yacsl/ranges/string_view.hpp"
 #include "yacsl/type_aliases.hpp"
 #include "yacsl/utils/nil.hpp"
 
 using SMFCall  = std::string;
 using SMFCalls = std::vector<std::string>;
+
+// NOLINTBEGIN(bugprone-exception-escape)
 
 namespace {
 class SMFTracker {
@@ -82,7 +88,11 @@ public:
   yacsl::ranges::Slice<yacsl::uchar, SizeT>
   allocate(this TestAllocator& /*self*/, SizeT size,
            yacsl::memory::Alignment align) noexcept {
-    void* ret = ::operator new(size, static_cast<std::align_val_t>(align));
+#ifdef _WIN32
+    void* ret = _aligned_malloc(static_cast<size_t>(align), size);
+#else
+    void* ret = aligned_alloc(static_cast<size_t>(align), size);
+#endif
     if (freed.contains(ret)) {
       freed.erase(ret);
     }
@@ -92,12 +102,15 @@ public:
         .address    = ret,
         .byte_count = size,
     });
-    return {static_cast<yacsl::uchar*>(ret), size};
+    return {
+        static_cast<yacsl::uchar*>(ret),
+        size,
+    };
   }
 
   void deallocate(this TestAllocator& /*self*/,
                   yacsl::ranges::Slice<yacsl::uchar, SizeT> mem) noexcept {
-    if (mem.data()) {
+    if (mem.data() != nullptr) {
       if (freed.contains(mem.data())) {
         yacsl::debug::log_error("double free");
         return;
@@ -108,7 +121,12 @@ public:
       }
 
       freed.emplace(mem.data());
-      ::operator delete(mem.data(), mem.size());
+
+#ifdef _WIN32
+      _aligned_free(mem.data());
+#else
+      free(mem.data());
+#endif
     }
     events.push_back(Event{
         .kind       = Event::Kind::Free,
@@ -154,7 +172,8 @@ static int test_allocator() {
   int ret = 0;
   TestAllocator::events.clear();
   TestAllocator allocator;
-  auto          mem = allocator.allocate(10, yacsl::memory::Alignment{16});
+  // NOLINTNEXTLINE(misc-const-correctness)
+  auto mem = allocator.allocate(10, yacsl::memory::Alignment{16});
 
   EXPECT_EQ(TestAllocator::events,
             std::vector<TestAllocator::Event>({{

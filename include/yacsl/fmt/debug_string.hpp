@@ -69,7 +69,7 @@ char* write_debug_char(YACSL_LIFETIMEBOUND char* buf, C chr) {
   // unsigned types other than uchar also applies to wchar_t, but you can't cast
   // a wchar to uchar like it suggests if you don't want to lose precision.
   // NOLINTNEXTLINE(bugprone-signed-char-misuse)
-  auto uchr = static_cast<type_traits::MakeUnsigned<C>>(chr);
+  auto const uchr = static_cast<type_traits::MakeUnsigned<C>>(chr);
   if (uchr >= 0x20) {
     if (uchr == 0x7F) {
       buf[0] = '\\';
@@ -135,7 +135,7 @@ void write_debug_char(containers::String& buf, C chr) {
   // unsigned types other than uchar also applies to wchar_t, but you can't cast
   // a wchar to uchar like it suggests if you don't want to lose precision.
   // NOLINTNEXTLINE(bugprone-signed-char-misuse)
-  auto uchr = static_cast<type_traits::MakeUnsigned<C>>(chr);
+  auto const uchr = static_cast<type_traits::MakeUnsigned<C>>(chr);
   if (uchr >= 0x20) {
     if (uchr == 0x7F) {
       using ranges::operator""_sv;

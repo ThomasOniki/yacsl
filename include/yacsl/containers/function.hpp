@@ -75,8 +75,8 @@ Function<Ret(Args...), BufSz, A>::Function(auto&& func) {
 }
 
 #ifdef YACSL_LSP_ONLY
-template Function<void(), 0>::Function(decltype([]() {})& func);
-template Function<void()>::Function(decltype([]() {})&& func);
+template Function<void(), 0>::Function(decltype([] {})& func);
+template Function<void()>::Function(decltype([] {})&& func);
 #endif
 
 } // namespace yacsl::containers

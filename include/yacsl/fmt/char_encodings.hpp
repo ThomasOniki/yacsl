@@ -13,13 +13,13 @@ constexpr u32 utf8_char_len(uchar utf8) noexcept {
   if (utf8 <= 127) {
     return 1;
   }
-  if (utf8 >> 5 == 0b110) {
+  if (utf8 >> 5U == 0b110) {
     return 2;
   }
-  if (utf8 >> 4 == 0b1110) {
+  if (utf8 >> 4U == 0b1110) {
     return 3;
   }
-  if (utf8 >> 3 == 0b11110) {
+  if (utf8 >> 3U == 0b11110) {
     return 4;
   }
   return 0;
@@ -36,23 +36,23 @@ inline char* write_char1(YACSL_LIFETIMEBOUND char* buf, char8_t chr) {
 }
 inline char* write_char2(YACSL_LIFETIMEBOUND char* buf, char32_t chr) {
   static constexpr char32_t mask = 0b11'1111;
-  buf[0]                         = static_cast<char>(0b1100'0000 | (chr >> 6));
-  buf[1] = static_cast<char>(0b1000'0000 | (chr & mask));
+  buf[0] = static_cast<char>(0b1100'0000U | (chr >> 6U));
+  buf[1] = static_cast<char>(0b1000'0000U | (chr & mask));
   return buf + 2;
 }
 inline char* write_char3(YACSL_LIFETIMEBOUND char* buf, char32_t chr) {
   static constexpr char32_t mask = 0b11'1111;
-  buf[0]                         = static_cast<char>(0b1110'0000 | (chr >> 12));
-  buf[1] = static_cast<char>(0b1000'0000 | ((chr >> 6) & mask));
-  buf[2] = static_cast<char>(0b1000'0000 | (chr & mask));
+  buf[0] = static_cast<char>(0b1110'0000U | (chr >> 12U));
+  buf[1] = static_cast<char>(0b1000'0000U | ((chr >> 6U) & mask));
+  buf[2] = static_cast<char>(0b1000'0000U | (chr & mask));
   return buf + 3;
 }
 inline char* write_char4(YACSL_LIFETIMEBOUND char* buf, char32_t chr) {
   static constexpr char32_t mask = 0b11'1111;
-  buf[0]                         = static_cast<char>(0b1111'0000 | (chr >> 18));
-  buf[1] = static_cast<char>(0b1000'0000 | ((chr >> 12) & mask));
-  buf[2] = static_cast<char>(0b1000'0000 | ((chr >> 6) & mask));
-  buf[3] = static_cast<char>(0b1000'0000 | (chr & mask));
+  buf[0] = static_cast<char>(0b1111'0000U | (chr >> 18U));
+  buf[1] = static_cast<char>(0b1000'0000U | ((chr >> 12U) & mask));
+  buf[2] = static_cast<char>(0b1000'0000U | ((chr >> 6U) & mask));
+  buf[3] = static_cast<char>(0b1000'0000U | (chr & mask));
   return buf + 4;
 }
 
@@ -68,7 +68,7 @@ inline char* write_low_surrogate(YACSL_LIFETIMEBOUND char* buf, char32_t high,
   static constexpr char32_t mask = 0b11'1111'1111;
   high &= mask;
   low &= mask;
-  char32_t const unicode = 0x10000 + ((high << 10) | low);
+  char32_t const unicode = 0x10000 + ((high << 10U) | low);
   return write_char4(buf, unicode);
 }
 

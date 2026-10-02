@@ -64,12 +64,12 @@ enum class EnumClass : yacsl::u16 {
 } // namespace test_ns
 
 template <typename... Args>
-static void log_to_file(yacsl::debug::Logger::Level                 lvl,
+static void log_to_file(yacsl::debug::Logger::Level              lvl,
                         yacsl::fmt::FormatString<Args...> const& fmt,
                         Args&&... args) {
   yacsl::os::File::Flags const flags = yacsl::os::File::Flags::Write |
-                                      yacsl::os::File::Flags::Create |
-                                      yacsl::os::File::Flags::Trunc;
+                                       yacsl::os::File::Flags::Create |
+                                       yacsl::os::File::Flags::Trunc;
   yacsl::debug::Logger         logger(
       yacsl::os::File::open("test_logs.txt", flags).value(),
       yacsl::os::File::open("test_logs.txt", flags).value(),
@@ -143,8 +143,7 @@ int main() {
           u"bar",
           u"🤓",
           u"⭐",
-          u"The emoji aren't padded correctly because they use 4 UTF-8 "
-          u"chars.",
+          u"The emoji aren't padded correctly because they use 4 UTF-8 chars.",
       });
   check("[INFO] char16_t string range: [***foo****, ***bar****, ***🤓***, "
         "***⭐****, "

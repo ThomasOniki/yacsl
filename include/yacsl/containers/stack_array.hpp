@@ -115,13 +115,17 @@ public:
   }
   template <typename Self>
   [[nodiscard]] constexpr auto reversed_slice(this Self&& /*self*/) noexcept {
-    return ranges::ReversedSlice<type_traits::CopyCV<Self, T>, SizeT>{nullptr,
-                                                                      0};
+    return ranges::ReversedSlice<type_traits::CopyCV<Self, T>, SizeT>{
+        nullptr,
+        0,
+    };
   }
   template <typename Self>
   [[nodiscard]] constexpr auto bytes(this Self&& /*self*/) noexcept {
     return ranges::ReversedSlice<type_traits::CopyCV<Self, uchar>, SizeT>{
-        nullptr, 0};
+        nullptr,
+        0,
+    };
   }
 
   [[nodiscard]] constexpr ranges::IntegerRange<SizeT>

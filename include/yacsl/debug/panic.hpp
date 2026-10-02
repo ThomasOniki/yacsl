@@ -20,7 +20,7 @@ panic(SourceLocation location = SourceLocation::current()) noexcept {
 }
 
 template <typename... Args>
-[[noreturn]] // NOLINTNEXTLINE(misc-no-recursion)
+[[noreturn]] 
 void panic(fmt::FormatString<Args...> const& fmt, Args&&... args) noexcept {
   panic_impl(fmt::format("panic at {}\n", fmt.source_location()) +
              fmt::format(fmt, memory::forward<Args>(args)...) +
