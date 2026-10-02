@@ -459,8 +459,8 @@ public:
   void format(this Formatter const& self, containers::String& buf,
               T const& range) noexcept {
     buf += '[';
-    auto iter = range.begin();
-    auto end  = range.end();
+    auto       iter = range.begin();
+    auto const end  = range.end();
     if (iter != end) {
       self.impl_.format(buf, *iter);
       ++iter;
@@ -507,7 +507,7 @@ public:
 private:
   static constexpr containers::StackArray<
       char, type_traits::TYPE_STRING<T>.size() + 2>
-      CAST_STRING_ARR = []() {
+      CAST_STRING_ARR = [] {
         containers::StackArray<char, type_traits::TYPE_STRING<T>.size() + 2>
             arr{};
         arr[0]              = '(';
@@ -526,7 +526,7 @@ private:
   static constexpr containers::StackArray<ranges::StringView, sizeof...(Values)>
   make_table(meta::IntegerSequence<u32, Values...> /*sequence*/) {
     containers::StackArray<ranges::StringView, sizeof...(Values)> ret;
-    (..., [&]() { ret[Values] = table_entry<T(Values)>(); }());
+    (..., [&] { ret[Values] = table_entry<T(Values)>(); }());
     return ret;
   }
 
@@ -534,7 +534,7 @@ private:
     return __PRETTY_FUNCTION__;
   }
 
-  static constexpr usize TABLE_ENTRY_OFFSET_FROM_BEGIN = []() -> usize {
+  static constexpr usize TABLE_ENTRY_OFFSET_FROM_BEGIN = [] -> usize {
     constexpr ranges::StringView pretty =
         table_entry_pretty<static_cast<T>(0)>();
     constexpr ranges::StringView to_find = "Value = ";
@@ -554,7 +554,7 @@ private:
     return 0;
   }();
 
-  static constexpr usize TABLE_ENTRY_OFFSET_FROM_END = []() -> usize {
+  static constexpr usize TABLE_ENTRY_OFFSET_FROM_END = [] -> usize {
     constexpr ranges::StringView pretty =
         table_entry_pretty<static_cast<T>(0)>();
     usize templates = 0;

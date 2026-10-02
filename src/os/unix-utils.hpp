@@ -31,8 +31,8 @@ inline ranges::StringView errno_str() noexcept { return errno_str(errno); }
 } // namespace yacsl::os
 
 #define YACSL_TRY_SYSCALL(syscall)                                             \
-  [&]() {                                                                      \
-    auto _result = syscall;                                                    \
+  [&] {                                                                      \
+    auto const _result = syscall;                                              \
     debug::assert_(_result != -1, #syscall " failed: {}", errno_str());        \
     return _result;                                                            \
   }()

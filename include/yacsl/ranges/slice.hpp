@@ -54,8 +54,8 @@ public:
 
   // The memory::move and memory::forward functions are in lifetimes.hpp which
   // includes this file, so they cannot be used here.
-  // NOLINTBEGIN(cppcoreguidelines-missing-std-memory::forward)
-  // NOLINTBEGIN(cppcoreguidelines-rvalue-reference-param-not-memory::moved)
+  // NOLINTBEGIN(cppcoreguidelines-missing-std-forward)
+  // NOLINTBEGIN(cppcoreguidelines-rvalue-reference-param-not-moved)
   template <typename Self>
   [[nodiscard]] constexpr type_traits::CopyCV<Self, T>*
   data(this Self&& self) noexcept {
@@ -128,8 +128,8 @@ public:
   end(this Self&& self) noexcept {
     return self.data_ + self.size_;
   }
-  // NOLINTEND(cppcoreguidelines-rvalue-reference-param-not-memory::moved)
-  // NOLINTEND(cppcoreguidelines-missing-std-memory::forward)
+  // NOLINTEND(cppcoreguidelines-rvalue-reference-param-not-moved)
+  // NOLINTEND(cppcoreguidelines-missing-std-forward)
 
 private:
   T*    data_;

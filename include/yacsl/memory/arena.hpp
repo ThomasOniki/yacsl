@@ -132,6 +132,8 @@ using PermanentArena =
 
 template <type_traits::TriviallyDestructible T, typename... Args>
 T& Arena::push(this Arena& self, Args&&... args) {
+  // bytes has to be mutable to not cast away const in the reinterpret_cast
+  // NOLINTNEXTLINE(misc-const-correctness)
   auto bytes = self.allocate(sizeof(T), memory::align_of<T>);
   return *memory::construct_at(reinterpret_cast<T*>(bytes.data()),
                                memory::forward<Args>(args)...);
@@ -140,6 +142,8 @@ T& Arena::push(this Arena& self, Args&&... args) {
 template <type_traits::TriviallyDestructible T>
 ranges::Slice<T, Arena::SizeT> Arena::push_array(this Arena& self,
                                                  SizeT       count) {
+  // bytes has to be mutable to not cast away const in the reinterpret_cast
+  // NOLINTNEXTLINE(misc-const-correctness)
   auto  bytes     = self.allocate(sizeof(T) * count, memory::align_of<T>);
   auto* allocated = reinterpret_cast<T*>(bytes.data());
 

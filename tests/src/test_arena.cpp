@@ -1,6 +1,6 @@
+#include "test_utils.hpp"
 #include "yacsl/debug/log.hpp"
 #include "yacsl/memory/arena.hpp"
-#include "test_utils.hpp"
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -53,8 +53,8 @@ static int test_ctors() {
   return ret;
 }
 
-static bool is_aligned(Aligned* ptr) {
-  auto uptr = reinterpret_cast<uintptr_t>(ptr);
+static bool is_aligned(Aligned const* ptr) {
+  auto const uptr = reinterpret_cast<uintptr_t>(ptr);
   return uptr % alignof(Aligned) == 0;
 }
 
@@ -62,7 +62,8 @@ static int test_align() {
   int ret = 0;
   (void)yacsl::memory::MainArenaAllocator::get().push_array<char>(15);
 
-  Aligned* aligned = &yacsl::memory::MainArenaAllocator::get().push<Aligned>();
+  Aligned const* aligned =
+      &yacsl::memory::MainArenaAllocator::get().push<Aligned>();
 
   EXPECT(is_aligned(aligned));
 

@@ -63,7 +63,6 @@ public:
   }
 
 private:
-  // NOLINTNEXTLINE(misc-no-recursion)
   void demangle_string(this Demangler& self) noexcept {
     self.substitute_beginings_.push_back(self.demangled_.size());
     bool const is_nested = self.skip('N');
@@ -124,7 +123,6 @@ private:
     self.substitute_beginings_.pop_back();
   }
 
-  // NOLINTNEXTLINE(misc-no-recursion)
   void demangle_type(this Demangler& self) noexcept {
     ranges::StringView const qualifiers = self.get_mangled_qualifiers();
 
@@ -160,7 +158,7 @@ private:
     self.demangle_type_qualifiers(qualifiers);
   }
 
-  void // NOLINTNEXTLINE(misc-no-recursion)
+  void
   demangle_template_parameter_pack(this Demangler&    self,
                                    ranges::StringView qualifiers) noexcept {
     using yacsl::ranges::operator""_sv;
@@ -175,7 +173,6 @@ private:
     }
   }
 
-  // NOLINTNEXTLINE(misc-no-recursion)
   void demangle_array_type(this Demangler&    self,
                            ranges::StringView qualifiers) noexcept {
     ++self.mangled_;
@@ -230,7 +227,6 @@ private:
     return {begin, self.mangled_};
   }
 
-  // NOLINTNEXTLINE(misc-no-recursion)
   void demangle_template_args(this Demangler& self) noexcept {
     self.has_templates_ = true;
     ++self.mangled_;
@@ -271,7 +267,6 @@ private:
     self.demangled_ += '>';
   }
 
-  // NOLINTNEXTLINE(misc-no-recursion)
   void demangle_template_arg(this Demangler& self) noexcept {
     if (*self.mangled_ == 'L') {
       self.demangle_litteral();
@@ -285,7 +280,7 @@ private:
     }
   }
 
-  // NOLINTNEXTLINE(misc-no-recursion)
+  
   void demangle_litteral(this Demangler& self) noexcept {
     ++self.mangled_;
     switch (*self.mangled_) {
@@ -336,7 +331,7 @@ private:
     ++self.mangled_;
   }
 
-  // NOLINTNEXTLINE(misc-no-recursion)
+  
   void demangle_expression(this Demangler& self) noexcept {
     if (self.skip("tl")) {
       self.demangle_type_litteral();
@@ -350,7 +345,7 @@ private:
     }
   }
 
-  // NOLINTNEXTLINE(misc-no-recursion)
+  
   void demangle_type_litteral(this Demangler& self) noexcept {
     self.demangle_type();
     self.demangled_ += '{';
@@ -409,7 +404,7 @@ private:
     containers::Vector<Submodule> submodules;
   };
 
-  // NOLINTNEXTLINE(misc-no-recursion)
+  
   Modules demangle_modules(this Demangler& self) noexcept {
     Modules ret;
     for (;;) {

@@ -10,7 +10,7 @@ template <typename T> constexpr ranges::StringView type_string_impl_pretty() {
   return __PRETTY_FUNCTION__;
 }
 
-constexpr usize TYPE_STRING_IMPL_OFFSET_FROM_BEGIN = []() -> usize {
+constexpr usize TYPE_STRING_IMPL_OFFSET_FROM_BEGIN = [] -> usize {
   using yacsl::ranges::operator""_sv;
   constexpr ranges::StringView pretty  = type_string_impl_pretty<int>();
   constexpr ranges::StringView to_find = "T = ";
@@ -29,7 +29,7 @@ constexpr usize TYPE_STRING_IMPL_OFFSET_FROM_BEGIN = []() -> usize {
   return 0;
 }();
 
-constexpr usize TYPE_STRING_IMPL_OFFSET_FROM_END = []() -> usize {
+constexpr usize TYPE_STRING_IMPL_OFFSET_FROM_END = [] -> usize {
   constexpr ranges::StringView pretty    = type_string_impl_pretty<int>();
   usize                        templates = 0;
   for (usize i = TYPE_STRING_IMPL_OFFSET_FROM_BEGIN; i < pretty.size(); ++i) {

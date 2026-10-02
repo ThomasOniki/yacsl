@@ -8,8 +8,8 @@
 #include "yacsl/fmt/formatter.hpp"
 #include "yacsl/memory/alignment.hpp"
 #include "yacsl/ranges/slice.hpp"
+#include "yacsl/type_aliases.hpp"
 #include "yacsl/utils/nil.hpp"
-#include <cstdlib>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -80,13 +80,17 @@ public:
            yacsl::memory::Alignment align) {
     ++allocate_call_count;
 #ifdef _WIN32
-    return {static_cast<yacsl::uchar*>(
-                _aligned_malloc(static_cast<size_t>(align), size)),
-            size};
+    return {
+        static_cast<yacsl::uchar*>(
+            _aligned_malloc(static_cast<size_t>(align), size)),
+        size,
+    };
 #else
-    return {static_cast<yacsl::uchar*>(
-                aligned_alloc(static_cast<size_t>(align), size)),
-            size};
+    return {
+        static_cast<yacsl::uchar*>(
+            aligned_alloc(static_cast<size_t>(align), size)),
+        size,
+    };
 #endif
   }
   void deallocate(this TestAllocator& /*self*/,
@@ -119,7 +123,7 @@ public:
 static int test_function_running() {
   int                                 ret = 0;
   bool                                ran = false;
-  yacsl::containers::Function<void()> func([&ran]() { ran = true; });
+  yacsl::containers::Function<void()> func([&ran] { ran = true; });
 
   EXPECT(!ran);
   func();
@@ -160,7 +164,7 @@ static int test_copied_lambda() {
     CHECK_COUNTS(.constructor_call_count = 1);
 
     yacsl::containers::Function<void(), 0, TestAllocator> const func(
-        [&test]() { (void)test; });
+        [&test] { (void)test; });
 
     CHECK_COUNTS(0);
 
@@ -183,7 +187,7 @@ static int test_ref_capture_lamdba() {
     TestStruct const test;
     CHECK_COUNTS(.constructor_call_count = 1);
 
-    auto lambda = [test]() {};
+    auto lambda = [test] {};
     CHECK_COUNTS(.copy_constructor_call_count = 1);
 
     yacsl::containers::Function<void()> const func(lambda);

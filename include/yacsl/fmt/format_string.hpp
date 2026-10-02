@@ -22,7 +22,7 @@ public:
       char const*           fmt,
       debug::SourceLocation location = debug::SourceLocation::current())
       : location_(location) {
-    (..., [&]() {
+    (..., [&] {
       char const* segment_begin = fmt;
       for (; *fmt != '{'; ++fmt) {
         if (*fmt == '\0') {
@@ -104,7 +104,7 @@ using FormatString =
     internal::FormatStringImpl<meta::IndexSequenceToN<sizeof...(Args)>,
                                type_traits::RemoveCVRef<Args>...>::TypeIdentity;
 
-template <typename... Args> // NOLINTNEXTLINE(misc-no-recursion)
+template <typename... Args> 
 void format_to(containers::String& buf, FormatString<Args...> const& fmt,
                Args&&... args) {
   FormatString<Args...>::format_to(buf, fmt, memory::forward<Args>(args)...);
