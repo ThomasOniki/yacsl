@@ -63,11 +63,13 @@ void Process::Input::write(this Input&                self,
 }
 
 static void redirect_child_stdio_to_file(posix_spawn_file_actions_t* actions,
-                                         File::OpenFlags flags, char const* path,
+                                         File::OpenFlags             flags,
+                                         char const*                 path,
                                          int stream) noexcept {
-  int const oflag = unix_flags(
-      flags | File::OpenFlags::DontCloseOnExec |
-      (stream == STDIN_FILENO ? File::OpenFlags::Read : File::OpenFlags::Write));
+  int const oflag =
+      unix_flags(flags | File::OpenFlags::DontCloseOnExec |
+                 (stream == STDIN_FILENO ? File::OpenFlags::Read
+                                         : File::OpenFlags::Write));
 
   CHECK_RETURN(
       posix_spawn_file_actions_addopen(actions, stream, path, oflag, 0644));

@@ -73,36 +73,39 @@ void Process::open_files(this Process& self, void* pvoid_state) noexcept {
     state.info.hStdInput =
         open_file_handle(state.stdio->input.file_info_.path,
                          state.stdio->input.file_info_.flags |
-                             File::OpenFlags::Read | File::OpenFlags::DontCloseOnExec)
+                             File::OpenFlags::Read |
+                             File::OpenFlags::DontCloseOnExec)
             .value();
   } else if (self.stdin_type_ == Null) {
     state.info.hStdInput =
-        open_file_handle("NUL",
-                         File::OpenFlags::Read | File::OpenFlags::DontCloseOnExec)
+        open_file_handle("NUL", File::OpenFlags::Read |
+                                    File::OpenFlags::DontCloseOnExec)
             .value();
   }
   if (self.stdout_type_ == TYPE_FILE) {
     state.info.hStdOutput =
         open_file_handle(state.stdio->output.file_info_.path,
                          state.stdio->output.file_info_.flags |
-                             File::OpenFlags::Write | File::OpenFlags::DontCloseOnExec)
+                             File::OpenFlags::Write |
+                             File::OpenFlags::DontCloseOnExec)
             .value();
   } else if (self.stdout_type_ == Null) {
     state.info.hStdOutput =
-        open_file_handle("NUL",
-                         File::OpenFlags::Write | File::OpenFlags::DontCloseOnExec)
+        open_file_handle("NUL", File::OpenFlags::Write |
+                                    File::OpenFlags::DontCloseOnExec)
             .value();
   }
   if (self.stderr_type_ == TYPE_FILE) {
     state.info.hStdError =
         open_file_handle(state.stdio->error.file_info_.path,
                          state.stdio->error.file_info_.flags |
-                             File::OpenFlags::Write | File::OpenFlags::DontCloseOnExec)
+                             File::OpenFlags::Write |
+                             File::OpenFlags::DontCloseOnExec)
             .value();
   } else if (self.stderr_type_ == Null) {
     state.info.hStdError =
-        open_file_handle("NUL",
-                         File::OpenFlags::Write | File::OpenFlags::DontCloseOnExec)
+        open_file_handle("NUL", File::OpenFlags::Write |
+                                    File::OpenFlags::DontCloseOnExec)
             .value();
   }
 }
@@ -241,7 +244,7 @@ Process::spawn(char const* const* argv, Stdio const& stdio) noexcept {
               .dwXCountChars   = 0,
               .dwYCountChars   = 0,
               .dwFillAttribute = 0,
-              .dwOpenFlags         = STARTF_USESTDHANDLES,
+              .dwOpenFlags     = STARTF_USESTDHANDLES,
               .wShowWindow     = 0,
               .cbReserved2     = 0,
               .lpReserved2     = nullptr,
