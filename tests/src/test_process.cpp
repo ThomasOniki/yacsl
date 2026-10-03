@@ -150,7 +150,7 @@ struct Pipes {
 template <typename T>
 static T create_io(Type type, char const* path, auto& pipe) noexcept {
   if (type == Type::File) {
-    return T(path, yacsl::os::File::Flags::Create);
+    return T(path, yacsl::os::File::OpenFlags::Create);
   }
   if (type == Type::OtherPipe) {
     return pipe;

@@ -63,11 +63,11 @@ void Process::Input::write(this Input&                self,
 }
 
 static void redirect_child_stdio_to_file(posix_spawn_file_actions_t* actions,
-                                         File::Flags flags, char const* path,
+                                         File::OpenFlags flags, char const* path,
                                          int stream) noexcept {
   int const oflag = unix_flags(
-      flags | File::Flags::DontCloseOnExec |
-      (stream == STDIN_FILENO ? File::Flags::Read : File::Flags::Write));
+      flags | File::OpenFlags::DontCloseOnExec |
+      (stream == STDIN_FILENO ? File::OpenFlags::Read : File::OpenFlags::Write));
 
   CHECK_RETURN(
       posix_spawn_file_actions_addopen(actions, stream, path, oflag, 0644));
@@ -80,7 +80,7 @@ void Process::open_files(this Process& self, void* pvoid_state) noexcept {
         &state.file_actions, state.stdio->input.file_info_.flags,
         state.stdio->input.file_info_.path, STDIN_FILENO);
   } else if (self.stdin_type_ == Null) {
-    redirect_child_stdio_to_file(&state.file_actions, File::Flags::None,
+    redirect_child_stdio_to_file(&state.file_actions, File::OpenFlags::None,
                                  "/dev/null", STDIN_FILENO);
   }
   if (self.stdout_type_ == TYPE_FILE) {
@@ -88,7 +88,7 @@ void Process::open_files(this Process& self, void* pvoid_state) noexcept {
         &state.file_actions, state.stdio->output.file_info_.flags,
         state.stdio->output.file_info_.path, STDOUT_FILENO);
   } else if (self.stdout_type_ == Null) {
-    redirect_child_stdio_to_file(&state.file_actions, File::Flags::None,
+    redirect_child_stdio_to_file(&state.file_actions, File::OpenFlags::None,
                                  "/dev/null", STDOUT_FILENO);
   }
   if (self.stderr_type_ == TYPE_FILE) {
@@ -96,7 +96,7 @@ void Process::open_files(this Process& self, void* pvoid_state) noexcept {
         &state.file_actions, state.stdio->error.file_info_.flags,
         state.stdio->error.file_info_.path, STDERR_FILENO);
   } else if (self.stderr_type_ == Null) {
-    redirect_child_stdio_to_file(&state.file_actions, File::Flags::None,
+    redirect_child_stdio_to_file(&state.file_actions, File::OpenFlags::None,
                                  "/dev/null", STDERR_FILENO);
   }
 }

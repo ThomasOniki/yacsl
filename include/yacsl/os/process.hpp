@@ -47,9 +47,9 @@ private:
       pipe.handle_ = File::NIL_HANDLE;
     }
 
-    constexpr StdioInit(char const* path, File::Flags flags) noexcept
+    constexpr StdioInit(char const* path, File::OpenFlags flags) noexcept
         : type_(TYPE_FILE), file_info_{.path = path, .flags = flags} {}
-    constexpr StdioInit(ranges::StringView path, File::Flags flags) noexcept
+    constexpr StdioInit(ranges::StringView path, File::OpenFlags flags) noexcept
         : type_(TYPE_FILE),
           file_info_{
               .path =
@@ -65,7 +65,7 @@ private:
     StdioType type_ = StdioType::Null;
     struct FileInfo {
       alignas(16) char const* path = nullptr;
-      File::Flags flags            = File::Flags::None;
+      File::OpenFlags flags            = File::OpenFlags::None;
     };
     union {
       FileInfo     file_info_;
