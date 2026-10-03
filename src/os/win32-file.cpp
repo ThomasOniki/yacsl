@@ -11,7 +11,7 @@
 namespace yacsl::os {
 
 containers::Result<File, File::OpenError>
-File::open(char const* path, File::Flags flags) noexcept {
+File::open(char const* path, File::OpenFlags flags) noexcept {
   containers::Result<HANDLE, OpenError> handle = open_file_handle(path, flags);
   if (handle.is_error()) [[unlikely]] {
     return handle.error_unchecked();
@@ -19,7 +19,7 @@ File::open(char const* path, File::Flags flags) noexcept {
   File opened;
   opened.handle_ = handle.value_unchecked();
 
-  if (strip_file_open_flag(&flags, File::Flags::SeekEnd)) {
+  if (strip_file_open_flag(&flags, File::OpenFlags::SeekEnd)) {
     LONG high = 0;
     opened.cursor_pos_ =
         static_cast<usize>(SetFilePointer(opened.handle_, 0, &high, FILE_END));
