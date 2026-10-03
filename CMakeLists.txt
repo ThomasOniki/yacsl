@@ -34,4 +34,4 @@ if(PROJECT_IS_TOP_LEVEL)
   add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/tests")
 endif()
 
-install_library(yacsl yacsl)
+install_project_targets(yacsl yacsl)
