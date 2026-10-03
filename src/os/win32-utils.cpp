@@ -21,8 +21,9 @@ open_file_handle(char const* path, File::OpenFlags flags) {
       .nLength              = sizeof(SECURITY_ATTRIBUTES),
       .lpSecurityDescriptor = nullptr,
       .bInheritHandle =
-          strip_file_open_flag(&flags, File::OpenFlags::DontCloseOnExec) ? TRUE
-                                                                     : FALSE,
+          strip_file_open_flag(&flags, File::OpenFlags::DontCloseOnExec)
+              ? TRUE
+              : FALSE,
   };
 
   bool const trunc  = strip_file_open_flag(&flags, File::OpenFlags::Trunc);

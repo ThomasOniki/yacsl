@@ -280,7 +280,6 @@ private:
     }
   }
 
-  
   void demangle_litteral(this Demangler& self) noexcept {
     ++self.mangled_;
     switch (*self.mangled_) {
@@ -331,7 +330,6 @@ private:
     ++self.mangled_;
   }
 
-  
   void demangle_expression(this Demangler& self) noexcept {
     if (self.skip("tl")) {
       self.demangle_type_litteral();
@@ -345,7 +343,6 @@ private:
     }
   }
 
-  
   void demangle_type_litteral(this Demangler& self) noexcept {
     self.demangle_type();
     self.demangled_ += '{';
@@ -404,7 +401,6 @@ private:
     containers::Vector<Submodule> submodules;
   };
 
-  
   Modules demangle_modules(this Demangler& self) noexcept {
     Modules ret;
     for (;;) {

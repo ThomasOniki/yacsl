@@ -65,7 +65,7 @@ private:
     StdioType type_ = StdioType::Null;
     struct FileInfo {
       alignas(16) char const* path = nullptr;
-      File::OpenFlags flags            = File::OpenFlags::None;
+      File::OpenFlags flags        = File::OpenFlags::None;
     };
     union {
       FileInfo     file_info_;

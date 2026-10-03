@@ -106,11 +106,13 @@ private:
   mutable IsTtyFlag is_tty_ = IsTtyFlag::NotComputed;
 };
 
-constexpr File::OpenFlags operator|(File::OpenFlags lhs, File::OpenFlags rhs) noexcept {
+constexpr File::OpenFlags operator|(File::OpenFlags lhs,
+                                    File::OpenFlags rhs) noexcept {
   return File::OpenFlags(
       static_cast<u8>(static_cast<u8>(lhs) | static_cast<u8>(rhs)));
 }
-constexpr File::OpenFlags operator&(File::OpenFlags lhs, File::OpenFlags rhs) noexcept {
+constexpr File::OpenFlags operator&(File::OpenFlags lhs,
+                                    File::OpenFlags rhs) noexcept {
   return File::OpenFlags(
       static_cast<u8>(static_cast<u8>(lhs) & static_cast<u8>(rhs)));
 }

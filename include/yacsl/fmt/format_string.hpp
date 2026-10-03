@@ -104,7 +104,7 @@ using FormatString =
     internal::FormatStringImpl<meta::IndexSequenceToN<sizeof...(Args)>,
                                type_traits::RemoveCVRef<Args>...>::TypeIdentity;
 
-template <typename... Args> 
+template <typename... Args>
 void format_to(containers::String& buf, FormatString<Args...> const& fmt,
                Args&&... args) {
   FormatString<Args...>::format_to(buf, fmt, memory::forward<Args>(args)...);
