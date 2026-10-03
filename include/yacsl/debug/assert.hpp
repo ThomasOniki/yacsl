@@ -47,7 +47,7 @@ assert_unchecked(bool           cond,
 
 #ifdef NDEBUG
 template <typename... Args>
-constexpr void assert_unchecked(bool /*cond*/,
+constexpr void assert_unchecked(bool cond,
                                 fmt::FormatString<Args...> const& /*fmt*/,
                                 Args&&... /*args*/) {
   if (!cond) [[unlikely]] {
