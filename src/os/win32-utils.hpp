@@ -34,8 +34,8 @@ inline ranges::StringView win32_err_str() noexcept {
 }
 
 // SeekEnd will be ignored
-containers::Result<HANDLE, File::OpenError> open_file_handle(char const* path,
-                                                             File::OpenFlags flags);
+containers::Result<HANDLE, File::OpenError>
+open_file_handle(char const* path, File::OpenFlags flags);
 
 } // namespace yacsl::os
 
