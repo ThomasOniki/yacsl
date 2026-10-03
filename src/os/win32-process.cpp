@@ -244,7 +244,7 @@ Process::spawn(char const* const* argv, Stdio const& stdio) noexcept {
               .dwXCountChars   = 0,
               .dwYCountChars   = 0,
               .dwFillAttribute = 0,
-              .dwOpenFlags     = STARTF_USESTDHANDLES,
+              .dwFlags         = STARTF_USESTDHANDLES,
               .wShowWindow     = 0,
               .cbReserved2     = 0,
               .lpReserved2     = nullptr,
