@@ -1,7 +1,9 @@
 #pragma once
 
+#include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/type_aliases.hpp"
 #include "yacsl/type_traits/categories.hpp"
+#include "yacsl/type_traits/comparaison.hpp"
 
 #ifdef YACSL_COMPILER_MSVC
 #include <intrin.h>
@@ -29,6 +31,32 @@ template <type_traits::Integral T> constexpr T pow8(u32 exp) noexcept {
 }
 template <type_traits::Integral T> constexpr T pow16(u32 exp) noexcept {
   return 1U << 4 * exp;
+}
+
+template <typename T> constexpr T&& max(T&& lhs, T&& rhs) noexcept {
+  return memory::forward<T>(lhs) > memory::forward<T>(rhs)
+             ? memory::forward<T>(lhs)
+             : memory::forward<T>(rhs);
+}
+template <typename T, typename... Others>
+constexpr T&& max(T&& first, Others&&... others)
+  requires(... && type_traits::SameAs<T, Others>)
+{
+  return max(memory::forward<T>(first),
+             max(memory::forward<Others>(others)...));
+}
+
+template <typename T> constexpr T&& min(T&& lhs, T&& rhs) noexcept {
+  return memory::forward<T>(lhs) < memory::forward<T>(rhs)
+             ? memory::forward<T>(lhs)
+             : memory::forward<T>(rhs);
+}
+template <typename T, typename... Others>
+constexpr T&& min(T&& first, Others&&... others)
+  requires(... && type_traits::SameAs<T, Others>)
+{
+  return min(memory::forward<T>(first),
+             min(memory::forward<Others>(others)...));
 }
 
 } // namespace yacsl::math
