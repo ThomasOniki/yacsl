@@ -4,7 +4,7 @@
 
 namespace yacsl::meta {
 
-template <typename T, T... Ints> class IntegerSequence {
+template <typename T, T... Ints> struct IntegerSequence {
   using Type = T;
 };
 
