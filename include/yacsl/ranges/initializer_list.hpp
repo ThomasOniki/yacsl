@@ -13,32 +13,27 @@ namespace std {
 // NOLINTNEXTLINE(bugprone-std-namespace-modification)
 template <typename T> class initializer_list {
 public:
-  constexpr initializer_list() noexcept : data_(nullptr), size_(0) {}
-
-  // There are no explicit object parameters here because some compilers might
-  // rely on implicit this.
-  [[nodiscard]] constexpr yacsl::usize size() const noexcept { return size_; }
-  [[nodiscard]] constexpr T const*     begin() const noexcept { return data_; }
-  [[nodiscard]] constexpr T const*     end() const noexcept {
-    return data_ + size_;
+  [[nodiscard]] constexpr yacsl::usize
+  size(this initializer_list const& self) noexcept {
+    return self.size_;
+  }
+  [[nodiscard]] constexpr T const*
+  data(this initializer_list const& self) noexcept {
+    return self.data_;
   }
 
-public:
-  using value_type      = T;
-  using reference       = T const&;
-  using const_reference = T const&;
-  using size_type       = yacsl::usize;
-
-  using iterator       = T const*;
-  using const_iterator = T const*;
-
-private:
-  initializer_list(T const* data, yacsl::usize size)
-      : data_(data), size_(size) {}
+  [[nodiscard]] constexpr T const*
+  begin(this initializer_list const& self) noexcept {
+    return self.data_;
+  }
+  [[nodiscard]] constexpr T const*
+  end(this initializer_list const& self) noexcept {
+    return self.data_ + self.size_;
+  }
 
 private:
-  T const*     data_;
-  yacsl::usize size_;
+  T const*     data_ = nullptr;
+  yacsl::usize size_ = 0;
 };
 
 } // namespace std
