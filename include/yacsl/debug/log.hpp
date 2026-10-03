@@ -244,6 +244,8 @@ private:
   Level                 level_ = DEFAULT_LOG_LEVEL;
 };
 
+inline void flush_logger() noexcept { Logger::get_default_instance().flush(); }
+
 // lvl is used to determine if it needs to output to the output file or error
 // file.
 inline void log(Logger::Level             lvl,

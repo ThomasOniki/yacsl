@@ -5,8 +5,8 @@
 namespace yacsl::debug {
 
 [[noreturn]] void panic_impl(containers::String const& formatted) noexcept {
-  Logger::get_default_instance().log(Logger::Level::Panic, formatted);
-  Logger::get_default_instance().flush();
+  log(Logger::Level::Panic, formatted);
+  flush_logger();
   abort();
 }
 

@@ -108,6 +108,6 @@ int main() {
   EXPECT(test_align() == 0);
   EXPECT(test_ctors() == 0);
   EXPECT(test_rewind() == 0);
-  yacsl::debug::Logger::get_default_instance().flush();
+  yacsl::debug::flush_logger();
   return ret;
 }

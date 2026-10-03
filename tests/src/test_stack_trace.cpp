@@ -56,6 +56,6 @@ template <ns1::ns2::S<> S = ns1::ns2::S<>{}> YACSL_NOINLINE int f4() noexcept {
 int main() {
   int ret = 0;
   EXPECT(f4() == 0);
-  yacsl::debug::Logger::get_default_instance().flush();
+  yacsl::debug::flush_logger();
   return ret;
 }

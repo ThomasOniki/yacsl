@@ -204,6 +204,6 @@ int main() {
   EXPECT(test_moved_lambda() == 0);
   EXPECT(test_copied_lambda() == 0);
   EXPECT(test_ref_capture_lamdba() == 0);
-  yacsl::debug::Logger::get_default_instance().flush();
+  yacsl::debug::flush_logger();
   return ret;
 }

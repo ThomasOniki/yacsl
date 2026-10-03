@@ -526,7 +526,7 @@ int main() {
             "calling test_run_c() with input type {}, output type "
             "{} and error type {}",
             stdin_type, stdout_type, stderr_type);
-        yacsl::debug::Logger::get_default_instance().flush();
+        yacsl::debug::flush_logger();
         if (test_run_c({
                 .input  = stdin_type,
                 .output = stdout_type,
@@ -544,7 +544,7 @@ int main() {
 
   EXPECT(remove(CHILD_STDIN_FILE_PATH) == 0);
 
-  yacsl::debug::Logger::get_default_instance().flush();
+  yacsl::debug::flush_logger();
 
   return ret;
 }

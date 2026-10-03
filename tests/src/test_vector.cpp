@@ -198,7 +198,7 @@ int main() {
   int ret = 0;
   EXPECT(test_allocator() == 0);
   yacsl::debug::log_warning("TODO: vector tests");
-  yacsl::debug::Logger::get_default_instance().flush();
+  yacsl::debug::flush_logger();
   return ret;
 }
 
