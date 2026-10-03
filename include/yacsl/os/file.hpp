@@ -56,8 +56,8 @@ public:
     return self;
   }
 
-  // seek/close don't do anything. This doesn't duplicate the standard streams,
-  // it just sets handle_.
+  // This doesn't duplicate the standard streams, it just sets handle_ to the
+  // sentinel values for the standard handles.
   [[nodiscard]] static File open_stdin() noexcept YACSL_API;
   [[nodiscard]] static File open_stdout() noexcept YACSL_API;
   [[nodiscard]] static File open_stderr() noexcept YACSL_API;
