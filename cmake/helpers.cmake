@@ -120,7 +120,7 @@ function(source_directory target path)
 endfunction()
 
 # This function accepts target names after project
-function(install_library project)
+function(install_project_targets project)
   include(CMakePackageConfigHelpers)
   include(GNUInstallDirs)
 
