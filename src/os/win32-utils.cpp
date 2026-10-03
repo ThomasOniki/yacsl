@@ -49,10 +49,14 @@ open_file_handle(char const* path, File::Flags flags) {
 
   if (handle == INVALID_HANDLE_VALUE) {
     DWORD const err = GetLastError();
-    if (err == ERROR_FILE_NOT_FOUND) {
+    switch (err) {
+    case ERROR_FILE_NOT_FOUND:
       return File::OpenError::FileNotFound;
+    case ERROR_ACCESS_DENIED:
+      return File::OpenError::PermissionDenied;
+    default:
+      debug::panic("CreateFileA failed: {}", win32_err_str(err));
     }
-    debug::panic("CreateFileA failed: {}", win32_err_str(err));
   }
 
   return handle;

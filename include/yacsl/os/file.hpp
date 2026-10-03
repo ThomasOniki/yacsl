@@ -24,7 +24,9 @@ public:
   constexpr File() noexcept = default;
 
   enum class OpenError : u8 {
-    FileNotFound = 1,
+    None,
+    FileNotFound,
+    PermissionDenied,
   };
 
   [[nodiscard]] static containers::Result<File, OpenError>
