@@ -9,21 +9,21 @@
 
 namespace yacsl::os {
 
-int unix_flags(File::Flags flags) noexcept {
+int unix_flags(File::OpenFlags flags) noexcept {
   unsigned int ret = 0;
 
-  if (strip_file_open_flag(&flags, File::Flags::Trunc)) {
+  if (strip_file_open_flag(&flags, File::OpenFlags::Trunc)) {
     ret |= O_TRUNC;
   }
-  if (strip_file_open_flag(&flags, File::Flags::Create)) {
+  if (strip_file_open_flag(&flags, File::OpenFlags::Create)) {
     ret |= O_CREAT;
   }
-  if (!strip_file_open_flag(&flags, File::Flags::DontCloseOnExec)) {
+  if (!strip_file_open_flag(&flags, File::OpenFlags::DontCloseOnExec)) {
     ret |= O_CLOEXEC;
   }
-  if (flags == File::Flags::Read) {
+  if (flags == File::OpenFlags::Read) {
     ret |= O_RDONLY;
-  } else if (flags == File::Flags::Write) {
+  } else if (flags == File::OpenFlags::Write) {
     ret |= O_WRONLY;
   } else {
     ret |= O_RDWR;

@@ -15,9 +15,9 @@
 namespace yacsl::os {
 
 containers::Result<File, File::OpenError>
-File::open(char const* path, File::Flags flags) noexcept {
-  bool const seek_end = strip_file_open_flag(&flags, File::Flags::SeekEnd) &&
-                        (flags & File::Flags::Trunc) == File::Flags::None;
+File::open(char const* path, File::OpenFlags flags) noexcept {
+  bool const seek_end = strip_file_open_flag(&flags, File::OpenFlags::SeekEnd) &&
+                        (flags & File::OpenFlags::Trunc) == File::OpenFlags::None;
   File       opened;
   opened.handle_ = ::open(path, unix_flags(flags), 0644);
   if (opened.handle_ == -1) [[unlikely]] {

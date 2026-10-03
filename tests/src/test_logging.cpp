@@ -67,9 +67,9 @@ template <typename... Args>
 static void log_to_file(yacsl::debug::Logger::Level              lvl,
                         yacsl::fmt::FormatString<Args...> const& fmt,
                         Args&&... args) {
-  yacsl::os::File::Flags const flags = yacsl::os::File::Flags::Write |
-                                       yacsl::os::File::Flags::Create |
-                                       yacsl::os::File::Flags::Trunc;
+  yacsl::os::File::OpenFlags const flags = yacsl::os::File::OpenFlags::Write |
+                                       yacsl::os::File::OpenFlags::Create |
+                                       yacsl::os::File::OpenFlags::Trunc;
   yacsl::debug::Logger         logger(
       yacsl::os::File::open("test_logs.txt", flags).value(),
       yacsl::os::File::open("test_logs.txt", flags).value(),

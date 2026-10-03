@@ -9,24 +9,24 @@
 namespace yacsl::os {
 
 containers::Result<HANDLE, File::OpenError>
-open_file_handle(char const* path, File::Flags flags) {
+open_file_handle(char const* path, File::OpenFlags flags) {
   DWORD access = 0;
-  if (strip_file_open_flag(&flags, File::Flags::Read)) {
+  if (strip_file_open_flag(&flags, File::OpenFlags::Read)) {
     access |= GENERIC_READ;
   }
-  if (strip_file_open_flag(&flags, File::Flags::Write)) {
+  if (strip_file_open_flag(&flags, File::OpenFlags::Write)) {
     access |= GENERIC_WRITE;
   }
   SECURITY_ATTRIBUTES security_attr = {
       .nLength              = sizeof(SECURITY_ATTRIBUTES),
       .lpSecurityDescriptor = nullptr,
       .bInheritHandle =
-          strip_file_open_flag(&flags, File::Flags::DontCloseOnExec) ? TRUE
+          strip_file_open_flag(&flags, File::OpenFlags::DontCloseOnExec) ? TRUE
                                                                      : FALSE,
   };
 
-  bool const trunc  = strip_file_open_flag(&flags, File::Flags::Trunc);
-  bool const create = strip_file_open_flag(&flags, File::Flags::Create);
+  bool const trunc  = strip_file_open_flag(&flags, File::OpenFlags::Trunc);
+  bool const create = strip_file_open_flag(&flags, File::OpenFlags::Create);
   DWORD      creation_disposition = 0;
 
   if (create) {

@@ -12,7 +12,7 @@ namespace yacsl::os {
 
 class File {
 public:
-  enum class Flags : u8 {
+  enum class OpenFlags : u8 {
     None            = 0,
     Read            = 1U << 0U,
     Write           = 1U << 1U,
@@ -30,9 +30,9 @@ public:
   };
 
   [[nodiscard]] static containers::Result<File, OpenError>
-  open(char const* path, Flags flags) noexcept YACSL_API;
+  open(char const* path, OpenFlags flags) noexcept YACSL_API;
   [[nodiscard]] static containers::Result<File, OpenError>
-  open(ranges::StringView path, Flags flags) noexcept {
+  open(ranges::StringView path, OpenFlags flags) noexcept {
     return open(containers::String(path).c_str(), flags);
   }
 
@@ -106,16 +106,16 @@ private:
   mutable IsTtyFlag is_tty_ = IsTtyFlag::NotComputed;
 };
 
-constexpr File::Flags operator|(File::Flags lhs, File::Flags rhs) noexcept {
-  return File::Flags(
+constexpr File::OpenFlags operator|(File::OpenFlags lhs, File::OpenFlags rhs) noexcept {
+  return File::OpenFlags(
       static_cast<u8>(static_cast<u8>(lhs) | static_cast<u8>(rhs)));
 }
-constexpr File::Flags operator&(File::Flags lhs, File::Flags rhs) noexcept {
-  return File::Flags(
+constexpr File::OpenFlags operator&(File::OpenFlags lhs, File::OpenFlags rhs) noexcept {
+  return File::OpenFlags(
       static_cast<u8>(static_cast<u8>(lhs) & static_cast<u8>(rhs)));
 }
-constexpr File::Flags operator~(File::Flags flags) noexcept {
-  return File::Flags(~static_cast<u8>(flags));
+constexpr File::OpenFlags operator~(File::OpenFlags flags) noexcept {
+  return File::OpenFlags(~static_cast<u8>(flags));
 }
 
 } // namespace yacsl::os

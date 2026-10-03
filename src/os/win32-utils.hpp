@@ -13,9 +13,9 @@
 
 namespace yacsl::os {
 
-inline bool strip_file_open_flag(File::Flags* flags,
-                                 File::Flags  flag) noexcept {
-  File::Flags const stripped = *flags & ~flag;
+inline bool strip_file_open_flag(File::OpenFlags* flags,
+                                 File::OpenFlags  flag) noexcept {
+  File::OpenFlags const stripped = *flags & ~flag;
   if (stripped != *flags) {
     *flags = stripped;
     return true;
@@ -35,7 +35,7 @@ inline ranges::StringView win32_err_str() noexcept {
 
 // SeekEnd will be ignored
 containers::Result<HANDLE, File::OpenError> open_file_handle(char const* path,
-                                                             File::Flags flags);
+                                                             File::OpenFlags flags);
 
 } // namespace yacsl::os
 
