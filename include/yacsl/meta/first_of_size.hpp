@@ -1,8 +1,8 @@
 #pragma once
 
-namespace yacsl::meta {
+#include "yacsl/type_aliases.hpp"
 
-using usize = decltype(sizeof(int));
+namespace yacsl::meta {
 
 namespace internal {
 
