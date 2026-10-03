@@ -9,21 +9,17 @@ template <typename T, T... Ints> struct IntegerSequence {
 };
 
 namespace internal {
-template <typename A, typename B> struct MergeIntegerSequencesImpl;
+template <typename First, typename... Others> struct MergeIntegerSequencesImpl {
+  using Type = MergeIntegerSequencesImpl<
+      First, typename MergeIntegerSequencesImpl<Others...>::Type>::Type;
+};
 template <typename T, T... Ints1, T... Ints2>
 struct MergeIntegerSequencesImpl<IntegerSequence<T, Ints1...>,
                                  IntegerSequence<T, Ints2...>> {
   using Type = IntegerSequence<T, Ints1..., Ints2...>;
 };
-template <typename T, T Int, typename Seq> struct PrependToIntegerSequenceImpl;
-template <typename T, T Int, T... Ints>
-struct PrependToIntegerSequenceImpl<T, Int, IntegerSequence<T, Ints...>> {
-  using Type = IntegerSequence<T, Int, Ints...>;
-};
-template <typename T, T Int, typename Seq> struct AppendToIntegerSequenceImpl;
-template <typename T, T Int, T... Ints>
-struct AppendToIntegerSequenceImpl<T, Int, IntegerSequence<T, Ints...>> {
-  using Type = IntegerSequence<T, Ints..., Int>;
+template <typename T> struct MergeIntegerSequencesImpl<T> {
+  using Type = T;
 };
 } // namespace internal
 
@@ -42,14 +38,14 @@ template <usize N>
 using IndexSequenceToN = IntegerSequence<usize, __integer_pack(N)...>;
 #endif
 
-template <typename A, typename B>
-using MergeIntegerSequences = internal::MergeIntegerSequencesImpl<A, B>::Type;
+template <typename... Ts>
+using MergeIntegerSequences = internal::MergeIntegerSequencesImpl<Ts...>::Type;
 
-template <typename Seq, Seq::Type Elem>
+template <typename Seq, Seq::Type... Ints>
 using PrependToIntegerSequence =
-    internal::PrependToIntegerSequenceImpl<typename Seq::Type, Elem, Seq>;
-template <typename Seq, Seq::Type Elem>
+    MergeIntegerSequences<IntegerSequence<typename Seq::Type, Ints...>, Seq>;
+template <typename Seq, Seq::Type... Ints>
 using AppendToIntegerSequence =
-    internal::AppendToIntegerSequenceImpl<typename Seq::Type, Elem, Seq>;
+    MergeIntegerSequences<Seq, IntegerSequence<typename Seq::Type, Ints...>>;
 
 } // namespace yacsl::meta
