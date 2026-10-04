@@ -3,10 +3,10 @@
 #include "yacsl/containers/tuple.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/meta/integer_sequence.hpp"
+#include "yacsl/meta/qualifiers.hpp"
+#include "yacsl/meta/same_as.hpp"
 #include "yacsl/threads/atomic.hpp"
 #include "yacsl/type_aliases.hpp"
-#include "yacsl/type_traits/comparaison.hpp"
-#include "yacsl/type_traits/qualifiers.hpp"
 #include <pthread.h>
 
 namespace yacsl::threads::internal {
@@ -51,11 +51,10 @@ public:
   void start(this Thread& self, Func&& func, Args&&... args) {
     self.join();
     static_assert(
-        type_traits::SameAs<void,
-                            decltype(func(memory::forward<Args>(args)...))>);
+        meta::SameAs<void, decltype(func(memory::forward<Args>(args)...))>);
 
-    using StoredFunction = internal::StorableFunctionType<
-        type_traits::RemoveReference<Func>>::Type;
+    using StoredFunction =
+        internal::StorableFunctionType<meta::RemoveReference<Func>>::Type;
     using Pack = containers::Tuple<StoredFunction, Atomic<bool>&, Args...>;
     Atomic<bool> ready = false;
     Pack         pack  = Pack(memory::forward<Func>(func), ready,
@@ -101,8 +100,8 @@ private:
   template <typename Func, usize... Indices, typename... Args>
   struct Callback<Func, meta::IndexSequence<Indices...>, Args...> {
     static void* callback(void* data) {
-      using StoredFunction = internal::StorableFunctionType<
-          type_traits::RemoveReference<Func>>::Type;
+      using StoredFunction =
+          internal::StorableFunctionType<meta::RemoveReference<Func>>::Type;
       using Pack = containers::Tuple<StoredFunction, Atomic<bool>&, Args...>;
       Pack pack(memory::move(*static_cast<Pack*>(data)));
 

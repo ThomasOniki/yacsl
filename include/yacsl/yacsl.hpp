@@ -13,6 +13,5 @@
 #include "yacsl/ranges/ranges.hpp"
 #include "yacsl/threads/threads.hpp"
 #include "yacsl/type_aliases.hpp"
-#include "yacsl/type_traits/type_traits.hpp"
 #include "yacsl/utils/utils.hpp"
 // IWYU pragma: end_exports

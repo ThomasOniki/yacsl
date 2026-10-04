@@ -3,7 +3,7 @@
 #include "yacsl/ranges/string_view.hpp"
 #include "yacsl/type_aliases.hpp"
 
-namespace yacsl::type_traits {
+namespace yacsl::meta {
 
 namespace internal {
 template <typename T> constexpr ranges::StringView type_string_impl_pretty() {
@@ -58,4 +58,4 @@ template <typename T> constexpr ranges::StringView type_string_impl() {
 template <typename T>
 constexpr ranges::StringView TYPE_STRING = internal::type_string_impl<T>();
 
-} // namespace yacsl::type_traits
+} // namespace yacsl::meta

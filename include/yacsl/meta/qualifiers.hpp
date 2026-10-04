@@ -1,17 +1,17 @@
 #pragma once
 
-#include "yacsl/type_traits/comparaison.hpp"
+#include "yacsl/meta/same_as.hpp"
+
+namespace yacsl::meta {
 
 #ifdef __clang__
-namespace yacsl::type_traits {
 template <typename T> using RemoveReference = __remove_reference_t(T);
 template <typename T> using RemoveConst     = __remove_const(T);
 template <typename T> using RemoveVolatile  = __remove_volatile(T);
 template <typename T> using RemoveCV        = __remove_cv(T);
 template <typename T> using RemoveCVRef     = __remove_cvref(T);
-} // namespace yacsl::type_traits
 #else
-namespace yacsl::type_traits::internal {
+namespace internal {
 template <typename T> struct RemoveReferenceImpl {
   using Type = __remove_reference(T);
 };
@@ -27,9 +27,8 @@ template <typename T> struct RemoveVolatileImpl {
 template <typename T> struct RemoveVolatileImpl<volatile T> {
   using Type = T;
 };
-} // namespace yacsl::type_traits::internal
+} // namespace internal
 
-namespace yacsl::type_traits {
 template <typename T>
 using RemoveReference = internal::RemoveReferenceImpl<T>::Type;
 template <typename T> using RemoveConst = internal::RemoveConstImpl<T>::Type;
@@ -37,10 +36,8 @@ template <typename T>
 using RemoveVolatile                    = internal::RemoveVolatileImpl<T>::Type;
 template <typename T> using RemoveCV    = RemoveConst<RemoveVolatile<T>>;
 template <typename T> using RemoveCVRef = RemoveCV<RemoveReference<T>>;
-} // namespace yacsl::type_traits
 #endif
 
-namespace yacsl::type_traits {
 template <typename T> using UnderlyingEnumType = __underlying_type(T);
 
 template <typename T>
@@ -156,4 +153,4 @@ using CopyReference = internal::CopyReferenceImpl<Src, Dst>::Type;
 template <typename Src, typename Dst>
 using CopyCVRef = CopyReference<Src, CopyCV<Src, Dst>>;
 
-} // namespace yacsl::type_traits
+} // namespace yacsl::meta

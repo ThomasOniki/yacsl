@@ -1,28 +1,26 @@
 #pragma once
 
-#include "yacsl/type_traits/categories.hpp"
+#include "yacsl/meta/concepts.hpp"
 
+namespace yacsl::meta {
 #ifdef __clang__
-namespace yacsl::type_traits {
 template <Integral T> using MakeUnsigned = __make_unsigned(T);
 template <Integral T> using MakeSigned   = __make_signed(T);
-} // namespace yacsl::type_traits
 #else
 
 #include "yacsl/meta/first_of_size.hpp"
 #include "yacsl/utils/extended_types.hpp"
 
-namespace yacsl::type_traits {
 namespace internal {
 
 template <typename T> struct MakeUnsignedImpl {
   using Type =
-      meta::FirstOfSize<sizeof(T), unsigned char, unsigned short, unsigned int,
-                        unsigned long, unsigned long long, utils::u128>::Type;
+      FirstOfSize<sizeof(T), unsigned char, unsigned short, unsigned int,
+                  unsigned long, unsigned long long, utils::u128>::Type;
 };
 template <typename T> struct MakeSignedImpl {
-  using Type = meta::FirstOfSize<sizeof(T), signed char, short, int, long,
-                                 long long, utils::i128>::Type;
+  using Type = FirstOfSize<sizeof(T), signed char, short, int, long, long long,
+                           utils::i128>::Type;
 };
 
 template <typename T> struct MakeUnsignedImpl<T const> {
@@ -67,6 +65,6 @@ template <> struct MakeSignedImpl<unsigned long long> {
 template <Integral T> using MakeUnsigned = internal::MakeUnsignedImpl<T>::Type;
 template <Integral T> using MakeSigned   = internal::MakeSignedImpl<T>::Type;
 
-} // namespace yacsl::type_traits
-
 #endif
+
+} // namespace yacsl::meta

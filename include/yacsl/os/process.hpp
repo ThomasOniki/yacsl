@@ -7,12 +7,12 @@
 #include "yacsl/containers/vector.hpp"
 #include "yacsl/debug/assert.hpp"
 #include "yacsl/export.hpp"
+#include "yacsl/meta/concepts.hpp"
 #include "yacsl/os/file.hpp"
 #include "yacsl/ranges/initializer_list.hpp"
 #include "yacsl/ranges/slice.hpp"
 #include "yacsl/ranges/string_view.hpp"
 #include "yacsl/type_aliases.hpp"
-#include "yacsl/type_traits/range_like.hpp"
 #include "yacsl/utils/nil.hpp"
 
 namespace yacsl::os {
@@ -186,7 +186,7 @@ public:
     return spawn<ranges::InitializerList<ranges::StringView>>(argv, stdio);
   }
 
-  template <type_traits::RangeOf<ranges::StringView> Range>
+  template <meta::RangeOf<ranges::StringView> Range>
   [[nodiscard]] static containers::Result<Process, SpawnError>
   spawn(Range const& argv, Stdio const& stdio) noexcept {
     containers::Vector<containers::BasicString<char, 16>, 6> cstrs(argv);

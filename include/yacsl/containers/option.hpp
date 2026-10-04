@@ -5,7 +5,7 @@
 #include "yacsl/debug/_extern_functions.hpp"
 #include "yacsl/debug/source_location.hpp"
 #include "yacsl/memory/lifetimes.hpp"
-#include "yacsl/type_traits/type_string.hpp"
+#include "yacsl/meta/type_string.hpp"
 #include "yacsl/utils/nil.hpp"
 
 namespace yacsl::containers {
@@ -127,8 +127,8 @@ public:
     if (!self.is_value_) [[unlikely]] {
       debug::internal::extern_panic(
           cat_nttpstrings<"Option<",
-                          NTTPString<type_traits::TYPE_STRING<T>.size()>(
-                              type_traits::TYPE_STRING<T>),
+                          NTTPString<meta::TYPE_STRING<T>.size()>(
+                              meta::TYPE_STRING<T>),
                           "> is nil.">.view(),
           location);
     }
@@ -215,8 +215,8 @@ public:
     if (!self.is_value_) [[unlikely]] {
       debug::internal::extern_panic(
           cat_nttpstrings<"Option<",
-                          NTTPString<type_traits::TYPE_STRING<T>.size()>(
-                              type_traits::TYPE_STRING<T>),
+                          NTTPString<meta::TYPE_STRING<T>.size()>(
+                              meta::TYPE_STRING<T>),
                           "> is nil.">.view(),
           location);
     }

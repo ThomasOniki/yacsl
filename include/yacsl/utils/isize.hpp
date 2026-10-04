@@ -1,8 +1,8 @@
 #pragma once
 
+#include "yacsl/meta/sign.hpp"
 #include "yacsl/type_aliases.hpp"
-#include "yacsl/type_traits/sign.hpp"
 
 namespace yacsl::utils {
-using isize = type_traits::MakeSigned<usize>;
+using isize = meta::MakeSigned<usize>;
 } // namespace yacsl::utils

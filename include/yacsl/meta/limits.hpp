@@ -1,10 +1,10 @@
 #pragma once
 
+#include "yacsl/meta/concepts.hpp"
+#include "yacsl/meta/sign.hpp"
 #include "yacsl/type_aliases.hpp"
-#include "yacsl/type_traits/categories.hpp"
-#include "yacsl/type_traits/sign.hpp"
 
-namespace yacsl::type_traits {
+namespace yacsl::meta {
 
 template <Arithmetic T> struct Limits;
 
@@ -24,4 +24,4 @@ struct Limits<T> {
   static constexpr u32 MAX_BITS = sizeof(T) * 8;
 };
 
-} // namespace yacsl::type_traits
+} // namespace yacsl::meta

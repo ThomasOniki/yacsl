@@ -2,19 +2,19 @@
 
 #include "yacsl/containers/stack_array.hpp"
 #include "yacsl/memory/lifetimes.hpp"
+#include "yacsl/meta/concepts.hpp"
 #include "yacsl/meta/conditional.hpp"
+#include "yacsl/meta/qualifiers.hpp"
 #include "yacsl/type_aliases.hpp"
-#include "yacsl/type_traits/categories.hpp"
-#include "yacsl/type_traits/qualifiers.hpp"
 
 namespace yacsl::math {
 
-template <type_traits::Arithmetic T, usize Rows, usize Cols,
-          type_traits::Integral SizeT = usize>
+template <meta::Arithmetic T, usize Rows, usize Cols,
+          meta::Integral SizeT = usize>
 class Matrix {
 public:
   template <typename Self>
-  [[nodiscard]] constexpr type_traits::CopyCVRef<Self&&, T>
+  [[nodiscard]] constexpr meta::CopyCVRef<Self&&, T>
   operator[](this Self&& self, SizeT row, SizeT column) noexcept {
     if constexpr (Cols == 1) {
       return memory::forward<Self>(self).data_[row];
@@ -24,7 +24,7 @@ public:
   }
 
   template <typename Self>
-  [[nodiscard]] constexpr type_traits::CopyCVRef<Self&&, T>
+  [[nodiscard]] constexpr meta::CopyCVRef<Self&&, T>
   operator[](this Self&& self, SizeT column) noexcept
     requires(Cols == 1)
   {
@@ -79,18 +79,18 @@ public:
       data_;
 };
 
-template <type_traits::Arithmetic T, type_traits::Integral SizeT = usize>
+template <meta::Arithmetic T, meta::Integral SizeT = usize>
 using Vec2 = Matrix<T, 2, 1, SizeT>;
-template <type_traits::Arithmetic T, type_traits::Integral SizeT = usize>
+template <meta::Arithmetic T, meta::Integral SizeT = usize>
 using Vec3 = Matrix<T, 3, 1, SizeT>;
-template <type_traits::Arithmetic T, type_traits::Integral SizeT = usize>
+template <meta::Arithmetic T, meta::Integral SizeT = usize>
 using Vec4 = Matrix<T, 4, 1, SizeT>;
 
-template <type_traits::Arithmetic T, type_traits::Integral SizeT = usize>
+template <meta::Arithmetic T, meta::Integral SizeT = usize>
 using Mat2x2 = Matrix<T, 2, 2, SizeT>;
-template <type_traits::Arithmetic T, type_traits::Integral SizeT = usize>
+template <meta::Arithmetic T, meta::Integral SizeT = usize>
 using Mat3x3 = Matrix<T, 3, 3, SizeT>;
-template <type_traits::Arithmetic T, type_traits::Integral SizeT = usize>
+template <meta::Arithmetic T, meta::Integral SizeT = usize>
 using Mat4x4 = Matrix<T, 4, 4, SizeT>;
 
 } // namespace yacsl::math
