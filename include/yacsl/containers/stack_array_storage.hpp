@@ -97,7 +97,7 @@ public:
   }
 
 private:
-  alignas(T) StackArray<u8, N * sizeof(T)> data_;
+  YACSL_NO_UNIQUE_ADDRESS alignas(T) StackArray<u8, N * sizeof(T)> data_;
 };
 
 } // namespace yacsl::containers
