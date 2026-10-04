@@ -46,6 +46,8 @@ template <typename T>
 concept MutableType = !__is_const(RemoveReference<T>);
 template <typename T>
 concept VolatileType = __is_volatile(RemoveReference<T>);
+template <typename T>
+concept ReferenceType = __is_reference(T);
 
 template <typename T, typename BaseType>
 concept ReferenceTo = OneOf<T, BaseType&, BaseType&&>;
