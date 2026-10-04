@@ -2,14 +2,13 @@
 
 #include "yacsl/attributes.hpp"
 #include "yacsl/memory/lifetimes.hpp"
+#include "yacsl/meta/allocator.hpp"
 #include "yacsl/threads/atomic.hpp"
-#include "yacsl/type_traits/allocator.hpp"
 
 namespace yacsl::containers {
 
-template <typename T, type_traits::Allocator A,
-          type_traits::Integral SizeT     = usize,
-          auto                  Increment = [](SizeT& count) { ++count; },
+template <typename T, memory::AllocatorType A, meta::Integral SizeT = usize,
+          auto Increment = [](SizeT& count) { ++count; },
           auto Decrement = [](SizeT& count) { return --count; }>
 class RefCounted {
 public:
@@ -48,17 +47,17 @@ public:
   template <typename Self>
   [[nodiscard]] constexpr auto&&
   get(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
-    return memory::forward<type_traits::CopyCVRef<Self&&, T>>(
+    return memory::forward<meta::CopyCVRef<Self&&, T>>(
         *memory::forward<Self>(self).ptr_);
   }
   template <typename Self>
   [[nodiscard]] constexpr auto&&
   operator*(this Self&& self YACSL_LIFETIMEBOUND) {
-    return memory::forward<type_traits::CopyCVRef<Self&&, T>>(
+    return memory::forward<meta::CopyCVRef<Self&&, T>>(
         *memory::forward<Self>(self).ptr_);
   }
   template <typename Self>
-  [[nodiscard]] constexpr type_traits::CopyCV<Self, T>*
+  [[nodiscard]] constexpr meta::CopyCV<Self, T>*
   operator->(this Self&& self YACSL_LIFETIMEBOUND) {
     return memory::forward<Self>(self).ptr_;
   }
@@ -85,8 +84,7 @@ private:
   Data* ptr_;
 };
 
-template <typename T, type_traits::Allocator A,
-          type_traits::Integral SizeT = usize>
+template <typename T, memory::AllocatorType A, meta::Integral SizeT = usize>
 using AtomicRefCounted =
     RefCounted<T, A, threads::Atomic<SizeT>,
                [](threads::Atomic<SizeT>& count) {

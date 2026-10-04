@@ -3,9 +3,9 @@
 #include "yacsl/attributes.hpp"
 #include "yacsl/containers/string.hpp"
 #include "yacsl/memory/lifetimes.hpp"
+#include "yacsl/meta/concepts.hpp"
 #include "yacsl/ranges/string_view.hpp"
 #include "yacsl/type_aliases.hpp"
-#include "yacsl/type_traits/categories.hpp"
 
 namespace yacsl::fmt {
 
@@ -86,7 +86,7 @@ inline char* write_low_surrogate(YACSL_LIFETIMEBOUND char* buf, char32_t high,
 // Unicode - 0x10000 = yyyyyyyyyyxxxxxxxxxx
 // W1 = 0xD800 + yyyyyyyyyy = 110110yyyyyyyyyy
 // W2 = 0xDC00 + xxxxxxxxxx = 110111xxxxxxxxxx
-template <type_traits::Character C>
+template <meta::Character C>
 char* write_char(YACSL_LIFETIMEBOUND char* buf, C chr) {
   if (sizeof(C) == 1 || chr < 0x80) {
     return write_char1(buf, static_cast<char8_t>(chr));
@@ -108,8 +108,7 @@ char* write_char(YACSL_LIFETIMEBOUND char* buf, C chr) {
   return write_char4(buf, static_cast<char32_t>(chr));
 }
 
-template <type_traits::Character C>
-void write_char(containers::String& buf, C chr) {
+template <meta::Character C> void write_char(containers::String& buf, C chr) {
   if (sizeof(C) == 1 || chr < 0x80) {
     write_char1(buf.grow(1), static_cast<char8_t>(chr));
   } else if (chr < 0x800) {
@@ -128,7 +127,7 @@ void write_char(containers::String& buf, C chr) {
   }
 }
 
-template <type_traits::Character C> u32 char_len(C chr) {
+template <meta::Character C> u32 char_len(C chr) {
   if constexpr (sizeof(C) == 1) {
     return 1;
   }
@@ -158,7 +157,7 @@ template <type_traits::Character C> u32 char_len(C chr) {
   return 4;
 }
 
-template <type_traits::Character C>
+template <meta::Character C>
 usize real_string_len(ranges::BasicStringView<C, usize> str) {
   if constexpr (sizeof(C) == 1) {
     return str.size();
@@ -170,7 +169,7 @@ usize real_string_len(ranges::BasicStringView<C, usize> str) {
   return ret;
 }
 
-template <type_traits::Character C>
+template <meta::Character C>
 void write_string(char* buf, ranges::BasicStringView<C, usize> str) {
   if constexpr (sizeof(C) == 1) {
     memory::copy(str.bytes(), reinterpret_cast<uchar*>(buf));
@@ -181,7 +180,7 @@ void write_string(char* buf, ranges::BasicStringView<C, usize> str) {
   }
 }
 
-template <type_traits::Character C>
+template <meta::Character C>
 void write_string(containers::String&               buf,
                   ranges::BasicStringView<C, usize> str) {
   if constexpr (sizeof(C) == 1) {

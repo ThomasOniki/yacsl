@@ -3,12 +3,12 @@
 #include "yacsl/debug/panic.hpp"
 #include "yacsl/fmt/format_string.hpp"
 #include "yacsl/memory/lifetimes.hpp"
-#include "yacsl/type_traits/categories.hpp"
+#include "yacsl/meta/concepts.hpp"
 #include "yacsl/utils/nil.hpp"
 
 namespace yacsl::containers {
 
-template <type_traits::Enum Err> class Error {
+template <meta::Enum Err> class Error {
 public:
   constexpr Error(utils::Nil /*nil*/) noexcept {}
 
@@ -54,6 +54,6 @@ private:
   Err value_{0};
 };
 
-template <type_traits::Enum Err> Error(Err) -> Error<Err>;
+template <meta::Enum Err> Error(Err) -> Error<Err>;
 
 } // namespace yacsl::containers

@@ -8,9 +8,9 @@
 #include "yacsl/fmt/formatter.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/meta/integer_sequence.hpp"
+#include "yacsl/meta/qualifiers.hpp"
 #include "yacsl/ranges/string_view.hpp"
 #include "yacsl/type_aliases.hpp"
-#include "yacsl/type_traits/qualifiers.hpp"
 
 namespace yacsl::fmt::internal {
 
@@ -102,7 +102,7 @@ namespace yacsl::fmt {
 template <typename... Args>
 using FormatString =
     internal::FormatStringImpl<meta::IndexSequenceToN<sizeof...(Args)>,
-                               type_traits::RemoveCVRef<Args>...>::TypeIdentity;
+                               meta::RemoveCVRef<Args>...>::TypeIdentity;
 
 template <typename... Args>
 void format_to(containers::String& buf, FormatString<Args...> const& fmt,

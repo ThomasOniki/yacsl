@@ -4,14 +4,14 @@
 #include "yacsl/containers/string.hpp"
 #include "yacsl/fmt/char_encodings.hpp"
 #include "yacsl/memory/lifetimes.hpp"
+#include "yacsl/meta/concepts.hpp"
+#include "yacsl/meta/sign.hpp"
 #include "yacsl/ranges/string_view.hpp"
 #include "yacsl/type_aliases.hpp"
-#include "yacsl/type_traits/categories.hpp"
-#include "yacsl/type_traits/sign.hpp"
 
 namespace yacsl::fmt {
 
-template <type_traits::Character C> u32 debug_char_len(C chr) {
+template <meta::Character C> u32 debug_char_len(C chr) {
   if (chr == '\n' || chr == '\0' || chr == '\r' || chr == '\t' || chr == '\v') {
     return 2;
   }
@@ -21,7 +21,7 @@ template <type_traits::Character C> u32 debug_char_len(C chr) {
   return char_len(chr);
 }
 
-template <type_traits::Character C>
+template <meta::Character C>
 usize debug_string_len(ranges::BasicStringView<C, usize> str) noexcept {
   usize len = 0;
   for (C const chr : str) {
@@ -63,13 +63,13 @@ inline char* write_debug_char_below_0x20(YACSL_LIFETIMEBOUND char* buf,
   }
 }
 
-template <type_traits::Character C>
+template <meta::Character C>
 char* write_debug_char(YACSL_LIFETIMEBOUND char* buf, C chr) {
   // For some reason clang-tidy's warning about casting [signed] char to
   // unsigned types other than uchar also applies to wchar_t, but you can't cast
   // a wchar to uchar like it suggests if you don't want to lose precision.
   // NOLINTNEXTLINE(bugprone-signed-char-misuse)
-  auto const uchr = static_cast<type_traits::MakeUnsigned<C>>(chr);
+  auto const uchr = static_cast<meta::MakeUnsigned<C>>(chr);
   if (uchr >= 0x20) {
     if (uchr == 0x7F) {
       buf[0] = '\\';
@@ -129,13 +129,13 @@ inline void write_debug_char_below_0x20(containers::String& buf, char chr) {
   }
 }
 
-template <type_traits::Character C>
+template <meta::Character C>
 void write_debug_char(containers::String& buf, C chr) {
   // For some reason clang-tidy's warning about casting [signed] char to
   // unsigned types other than uchar also applies to wchar_t, but you can't cast
   // a wchar to uchar like it suggests if you don't want to lose precision.
   // NOLINTNEXTLINE(bugprone-signed-char-misuse)
-  auto const uchr = static_cast<type_traits::MakeUnsigned<C>>(chr);
+  auto const uchr = static_cast<meta::MakeUnsigned<C>>(chr);
   if (uchr >= 0x20) {
     if (uchr == 0x7F) {
       using ranges::operator""_sv;
@@ -148,7 +148,7 @@ void write_debug_char(containers::String& buf, C chr) {
   }
 }
 
-template <type_traits::Character C>
+template <meta::Character C>
 void write_debug_string(char* buf, ranges::BasicStringView<C, usize> str) {
   *buf = '"';
   ++buf;
@@ -157,7 +157,7 @@ void write_debug_string(char* buf, ranges::BasicStringView<C, usize> str) {
   }
   *buf = '"';
 }
-template <type_traits::Character C>
+template <meta::Character C>
 void write_debug_string(containers::String&               buf,
                         ranges::BasicStringView<C, usize> str) {
   buf += '"';
@@ -167,7 +167,7 @@ void write_debug_string(containers::String&               buf,
   buf += '"';
 }
 
-template <bool IsDebug, type_traits::Character C>
+template <bool IsDebug, meta::Character C>
 void write_maybe_debug_string(containers::String&               buf,
                               ranges::BasicStringView<C, usize> str) {
   if constexpr (IsDebug) {
@@ -176,7 +176,7 @@ void write_maybe_debug_string(containers::String&               buf,
     write_string(buf, str);
   }
 }
-template <bool IsDebug, type_traits::Character C>
+template <bool IsDebug, meta::Character C>
 void write_maybe_debug_string(char*                             buf,
                               ranges::BasicStringView<C, usize> str) {
   if constexpr (IsDebug) {
@@ -186,7 +186,7 @@ void write_maybe_debug_string(char*                             buf,
   }
 }
 
-template <bool IsDebug, type_traits::Character C>
+template <bool IsDebug, meta::Character C>
 usize maybe_debug_string_len(ranges::BasicStringView<C, usize> str) {
   if constexpr (IsDebug) {
     return debug_string_len(str);

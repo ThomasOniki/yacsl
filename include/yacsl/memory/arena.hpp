@@ -6,9 +6,9 @@
 #include "yacsl/memory/alignment.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/memory/singleton_allocator.hpp"
+#include "yacsl/meta/concepts.hpp"
 #include "yacsl/ranges/slice.hpp"
 #include "yacsl/type_aliases.hpp"
-#include "yacsl/type_traits/trivial.hpp"
 #include "yacsl/utils/constants.hpp"
 #include "yacsl/utils/nil.hpp"
 
@@ -48,9 +48,9 @@ public:
 
   constexpr ~Arena() noexcept = default;
 
-  template <type_traits::TriviallyDestructible T, typename... Args>
+  template <meta::TriviallyDestructible T, typename... Args>
   [[nodiscard]] T& push(this Arena& self, Args&&... args);
-  template <type_traits::TriviallyDestructible T>
+  template <meta::TriviallyDestructible T>
   [[nodiscard]] ranges::Slice<T, SizeT> push_array(this Arena& self,
                                                    SizeT       count);
 
@@ -130,7 +130,7 @@ using ScratchArenaAllocator = SingletonAllocator<Arena, "scratch", true>;
 using PermanentArena =
     SingletonAllocator<Arena, "permanent", true>; // NO NOT RESET
 
-template <type_traits::TriviallyDestructible T, typename... Args>
+template <meta::TriviallyDestructible T, typename... Args>
 T& Arena::push(this Arena& self, Args&&... args) {
   // bytes has to be mutable to not cast away const in the reinterpret_cast
   // NOLINTNEXTLINE(misc-const-correctness)
@@ -139,7 +139,7 @@ T& Arena::push(this Arena& self, Args&&... args) {
                                memory::forward<Args>(args)...);
 }
 
-template <type_traits::TriviallyDestructible T>
+template <meta::TriviallyDestructible T>
 ranges::Slice<T, Arena::SizeT> Arena::push_array(this Arena& self,
                                                  SizeT       count) {
   // bytes has to be mutable to not cast away const in the reinterpret_cast

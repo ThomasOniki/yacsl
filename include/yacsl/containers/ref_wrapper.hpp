@@ -12,17 +12,17 @@ public:
   template <typename Self>
   [[nodiscard]] constexpr auto&&
   get(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
-    return memory::forward<type_traits::CopyCVRef<Self&&, T>>(
+    return memory::forward<meta::CopyCVRef<Self&&, T>>(
         *memory::forward<Self>(self).ptr_);
   }
   template <typename Self>
   [[nodiscard]] constexpr auto&&
   operator*(this Self&& self YACSL_LIFETIMEBOUND) {
-    return memory::forward<type_traits::CopyCVRef<Self&&, T>>(
+    return memory::forward<meta::CopyCVRef<Self&&, T>>(
         *memory::forward<Self>(self).ptr_);
   }
   template <typename Self>
-  [[nodiscard]] constexpr type_traits::CopyCV<Self, T>*
+  [[nodiscard]] constexpr meta::CopyCV<Self, T>*
   operator->(this Self&& self YACSL_LIFETIMEBOUND) {
     return memory::forward<Self>(self).ptr_;
   }

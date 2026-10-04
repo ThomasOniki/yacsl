@@ -1,9 +1,10 @@
 #pragma once
 
-#include "yacsl/type_traits/comparaison.hpp"
-#include "yacsl/type_traits/qualifiers.hpp"
+#include "yacsl/meta/declval.hpp"
+#include "yacsl/meta/qualifiers.hpp"
+#include "yacsl/meta/same_as.hpp"
 
-namespace yacsl::type_traits {
+namespace yacsl::meta {
 
 #if __has_builtin(__is_integral)
 template <typename T>
@@ -52,4 +53,30 @@ concept UnsignedIntegral = Integral<T> && T(-1) > T(0);
 template <typename T>
 concept Enum = __is_enum(T);
 
-} // namespace yacsl::type_traits
+template <typename From, typename To>
+concept ConvertibleTo = __is_convertible(From, To);
+
+#ifdef __clang__
+template <typename T>
+concept TriviallyDestructible = __is_trivially_destructible(T);
+#else
+template <typename T>
+concept TriviallyDestructible = __has_trivial_destructor(T);
+#endif
+
+template <typename T>
+concept TriviallyCopyable = __is_trivially_copyable(T);
+
+template <typename T>
+concept RangeLike = requires(T range) {
+  { range.begin() } -> SameAs<decltype(range.end())>;
+  { *range.begin() };
+  { ++declval<decltype(range.begin())>() };
+};
+
+template <typename Range, typename T>
+concept RangeOf = RangeLike<Range> && requires(Range range) {
+  { *range.begin() } -> ConvertibleTo<T>;
+};
+
+} // namespace yacsl::meta

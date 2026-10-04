@@ -3,19 +3,19 @@
 #include "yacsl/attributes.hpp"
 #include "yacsl/containers/stack_array.hpp"
 #include "yacsl/memory/alignment.hpp"
+#include "yacsl/memory/allocator_type.hpp"
 #include "yacsl/memory/arena.hpp"
 #include "yacsl/memory/lifetimes.hpp"
+#include "yacsl/meta/qualifiers.hpp"
 #include "yacsl/type_aliases.hpp"
-#include "yacsl/type_traits/allocator.hpp"
-#include "yacsl/type_traits/qualifiers.hpp"
 
 namespace yacsl::containers {
 
 template <typename F, usize BufSz = 8,
-          type_traits::Allocator A = memory::MainArenaAllocator>
+          memory::AllocatorType A = memory::MainArenaAllocator>
 class Function;
 
-template <typename Ret, typename... Args, usize BufSz, type_traits::Allocator A>
+template <typename Ret, typename... Args, usize BufSz, memory::AllocatorType A>
 class Function<Ret(Args...), BufSz, A> {
 public:
   Function(auto&& func);
@@ -49,9 +49,9 @@ private:
   Ret (*call_)(void* func, Args... args) = nullptr;
 };
 
-template <typename Ret, typename... Args, usize BufSz, type_traits::Allocator A>
+template <typename Ret, typename... Args, usize BufSz, memory::AllocatorType A>
 Function<Ret(Args...), BufSz, A>::Function(auto&& func) {
-  using Func = type_traits::RemoveReference<decltype(func)>;
+  using Func = meta::RemoveReference<decltype(func)>;
 
   if constexpr (sizeof(Func) > sizeof(uchar) * BufSz || alignof(Func) > 8) {
     data_ = allocator_.allocate(sizeof(Func), memory::align_of<Func>).data();

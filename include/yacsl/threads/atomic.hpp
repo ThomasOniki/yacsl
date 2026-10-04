@@ -1,8 +1,8 @@
 #pragma once
 
 #include "yacsl/containers/stack_storage.hpp"
+#include "yacsl/meta/concepts.hpp"
 #include "yacsl/type_aliases.hpp"
-#include "yacsl/type_traits/trivial.hpp"
 
 namespace yacsl::threads {
 
@@ -16,7 +16,7 @@ enum class MemoryOrder : u8 {
 };
 
 template <typename T>
-  requires type_traits::TriviallyCopyable<T>
+  requires meta::TriviallyCopyable<T>
 class Atomic {
 public:
   constexpr Atomic() noexcept = default;

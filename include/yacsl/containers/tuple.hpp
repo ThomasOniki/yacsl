@@ -5,8 +5,8 @@
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/meta/integer_sequence.hpp"
 #include "yacsl/meta/pack.hpp"
+#include "yacsl/meta/same_as.hpp"
 #include "yacsl/type_aliases.hpp"
-#include "yacsl/type_traits/comparaison.hpp"
 
 namespace yacsl::containers {
 namespace internal {
@@ -18,13 +18,13 @@ public:
   template <typename Arg>
   // NOLINTNEXTLINE(bugprone-memory::forwarding-reference-overload)
   explicit constexpr TupleLeaf(Arg&& other) noexcept
-    requires(!type_traits::SameAs<T, T&&>)
+    requires(!meta::SameAs<T, T&&>)
       : value_(memory::forward<Arg>(other)) {}
 
   template <typename Arg>
   // NOLINTNEXTLINE(bugprone-memory::forwarding-reference-overload)
   explicit constexpr TupleLeaf(YACSL_LIFETIMEBOUND Arg&& other) noexcept
-    requires type_traits::SameAs<T, T&&>
+    requires meta::SameAs<T, T&&>
       : value_(memory::forward<Arg>(other)) {}
 
   [[nodiscard]] constexpr T&

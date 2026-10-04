@@ -7,17 +7,16 @@
 #include "yacsl/fmt/format_string_parser.hpp"
 #include "yacsl/fmt/itoa.hpp"
 #include "yacsl/fmt/padding.hpp"
+#include "yacsl/memory/allocator_type.hpp"
 #include "yacsl/memory/lifetimes.hpp"
+#include "yacsl/meta/concepts.hpp"
 #include "yacsl/meta/declval.hpp"
 #include "yacsl/meta/integer_sequence.hpp"
+#include "yacsl/meta/qualifiers.hpp"
+#include "yacsl/meta/sign.hpp"
+#include "yacsl/meta/type_string.hpp"
 #include "yacsl/ranges/string_view.hpp"
 #include "yacsl/type_aliases.hpp"
-#include "yacsl/type_traits/allocator.hpp"
-#include "yacsl/type_traits/categories.hpp"
-#include "yacsl/type_traits/qualifiers.hpp"
-#include "yacsl/type_traits/range_like.hpp"
-#include "yacsl/type_traits/sign.hpp"
-#include "yacsl/type_traits/type_string.hpp"
 
 namespace yacsl::fmt {
 
@@ -29,13 +28,13 @@ public:
   }
   void format(this Formatter const& /*self*/, containers::String& buf,
               T const& value) noexcept {
-    buf += type_traits::TYPE_STRING<T>;
+    buf += meta::TYPE_STRING<T>;
     buf += " at ";
     itoa(buf, reinterpret_cast<uptr>(&value), "0123456789abcdef");
   }
 };
 
-template <type_traits::Integral T> class Formatter<T> {
+template <meta::Integral T> class Formatter<T> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
     FormatStringParser parser(fmt);
@@ -159,16 +158,16 @@ public:
             containers::NTTPString Plus = "">
   static void format_with_prefix_after_sign(containers::String& buf, T value,
                                             PaddingOptions opts) noexcept {
-    if constexpr (type_traits::UnsignedIntegral<T>) {
+    if constexpr (meta::UnsignedIntegral<T>) {
       pad_integral<Charset, containers::cat_nttpstrings<Plus, Prefix>>(
           buf, value, opts);
     } else {
       if (value >= 0) {
         pad_integral<Charset, containers::cat_nttpstrings<Plus, Prefix>>(
-            buf, static_cast<type_traits::MakeUnsigned<T>>(value), opts);
+            buf, static_cast<meta::MakeUnsigned<T>>(value), opts);
       } else {
         pad_integral<Charset, containers::cat_nttpstrings<"-", Prefix>>(
-            buf, static_cast<type_traits::MakeUnsigned<T>>(-value), opts);
+            buf, static_cast<meta::MakeUnsigned<T>>(-value), opts);
       }
     }
   }
@@ -187,7 +186,7 @@ private:
 
   u32  width_    = 0;
   char fill_     = ' ';
-  Type type_ : 3 = type_traits::Character<T> ? Type::Char : Type::Decimal;
+  Type type_ : 3 = meta::Character<T> ? Type::Char : Type::Decimal;
   FormatStringParser::Align align_ : 2 = FormatStringParser::Align::Right;
   FormatStringParser::Sign  sign_ : 2  = FormatStringParser::Sign::Normal;
   bool                      is_alternate_form_ : 1 = false;
@@ -234,7 +233,7 @@ private:
   Type                      type_ : 1  = Type::Alpha;
 };
 
-template <type_traits::FloatingPoint T> class Formatter<T> {
+template <meta::FloatingPoint T> class Formatter<T> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) {
     FormatStringParser parser(fmt);
@@ -299,7 +298,7 @@ private:
   FormatStringParser::Align align_ : 2 = FormatStringParser::Align::Right;
 };
 
-template <type_traits::Character Char, type_traits::Integral SizeT>
+template <meta::Character Char, meta::Integral SizeT>
 class Formatter<ranges::BasicStringView<Char, SizeT>> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
@@ -345,7 +344,7 @@ private:
   Type                      type_ : 1  = Type::Normal;
 };
 
-template <type_traits::Character Char, type_traits::Integral SizeT>
+template <meta::Character Char, meta::Integral SizeT>
 class Formatter<ranges::Slice<Char, SizeT>> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
@@ -360,7 +359,7 @@ private:
   Formatter<ranges::BasicStringView<Char, SizeT>> impl_;
 };
 
-template <type_traits::Character Char> class Formatter<Char*> {
+template <meta::Character Char> class Formatter<Char*> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
     FormatStringParser parser(fmt);
@@ -404,8 +403,8 @@ private:
   FormatStringParser::Align align_ : 2 = FormatStringParser::Align::Left;
 };
 
-template <type_traits::Character Char, usize N, type_traits::Allocator A,
-          type_traits::Integral SizeT>
+template <meta::Character Char, usize N, memory::AllocatorType A,
+          meta::Integral SizeT>
 class Formatter<containers::BasicString<Char, N, A, SizeT>> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
@@ -420,7 +419,7 @@ private:
   Formatter<ranges::BasicStringView<Char>> impl_;
 };
 
-template <type_traits::Character Char, usize N> class Formatter<Char[N]> {
+template <meta::Character Char, usize N> class Formatter<Char[N]> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
     return self.impl_.parse(fmt);
@@ -435,7 +434,7 @@ private:
   Formatter<ranges::BasicStringView<Char>> impl_;
 };
 
-template <type_traits::Character Char, usize N> class Formatter<Char const[N]> {
+template <meta::Character Char, usize N> class Formatter<Char const[N]> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
     return self.impl_.parse(fmt);
@@ -450,7 +449,7 @@ private:
   Formatter<ranges::BasicStringView<Char>> impl_;
 };
 
-template <type_traits::RangeLike T> class Formatter<T> {
+template <meta::RangeLike T> class Formatter<T> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
     return self.impl_.parse(fmt);
@@ -473,11 +472,10 @@ public:
   }
 
 private:
-  Formatter<type_traits::RemoveCVRef<decltype(*meta::declval<T>().begin())>>
-      impl_;
+  Formatter<meta::RemoveCVRef<decltype(*meta::declval<T>().begin())>> impl_;
 };
 
-template <type_traits::Enum T> class Formatter<T> {
+template <meta::Enum T> class Formatter<T> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
     FormatStringParser parser(fmt);
@@ -489,8 +487,7 @@ public:
 
   void format(this Formatter& self, containers::String& buf, T value) noexcept {
     auto const scalar = static_cast<UnderlyingType>(value);
-    auto const u_val =
-        static_cast<type_traits::MakeUnsigned<UnderlyingType>>(value);
+    auto const u_val  = static_cast<meta::MakeUnsigned<UnderlyingType>>(value);
     PaddingOptions const opts = {
         .width = self.width_,
         .fill  = self.fill_,
@@ -505,14 +502,12 @@ public:
   }
 
 private:
-  static constexpr containers::StackArray<
-      char, type_traits::TYPE_STRING<T>.size() + 2>
+  static constexpr containers::StackArray<char, meta::TYPE_STRING<T>.size() + 2>
       CAST_STRING_ARR = [] {
-        containers::StackArray<char, type_traits::TYPE_STRING<T>.size() + 2>
-            arr{};
+        containers::StackArray<char, meta::TYPE_STRING<T>.size() + 2> arr{};
         arr[0]              = '(';
         arr[arr.size() - 1] = ')';
-        memory::copy(type_traits::TYPE_STRING<T>.slice(), &arr[1]);
+        memory::copy(meta::TYPE_STRING<T>.slice(), &arr[1]);
         return arr;
       }();
 
@@ -521,7 +516,7 @@ private:
       CAST_STRING_ARR.size(),
   };
 
-  using UnderlyingType = type_traits::UnderlyingEnumType<T>;
+  using UnderlyingType = meta::UnderlyingEnumType<T>;
   template <u32... Values>
   static constexpr containers::StackArray<ranges::StringView, sizeof...(Values)>
   make_table(meta::IntegerSequence<u32, Values...> /*sequence*/) {

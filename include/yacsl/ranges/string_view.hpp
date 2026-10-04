@@ -2,14 +2,14 @@
 
 #include <string.h>
 
+#include "yacsl/meta/concepts.hpp"
+#include "yacsl/meta/same_as.hpp"
 #include "yacsl/ranges/slice.hpp"
 #include "yacsl/type_aliases.hpp"
-#include "yacsl/type_traits/categories.hpp"
-#include "yacsl/type_traits/comparaison.hpp"
 
 namespace yacsl::ranges {
 
-template <type_traits::Character T, type_traits::Integral SizeT = usize>
+template <meta::Character T, meta::Integral SizeT = usize>
 class BasicStringView {
 public:
   constexpr BasicStringView() = default;
@@ -17,7 +17,7 @@ public:
       : data_(data), size_(size) {}
 
   constexpr BasicStringView(T const* cstr YACSL_LIFETIMEBOUND) : data_(cstr) {
-    if constexpr (type_traits::SameAs<char, T>) {
+    if constexpr (meta::SameAs<char, T>) {
       if !consteval {
         size_ = static_cast<SizeT>(strlen(cstr));
         return;
@@ -99,11 +99,11 @@ private:
   SizeT    size_ = 0;
 };
 
-template <type_traits::Character Char, type_traits::Integral SizeT>
+template <meta::Character Char, meta::Integral SizeT>
 BasicStringView(Char const*, SizeT) -> BasicStringView<Char, SizeT>;
-template <type_traits::Character Char>
+template <meta::Character Char>
 BasicStringView(Char const*) -> BasicStringView<Char, usize>;
-template <type_traits::Character Char>
+template <meta::Character Char>
 BasicStringView(Char const*, Char const*) -> BasicStringView<Char, usize>;
 
 using StringView = BasicStringView<char>;

@@ -5,6 +5,7 @@
 #include <fileapi.h>
 #include <intsafe.h>
 #include <winerror.h>
+#include <winnt.h>
 
 namespace yacsl::os {
 
@@ -311,7 +312,7 @@ ranges::StringView win32_err_str(DWORD err) noexcept {
     case ERROR_PROCESS_MODE_NOT_BACKGROUND: return "ERROR_PROCESS_MODE_NOT_BACKGROUND The process is not in background processing mode.";
     case ERROR_INVALID_ADDRESS: return "ERROR_INVALID_ADDRESS Attempt to access invalid address.";
     case ERROR_USER_PROFILE_LOAD: return "ERROR_USER_PROFILE_LOAD User profile cannot be loaded.";
-    case ERROR_ARITHMETIC_OVERFLOW: return "ERROR_ARITHMETIC_OVERFLOW type_traits::Arithmetic result exceeded 32 bits.";
+    case ERROR_ARITHMETIC_OVERFLOW: return "ERROR_ARITHMETIC_OVERFLOW Arithmetic result exceeded 32 bits.";
     case ERROR_PIPE_CONNECTED: return "ERROR_PIPE_CONNECTED There is a process on other end of the pipe.";
     case ERROR_PIPE_LISTENING: return "ERROR_PIPE_LISTENING Waiting for a process to open the other end of the pipe.";
     case ERROR_VERIFIER_STOP: return "ERROR_VERIFIER_STOP Application verifier has found an error in the current process.";
@@ -1014,7 +1015,7 @@ ranges::StringView win32_err_str(DWORD err) noexcept {
     case ERROR_PATCH_PACKAGE_OPEN_FAILED: return "ERROR_PATCH_PACKAGE_OPEN_FAILED This update package could not be opened. Verify that the update package exists and that you can access it, or contact the application vendor to verify that this is a valid Windows Installer update package.";
     case ERROR_PATCH_PACKAGE_INVALID: return "ERROR_PATCH_PACKAGE_INVALID This update package could not be opened. Contact the application vendor to verify that this is a valid Windows Installer update package.";
     case ERROR_PATCH_PACKAGE_UNSUPPORTED: return "ERROR_PATCH_PACKAGE_UNSUPPORTED This update package cannot be processed by the Windows Installer service. You must install a Windows service pack that contains a newer version of the Windows Installer service.";
-    case ERROR_PRODUCT_VERSION: return "ERROR_PRODUCT_VERSION Another version of this product is already installed. Installation of this version cannot continue. To configure or remove the existing version of this product, use Add/type_traits::Remove Programs on the Control Panel.";
+    case ERROR_PRODUCT_VERSION: return "ERROR_PRODUCT_VERSION Another version of this product is already installed. Installation of this version cannot continue. To configure or remove the existing version of this product, use Add/Remove Programs on the Control Panel.";
     case ERROR_INVALID_COMMAND_LINE: return "ERROR_INVALID_COMMAND_LINE Invalid command line argument. Consult the Windows Installer SDK for detailed command line help.";
     case ERROR_INSTALL_REMOTE_DISALLOWED: return "ERROR_INSTALL_REMOTE_DISALLOWED Only administrators have permission to add, remove, or configure server software during a Terminal services remote session. If you want to install or configure software on the server, contact your network administrator.";
     case ERROR_SUCCESS_REBOOT_INITIATED: return "ERROR_SUCCESS_REBOOT_INITIATED The requested operation completed successfully. The system will be restarted so the changes can take effect.";
@@ -2018,7 +2019,7 @@ ranges::StringView win32_err_str(DWORD err) noexcept {
     case ERROR_DS_PDC_OPERATION_IN_PROGRESS: return "ERROR_DS_PDC_OPERATION_IN_PROGRESS Another operation which requires exclusive access to the PDC FSMO is already in progress.";
     case ERROR_DS_CROSS_DOMAIN_CLEANUP_REQD: return "ERROR_DS_CROSS_DOMAIN_CLEANUP_REQD A cross-domain memory::move operation failed such that two versions of the memory::moved object exist - one each in the source and destination domains. The destination object needs to be removed to restore the system to a consistent state.";
     case ERROR_DS_ILLEGAL_XDOM_MOVE_OPERATION: return "ERROR_DS_ILLEGAL_XDOM_MOVE_OPERATION This object may not be memory::moved across domain boundaries either because cross-domain memory::moves for this class are disallowed, or the object has some special characteristics, e.g.: trust account or restricted RID, which prevent its memory::move.";
-    case ERROR_DS_CANT_WITH_ACCT_GROUP_MEMBERSHPS: return "ERROR_DS_CANT_WITH_ACCT_GROUP_MEMBERSHPS Can't memory::move objects with memberships across domain boundaries as once memory::moved, this would violate the membership conditions of the account group. type_traits::Remove the object from any account group memberships and retry.";
+    case ERROR_DS_CANT_WITH_ACCT_GROUP_MEMBERSHPS: return "ERROR_DS_CANT_WITH_ACCT_GROUP_MEMBERSHPS Can't memory::move objects with memberships across domain boundaries as once memory::moved, this would violate the membership conditions of the account group. Remove the object from any account group memberships and retry.";
     case ERROR_DS_NC_MUST_HAVE_NC_PARENT: return "ERROR_DS_NC_MUST_HAVE_NC_PARENT A naming context head must be the immediate child of another naming context head, not of an interior node.";
     case ERROR_DS_CR_IMPOSSIBLE_TO_VALIDATE: return "ERROR_DS_CR_IMPOSSIBLE_TO_VALIDATE The directory cannot validate the proposed naming context name because it does not hold a replica of the naming context above the proposed naming context. Please ensure that the domain naming master role is held by a server that is configured as a global catadebug::log server, and that the server is up to date with its replication partners. (Applies only to Windows 2000 Domain Naming masters.)";
     case ERROR_DS_DST_DOMAIN_NOT_NATIVE: return "ERROR_DS_DST_DOMAIN_NOT_NATIVE Destination domain must be in native mode.";

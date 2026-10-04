@@ -3,25 +3,22 @@
 #include "yacsl/attributes.hpp"
 #include "yacsl/containers/stack_array.hpp"
 #include "yacsl/memory/alignment.hpp"
+#include "yacsl/memory/allocator_type.hpp"
 #include "yacsl/memory/arena.hpp"
 #include "yacsl/memory/lifetimes.hpp"
+#include "yacsl/meta/concepts.hpp"
+#include "yacsl/meta/same_as.hpp"
 #include "yacsl/meta/type_identity.hpp"
 #include "yacsl/ranges/initializer_list.hpp"
 #include "yacsl/ranges/integer_range.hpp"
 #include "yacsl/ranges/slice.hpp"
 #include "yacsl/type_aliases.hpp"
-#include "yacsl/type_traits/allocator.hpp"
-#include "yacsl/type_traits/categories.hpp"
-#include "yacsl/type_traits/comparaison.hpp"
-#include "yacsl/type_traits/convertible_to.hpp"
-#include "yacsl/type_traits/range_like.hpp"
-#include "yacsl/type_traits/trivial.hpp"
 
 namespace yacsl::containers {
 
 template <typename T, usize N = 0,
-          type_traits::Allocator A     = memory::MainArenaAllocator,
-          type_traits::Integral  SizeT = usize>
+          memory::AllocatorType A     = memory::MainArenaAllocator,
+          meta::Integral        SizeT = usize>
 class Vector {
 public:
   constexpr Vector() noexcept = default;
@@ -30,7 +27,7 @@ public:
 
   constexpr Vector(ranges::InitializerList<T> init, A const& allocator = A());
 
-  template <type_traits::RangeOf<T> Range>
+  template <meta::RangeOf<T> Range>
   constexpr Vector(Range const& range, A const& allocator = A());
   constexpr explicit Vector(SizeT count, A const& allocator = A());
 
@@ -78,7 +75,7 @@ public:
   }
 
   template <typename Self>
-  [[nodiscard]] constexpr type_traits::CopyCV<Self, T>*
+  [[nodiscard]] constexpr meta::CopyCV<Self, T>*
   data(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
     return memory::forward<Self>(self).data_;
   }
@@ -86,14 +83,14 @@ public:
   template <typename Self>
   [[nodiscard]] constexpr auto&&
   operator[](this Self&& self YACSL_LIFETIMEBOUND, SizeT index) noexcept {
-    return memory::forward<type_traits::CopyCVRef<Self&&, T>>(
+    return memory::forward<meta::CopyCVRef<Self&&, T>>(
         memory::forward<Self>(self).data_[static_cast<usize>(index)]);
   }
 
   template <typename Self>
   [[nodiscard]] constexpr auto
   slice(this Self&& self YACSL_LIFETIMEBOUND) noexcept
-      -> ranges::Slice<type_traits::CopyCV<Self, T>, SizeT> {
+      -> ranges::Slice<meta::CopyCV<Self, T>, SizeT> {
     return {
         memory::forward<Self>(self).data_,
         memory::forward<Self>(self).size_,
@@ -102,7 +99,7 @@ public:
   template <typename Self>
   [[nodiscard]] constexpr auto
   reversed_slice(this Self&& self YACSL_LIFETIMEBOUND) noexcept
-      -> ranges::ReversedSlice<type_traits::CopyCV<Self, T>, SizeT> {
+      -> ranges::ReversedSlice<meta::CopyCV<Self, T>, SizeT> {
     return {
         memory::forward<Self>(self).data_,
         memory::forward<Self>(self).size_,
@@ -161,8 +158,7 @@ private:
   SizeT capacity_ = fixed_buffer_.size();
 };
 
-template <typename T, usize N, type_traits::Allocator A,
-          type_traits::Integral SizeT>
+template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
 constexpr Vector<T, N, A, SizeT>::Vector(ranges::InitializerList<T> init,
                                          A const&                   allocator)
     : allocator_(allocator), size_(static_cast<SizeT>(init.size())) {
@@ -170,28 +166,25 @@ constexpr Vector<T, N, A, SizeT>::Vector(ranges::InitializerList<T> init,
   copy(init.begin());
 }
 
-template <typename T, usize N, type_traits::Allocator A,
-          type_traits::Integral SizeT>
-template <type_traits::RangeOf<T> Range>
+template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
+template <meta::RangeOf<T> Range>
 constexpr Vector<T, N, A, SizeT>::Vector(Range const& range, A const& allocator)
     : allocator_(allocator) {
   if constexpr (requires(Range with_size) {
-                  { with_size.size() } -> type_traits::Integral;
+                  { with_size.size() } -> meta::Integral;
                 }) {
     size_ = static_cast<SizeT>(range.size());
     maybe_alloc(size_);
     if constexpr (requires(Range with_ptr) {
-                    { with_ptr.data() } -> type_traits::OneOf<T*, T const*>;
+                    { with_ptr.data() } -> meta::OneOf<T*, T const*>;
                   }) {
       copy(range.data());
     } else if constexpr (requires(Range with_ptr) {
-                           {
-                             with_ptr.begin()
-                           } -> type_traits::OneOf<T*, T const*>;
+                           { with_ptr.begin() } -> meta::OneOf<T*, T const*>;
                          }) {
       copy(range.begin());
     } else if constexpr (requires(Range indexable) {
-                           { indexable[0] } -> type_traits::ConvertibleTo<T>;
+                           { indexable[0] } -> meta::ConvertibleTo<T>;
                          }) {
       for (SizeT i = 0; i < size_; ++i) {
         memory::construct_at(data_ + i, range[i]);
@@ -209,8 +202,7 @@ constexpr Vector<T, N, A, SizeT>::Vector(Range const& range, A const& allocator)
   }
 }
 
-template <typename T, usize N, type_traits::Allocator A,
-          type_traits::Integral SizeT>
+template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
 constexpr Vector<T, N, A, SizeT>::Vector(SizeT count, A const& allocator)
     : allocator_(allocator), size_(count) {
   maybe_alloc(size_);
@@ -219,16 +211,14 @@ constexpr Vector<T, N, A, SizeT>::Vector(SizeT count, A const& allocator)
   }
 }
 
-template <typename T, usize N, type_traits::Allocator A,
-          type_traits::Integral SizeT>
+template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
 constexpr Vector<T, N, A, SizeT>::Vector(Vector const& other)
     : allocator_(other.allocator_), size_(other.size_) {
   maybe_alloc(size_);
   copy(other.data_);
 }
 
-template <typename T, usize N, type_traits::Allocator A,
-          type_traits::Integral SizeT>
+template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
 constexpr Vector<T, N, A, SizeT>::Vector(Vector&& other) noexcept
     : allocator_(memory::move(other.allocator_)), size_(other.size_) {
   if constexpr (N > 0) {
@@ -241,8 +231,7 @@ constexpr Vector<T, N, A, SizeT>::Vector(Vector&& other) noexcept
   other.size_ = other.capacity_ = 0;
 }
 
-template <typename T, usize N, type_traits::Allocator A,
-          type_traits::Integral SizeT>
+template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
 constexpr Vector<T, N, A, SizeT>&
 Vector<T, N, A, SizeT>::operator=(this Vector& self YACSL_LIFETIMEBOUND,
                                   Vector const&     other) {
@@ -262,8 +251,7 @@ Vector<T, N, A, SizeT>::operator=(this Vector& self YACSL_LIFETIMEBOUND,
   return self;
 }
 
-template <typename T, usize N, type_traits::Allocator A,
-          type_traits::Integral SizeT>
+template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
 constexpr Vector<T, N, A, SizeT>&
 Vector<T, N, A, SizeT>::operator=(this Vector& self YACSL_LIFETIMEBOUND,
                                   Vector&&          other) noexcept {
@@ -287,8 +275,7 @@ Vector<T, N, A, SizeT>::operator=(this Vector& self YACSL_LIFETIMEBOUND,
   return self;
 }
 
-template <typename T, usize N, type_traits::Allocator A,
-          type_traits::Integral SizeT>
+template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
 constexpr Vector<T, N, A, SizeT>&
 Vector<T, N, A, SizeT>::operator=(this Vector& self YACSL_LIFETIMEBOUND,
                                   ranges::InitializerList<T> const& init) {
@@ -299,8 +286,7 @@ Vector<T, N, A, SizeT>::operator=(this Vector& self YACSL_LIFETIMEBOUND,
   return self;
 }
 
-template <typename T, usize N, type_traits::Allocator A,
-          type_traits::Integral SizeT>
+template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
 template <typename... Args>
 constexpr T& Vector<T, N, A, SizeT>::emplace_back(this Vector& self,
                                                   Args&&... args) {
@@ -311,22 +297,19 @@ constexpr T& Vector<T, N, A, SizeT>::emplace_back(this Vector& self,
                                memory::forward<Args>(args)...);
 }
 
-template <typename T, usize N, type_traits::Allocator A,
-          type_traits::Integral SizeT>
+template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
 constexpr void Vector<T, N, A, SizeT>::pop_back(this Vector& self) noexcept {
   self.data_[--self.size_].~T();
 }
 
-template <typename T, usize N, type_traits::Allocator A,
-          type_traits::Integral SizeT>
+template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
 constexpr void Vector<T, N, A, SizeT>::clear(this Vector& self) noexcept {
   while (self.size_ > 0) {
     self.pop_back();
   }
 }
 
-template <typename T, usize N, type_traits::Allocator A,
-          type_traits::Integral SizeT>
+template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
 constexpr void Vector<T, N, A, SizeT>::reserve(this Vector& self,
                                                SizeT        capacity) {
   if (capacity > self.capacity_) {
@@ -334,11 +317,10 @@ constexpr void Vector<T, N, A, SizeT>::reserve(this Vector& self,
   }
 }
 
-template <typename T, usize N, type_traits::Allocator A,
-          type_traits::Integral SizeT>
+template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
 constexpr void Vector<T, N, A, SizeT>::resize(this Vector& self, SizeT count) {
   if (self.size_ >= count) {
-    if constexpr (type_traits::TriviallyDestructible<T>) {
+    if constexpr (meta::TriviallyDestructible<T>) {
       self.size_ = count;
     } else {
       while (self.size_ > count) {
@@ -353,8 +335,7 @@ constexpr void Vector<T, N, A, SizeT>::resize(this Vector& self, SizeT count) {
   }
 }
 
-template <typename T, usize N, type_traits::Allocator A,
-          type_traits::Integral SizeT>
+template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
 void Vector<T, N, A, SizeT>::maybe_alloc(this Vector& self, SizeT count) {
   if (N == 0 || count > static_cast<SizeT>(N)) {
     self.capacity_ = count;
@@ -366,8 +347,7 @@ void Vector<T, N, A, SizeT>::maybe_alloc(this Vector& self, SizeT count) {
   }
 }
 
-template <typename T, usize N, type_traits::Allocator A,
-          type_traits::Integral SizeT>
+template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
 void Vector<T, N, A, SizeT>::free(this Vector& self) {
   self.clear();
   if (N == 0 || self.data_ != self.fixed_buffer_.data()) {
@@ -378,8 +358,7 @@ void Vector<T, N, A, SizeT>::free(this Vector& self) {
   }
 }
 
-template <typename T, usize N, type_traits::Allocator A,
-          type_traits::Integral SizeT>
+template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
 void Vector<T, N, A, SizeT>::definitely_reserve(this Vector& self,
                                                 SizeT        capacity) {
   T* old_data = self.data_;
@@ -410,17 +389,15 @@ void Vector<T, N, A, SizeT>::definitely_reserve(this Vector& self,
   self.capacity_ = capacity;
 }
 
-template <typename T, usize N, type_traits::Allocator A,
-          type_traits::Integral SizeT>
+template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
 template <typename Copied>
 void Vector<T, N, A, SizeT>::copy(this Vector& self, Copied const* data) {
   memory::copy({data, static_cast<usize>(self.size_)}, self.data_);
 }
 
-template <typename T, usize N, type_traits::Allocator A,
-          type_traits::Integral SizeT>
+template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
 void Vector<T, N, A, SizeT>::move(this Vector& self, T* data) {
-  if constexpr (type_traits::TriviallyCopyable<T>) {
+  if constexpr (meta::TriviallyCopyable<T>) {
     if (self.size_ > 0) {
       memory::copy(ranges::Slice{data, static_cast<usize>(self.size_)},
                    self.data_);

@@ -2,12 +2,11 @@
 
 #include "yacsl/containers/nttp_string.hpp"
 #include "yacsl/memory/alignment.hpp"
-#include "yacsl/type_traits/allocator.hpp"
+#include "yacsl/memory/allocator_type.hpp"
 
 namespace yacsl::memory {
 
-template <type_traits::Allocator A, containers::NTTPString Name,
-          bool ThreadLocal = true>
+template <AllocatorType A, containers::NTTPString Name, bool ThreadLocal = true>
 class SingletonAllocator {
 public:
   using SizeT = A::SizeT;

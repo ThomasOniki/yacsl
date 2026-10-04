@@ -2,20 +2,20 @@
 
 #include "yacsl/attributes.hpp"
 #include "yacsl/containers/vector.hpp"
+#include "yacsl/memory/allocator_type.hpp"
 #include "yacsl/memory/arena.hpp"
 #include "yacsl/memory/lifetimes.hpp"
+#include "yacsl/meta/concepts.hpp"
+#include "yacsl/meta/qualifiers.hpp"
 #include "yacsl/ranges/slice.hpp"
 #include "yacsl/ranges/string_view.hpp"
 #include "yacsl/type_aliases.hpp"
-#include "yacsl/type_traits/allocator.hpp"
-#include "yacsl/type_traits/categories.hpp"
-#include "yacsl/type_traits/qualifiers.hpp"
 
 namespace yacsl::containers {
 
-template <type_traits::Character Char, usize N = 0,
-          type_traits::Allocator A     = memory::MainArenaAllocator,
-          type_traits::Integral  SizeT = usize>
+template <meta::Character Char, usize N = 0,
+          memory::AllocatorType A     = memory::MainArenaAllocator,
+          meta::Integral        SizeT = usize>
 class BasicString {
 public:
   constexpr BasicString() noexcept = default;
@@ -191,13 +191,12 @@ public:
     return {self.data_.data(), self.data_.size()};
   }
   template <typename Self>
-  [[nodiscard]] constexpr ranges::Slice<type_traits::CopyCV<Self, Char>, SizeT>
+  [[nodiscard]] constexpr ranges::Slice<meta::CopyCV<Self, Char>, SizeT>
   slice(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
     return memory::forward<Self>(self).data_.slice();
   }
   template <typename Self>
-  [[nodiscard]] constexpr ranges::ReversedSlice<type_traits::CopyCV<Self, Char>,
-                                                SizeT>
+  [[nodiscard]] constexpr ranges::ReversedSlice<meta::CopyCV<Self, Char>, SizeT>
   reversed_slice(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
     return memory::forward<Self>(self).data_.reversed_slice();
   }

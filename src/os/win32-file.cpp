@@ -1,12 +1,17 @@
 #ifdef _WIN32
 
 #include "win32-utils.hpp"
+#include "yacsl/debug/panic.hpp"
+#include "yacsl/meta/limits.hpp"
 #include "yacsl/type_aliases.hpp"
-#include "yacsl/type_traits/limits.hpp"
 #include "yacsl/utils/isize.hpp"
+#include <accctrl.h>
+#include <aclapi.h>
+#include <errhandlingapi.h>
 #include <fileapi.h>
 #include <intsafe.h>
 #include <windows.h>
+#include <winnt.h>
 
 namespace yacsl::os {
 
@@ -23,8 +28,7 @@ File::open(char const* path, File::OpenFlags flags) noexcept {
     LONG high = 0;
     opened.cursor_pos_ =
         static_cast<usize>(SetFilePointer(opened.handle_, 0, &high, FILE_END));
-    opened.cursor_pos_ +=
-        static_cast<usize>(high) * type_traits::Limits<LONG>::MAX;
+    opened.cursor_pos_ += static_cast<usize>(high) * meta::Limits<LONG>::MAX;
     if (opened.cursor_pos_ == static_cast<usize>(INVALID_SET_FILE_POINTER)) {
       DWORD const err = GetLastError();
       if (err != NO_ERROR) {
@@ -74,7 +78,7 @@ usize File::read(this File& self, ranges::Slice<uchar> buffer) noexcept {
 
 void File::seek_begin(this File& self, utils::isize offset) noexcept {
   auto  low     = static_cast<LONG>(offset);
-  auto  high    = static_cast<LONG>(offset / type_traits::Limits<LONG>::MAX);
+  auto  high    = static_cast<LONG>(offset / meta::Limits<LONG>::MAX);
   DWORD pos_low = SetFilePointer(self.handle_, low, &high, FILE_BEGIN);
   if (pos_low == INVALID_SET_FILE_POINTER) {
     DWORD const err = GetLastError();
@@ -83,11 +87,11 @@ void File::seek_begin(this File& self, utils::isize offset) noexcept {
     }
   }
   self.cursor_pos_ =
-      static_cast<usize>(high) * type_traits::Limits<LONG>::MAX + pos_low;
+      static_cast<usize>(high) * meta::Limits<LONG>::MAX + pos_low;
 }
 void File::seek_end(this File& self, utils::isize offset) noexcept {
   auto  low     = static_cast<LONG>(offset);
-  auto  high    = static_cast<LONG>(offset / type_traits::Limits<LONG>::MAX);
+  auto  high    = static_cast<LONG>(offset / meta::Limits<LONG>::MAX);
   DWORD pos_low = SetFilePointer(self.handle_, low, &high, FILE_END);
   if (pos_low == INVALID_SET_FILE_POINTER) {
     DWORD const err = GetLastError();
@@ -96,11 +100,11 @@ void File::seek_end(this File& self, utils::isize offset) noexcept {
     }
   }
   self.cursor_pos_ =
-      static_cast<usize>(high) * type_traits::Limits<LONG>::MAX + pos_low;
+      static_cast<usize>(high) * meta::Limits<LONG>::MAX + pos_low;
 }
 void File::seek_cursor(this File& self, utils::isize offset) noexcept {
   auto  low     = static_cast<LONG>(offset);
-  auto  high    = static_cast<LONG>(offset / type_traits::Limits<LONG>::MAX);
+  auto  high    = static_cast<LONG>(offset / meta::Limits<LONG>::MAX);
   DWORD pos_low = SetFilePointer(self.handle_, low, &high, FILE_CURRENT);
   if (pos_low == INVALID_SET_FILE_POINTER) {
     DWORD const err = GetLastError();
@@ -109,7 +113,7 @@ void File::seek_cursor(this File& self, utils::isize offset) noexcept {
     }
   }
   self.cursor_pos_ =
-      static_cast<usize>(high) * type_traits::Limits<LONG>::MAX + pos_low;
+      static_cast<usize>(high) * meta::Limits<LONG>::MAX + pos_low;
 }
 // NOLINTEND(readability-make-member-function-const)
 

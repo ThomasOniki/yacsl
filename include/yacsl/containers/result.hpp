@@ -3,14 +3,14 @@
 #include "yacsl/attributes.hpp"
 #include "yacsl/debug/panic.hpp"
 #include "yacsl/memory/lifetimes.hpp"
-#include "yacsl/type_traits/qualifiers.hpp"
-#include "yacsl/type_traits/type_string.hpp"
+#include "yacsl/meta/qualifiers.hpp"
+#include "yacsl/meta/type_string.hpp"
 
 namespace yacsl::containers {
 
 template <typename Value, typename Error> class Result {
 public:
-  template <type_traits::MaybeCVRef<Error> E>
+  template <meta::MaybeCVRef<Error> E>
   Result(E&& error) : error_(memory::forward<E>(error)), is_error_(true) {}
   template <typename... Args>
   Result(Args&&... args) : value_(memory::forward<Args>(args)...) {}
@@ -70,9 +70,8 @@ public:
   [[nodiscard]] constexpr auto&&
   value(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
     if (self.is_error_) [[unlikely]] {
-      debug::panic("Result<{}, {}> is error {}.",
-                   type_traits::TYPE_STRING<Value>,
-                   type_traits::TYPE_STRING<Error>, self.error_);
+      debug::panic("Result<{}, {}> is error {}.", meta::TYPE_STRING<Value>,
+                   meta::TYPE_STRING<Error>, self.error_);
     }
     return memory::forward<Self>(self).value_;
   }
@@ -81,8 +80,8 @@ public:
   value_unchecked(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
     if (self.is_error_) [[unlikely]] {
       debug::unreachable("Result<{}, {}> is error {}.",
-                         type_traits::TYPE_STRING<Value>,
-                         type_traits::TYPE_STRING<Error>, self.error_);
+                         meta::TYPE_STRING<Value>, meta::TYPE_STRING<Error>,
+                         self.error_);
     }
     return memory::forward<Self>(self).value_;
   }
@@ -91,9 +90,8 @@ public:
   [[nodiscard]] constexpr auto&&
   error(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
     if (!self.is_error_) [[unlikely]] {
-      debug::panic("Result<{}, {}> is value {}.",
-                   type_traits::TYPE_STRING<Value>,
-                   type_traits::TYPE_STRING<Error>, self.value_);
+      debug::panic("Result<{}, {}> is value {}.", meta::TYPE_STRING<Value>,
+                   meta::TYPE_STRING<Error>, self.value_);
     }
     return memory::forward<Self>(self).error_;
   }
@@ -102,8 +100,8 @@ public:
   error_unchecked(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
     if (!self.is_error_) [[unlikely]] {
       debug::unreachable("Result<{}, {}> is value {}.",
-                         type_traits::TYPE_STRING<Value>,
-                         type_traits::TYPE_STRING<Error>, self.value_);
+                         meta::TYPE_STRING<Value>, meta::TYPE_STRING<Error>,
+                         self.value_);
     }
     return memory::forward<Self>(self).error_;
   }

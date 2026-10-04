@@ -1,17 +1,16 @@
 #pragma once
 
 #include "yacsl/attributes.hpp"
+#include "yacsl/meta/concepts.hpp"
 #include "yacsl/meta/conditional.hpp"
+#include "yacsl/meta/qualifiers.hpp"
 #include "yacsl/ranges/initializer_list.hpp"
 #include "yacsl/ranges/integer_range.hpp"
 #include "yacsl/type_aliases.hpp"
-#include "yacsl/type_traits/categories.hpp"
-#include "yacsl/type_traits/qualifiers.hpp"
 
 namespace yacsl::ranges {
 
-template <typename T, type_traits::Integral SizeT = usize,
-          bool Reversed = false>
+template <typename T, meta::Integral SizeT = usize, bool Reversed = false>
 class Slice {
 public:
   friend class Slice<T const, SizeT>;
@@ -25,7 +24,7 @@ public:
       : data_(Reversed ? data + size - 1 : data), size_(size) {}
 
   constexpr Slice(InitializerList<T> data YACSL_LIFETIMEBOUND) noexcept
-    requires type_traits::ConstType<T>
+    requires meta::ConstType<T>
       : data_(data.begin()), size_(data.size()) {}
 
   constexpr Slice(Slice<T, SizeT, !Reversed> other) noexcept
@@ -35,17 +34,16 @@ public:
   // If you just use RemoveConst<T> without the Conditional and the requires
   // ConstType<T> clause is not satisfied then it deletes the copy constructor
   // instead of not defining it.
-  constexpr Slice(Slice<meta::Conditional<type_traits::ConstType<T>,
-                                          type_traits::RemoveConst<T>, void>,
-                        SizeT> const& mutable_slice) noexcept
-    requires type_traits::ConstType<T>
+  constexpr Slice(
+      Slice<meta::Conditional<meta::ConstType<T>, meta::RemoveConst<T>, void>,
+            SizeT> const& mutable_slice) noexcept
+    requires meta::ConstType<T>
       : data_(mutable_slice.data_), size_(mutable_slice.size_) {}
 
-  constexpr Slice&
-  operator=(Slice<meta::Conditional<type_traits::ConstType<T>,
-                                    type_traits::RemoveConst<T>, void>,
-                  SizeT> const& mutable_slice) noexcept
-    requires type_traits::ConstType<T>
+  constexpr Slice& operator=(
+      Slice<meta::Conditional<meta::ConstType<T>, meta::RemoveConst<T>, void>,
+            SizeT> const& mutable_slice) noexcept
+    requires meta::ConstType<T>
   {
     data_ = mutable_slice.data_;
     size_ = mutable_slice.size_;
@@ -57,7 +55,7 @@ public:
   // NOLINTBEGIN(cppcoreguidelines-missing-std-forward)
   // NOLINTBEGIN(cppcoreguidelines-rvalue-reference-param-not-moved)
   template <typename Self>
-  [[nodiscard]] constexpr type_traits::CopyCV<Self, T>*
+  [[nodiscard]] constexpr meta::CopyCV<Self, T>*
   data(this Self&& self) noexcept {
     return self.data_;
   }
@@ -68,20 +66,20 @@ public:
   template <typename Self>
   [[nodiscard]] constexpr auto&& operator[](this Self&& self,
                                             SizeT       index) noexcept {
-    return static_cast<type_traits::CopyCVRef<Self&&, T>>(
+    return static_cast<meta::CopyCVRef<Self&&, T>>(
         self.data_[Reversed ? -index : index]);
   }
 
   template <typename Self>
   [[nodiscard]] constexpr auto bytes(this Self&& self) noexcept {
-    if constexpr (type_traits::ConstType<T>) {
-      using Byte = type_traits::CopyCV<Self, uchar const>;
+    if constexpr (meta::ConstType<T>) {
+      using Byte = meta::CopyCV<Self, uchar const>;
       return Slice<Byte, SizeT>{
           reinterpret_cast<Byte*>(self.data_),
           static_cast<SizeT>(self.size_ * sizeof(T)),
       };
     } else {
-      using Byte = type_traits::CopyCV<Self, uchar>;
+      using Byte = meta::CopyCV<Self, uchar>;
       return Slice<Byte, SizeT>{
           reinterpret_cast<Byte*>(self.data_),
           static_cast<SizeT>(self.size_ * sizeof(T)),
@@ -91,12 +89,12 @@ public:
 
   template <typename Self>
   [[nodiscard]] constexpr auto slice(this Self&& self) noexcept
-      -> Slice<type_traits::CopyCV<Self, T>, SizeT, false> {
+      -> Slice<meta::CopyCV<Self, T>, SizeT, false> {
     return {static_cast<Self&&>(self).data_, static_cast<Self&&>(self).size_};
   }
   template <typename Self>
   [[nodiscard]] constexpr auto reversed_slice(this Self&& self) noexcept
-      -> Slice<type_traits::CopyCV<Self, T>, SizeT, true> {
+      -> Slice<meta::CopyCV<Self, T>, SizeT, true> {
     return {static_cast<Self&&>(self).data_, static_cast<Self&&>(self).size_};
   }
 
@@ -119,12 +117,12 @@ public:
   }
 
   template <typename Self>
-  [[nodiscard]] constexpr type_traits::CopyCV<Self, T>*
+  [[nodiscard]] constexpr meta::CopyCV<Self, T>*
   begin(this Self&& self) noexcept {
     return self.data_;
   }
   template <typename Self>
-  [[nodiscard]] constexpr type_traits::CopyCV<Self, T>*
+  [[nodiscard]] constexpr meta::CopyCV<Self, T>*
   end(this Self&& self) noexcept {
     return self.data_ + self.size_;
   }
@@ -136,7 +134,7 @@ private:
   SizeT size_;
 };
 
-template <typename T, type_traits::Integral SizeT = usize>
+template <typename T, meta::Integral SizeT = usize>
 using ReversedSlice = Slice<T, SizeT, true>;
 
 } // namespace yacsl::ranges

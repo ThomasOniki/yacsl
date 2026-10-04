@@ -3,8 +3,8 @@
 #include "yacsl/attributes.hpp"
 #include "yacsl/containers/stack_array.hpp"
 #include "yacsl/memory/lifetimes.hpp"
+#include "yacsl/meta/qualifiers.hpp"
 #include "yacsl/type_aliases.hpp"
-#include "yacsl/type_traits/qualifiers.hpp"
 
 namespace yacsl::containers {
 
@@ -32,7 +32,7 @@ public:
   template <typename Self>
   [[nodiscard]] constexpr auto&&
   get(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
-    return memory::forward<type_traits::CopyCVRef<Self&&, T>>(
+    return memory::forward<meta::CopyCVRef<Self&&, T>>(
         *memory::forward<Self>(self).ptr());
   }
 
@@ -40,7 +40,7 @@ private:
   template <typename Self>
   [[nodiscard]] constexpr auto*
   ptr(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
-    return reinterpret_cast<type_traits::CopyCV<Self, T>*>(
+    return reinterpret_cast<meta::CopyCV<Self, T>*>(
         memory::forward<Self>(self).data_.data());
   }
 
