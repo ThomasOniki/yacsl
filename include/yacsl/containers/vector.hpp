@@ -1,7 +1,7 @@
 #pragma once
 
 #include "yacsl/attributes.hpp"
-#include "yacsl/containers/stack_array.hpp"
+#include "yacsl/containers/stack_array_storage.hpp"
 #include "yacsl/memory/alignment.hpp"
 #include "yacsl/memory/allocator_type.hpp"
 #include "yacsl/memory/arena.hpp"
@@ -150,8 +150,8 @@ private:
   void definitely_reserve(this Vector& self, SizeT capacity);
 
 private:
-  YACSL_NO_UNIQUE_ADDRESS StackArray<T, N, SizeT> fixed_buffer_ = {};
-  YACSL_NO_UNIQUE_ADDRESS A                       allocator_;
+  YACSL_NO_UNIQUE_ADDRESS StackArrayStorage<T, N, SizeT> fixed_buffer_ = {};
+  YACSL_NO_UNIQUE_ADDRESS A                              allocator_;
 
   T*    data_     = fixed_buffer_.data();
   SizeT size_     = 0;
