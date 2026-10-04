@@ -13,7 +13,7 @@
 
 namespace yacsl::containers {
 
-template <meta::Character Char, usize N = 0,
+template <meta::Character T, usize N = 0,
           memory::AllocatorType A     = memory::MainArenaAllocator,
           meta::Integral        SizeT = usize>
 class BasicString {
@@ -23,18 +23,18 @@ public:
 
   constexpr ~BasicString() noexcept = default;
 
-  constexpr BasicString(Char const* cstr, A const& allocator = A()) noexcept
-      : data_(ranges::BasicStringView<Char, usize>(cstr), allocator) {}
+  constexpr BasicString(T const* cstr, A const& allocator = A()) noexcept
+      : data_(ranges::BasicStringView<T, usize>(cstr), allocator) {}
 
-  constexpr BasicString(Char const* data, SizeT len,
+  constexpr BasicString(T const* data, SizeT len,
                         A const& allocator = A()) noexcept
-      : data_(ranges::BasicStringView<Char, usize>(data, len), allocator) {}
+      : data_(ranges::BasicStringView<T, usize>(data, len), allocator) {}
 
-  constexpr BasicString(Char const* begin, Char const* end,
+  constexpr BasicString(T const* begin, T const* end,
                         A const& allocator = A()) noexcept
-      : data_(ranges::BasicStringView<Char, usize>(begin, end), allocator) {}
+      : data_(ranges::BasicStringView<T, usize>(begin, end), allocator) {}
 
-  constexpr BasicString(ranges::BasicStringView<Char, SizeT> str,
+  constexpr BasicString(ranges::BasicStringView<T, SizeT> str,
                         A const& allocator = A()) noexcept
       : data_(str, allocator) {}
 
@@ -57,23 +57,23 @@ public:
   }
 
   constexpr BasicString& append(this BasicString& self YACSL_LIFETIMEBOUND,
-                                Char const* ptr, SizeT len) noexcept {
+                                T const* ptr, SizeT len) noexcept {
     memory::copy({ptr, len}, self.grow(len));
     return self;
   }
   constexpr BasicString& append(this BasicString& self YACSL_LIFETIMEBOUND,
-                                Char const* begin, Char const* end) noexcept {
+                                T const* begin, T const* end) noexcept {
     return self.append(begin, static_cast<SizeT>(end - begin));
   }
 
   constexpr BasicString&
-  append(this BasicString& self               YACSL_LIFETIMEBOUND,
-         ranges::BasicStringView<Char, SizeT> str) noexcept {
+  append(this BasicString& self            YACSL_LIFETIMEBOUND,
+         ranges::BasicStringView<T, SizeT> str) noexcept {
     return self.append(str.data(), str.size());
   }
   constexpr BasicString& append(this BasicString& self YACSL_LIFETIMEBOUND,
-                                Char const*            cstr) noexcept {
-    return self.append(ranges::BasicStringView<Char, usize>(cstr));
+                                T const*               cstr) noexcept {
+    return self.append(ranges::BasicStringView<T, usize>(cstr));
   }
   constexpr BasicString& append(this BasicString& self YACSL_LIFETIMEBOUND,
                                 BasicString const&     other) noexcept {
@@ -81,13 +81,13 @@ public:
   }
 
   constexpr BasicString& append(this BasicString& self YACSL_LIFETIMEBOUND,
-                                Char                   chr) noexcept {
+                                T                      chr) noexcept {
     *self.grow(1) = chr;
     return self;
   }
 
   constexpr BasicString& operator+=(this BasicString& self YACSL_LIFETIMEBOUND,
-                                    ranges::BasicStringView<Char, SizeT> str) {
+                                    ranges::BasicStringView<T, SizeT> str) {
     return self.append(str);
   }
   constexpr BasicString& operator+=(this BasicString& self YACSL_LIFETIMEBOUND,
@@ -95,11 +95,11 @@ public:
     return self.append(str);
   }
   constexpr BasicString& operator+=(this BasicString& self YACSL_LIFETIMEBOUND,
-                                    Char const*            cstr) {
+                                    T const*               cstr) {
     return self.append(cstr);
   }
   constexpr BasicString& operator+=(this BasicString& self YACSL_LIFETIMEBOUND,
-                                    Char                   chr) {
+                                    T                      chr) {
     return self.append(chr);
   }
 
@@ -109,18 +109,18 @@ public:
     return lhs += rhs;
   }
   template <typename Self>
-  constexpr BasicString operator+(this Self&&                          self,
-                                  ranges::BasicStringView<Char, SizeT> rhs) {
+  constexpr BasicString operator+(this Self&&                       self,
+                                  ranges::BasicStringView<T, SizeT> rhs) {
     BasicString lhs = memory::forward<Self>(self);
     return lhs += rhs;
   }
   template <typename Self>
-  constexpr BasicString operator+(this Self&& self, Char const* cstr) {
+  constexpr BasicString operator+(this Self&& self, T const* cstr) {
     BasicString lhs = memory::forward<Self>(self);
     return lhs += cstr;
   }
   template <typename Self>
-  constexpr BasicString operator+(this Self&& self, Char chr) {
+  constexpr BasicString operator+(this Self&& self, T chr) {
     BasicString lhs = memory::forward<Self>(self);
     return lhs += chr;
   }
@@ -138,8 +138,8 @@ public:
 
   // This doesn't initialize the new memory but adds count to size. It is useful
   // for characters you want to memcpy into. It returns new_end - count.
-  constexpr Char* grow(this BasicString& self YACSL_LIFETIMEBOUND,
-                       SizeT                  count) noexcept {
+  constexpr T* grow(this BasicString& self YACSL_LIFETIMEBOUND,
+                    SizeT                  count) noexcept {
     self.data_.resize(self.data_.size() + count);
     return self.data_.end() - count;
   }
@@ -151,7 +151,7 @@ public:
   }
 
   template <typename Self>
-  [[nodiscard]] constexpr Char*
+  [[nodiscard]] constexpr T*
   c_str(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
     self.data_.reserve(self.data_.size() + 1);
     self.data_[self.data_.size()] = '\0';
@@ -177,26 +177,26 @@ public:
     return self.view() == other.view();
   }
   [[nodiscard]] constexpr bool
-  operator==(this BasicString const&                     self,
-             ranges::BasicStringView<Char, SizeT> const& rhs) noexcept {
+  operator==(this BasicString const&                  self,
+             ranges::BasicStringView<T, SizeT> const& rhs) noexcept {
     return self.view() == rhs;
   }
   [[nodiscard]] constexpr bool operator==(this BasicString const& self,
-                                          Char const* cstr) noexcept {
+                                          T const* cstr) noexcept {
     return self.view() == ranges::BasicStringView(cstr);
   }
 
-  [[nodiscard]] constexpr ranges::BasicStringView<Char, SizeT>
+  [[nodiscard]] constexpr ranges::BasicStringView<T, SizeT>
   view(this BasicString const& self YACSL_LIFETIMEBOUND) noexcept {
     return {self.data_.data(), self.data_.size()};
   }
   template <typename Self>
-  [[nodiscard]] constexpr ranges::Slice<meta::CopyCV<Self, Char>, SizeT>
+  [[nodiscard]] constexpr ranges::Slice<meta::CopyCV<Self, T>, SizeT>
   slice(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
     return memory::forward<Self>(self).data_.slice();
   }
   template <typename Self>
-  [[nodiscard]] constexpr ranges::ReversedSlice<meta::CopyCV<Self, Char>, SizeT>
+  [[nodiscard]] constexpr ranges::ReversedSlice<meta::CopyCV<Self, T>, SizeT>
   reversed_slice(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
     return memory::forward<Self>(self).data_.reversed_slice();
   }
@@ -224,7 +224,7 @@ public:
   }
 
 private:
-  Vector<Char, N, A, SizeT> data_;
+  Vector<T, N, A, SizeT> data_;
 };
 
 using String = BasicString<char>;

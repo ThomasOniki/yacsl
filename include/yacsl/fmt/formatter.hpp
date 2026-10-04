@@ -298,8 +298,8 @@ private:
   FormatStringParser::Align align_ : 2 = FormatStringParser::Align::Right;
 };
 
-template <meta::Character Char, meta::Integral SizeT>
-class Formatter<ranges::BasicStringView<Char, SizeT>> {
+template <meta::Character T, meta::Integral SizeT>
+class Formatter<ranges::BasicStringView<T, SizeT>> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
     FormatStringParser parser(fmt);
@@ -314,7 +314,7 @@ public:
   }
 
   void format(this Formatter const& self, containers::String& buf,
-              ranges::BasicStringView<Char, SizeT> str) noexcept {
+              ranges::BasicStringView<T, SizeT> str) noexcept {
     PaddingOptions const opts{
         .width = self.width_,
         .fill  = self.fill_,
@@ -322,12 +322,12 @@ public:
     };
     if (self.type_ == Type::Normal) [[likely]] {
       pad_string(buf,
-                 ranges::BasicStringView<Char>(str.data(),
-                                               static_cast<usize>(str.size())),
+                 ranges::BasicStringView<T>(str.data(),
+                                            static_cast<usize>(str.size())),
                  opts);
     } else {
       pad_string<true>(buf,
-                       ranges::BasicStringView<Char>(
+                       ranges::BasicStringView<T>(
                            str.data(), static_cast<usize>(str.size())),
                        opts);
     }
@@ -344,22 +344,22 @@ private:
   Type                      type_ : 1  = Type::Normal;
 };
 
-template <meta::Character Char, meta::Integral SizeT>
-class Formatter<ranges::Slice<Char, SizeT>> {
+template <meta::Character T, meta::Integral SizeT>
+class Formatter<ranges::Slice<T, SizeT>> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
     return self.impl_.parse(fmt);
   }
   void format(this Formatter const& self, containers::String& buf,
-              ranges::Slice<Char, SizeT> str) noexcept {
+              ranges::Slice<T, SizeT> str) noexcept {
     return self.impl_.format(buf, {str.data(), str.size()});
   }
 
 private:
-  Formatter<ranges::BasicStringView<Char, SizeT>> impl_;
+  Formatter<ranges::BasicStringView<T, SizeT>> impl_;
 };
 
-template <meta::Character Char> class Formatter<Char*> {
+template <meta::Character T> class Formatter<T*> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
     FormatStringParser parser(fmt);
@@ -375,16 +375,16 @@ public:
   }
 
   void format(this Formatter const& self, containers::String& buf,
-              Char const* str) noexcept {
+              T const* str) noexcept {
     PaddingOptions const opts{
         .width = self.width_,
         .fill  = self.fill_,
         .align = self.align_,
     };
     if (self.type_ == Type::CString) [[likely]] {
-      pad_string(buf, ranges::BasicStringView<Char>(str), opts);
+      pad_string(buf, ranges::BasicStringView<T>(str), opts);
     } else if (self.type_ == Type::Debug) {
-      pad_string<true>(buf, ranges::BasicStringView<Char>(str), opts);
+      pad_string<true>(buf, ranges::BasicStringView<T>(str), opts);
     } else {
       pad_integral<"0123456789abcdef">(buf, reinterpret_cast<uptr>(str), opts);
     }
@@ -403,50 +403,50 @@ private:
   FormatStringParser::Align align_ : 2 = FormatStringParser::Align::Left;
 };
 
-template <meta::Character Char, usize N, memory::AllocatorType A,
+template <meta::Character T, usize N, memory::AllocatorType A,
           meta::Integral SizeT>
-class Formatter<containers::BasicString<Char, N, A, SizeT>> {
+class Formatter<containers::BasicString<T, N, A, SizeT>> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
     return self.impl_.parse(fmt);
   }
   void format(this Formatter const& self, containers::String& buf,
-              containers::BasicString<Char, N, A, SizeT> const& str) noexcept {
+              containers::BasicString<T, N, A, SizeT> const& str) noexcept {
     return self.impl_.format(buf, str.view());
   }
 
 private:
-  Formatter<ranges::BasicStringView<Char>> impl_;
+  Formatter<ranges::BasicStringView<T>> impl_;
 };
 
-template <meta::Character Char, usize N> class Formatter<Char[N]> {
+template <meta::Character T, usize N> class Formatter<T[N]> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
     return self.impl_.parse(fmt);
   }
   void format(this Formatter const& self, containers::String& buf,
-              Char const (&str)[N]) noexcept {
+              T const (&str)[N]) noexcept {
     return self.impl_.format(
-        buf, ranges::BasicStringView(static_cast<Char const*>(str), N - 1));
+        buf, ranges::BasicStringView(static_cast<T const*>(str), N - 1));
   }
 
 private:
-  Formatter<ranges::BasicStringView<Char>> impl_;
+  Formatter<ranges::BasicStringView<T>> impl_;
 };
 
-template <meta::Character Char, usize N> class Formatter<Char const[N]> {
+template <meta::Character T, usize N> class Formatter<T const[N]> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
     return self.impl_.parse(fmt);
   }
   void format(this Formatter const& self, containers::String& buf,
-              Char const (&str)[N]) noexcept {
-    return self.Formatter<ranges::BasicStringView<Char>>::format(
+              T const (&str)[N]) noexcept {
+    return self.Formatter<ranges::BasicStringView<T>>::format(
         buf, ranges::BasicStringView(str, N - 1));
   }
 
 private:
-  Formatter<ranges::BasicStringView<Char>> impl_;
+  Formatter<ranges::BasicStringView<T>> impl_;
 };
 
 template <meta::RangeLike T> class Formatter<T> {
