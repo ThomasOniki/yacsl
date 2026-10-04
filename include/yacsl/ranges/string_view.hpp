@@ -99,12 +99,12 @@ private:
   SizeT    size_ = 0;
 };
 
-template <meta::Character Char, meta::Integral SizeT>
-BasicStringView(Char const*, SizeT) -> BasicStringView<Char, SizeT>;
-template <meta::Character Char>
-BasicStringView(Char const*) -> BasicStringView<Char, usize>;
-template <meta::Character Char>
-BasicStringView(Char const*, Char const*) -> BasicStringView<Char, usize>;
+template <meta::Character T, meta::Integral SizeT>
+BasicStringView(T const*, SizeT) -> BasicStringView<T, SizeT>;
+template <meta::Character T>
+BasicStringView(T const*) -> BasicStringView<T, usize>;
+template <meta::Character T>
+BasicStringView(T const*, T const*) -> BasicStringView<T, usize>;
 
 using StringView = BasicStringView<char>;
 

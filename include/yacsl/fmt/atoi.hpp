@@ -7,17 +7,17 @@
 
 namespace yacsl::fmt {
 
-template <meta::Character Char>
-constexpr Char const* num_end(YACSL_LIFETIMEBOUND Char const* begin) {
+template <meta::Character T>
+constexpr T const* num_end(YACSL_LIFETIMEBOUND T const* begin) {
   while (*begin >= '0' && *begin <= '9') {
     ++begin;
   }
   return begin;
 }
 
-template <meta::Integral T, meta::Character Char = char,
+template <meta::Integral T, meta::Character C = char,
           meta::Integral SizeT = usize>
-constexpr T atoi(ranges::BasicStringView<Char, SizeT> str) noexcept {
+constexpr T atoi(ranges::BasicStringView<C, SizeT> str) noexcept {
   T ret = 0;
   for (char const chr : str) {
     ret *= 10;
@@ -25,15 +25,15 @@ constexpr T atoi(ranges::BasicStringView<Char, SizeT> str) noexcept {
   }
   return ret;
 }
-template <meta::Integral T, meta::Character Char = char,
+template <meta::Integral T, meta::Character C = char,
           meta::Integral SizeT = usize>
-constexpr T atoi(Char const* begin, Char const* end) {
-  return fmt::atoi<T>(ranges::BasicStringView<Char, SizeT>(begin, end));
+constexpr T atoi(C const* begin, C const* end) {
+  return fmt::atoi<T>(ranges::BasicStringView<C, SizeT>(begin, end));
 }
-template <meta::Integral T, meta::Character Char = char,
+template <meta::Integral T, meta::Character C = char,
           meta::Integral SizeT = usize>
-constexpr T atoi(Char const* ptr, SizeT len) {
-  return fmt::atoi<T>(ranges::BasicStringView<Char, SizeT>(ptr, len));
+constexpr T atoi(C const* ptr, SizeT len) {
+  return fmt::atoi<T>(ranges::BasicStringView<C, SizeT>(ptr, len));
 }
 
 } // namespace yacsl::fmt

@@ -8,10 +8,10 @@
 
 namespace yacsl::containers {
 
-template <typename Value, typename Error> class Result {
+template <typename T, typename E> class Result {
 public:
-  template <meta::MaybeCVRef<Error> E>
-  Result(E&& error) : error_(memory::forward<E>(error)), is_error_(true) {}
+  template <meta::MaybeCVRef<E> Err>
+  Result(Err&& error) : error_(memory::forward<Err>(error)), is_error_(true) {}
   template <typename... Args>
   Result(Args&&... args) : value_(memory::forward<Args>(args)...) {}
 
@@ -70,8 +70,8 @@ public:
   [[nodiscard]] constexpr auto&&
   value(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
     if (self.is_error_) [[unlikely]] {
-      debug::panic("Result<{}, {}> is error {}.", meta::TYPE_STRING<Value>,
-                   meta::TYPE_STRING<Error>, self.error_);
+      debug::panic("Result<{}, {}> is error {}.", meta::TYPE_STRING<T>,
+                   meta::TYPE_STRING<E>, self.error_);
     }
     return memory::forward<Self>(self).value_;
   }
@@ -79,9 +79,8 @@ public:
   [[nodiscard]] constexpr auto&&
   value_unchecked(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
     if (self.is_error_) [[unlikely]] {
-      debug::unreachable("Result<{}, {}> is error {}.",
-                         meta::TYPE_STRING<Value>, meta::TYPE_STRING<Error>,
-                         self.error_);
+      debug::unreachable("Result<{}, {}> is error {}.", meta::TYPE_STRING<T>,
+                         meta::TYPE_STRING<E>, self.error_);
     }
     return memory::forward<Self>(self).value_;
   }
@@ -90,8 +89,8 @@ public:
   [[nodiscard]] constexpr auto&&
   error(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
     if (!self.is_error_) [[unlikely]] {
-      debug::panic("Result<{}, {}> is value {}.", meta::TYPE_STRING<Value>,
-                   meta::TYPE_STRING<Error>, self.value_);
+      debug::panic("Result<{}, {}> is value {}.", meta::TYPE_STRING<T>,
+                   meta::TYPE_STRING<E>, self.value_);
     }
     return memory::forward<Self>(self).error_;
   }
@@ -99,16 +98,15 @@ public:
   [[nodiscard]] constexpr auto&&
   error_unchecked(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
     if (!self.is_error_) [[unlikely]] {
-      debug::unreachable("Result<{}, {}> is value {}.",
-                         meta::TYPE_STRING<Value>, meta::TYPE_STRING<Error>,
-                         self.value_);
+      debug::unreachable("Result<{}, {}> is value {}.", meta::TYPE_STRING<T>,
+                         meta::TYPE_STRING<E>, self.value_);
     }
     return memory::forward<Self>(self).error_;
   }
 
   template <typename Self, typename F>
   auto transform(this Self&& self, F&& func)
-      -> Result<decltype(func(*self.value_)), Error> {
+      -> Result<decltype(func(*self.value_)), E> {
     if (self.is_value_) {
       return memory::forward<F>(func)(*memory::forward<Self>(self).value_);
     }
@@ -118,16 +116,16 @@ public:
 private:
   template <typename Self> void destroy(this Self&& self) noexcept {
     if (self.is_error_) [[unlikely]] {
-      memory::forward<Self>(self).error_.~Error();
+      memory::forward<Self>(self).error_.~E();
     } else {
-      memory::forward<Self>(self).value_.~Value();
+      memory::forward<Self>(self).value_.~T();
     }
   }
 
 private:
   union {
-    Value value_;
-    Error error_;
+    T value_;
+    E error_;
   };
   bool is_error_ = false;
 };
