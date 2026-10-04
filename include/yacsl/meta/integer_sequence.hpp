@@ -6,6 +6,8 @@ namespace yacsl::meta {
 
 template <typename T, T... Ints> struct IntegerSequence {
   using Type = T;
+
+  template <usize I> static constexpr T at_index = Ints...[I];
 };
 
 namespace internal {
