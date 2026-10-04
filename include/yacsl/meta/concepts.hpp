@@ -53,8 +53,8 @@ concept UnsignedIntegral = Integral<T> && T(-1) > T(0);
 template <typename T>
 concept Enum = __is_enum(T);
 
-template <typename From, typename To>
-concept ConvertibleTo = __is_convertible(From, To);
+template <typename T, typename U>
+concept ConvertibleTo = __is_convertible(T, U);
 
 #ifdef __clang__
 template <typename T>
@@ -74,8 +74,8 @@ concept RangeLike = requires(T range) {
   { ++declval<decltype(range.begin())>() };
 };
 
-template <typename Range, typename T>
-concept RangeOf = RangeLike<Range> && requires(Range range) {
+template <typename R, typename T>
+concept RangeOf = RangeLike<R> && requires(R range) {
   { *range.begin() } -> ConvertibleTo<T>;
 };
 

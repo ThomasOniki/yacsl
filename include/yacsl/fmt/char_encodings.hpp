@@ -86,15 +86,15 @@ inline char* write_low_surrogate(YACSL_LIFETIMEBOUND char* buf, char32_t high,
 // Unicode - 0x10000 = yyyyyyyyyyxxxxxxxxxx
 // W1 = 0xD800 + yyyyyyyyyy = 110110yyyyyyyyyy
 // W2 = 0xDC00 + xxxxxxxxxx = 110111xxxxxxxxxx
-template <meta::Character C>
-char* write_char(YACSL_LIFETIMEBOUND char* buf, C chr) {
-  if (sizeof(C) == 1 || chr < 0x80) {
+template <meta::Character T>
+char* write_char(YACSL_LIFETIMEBOUND char* buf, T chr) {
+  if (sizeof(T) == 1 || chr < 0x80) {
     return write_char1(buf, static_cast<char8_t>(chr));
   }
   if (chr < 0x800) {
     return write_char2(buf, static_cast<char32_t>(chr));
   }
-  if (sizeof(C) == 2 && chr >= 0xD800 && chr < 0xE000) {
+  if (sizeof(T) == 2 && chr >= 0xD800 && chr < 0xE000) {
     static thread_local char32_t high;
     if (chr < 0xDC00) {
       high = static_cast<char32_t>(chr);
@@ -108,12 +108,12 @@ char* write_char(YACSL_LIFETIMEBOUND char* buf, C chr) {
   return write_char4(buf, static_cast<char32_t>(chr));
 }
 
-template <meta::Character C> void write_char(containers::String& buf, C chr) {
-  if (sizeof(C) == 1 || chr < 0x80) {
+template <meta::Character T> void write_char(containers::String& buf, T chr) {
+  if (sizeof(T) == 1 || chr < 0x80) {
     write_char1(buf.grow(1), static_cast<char8_t>(chr));
   } else if (chr < 0x800) {
     write_char2(buf.grow(2), static_cast<char32_t>(chr));
-  } else if (sizeof(C) == 2 && chr >= 0xD800 && chr < 0xE000) {
+  } else if (sizeof(T) == 2 && chr >= 0xD800 && chr < 0xE000) {
     static thread_local char32_t high;
     if (chr < 0xDC00) {
       high = static_cast<char32_t>(chr);
@@ -127,11 +127,11 @@ template <meta::Character C> void write_char(containers::String& buf, C chr) {
   }
 }
 
-template <meta::Character C> u32 char_len(C chr) {
-  if constexpr (sizeof(C) == 1) {
+template <meta::Character T> u32 char_len(T chr) {
+  if constexpr (sizeof(T) == 1) {
     return 1;
   }
-  if constexpr (sizeof(C) == 2) {
+  if constexpr (sizeof(T) == 2) {
     if (chr < 0x80) {
       return 1;
     }
@@ -157,37 +157,37 @@ template <meta::Character C> u32 char_len(C chr) {
   return 4;
 }
 
-template <meta::Character C>
-usize real_string_len(ranges::BasicStringView<C, usize> str) {
-  if constexpr (sizeof(C) == 1) {
+template <meta::Character T>
+usize real_string_len(ranges::BasicStringView<T, usize> str) {
+  if constexpr (sizeof(T) == 1) {
     return str.size();
   }
   usize ret = 0;
-  for (C const chr : str) {
+  for (T const chr : str) {
     ret += char_len(chr);
   }
   return ret;
 }
 
-template <meta::Character C>
-void write_string(char* buf, ranges::BasicStringView<C, usize> str) {
-  if constexpr (sizeof(C) == 1) {
+template <meta::Character T>
+void write_string(char* buf, ranges::BasicStringView<T, usize> str) {
+  if constexpr (sizeof(T) == 1) {
     memory::copy(str.bytes(), reinterpret_cast<u8*>(buf));
     return;
   }
-  for (C const chr : str) {
+  for (T const chr : str) {
     buf = write_char(buf, chr);
   }
 }
 
-template <meta::Character C>
+template <meta::Character T>
 void write_string(containers::String&               buf,
-                  ranges::BasicStringView<C, usize> str) {
-  if constexpr (sizeof(C) == 1) {
+                  ranges::BasicStringView<T, usize> str) {
+  if constexpr (sizeof(T) == 1) {
     memory::copy(str.bytes(), reinterpret_cast<u8*>(buf.grow(str.size())));
     return;
   }
-  for (C const chr : str) {
+  for (T const chr : str) {
     write_char(buf, chr);
   }
 }

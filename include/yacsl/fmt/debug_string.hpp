@@ -11,7 +11,7 @@
 
 namespace yacsl::fmt {
 
-template <meta::Character C> u32 debug_char_len(C chr) {
+template <meta::Character T> u32 debug_char_len(T chr) {
   if (chr == '\n' || chr == '\0' || chr == '\r' || chr == '\t' || chr == '\v') {
     return 2;
   }
@@ -21,10 +21,10 @@ template <meta::Character C> u32 debug_char_len(C chr) {
   return char_len(chr);
 }
 
-template <meta::Character C>
-usize debug_string_len(ranges::BasicStringView<C, usize> str) noexcept {
+template <meta::Character T>
+usize debug_string_len(ranges::BasicStringView<T, usize> str) noexcept {
   usize len = 0;
-  for (C const chr : str) {
+  for (T const chr : str) {
     len += debug_char_len(chr);
   }
   return len;
@@ -63,13 +63,13 @@ inline char* write_debug_char_below_0x20(YACSL_LIFETIMEBOUND char* buf,
   }
 }
 
-template <meta::Character C>
-char* write_debug_char(YACSL_LIFETIMEBOUND char* buf, C chr) {
+template <meta::Character T>
+char* write_debug_char(YACSL_LIFETIMEBOUND char* buf, T chr) {
   // For some reason clang-tidy's warning about casting [signed] char to
   // unsigned types other than u8 also applies to wchar_t, but you can't cast
   // a wchar to u8 like it suggests if you don't want to lose precision.
   // NOLINTNEXTLINE(bugprone-signed-char-misuse)
-  auto const uchr = static_cast<meta::MakeUnsigned<C>>(chr);
+  auto const uchr = static_cast<meta::MakeUnsigned<T>>(chr);
   if (uchr >= 0x20) {
     if (uchr == 0x7F) {
       buf[0] = '\\';
@@ -129,13 +129,13 @@ inline void write_debug_char_below_0x20(containers::String& buf, char chr) {
   }
 }
 
-template <meta::Character C>
-void write_debug_char(containers::String& buf, C chr) {
+template <meta::Character T>
+void write_debug_char(containers::String& buf, T chr) {
   // For some reason clang-tidy's warning about casting [signed] char to
   // unsigned types other than u8 also applies to wchar_t, but you can't cast
   // a wchar to u8 like it suggests if you don't want to lose precision.
   // NOLINTNEXTLINE(bugprone-signed-char-misuse)
-  auto const uchr = static_cast<meta::MakeUnsigned<C>>(chr);
+  auto const uchr = static_cast<meta::MakeUnsigned<T>>(chr);
   if (uchr >= 0x20) {
     if (uchr == 0x7F) {
       using ranges::operator""_sv;
@@ -148,37 +148,37 @@ void write_debug_char(containers::String& buf, C chr) {
   }
 }
 
-template <meta::Character C>
-void write_debug_string(char* buf, ranges::BasicStringView<C, usize> str) {
+template <meta::Character T>
+void write_debug_string(char* buf, ranges::BasicStringView<T, usize> str) {
   *buf = '"';
   ++buf;
-  for (C const chr : str) {
+  for (T const chr : str) {
     buf = write_debug_char(buf, chr);
   }
   *buf = '"';
 }
-template <meta::Character C>
+template <meta::Character T>
 void write_debug_string(containers::String&               buf,
-                        ranges::BasicStringView<C, usize> str) {
+                        ranges::BasicStringView<T, usize> str) {
   buf += '"';
-  for (C const chr : str) {
+  for (T const chr : str) {
     write_debug_char(buf, chr);
   }
   buf += '"';
 }
 
-template <bool IsDebug, meta::Character C>
+template <bool IsDebug, meta::Character T>
 void write_maybe_debug_string(containers::String&               buf,
-                              ranges::BasicStringView<C, usize> str) {
+                              ranges::BasicStringView<T, usize> str) {
   if constexpr (IsDebug) {
     write_debug_string(buf, str);
   } else {
     write_string(buf, str);
   }
 }
-template <bool IsDebug, meta::Character C>
+template <bool IsDebug, meta::Character T>
 void write_maybe_debug_string(char*                             buf,
-                              ranges::BasicStringView<C, usize> str) {
+                              ranges::BasicStringView<T, usize> str) {
   if constexpr (IsDebug) {
     write_debug_string(buf, str);
   } else {
@@ -186,8 +186,8 @@ void write_maybe_debug_string(char*                             buf,
   }
 }
 
-template <bool IsDebug, meta::Character C>
-usize maybe_debug_string_len(ranges::BasicStringView<C, usize> str) {
+template <bool IsDebug, meta::Character T>
+usize maybe_debug_string_len(ranges::BasicStringView<T, usize> str) {
   if constexpr (IsDebug) {
     return debug_string_len(str);
   } else {

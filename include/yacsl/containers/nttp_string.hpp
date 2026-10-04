@@ -10,16 +10,16 @@
 
 namespace yacsl::containers {
 
-template <usize N, meta::Character C = char, meta::Integral SizeT = usize>
+template <usize N, meta::Character T = char, meta::Integral SizeT = usize>
 class NTTPString {
 public:
-  constexpr NTTPString(C const (&str)[N + 1]) noexcept {
+  constexpr NTTPString(T const (&str)[N + 1]) noexcept {
     for (usize i = 0; i < N; ++i) {
       data_[i] = str[i];
     }
   }
 
-  constexpr NTTPString(ranges::BasicStringView<C, SizeT> view) noexcept {
+  constexpr NTTPString(ranges::BasicStringView<T, SizeT> view) noexcept {
     for (SizeT i = 0; i < view.size(); ++i) {
       data_[i] = view[i];
     }
@@ -42,7 +42,7 @@ public:
   }
 
   template <typename Self>
-  [[nodiscard]] constexpr ranges::BasicStringView<C, SizeT>
+  [[nodiscard]] constexpr ranges::BasicStringView<T, SizeT>
   view(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
     return {memory::forward<Self>(self).data_.data(), static_cast<SizeT>(N)};
   }
@@ -74,13 +74,13 @@ public:
   }
 
 public:
-  StackArray<C, N, SizeT> data_ = {'\0'};
+  StackArray<T, N, SizeT> data_ = {'\0'};
 };
 
-template <meta::Character C, meta::Integral SizeT>
-class NTTPString<0, C, SizeT> {
+template <meta::Character T, meta::Integral SizeT>
+class NTTPString<0, T, SizeT> {
 public:
-  constexpr NTTPString(C const (& /*str*/)[1]) noexcept {}
+  constexpr NTTPString(T const (& /*str*/)[1]) noexcept {}
   constexpr NTTPString() noexcept = default;
 
   [[nodiscard]] constexpr SizeT size(this NTTPString const& /*self*/) noexcept {
@@ -99,20 +99,20 @@ public:
     return memory::forward<Self>(self).char_;
   }
 
-  [[nodiscard]] constexpr ranges::BasicStringView<C, SizeT>
+  [[nodiscard]] constexpr ranges::BasicStringView<T, SizeT>
   view(this NTTPString const& self YACSL_LIFETIMEBOUND) noexcept {
     return {&self.char_, static_cast<SizeT>(0)};
   }
   template <typename Self>
   [[nodiscard]] constexpr auto
   slice(this Self&& self YACSL_LIFETIMEBOUND) noexcept
-      -> ranges::Slice<meta::CopyCV<Self, C>, SizeT> {
+      -> ranges::Slice<meta::CopyCV<Self, T>, SizeT> {
     return {memory::forward<Self>(self).data(), static_cast<SizeT>(0)};
   }
   template <typename Self>
   [[nodiscard]] constexpr auto
   reversed_slice(this Self&& self YACSL_LIFETIMEBOUND) noexcept
-      -> ranges::ReversedSlice<meta::CopyCV<Self, C>, SizeT> {
+      -> ranges::ReversedSlice<meta::CopyCV<Self, T>, SizeT> {
     return {memory::forward<Self>(self).data(), static_cast<SizeT>(0)};
   }
   template <typename Self>
@@ -132,11 +132,11 @@ public:
     return memory::forward<Self>(self).data();
   }
 
-  C char_ = '\0';
+  T char_ = '\0';
 };
 
-template <meta::Character C, usize N>
-NTTPString(C const (&str)[N]) -> NTTPString<N - 1, C, usize>;
+template <meta::Character T, usize N>
+NTTPString(T const (&str)[N]) -> NTTPString<N - 1, T, usize>;
 
 template <NTTPString... Strings>
 constexpr NTTPString cat_nttpstrings = [] {

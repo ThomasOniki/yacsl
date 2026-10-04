@@ -23,8 +23,8 @@ struct PaddingOptions {
   FormatStringParser::Align align;
 };
 
-template <meta::Character C>
-void pad_char(containers::String& buf, C chr, PaddingOptions opts) {
+template <meta::Character T>
+void pad_char(containers::String& buf, T chr, PaddingOptions opts) {
   u32 const len = char_len(chr);
   if (len >= opts.width) {
     write_char(buf.grow(len), chr);
@@ -44,8 +44,8 @@ void pad_char(containers::String& buf, C chr, PaddingOptions opts) {
   }
 }
 
-template <meta::Character C>
-void pad_debug_char(containers::String& buf, C chr, PaddingOptions opts) {
+template <meta::Character T>
+void pad_debug_char(containers::String& buf, T chr, PaddingOptions opts) {
   u32 const len = debug_char_len(chr);
   // +2 for the quotes
   if (len + 2 >= opts.width) {
@@ -81,9 +81,9 @@ void pad_debug_char(containers::String& buf, C chr, PaddingOptions opts) {
   }
 }
 
-template <bool IsDebug, meta::Character C>
+template <bool IsDebug, meta::Character T>
 void pad_string_left_aligned(containers::String&               buf,
-                             ranges::BasicStringView<C, usize> str,
+                             ranges::BasicStringView<T, usize> str,
                              PaddingOptions                    opts) noexcept {
   usize const original_size = buf.size();
   write_maybe_debug_string<IsDebug>(buf, str);
@@ -98,9 +98,9 @@ void pad_string_left_aligned(containers::String&               buf,
   memset(buf.grow(pad_amount), opts.fill, pad_amount);
 }
 
-template <bool IsDebug, meta::Character C>
+template <bool IsDebug, meta::Character T>
 void pad_string_right_aligned(containers::String&               buf,
-                              ranges::BasicStringView<C, usize> str,
+                              ranges::BasicStringView<T, usize> str,
                               PaddingOptions                    opts) noexcept {
   usize const real_len = maybe_debug_string_len<IsDebug>(str);
   if (opts.width <= real_len) {
@@ -113,9 +113,9 @@ void pad_string_right_aligned(containers::String&               buf,
   write_maybe_debug_string<IsDebug>(begin + pad, str);
 }
 
-template <bool IsDebug, meta::Character C>
+template <bool IsDebug, meta::Character T>
 void pad_string_middle_aligned(containers::String&               buf,
-                               ranges::BasicStringView<C, usize> str,
+                               ranges::BasicStringView<T, usize> str,
                                PaddingOptions opts) noexcept {
   usize const real_len = maybe_debug_string_len<IsDebug>(str);
   if (opts.width <= real_len) {
@@ -128,8 +128,8 @@ void pad_string_middle_aligned(containers::String&               buf,
   write_maybe_debug_string<IsDebug>(begin + pad / 2, str);
 }
 
-template <bool IsDebug = false, meta::Character C>
-void pad_string(containers::String& buf, ranges::BasicStringView<C, usize> str,
+template <bool IsDebug = false, meta::Character T>
+void pad_string(containers::String& buf, ranges::BasicStringView<T, usize> str,
                 PaddingOptions opts) noexcept {
   if constexpr (IsDebug) {
     // + 2 for the 2 quotes
