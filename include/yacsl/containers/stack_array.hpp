@@ -121,7 +121,7 @@ public:
   }
   template <typename Self>
   [[nodiscard]] constexpr auto bytes(this Self&& /*self*/) noexcept {
-    return ranges::ReversedSlice<meta::CopyCV<Self, uchar>, SizeT>{
+    return ranges::ReversedSlice<meta::CopyCV<Self, u8>, SizeT>{
         nullptr,
         0,
     };

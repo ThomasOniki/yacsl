@@ -9,7 +9,7 @@
 
 namespace yacsl::fmt {
 
-constexpr u32 utf8_char_len(uchar utf8) noexcept {
+constexpr u32 utf8_char_len(u8 utf8) noexcept {
   if (utf8 <= 127) {
     return 1;
   }
@@ -172,7 +172,7 @@ usize real_string_len(ranges::BasicStringView<C, usize> str) {
 template <meta::Character C>
 void write_string(char* buf, ranges::BasicStringView<C, usize> str) {
   if constexpr (sizeof(C) == 1) {
-    memory::copy(str.bytes(), reinterpret_cast<uchar*>(buf));
+    memory::copy(str.bytes(), reinterpret_cast<u8*>(buf));
     return;
   }
   for (C const chr : str) {
@@ -184,7 +184,7 @@ template <meta::Character C>
 void write_string(containers::String&               buf,
                   ranges::BasicStringView<C, usize> str) {
   if constexpr (sizeof(C) == 1) {
-    memory::copy(str.bytes(), reinterpret_cast<uchar*>(buf.grow(str.size())));
+    memory::copy(str.bytes(), reinterpret_cast<u8*>(buf.grow(str.size())));
     return;
   }
   for (C const chr : str) {

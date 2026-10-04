@@ -63,8 +63,8 @@ public:
   [[nodiscard]] static File open_stderr() noexcept YACSL_API;
 
   usize write(this File&                 self,
-              ranges::Slice<uchar const> data) noexcept YACSL_API;
-  usize read(this File& self, ranges::Slice<uchar> buffer) noexcept YACSL_API;
+              ranges::Slice<u8 const> data) noexcept YACSL_API;
+  usize read(this File& self, ranges::Slice<u8> buffer) noexcept YACSL_API;
 
   [[nodiscard]] usize get_cursor(this File const& self) noexcept {
     return self.cursor_pos_;

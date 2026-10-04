@@ -15,8 +15,6 @@ using i64 = __INT64_TYPE__;
 using f32 = float;
 using f64 = double;
 
-using uchar = unsigned char;
-
 using usize   = __SIZE_TYPE__;
 using uptr    = __UINTPTR_TYPE__;
 using iptr    = __INTPTR_TYPE__;

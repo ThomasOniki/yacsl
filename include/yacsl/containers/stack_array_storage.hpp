@@ -97,7 +97,7 @@ public:
   }
 
 private:
-  alignas(T) StackArray<uchar, N * sizeof(T)> data_;
+  alignas(T) StackArray<u8, N * sizeof(T)> data_;
 };
 
 } // namespace yacsl::containers
