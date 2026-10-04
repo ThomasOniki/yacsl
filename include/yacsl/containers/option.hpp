@@ -5,6 +5,8 @@
 #include "yacsl/debug/_extern_functions.hpp"
 #include "yacsl/debug/source_location.hpp"
 #include "yacsl/memory/lifetimes.hpp"
+#include "yacsl/meta/conditional.hpp"
+#include "yacsl/meta/qualifiers.hpp"
 #include "yacsl/meta/type_string.hpp"
 #include "yacsl/utils/nil.hpp"
 
@@ -160,11 +162,11 @@ private:
   bool            is_value_;
 };
 
-template <typename T> class Option<T&> {
+template <meta::ReferenceType T> class Option<T> {
 public:
   constexpr Option(utils::Nil /*nil*/) noexcept {}
 
-  constexpr Option(T& value) noexcept : ptr_(&value) {}
+  constexpr Option(T value) noexcept : ptr_(&value) {}
 
   constexpr ~Option() noexcept                                      = default;
   constexpr Option(Option const&) noexcept                          = default;
@@ -178,12 +180,12 @@ public:
     return self;
   }
   constexpr Option& operator=(this Option& self YACSL_LIFETIMEBOUND,
-                              T&                value) noexcept {
+                              T                 value) noexcept {
     self.ptr_ = &value;
     return self;
   }
 
-  constexpr T& emplace(this Option& self YACSL_LIFETIMEBOUND, T& value) {
+  constexpr T emplace(this Option& self YACSL_LIFETIMEBOUND, T value) {
     self.ptr_ = &value;
     return *self.ptr_;
   }
@@ -203,13 +205,20 @@ public:
                                           utils::Nil /*nil*/) noexcept {
     return self.ptr_ != nullptr;
   }
-  [[nodiscard]] constexpr bool operator==(this Option const& self,
-                                          T const&           value) noexcept {
+  [[nodiscard]] constexpr bool operator==(
+      this Option const&                                     self,
+      meta::CopyReference<T, meta::RemoveReference<T> const> value) noexcept {
     return self.ptr_ != nullptr && self.ptr_ == &value;
   }
 
+private:
   template <typename Self>
-  [[nodiscard]] constexpr auto&&
+  using Forwarded = meta::Conditional<meta::LValueReferenceType<Self&&>, T,
+                                      meta::RemoveReference<T>&&>;
+
+public:
+  template <typename Self>
+  [[nodiscard]] constexpr Forwarded<Self>
   value(this Self&& self, debug::SourceLocation location =
                               debug::SourceLocation::current()) noexcept {
     if (!self.is_value_) [[unlikely]] {
@@ -223,7 +232,8 @@ public:
     return *memory::forward<Self>(self).ptr_;
   }
   template <typename Self>
-  [[nodiscard]] constexpr auto&& value_unchecked(this Self&& self) noexcept {
+  [[nodiscard]] constexpr Forwarded<Self>
+  value_unchecked(this Self&& self) noexcept {
 #ifdef NDEBUG
     if (!self.is_value_) [[unlikely]] {
       __builtin_unreachable();
@@ -235,7 +245,7 @@ public:
   }
 
 private:
-  T* ptr_ = nullptr;
+  meta::RemoveReference<T>* ptr_ = nullptr;
 };
 
 } // namespace yacsl::containers
