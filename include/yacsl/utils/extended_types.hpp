@@ -8,7 +8,7 @@ using u128 = __uint128_t;
 #else
 #include "yacsl/containers/stack_array.hpp"
 struct i128 {
-  containers::StackArray<uchar, 16> dummmy;
+  containers::StackArray<u8, 16> dummmy;
 };
 using u128 = i128;
 #endif

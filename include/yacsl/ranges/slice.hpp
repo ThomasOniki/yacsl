@@ -73,13 +73,13 @@ public:
   template <typename Self>
   [[nodiscard]] constexpr auto bytes(this Self&& self) noexcept {
     if constexpr (meta::ConstType<T>) {
-      using Byte = meta::CopyCV<Self, uchar const>;
+      using Byte = meta::CopyCV<Self, u8 const>;
       return Slice<Byte, SizeT>{
           reinterpret_cast<Byte*>(self.data_),
           static_cast<SizeT>(self.size_ * sizeof(T)),
       };
     } else {
-      using Byte = meta::CopyCV<Self, uchar>;
+      using Byte = meta::CopyCV<Self, u8>;
       return Slice<Byte, SizeT>{
           reinterpret_cast<Byte*>(self.data_),
           static_cast<SizeT>(self.size_ * sizeof(T)),

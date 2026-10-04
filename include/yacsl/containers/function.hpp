@@ -41,7 +41,7 @@ private:
   YACSL_NO_UNIQUE_ADDRESS A allocator_;
 
   alignas(8)
-      YACSL_NO_UNIQUE_ADDRESS StackArray<uchar, BufSz, usize> fixed_buffer_;
+      YACSL_NO_UNIQUE_ADDRESS StackArray<u8, BufSz, usize> fixed_buffer_;
 
   void* data_ = fixed_buffer_.data();
 
@@ -53,12 +53,12 @@ template <typename Ret, typename... Args, usize BufSz, memory::AllocatorType A>
 Function<Ret(Args...), BufSz, A>::Function(auto&& func) {
   using Func = meta::RemoveReference<decltype(func)>;
 
-  if constexpr (sizeof(Func) > sizeof(uchar) * BufSz || alignof(Func) > 8) {
+  if constexpr (sizeof(Func) > sizeof(u8) * BufSz || alignof(Func) > 8) {
     data_ = allocator_.allocate(sizeof(Func), memory::align_of<Func>).data();
 
     cleanup_ = [](void* data, A& alloc) {
       static_cast<Func*>(data)->~Func();
-      alloc.deallocate({static_cast<uchar*>(data), sizeof(Func)});
+      alloc.deallocate({static_cast<u8*>(data), sizeof(Func)});
     };
   } else {
     cleanup_ = [](void* data, A& /*allocator*/) {

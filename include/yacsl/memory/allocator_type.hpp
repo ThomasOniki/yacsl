@@ -10,7 +10,7 @@ namespace yacsl::memory {
 template <typename A>
 concept AllocatorType =
     requires(A allocator, A::SizeT size, Alignment align,
-             ranges::Slice<uchar, typename A::SizeT> slice) {
+             ranges::Slice<u8, typename A::SizeT> slice) {
       { allocator.allocate(size, align) } -> meta::SameAs<decltype(slice)>;
       { allocator.deallocate(slice) } -> meta::SameAs<void>;
       {

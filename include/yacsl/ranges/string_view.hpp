@@ -54,10 +54,10 @@ public:
   reversed_slice(this BasicStringView self) noexcept {
     return {self.data_, self.size_};
   }
-  [[nodiscard]] constexpr Slice<uchar const, SizeT>
+  [[nodiscard]] constexpr Slice<u8 const, SizeT>
   bytes(this BasicStringView self) noexcept {
     return {
-        reinterpret_cast<uchar const*>(self.data_),
+        reinterpret_cast<u8 const*>(self.data_),
         static_cast<SizeT>(self.size_ * sizeof(T)),
     };
   }

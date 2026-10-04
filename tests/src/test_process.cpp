@@ -210,7 +210,7 @@ get_pipe_output(Process::Output* output, yacsl::ranges::StringView expected) {
   yacsl::containers::String str;
   str.resize(expected.size() + 256);
   // NOLINTNEXTLINE(misc-const-correctness)
-  yacsl::ranges::Slice<yacsl::uchar> bytes      = str.bytes();
+  yacsl::ranges::Slice<yacsl::u8> bytes      = str.bytes();
   yacsl::usize                       total_read = output->read(bytes);
   while (total_read < expected.size()) {
     total_read +=
