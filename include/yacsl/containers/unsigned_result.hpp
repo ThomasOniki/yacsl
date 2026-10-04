@@ -4,17 +4,16 @@
 #include "yacsl/debug/panic.hpp"
 #include "yacsl/fmt/format_string.hpp"
 #include "yacsl/memory/lifetimes.hpp"
-#include "yacsl/type_traits/categories.hpp"
-#include "yacsl/type_traits/qualifiers.hpp"
-#include "yacsl/type_traits/sign.hpp"
-#include "yacsl/type_traits/type_string.hpp"
+#include "yacsl/meta/concepts.hpp"
+#include "yacsl/meta/qualifiers.hpp"
+#include "yacsl/meta/sign.hpp"
+#include "yacsl/meta/type_string.hpp"
 
 namespace yacsl::containers {
 
-template <type_traits::UnsignedIntegral Value, type_traits::Enum Error>
-  requires(
-      sizeof(Error) <= sizeof(Value) &&
-      type_traits::UnsignedIntegral<type_traits::UnderlyingEnumType<Error>>)
+template <meta::UnsignedIntegral Value, meta::Enum Error>
+  requires(sizeof(Error) <= sizeof(Value) &&
+           meta::UnsignedIntegral<meta::UnderlyingEnumType<Error>>)
 class UnsignedResult {
 public:
   constexpr UnsignedResult(Value expected) noexcept
@@ -48,8 +47,8 @@ public:
   }
   [[nodiscard]] constexpr Value value(this UnsignedResult self) noexcept {
     return self.value("UnsignedResult<{}, {}> is error {}.",
-                      type_traits::TYPE_STRING<Value>,
-                      type_traits::TYPE_STRING<Error>, self.error());
+                      meta::TYPE_STRING<Value>, meta::TYPE_STRING<Error>,
+                      self.error());
   }
 
   template <typename... Args>
@@ -62,12 +61,12 @@ public:
   [[nodiscard]] constexpr Value
   value_unchecked(this UnsignedResult self) noexcept {
     return self.value_unchecked("UnsignedResult<{}, {}> is error {}.",
-                                type_traits::TYPE_STRING<Value>,
-                                type_traits::TYPE_STRING<Error>, self.error());
+                                meta::TYPE_STRING<Value>,
+                                meta::TYPE_STRING<Error>, self.error());
   }
 
 private:
-  using Signed = type_traits::MakeSigned<Value>;
+  using Signed = meta::MakeSigned<Value>;
   Signed value_;
 };
 

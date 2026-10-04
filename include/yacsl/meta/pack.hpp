@@ -1,7 +1,7 @@
 #pragma once
 
+#include "yacsl/meta/same_as.hpp"
 #include "yacsl/type_aliases.hpp"
-#include "yacsl/type_traits/comparaison.hpp"
 
 namespace yacsl::meta {
 
@@ -21,7 +21,7 @@ using NthType = internal::NthTypeImpl<N, Ts...>::Type;
 template <typename... Ts> using LastType = NthType<sizeof...(Ts) - 1, Ts...>;
 
 template <typename T, typename... Ts>
-constexpr usize number_in_pack = (... + (type_traits::SameAs<T, Ts>));
+constexpr usize number_in_pack = (... + (SameAs<T, Ts>));
 
 template <typename... Ts>
 constexpr bool no_duplicates = (... && (number_in_pack<Ts, Ts...> == 1));

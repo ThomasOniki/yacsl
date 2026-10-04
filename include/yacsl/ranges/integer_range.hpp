@@ -1,10 +1,10 @@
 #pragma once
 
-#include "yacsl/type_traits/categories.hpp"
+#include "yacsl/meta/concepts.hpp"
 
 namespace yacsl::ranges {
 
-template <type_traits::Integral T, bool Reversed = false> class IntegerRange {
+template <meta::Integral T, bool Reversed = false> class IntegerRange {
 public:
   class Iterator {
   public:

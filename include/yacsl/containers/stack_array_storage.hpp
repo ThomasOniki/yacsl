@@ -3,18 +3,18 @@
 #include "yacsl/attributes.hpp"
 #include "yacsl/containers/stack_array.hpp"
 #include "yacsl/memory/lifetimes.hpp"
+#include "yacsl/meta/concepts.hpp"
+#include "yacsl/meta/qualifiers.hpp"
 #include "yacsl/ranges/integer_range.hpp"
 #include "yacsl/ranges/slice.hpp"
 #include "yacsl/type_aliases.hpp"
-#include "yacsl/type_traits/categories.hpp"
-#include "yacsl/type_traits/qualifiers.hpp"
 
 namespace yacsl::containers {
 
 // THIS DOES NOT KEEP TRACK OF WHICH ELEMENTS WHERE CREATED AND DESTROYED, YOU
 // ARE RESPONSIBLE FOR THAT.
 
-template <typename T, usize N, type_traits::Integral SizeT = usize>
+template <typename T, usize N, meta::Integral SizeT = usize>
 class StackArrayStorage {
 public:
   template <typename... Args>
@@ -47,7 +47,7 @@ public:
   template <typename Self>
   [[nodiscard]] constexpr auto*
   data(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
-    return reinterpret_cast<type_traits::CopyCV<Self, T>*>(
+    return reinterpret_cast<meta::CopyCV<Self, T>*>(
         memory::forward<Self>(self).data_.data());
   }
 
@@ -65,13 +65,13 @@ public:
   template <typename Self>
   [[nodiscard]] constexpr auto
   slice(this Self&& self YACSL_LIFETIMEBOUND) noexcept
-      -> ranges::Slice<type_traits::CopyCV<Self, T>, SizeT> {
+      -> ranges::Slice<meta::CopyCV<Self, T>, SizeT> {
     return {memory::forward<Self>(self).data(), static_cast<SizeT>(N)};
   }
   template <typename Self>
   [[nodiscard]] constexpr auto
   reversed_slice(this Self&& self YACSL_LIFETIMEBOUND) noexcept
-      -> ranges::ReversedSlice<type_traits::CopyCV<Self, T>, SizeT> {
+      -> ranges::ReversedSlice<meta::CopyCV<Self, T>, SizeT> {
     return {memory::forward<Self>(self).data(), static_cast<SizeT>(N)};
   }
   template <typename Self>

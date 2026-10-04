@@ -8,11 +8,11 @@
 #include "yacsl/fmt/format_string_parser.hpp"
 #include "yacsl/fmt/itoa.hpp"
 #include "yacsl/memory/lifetimes.hpp"
+#include "yacsl/meta/concepts.hpp"
+#include "yacsl/meta/limits.hpp"
+#include "yacsl/meta/sign.hpp"
 #include "yacsl/ranges/string_view.hpp"
 #include "yacsl/type_aliases.hpp"
-#include "yacsl/type_traits/categories.hpp"
-#include "yacsl/type_traits/limits.hpp"
-#include "yacsl/type_traits/sign.hpp"
 #include <string.h>
 
 namespace yacsl::fmt {
@@ -23,7 +23,7 @@ struct PaddingOptions {
   FormatStringParser::Align align;
 };
 
-template <type_traits::Character C>
+template <meta::Character C>
 void pad_char(containers::String& buf, C chr, PaddingOptions opts) {
   u32 const len = char_len(chr);
   if (len >= opts.width) {
@@ -44,7 +44,7 @@ void pad_char(containers::String& buf, C chr, PaddingOptions opts) {
   }
 }
 
-template <type_traits::Character C>
+template <meta::Character C>
 void pad_debug_char(containers::String& buf, C chr, PaddingOptions opts) {
   u32 const len = debug_char_len(chr);
   // +2 for the quotes
@@ -81,7 +81,7 @@ void pad_debug_char(containers::String& buf, C chr, PaddingOptions opts) {
   }
 }
 
-template <bool IsDebug, type_traits::Character C>
+template <bool IsDebug, meta::Character C>
 void pad_string_left_aligned(containers::String&               buf,
                              ranges::BasicStringView<C, usize> str,
                              PaddingOptions                    opts) noexcept {
@@ -98,7 +98,7 @@ void pad_string_left_aligned(containers::String&               buf,
   memset(buf.grow(pad_amount), opts.fill, pad_amount);
 }
 
-template <bool IsDebug, type_traits::Character C>
+template <bool IsDebug, meta::Character C>
 void pad_string_right_aligned(containers::String&               buf,
                               ranges::BasicStringView<C, usize> str,
                               PaddingOptions                    opts) noexcept {
@@ -113,7 +113,7 @@ void pad_string_right_aligned(containers::String&               buf,
   write_maybe_debug_string<IsDebug>(begin + pad, str);
 }
 
-template <bool IsDebug, type_traits::Character C>
+template <bool IsDebug, meta::Character C>
 void pad_string_middle_aligned(containers::String&               buf,
                                ranges::BasicStringView<C, usize> str,
                                PaddingOptions opts) noexcept {
@@ -128,7 +128,7 @@ void pad_string_middle_aligned(containers::String&               buf,
   write_maybe_debug_string<IsDebug>(begin + pad / 2, str);
 }
 
-template <bool IsDebug = false, type_traits::Character C>
+template <bool IsDebug = false, meta::Character C>
 void pad_string(containers::String& buf, ranges::BasicStringView<C, usize> str,
                 PaddingOptions opts) noexcept {
   if constexpr (IsDebug) {
@@ -153,32 +153,31 @@ void pad_string(containers::String& buf, ranges::BasicStringView<C, usize> str,
   }
 }
 
-template <u32 Base, usize Offset, type_traits::UnsignedIntegral T>
+template <u32 Base, usize Offset, meta::UnsignedIntegral T>
 constexpr containers::StackArray<T, 129 + Offset> gen_powers() noexcept {
   containers::StackArray<T, 129 + Offset> ret = {};
   T                                       pow = Base;
 
   for (u32 i = Offset + 1; i < ret.size(); ++i) {
     ret[i] = pow;
-    if (pow <= type_traits::Limits<T>::MAX / Base) {
+    if (pow <= meta::Limits<T>::MAX / Base) {
       pow = static_cast<T>(pow * Base);
     } else {
-      pow = type_traits::Limits<T>::MAX;
+      pow = meta::Limits<T>::MAX;
     }
   }
   return ret;
 }
 
 template <containers::NTTPString Charset = "0123456789",
-          containers::NTTPString Prefix  = "", type_traits::UnsignedIntegral T>
+          containers::NTTPString Prefix  = "", meta::UnsignedIntegral T>
 void pad_integral(containers::String& buf, T value,
                   PaddingOptions opts) noexcept {
   // Prefix.size() zeroes, 0, Base, Base^2, Base^3... Base^128
   static constexpr containers::StackArray<T, 129 + Prefix.size()> powers =
       gen_powers<Charset.size(), Prefix.size(), T>();
 
-  constexpr u32 max_len =
-      count_digits(type_traits::Limits<T>::MAX, Charset.size());
+  constexpr u32 max_len = count_digits(meta::Limits<T>::MAX, Charset.size());
 
   // If value >= powers[opts.width], value has width or more digits. If it does,
   // you should skip padding and just use itoa.
@@ -212,16 +211,16 @@ void pad_integral(containers::String& buf, T value,
 }
 
 template <containers::NTTPString Charset, containers::NTTPString Prefix = "",
-          type_traits::SignedIntegral T>
+          meta::SignedIntegral T>
 void pad_integral(containers::String& buf, T value,
                   PaddingOptions opts) noexcept {
   if (value >= 0) {
     pad_integral<Charset, Prefix>(
-        buf, static_cast<type_traits::MakeUnsigned<T>>(value), opts);
+        buf, static_cast<meta::MakeUnsigned<T>>(value), opts);
     return;
   }
   pad_integral<Charset, containers::cat_nttpstrings<Prefix, "-">>(
-      buf, static_cast<type_traits::MakeUnsigned<T>>(-value), opts);
+      buf, static_cast<meta::MakeUnsigned<T>>(-value), opts);
 }
 
 } // namespace yacsl::fmt

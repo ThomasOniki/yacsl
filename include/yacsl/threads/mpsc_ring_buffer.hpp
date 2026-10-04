@@ -4,9 +4,9 @@
 #include "yacsl/containers/stack_array.hpp"
 #include "yacsl/containers/stack_storage.hpp"
 #include "yacsl/memory/lifetimes.hpp"
+#include "yacsl/meta/limits.hpp"
 #include "yacsl/threads/atomic.hpp"
 #include "yacsl/type_aliases.hpp"
-#include "yacsl/type_traits/limits.hpp"
 #include "yacsl/utils/nil.hpp"
 #include <sched.h>
 
@@ -80,12 +80,12 @@ public:
       // Since usize has a finite precision and wraps to 0 on overflow and max
       // on underflow, there is no way to truly know if the write pointer is
       // ahead of the epoch. This assumes that there are less than
-      // type_traits::Limits<usize>::MAX/2 threads. If the assumption holds and
+      // meta::Limits<usize>::MAX/2 threads. If the assumption holds and
       // diff > max/2, then the true signed infinite precision difference must
       // be negative and have wrapped around to become a big number. Otherwise
       // it must be positive. If the true difference is negative, epoch < write.
       // This means that the slot hasn't been poped yet; the queue is full.
-      if (diff > type_traits::Limits<usize>::MAX / 2) {
+      if (diff > meta::Limits<usize>::MAX / 2) {
         return false;
       }
       // If epoch > write, another producer changed the epoch between
