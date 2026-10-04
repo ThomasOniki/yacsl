@@ -4,7 +4,6 @@
 #include "yacsl/containers/structured_bindings.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/meta/integer_sequence.hpp"
-#include "yacsl/meta/pack.hpp"
 #include "yacsl/meta/same_as.hpp"
 #include "yacsl/type_aliases.hpp"
 
@@ -53,7 +52,7 @@ template <typename Indices, typename... Ts> class TupleImpl;
 template <usize... Indices, typename... Ts>
 class TupleImpl<meta::IndexSequence<Indices...>, Ts...>
     : TupleLeaf<Indices, Ts>... {
-  template <usize I> using Leaf = TupleLeaf<I, meta::NthType<I, Ts...>>;
+  template <usize I> using Leaf = TupleLeaf<I, Ts...[I]>;
 
 public:
   constexpr TupleImpl() noexcept : Leaf<Indices>()... {}
@@ -83,7 +82,7 @@ template <typename... Ts> struct TupleSize<Tuple<Ts...>> {
   static constexpr usize value = sizeof...(Ts);
 };
 template <typename... Ts, usize I> struct TupleElement<Tuple<Ts...>, I> {
-  using Type = meta::NthType<I, Ts...>;
+  using Type = Ts...[I];
 };
 
 } // namespace yacsl::containers

@@ -14,7 +14,7 @@ add_warnings(yacsl)
 set_utf8(yacsl)
 set_hidden_visibility(yacsl)
 link_threads(yacsl)
-target_compile_features(yacsl PUBLIC cxx_std_23)
+target_compile_features(yacsl PUBLIC cxx_std_26)
 
 option(YACSL_WERROR "Treat warnings as errors." ON)
 option(YACSL_NO_LIBCPP "Don't link with the c++ standard library." OFF)
