@@ -1,10 +1,12 @@
 #pragma once
 
 #include "yacsl/attributes.hpp"
+#include "yacsl/containers/option.hpp"
 #include "yacsl/debug/panic.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/meta/qualifiers.hpp"
 #include "yacsl/meta/type_string.hpp"
+#include "yacsl/utils/nil.hpp"
 
 namespace yacsl::containers {
 
@@ -67,6 +69,14 @@ public:
   }
 
   template <typename Self>
+  auto optional_value_ref(this Self&& self YACSL_LIFETIMEBOUND) noexcept
+      -> Option<decltype((memory::forward<Self>(self).value_))> {
+    if (self.is_error_) {
+      return utils::NIL;
+    }
+    return memory::forward<Self>(self).value_;
+  }
+  template <typename Self>
   [[nodiscard]] constexpr auto&&
   value(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
     if (self.is_error_) [[unlikely]] {
@@ -85,6 +95,14 @@ public:
     return memory::forward<Self>(self).value_;
   }
 
+  template <typename Self>
+  auto optional_error_ref(this Self&& self YACSL_LIFETIMEBOUND) noexcept
+      -> Option<decltype((memory::forward<Self>(self).error_))> {
+    if (self.is_error_) {
+      return utils::NIL;
+    }
+    return memory::forward<Self>(self).error_;
+  }
   template <typename Self>
   [[nodiscard]] constexpr auto&&
   error(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
