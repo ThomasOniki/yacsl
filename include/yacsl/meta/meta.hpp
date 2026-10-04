@@ -4,7 +4,6 @@
 #include "yacsl/meta/concepts.hpp"
 #include "yacsl/meta/conditional.hpp"
 #include "yacsl/meta/declval.hpp"
-#include "yacsl/meta/first_of_size.hpp"
 #include "yacsl/meta/integer_sequence.hpp"
 #include "yacsl/meta/limits.hpp"
 #include "yacsl/meta/pack.hpp"

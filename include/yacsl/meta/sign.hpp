@@ -8,7 +8,7 @@ template <Integral T> using MakeUnsigned = __make_unsigned(T);
 template <Integral T> using MakeSigned   = __make_signed(T);
 #else
 
-#include "yacsl/meta/first_of_size.hpp"
+#include "yacsl/meta/pack.hpp"
 #include "yacsl/utils/extended_types.hpp"
 
 namespace internal {
