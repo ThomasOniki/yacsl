@@ -2,14 +2,16 @@
 
 #include "yacsl/meta/concepts.hpp"
 
+#ifndef __clang__
+#include "yacsl/meta/pack.hpp"
+#include "yacsl/utils/extended_types.hpp"
+#endif
+
 namespace yacsl::meta {
 #ifdef __clang__
 template <Integral T> using MakeUnsigned = __make_unsigned(T);
 template <Integral T> using MakeSigned   = __make_signed(T);
 #else
-
-#include "yacsl/meta/pack.hpp"
-#include "yacsl/utils/extended_types.hpp"
 
 namespace internal {
 
