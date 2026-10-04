@@ -54,7 +54,7 @@ public:
   [[nodiscard]] ranges::Slice<T, SizeT> push_array(this Arena& self,
                                                    SizeT       count);
 
-  [[nodiscard]] ranges::Slice<uchar, SizeT>
+  [[nodiscard]] ranges::Slice<u8, SizeT>
   allocate(this Arena& self, SizeT size, Alignment align) noexcept {
     auto const u_align = static_cast<usize>(align);
     uptr       top     = reinterpret_cast<uptr>(self.ptr_);
@@ -72,20 +72,20 @@ public:
     }
 
     // NOLINTNEXTLINE(performance-no-int-to-ptr)
-    self.ptr_ = reinterpret_cast<uchar*>(top);
+    self.ptr_ = reinterpret_cast<u8*>(top);
     // NOLINTNEXTLINE(performance-no-int-to-ptr)
-    return {reinterpret_cast<uchar*>(ret), size};
+    return {reinterpret_cast<u8*>(ret), size};
   }
 
-  void deallocate(this Arena& self, ranges::Slice<uchar, SizeT> data) noexcept {
+  void deallocate(this Arena& self, ranges::Slice<u8, SizeT> data) noexcept {
     if (data.end() == self.end_) {
       self.ptr_ = data.begin();
     }
   }
 
-  [[nodiscard]] containers::Option<ranges::Slice<uchar, SizeT>>
-  resize_in_place(ranges::Slice<uchar, SizeT> data, SizeT new_size) noexcept {
-    uchar* new_ptr = ptr_ + new_size - data.size();
+  [[nodiscard]] containers::Option<ranges::Slice<u8, SizeT>>
+  resize_in_place(ranges::Slice<u8, SizeT> data, SizeT new_size) noexcept {
+    u8* new_ptr = ptr_ + new_size - data.size();
     if (data.end() == ptr_ && new_ptr <= end_) {
       ptr_ = new_ptr;
       return {data.data(), new_size};
@@ -111,7 +111,7 @@ public:
 
   private:
     Arena& arena_;
-    uchar* ptr_;
+    u8* ptr_;
   };
 
 private:
@@ -119,9 +119,9 @@ private:
   void free_all(this Arena& self) noexcept YACSL_API;
 
 private:
-  uchar* begin_            = nullptr;
-  uchar* end_              = nullptr;
-  uchar* ptr_              = nullptr;
+  u8* begin_            = nullptr;
+  u8* end_              = nullptr;
+  u8* ptr_              = nullptr;
   usize  initial_capacity_ = 64 * utils::KiB;
 };
 

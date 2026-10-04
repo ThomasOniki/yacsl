@@ -352,7 +352,7 @@ void Vector<T, N, A, SizeT>::free(this Vector& self) {
   self.clear();
   if (N == 0 || self.data_ != self.fixed_buffer_.data()) {
     self.allocator_.deallocate({
-        reinterpret_cast<uchar*>(self.data_),
+        reinterpret_cast<u8*>(self.data_),
         static_cast<A::SizeT>(self.capacity_) * sizeof(T),
     });
   }
@@ -376,13 +376,13 @@ void Vector<T, N, A, SizeT>::definitely_reserve(this Vector& self,
   if constexpr (N > 0) {
     if (old_data != self.fixed_buffer_.data()) {
       self.allocator_.deallocate({
-          reinterpret_cast<uchar*>(old_data),
+          reinterpret_cast<u8*>(old_data),
           static_cast<A::SizeT>(self.capacity_) * sizeof(T),
       });
     }
   } else {
     self.allocator_.deallocate({
-        reinterpret_cast<uchar*>(old_data),
+        reinterpret_cast<u8*>(old_data),
         static_cast<A::SizeT>(self.capacity_) * sizeof(T),
     });
   }

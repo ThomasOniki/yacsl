@@ -20,7 +20,7 @@ namespace yacsl::file_formats::include / base / file_formats::include /
 
     fmt::Format format;
     containers::containers::containers::containers::containers::containers::
-        containers::Vector<uchar>
+        containers::Vector<u8>
             bytes;
 
     enum class ParseError : u8 {

@@ -75,26 +75,26 @@ public:
     return true;
   }
 
-  yacsl::ranges::Slice<yacsl::uchar, SizeT>
+  yacsl::ranges::Slice<yacsl::u8, SizeT>
   allocate(this TestAllocator& /*self*/, SizeT size,
            yacsl::memory::Alignment align) {
     ++allocate_call_count;
 #ifdef _WIN32
     return {
-        static_cast<yacsl::uchar*>(
+        static_cast<yacsl::u8*>(
             _aligned_malloc(static_cast<size_t>(align), size)),
         size,
     };
 #else
     return {
-        static_cast<yacsl::uchar*>(
+        static_cast<yacsl::u8*>(
             aligned_alloc(static_cast<size_t>(align), size)),
         size,
     };
 #endif
   }
   void deallocate(this TestAllocator& /*self*/,
-                  yacsl::ranges::Slice<yacsl::uchar, SizeT> mem) {
+                  yacsl::ranges::Slice<yacsl::u8, SizeT> mem) {
     ++free_call_count;
 #ifdef _WIN32
     _aligned_free(mem.data());
@@ -103,9 +103,9 @@ public:
 #endif
   }
 
-  yacsl::containers::Option<yacsl::ranges::Slice<yacsl::uchar, SizeT>>
+  yacsl::containers::Option<yacsl::ranges::Slice<yacsl::u8, SizeT>>
   resize_in_place(this TestAllocator& /*self*/,
-                  yacsl::ranges::Slice<yacsl::uchar, SizeT> /*mem*/,
+                  yacsl::ranges::Slice<yacsl::u8, SizeT> /*mem*/,
                   SizeT /*new_size*/) {
     return yacsl::utils::NIL;
   }

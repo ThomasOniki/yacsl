@@ -29,11 +29,11 @@ public:
     return get().allocate(size, align);
   }
   void deallocate(this SingletonAllocator /*self*/,
-                  ranges::Slice<uchar, SizeT> mem) noexcept {
+                  ranges::Slice<u8, SizeT> mem) noexcept {
     get().deallocate(mem);
   }
   auto resize_in_place(this SingletonAllocator /*self*/,
-                       ranges::Slice<uchar, SizeT> mem, SizeT new_size) {
+                       ranges::Slice<u8, SizeT> mem, SizeT new_size) {
     return get().resize_in_place(mem, new_size);
   }
 

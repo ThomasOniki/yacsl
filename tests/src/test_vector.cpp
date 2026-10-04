@@ -85,7 +85,7 @@ public:
     return &self == &other;
   }
 
-  yacsl::ranges::Slice<yacsl::uchar, SizeT>
+  yacsl::ranges::Slice<yacsl::u8, SizeT>
   allocate(this TestAllocator& /*self*/, SizeT size,
            yacsl::memory::Alignment align) noexcept {
 #ifdef _WIN32
@@ -103,13 +103,13 @@ public:
         .byte_count = size,
     });
     return {
-        static_cast<yacsl::uchar*>(ret),
+        static_cast<yacsl::u8*>(ret),
         size,
     };
   }
 
   void deallocate(this TestAllocator& /*self*/,
-                  yacsl::ranges::Slice<yacsl::uchar, SizeT> mem) noexcept {
+                  yacsl::ranges::Slice<yacsl::u8, SizeT> mem) noexcept {
     if (mem.data() != nullptr) {
       if (freed.contains(mem.data())) {
         yacsl::debug::log_error("double free");
@@ -135,9 +135,9 @@ public:
     });
   }
 
-  yacsl::containers::Option<yacsl::ranges::Slice<yacsl::uchar, SizeT>>
+  yacsl::containers::Option<yacsl::ranges::Slice<yacsl::u8, SizeT>>
   resize_in_place(this TestAllocator& /*self*/,
-                  yacsl::ranges::Slice<yacsl::uchar, SizeT> /*mem*/,
+                  yacsl::ranges::Slice<yacsl::u8, SizeT> /*mem*/,
                   SizeT /*new_size*/) {
     return yacsl::utils::NIL;
   }

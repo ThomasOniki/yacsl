@@ -12,8 +12,8 @@ namespace yacsl::memory {
 
 namespace {
 struct Metadata {
-  alignas(16) uchar* last_begin;
-  uchar* last_end;
+  alignas(16) u8* last_begin;
+  u8* last_end;
 };
 } // namespace
 
@@ -26,7 +26,7 @@ void Arena::reserve(this Arena& self, usize capacity) noexcept {
       .last_begin = self.begin_,
       .last_end   = self.end_,
   };
-  self.begin_ = static_cast<uchar*>(malloc(capacity));
+  self.begin_ = static_cast<u8*>(malloc(capacity));
   self.end_   = self.begin_ + capacity;
   self.ptr_   = self.begin_ + sizeof(Metadata);
 

@@ -45,7 +45,7 @@ private:
   }
 
 private:
-  alignas(T) StackArray<uchar, sizeof(T)> data_{};
+  alignas(T) StackArray<u8, sizeof(T)> data_{};
 };
 
 } // namespace yacsl::containers

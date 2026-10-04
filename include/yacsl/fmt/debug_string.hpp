@@ -53,7 +53,7 @@ inline char* write_debug_char_below_0x20(YACSL_LIFETIMEBOUND char* buf,
     buf[1] = 'x';
     if (chr < 0x10) {
       static constexpr ranges::StringView hex_digits = "0123456789abcdef";
-      buf[2] = hex_digits[static_cast<uchar>(chr)];
+      buf[2] = hex_digits[static_cast<u8>(chr)];
       return buf + 3;
     }
     static constexpr ranges::StringView table =
@@ -66,8 +66,8 @@ inline char* write_debug_char_below_0x20(YACSL_LIFETIMEBOUND char* buf,
 template <meta::Character C>
 char* write_debug_char(YACSL_LIFETIMEBOUND char* buf, C chr) {
   // For some reason clang-tidy's warning about casting [signed] char to
-  // unsigned types other than uchar also applies to wchar_t, but you can't cast
-  // a wchar to uchar like it suggests if you don't want to lose precision.
+  // unsigned types other than u8 also applies to wchar_t, but you can't cast
+  // a wchar to u8 like it suggests if you don't want to lose precision.
   // NOLINTNEXTLINE(bugprone-signed-char-misuse)
   auto const uchr = static_cast<meta::MakeUnsigned<C>>(chr);
   if (uchr >= 0x20) {
@@ -117,7 +117,7 @@ inline void write_debug_char_below_0x20(containers::String& buf, char chr) {
       str                                            = buf.grow(3);
       str[0]                                         = '\\';
       str[1]                                         = 'x';
-      str[2] = hex_digits[static_cast<uchar>(chr)];
+      str[2] = hex_digits[static_cast<u8>(chr)];
     } else {
       static constexpr ranges::StringView table =
           "101112131415161718191a1b1c1d1e1f";
@@ -132,8 +132,8 @@ inline void write_debug_char_below_0x20(containers::String& buf, char chr) {
 template <meta::Character C>
 void write_debug_char(containers::String& buf, C chr) {
   // For some reason clang-tidy's warning about casting [signed] char to
-  // unsigned types other than uchar also applies to wchar_t, but you can't cast
-  // a wchar to uchar like it suggests if you don't want to lose precision.
+  // unsigned types other than u8 also applies to wchar_t, but you can't cast
+  // a wchar to u8 like it suggests if you don't want to lose precision.
   // NOLINTNEXTLINE(bugprone-signed-char-misuse)
   auto const uchr = static_cast<meta::MakeUnsigned<C>>(chr);
   if (uchr >= 0x20) {
