@@ -6,7 +6,6 @@
 #include "yacsl/export.hpp"
 #include "yacsl/fmt/format_string.hpp"
 #include "yacsl/memory/lifetimes.hpp"
-#include <stdlib.h>
 
 namespace yacsl::debug {
 
@@ -15,8 +14,9 @@ panic_impl(containers::String const& formatted) noexcept YACSL_API;
 
 [[noreturn]] inline void
 panic(SourceLocation location = SourceLocation::current()) noexcept {
-  panic_impl(fmt::format("panic at {}\nstacktrace: {}", location,
-                         StackTrace::current()));
+  panic_impl(fmt::format("panic at {}\n"
+                         "stacktrace:\n{}",
+                         location, StackTrace::current()));
 }
 
 template <typename... Args>
@@ -24,7 +24,7 @@ template <typename... Args>
 void panic(fmt::FormatString<Args...> const& fmt, Args&&... args) noexcept {
   panic_impl(fmt::format("panic at {}\n", fmt.source_location()) +
              fmt::format(fmt, memory::forward<Args>(args)...) +
-             fmt::format("\nstacktrace: {}", StackTrace::current()));
+             fmt::format("\nstacktrace:\n{}", StackTrace::current()));
 }
 
 #ifdef NDEBUG
@@ -42,7 +42,7 @@ void unreachable(fmt::FormatString<Args...> const& fmt,
                  Args&&... args) noexcept {
   panic_impl(fmt::format("unreachable called at {}\n", fmt.source_location()) +
              fmt::format(fmt, memory::forward<Args>(args)...) +
-             fmt::format("\nstacktrace: {}", StackTrace::current()));
+             fmt::format("\nstacktrace:\n{}", StackTrace::current()));
 }
 
 #endif

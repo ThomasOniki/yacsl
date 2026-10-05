@@ -11,8 +11,10 @@ namespace yacsl::debug::internal {
 void extern_log_error(ranges::StringView msg) { log_error(msg); }
 
 void extern_panic(ranges::StringView msg, SourceLocation location) noexcept {
-  panic_impl(fmt::format("panic at {}\n{}\nstacktrace: {}", location, msg,
-                         StackTrace::current()));
+  panic_impl(fmt::format("panic at {}\n"
+                         "{}\n"
+                         "stacktrace:\n{}",
+                         location, msg, StackTrace::current()));
 }
 
 } // namespace yacsl::debug::internal
