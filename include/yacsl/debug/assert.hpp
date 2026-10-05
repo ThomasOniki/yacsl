@@ -25,6 +25,20 @@ constexpr void assert_(bool cond, fmt::FormatString<Args...> const& fmt,
                fmt::format("\nstacktrace:\n{}", StackTrace::current()));
   }
 }
+
+template <typename T, typename U>
+constexpr void
+assert_eq(T&& lhs, U&& rhs,
+          SourceLocation location = SourceLocation::current()) noexcept {
+  if (memory::forward<T>(lhs) != memory::forward<T>(rhs)) [[unlikely]] {
+    panic_impl(fmt::format("assert_eq failed at {}\n"
+                           "lhs: {}\n"
+                           "rhs: {}\n"
+                           "stacktrace:\n{}",
+                           location, memory::forward<T>(lhs),
+                           memory::forward<U>(rhs), StackTrace::current()));
+  }
+}
 template <typename T, typename U, typename... Args>
 constexpr void assert_eq(T&& lhs, U&& rhs, fmt::FormatString<Args...> fmt,
                          Args&&... args) noexcept {
@@ -63,6 +77,11 @@ constexpr void assert_unchecked(bool                              cond,
   assert_(cond, fmt, memory::forward<Args>(args)...);
 }
 
+template <typename T, typename U>
+constexpr void assert_eq_unchecked(T&& lhs, U&& rhs) noexcept {
+  assume_ifdef_ndebug(memory::forward<T>(lhs) == memory::forward<T>(rhs));
+  assert_eq(memory::forward<T>(lhs), memory::forward<T>(rhs));
+}
 template <typename T, typename U, typename... Args>
 constexpr void assert_eq_unchecked(T&& lhs, U&& rhs,
                                    fmt::FormatString<Args...> fmt,
