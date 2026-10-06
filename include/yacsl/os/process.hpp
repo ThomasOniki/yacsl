@@ -80,7 +80,7 @@ private:
 public:
   class Input {
   public:
-    void write(this Input&                self,
+    void write(this Input&             self,
                ranges::Slice<u8 const> bytes) noexcept YACSL_API;
 
     ~Input() noexcept = default;
@@ -106,8 +106,7 @@ public:
     ~Output() noexcept = default;
 
     // returns 0 on EOF, between 1 and buffer.size() when sucessful.
-    usize read(this Output&         self,
-               ranges::Slice<u8> buffer) noexcept YACSL_API;
+    usize read(this Output& self, ranges::Slice<u8> buffer) noexcept YACSL_API;
 
     using Init = StdioInit<false>;
     using enum StdioType;

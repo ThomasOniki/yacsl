@@ -8,21 +8,20 @@
 namespace yacsl::memory {
 
 template <typename A>
-concept AllocatorType =
-    requires(A allocator, A::SizeT size, Alignment align,
-             ranges::Slice<u8, typename A::SizeT> slice) {
-      { allocator.allocate(size, align) } -> meta::SameAs<decltype(slice)>;
-      { allocator.deallocate(slice) } -> meta::SameAs<void>;
-      {
-        allocator.resize_in_place(slice, size)
-      } -> meta::SameAs<containers::Option<decltype(slice)>>;
-      { allocator == allocator } -> meta::SameAs<bool>;
+concept AllocatorType = requires(A allocator, A::SizeT size, Alignment align,
+                                 ranges::Slice<u8, typename A::SizeT> slice) {
+  { allocator.allocate(size, align) } -> meta::SameAs<decltype(slice)>;
+  { allocator.deallocate(slice) } -> meta::SameAs<void>;
+  {
+    allocator.resize_in_place(slice, size)
+  } -> meta::SameAs<containers::Option<decltype(slice)>>;
+  { allocator == allocator } -> meta::SameAs<bool>;
 
-      A();
-      A(allocator);
-      A(memory::move(allocator));
-      allocator = allocator;
-      allocator = memory::move(allocator);
-    };
+  A();
+  A(allocator);
+  A(memory::move(allocator));
+  allocator = allocator;
+  allocator = memory::move(allocator);
+};
 
 } // namespace yacsl::memory
