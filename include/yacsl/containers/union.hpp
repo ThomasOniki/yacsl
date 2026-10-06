@@ -1,12 +1,18 @@
 #pragma once
 
+#include "yacsl/containers/nttp_string.hpp"
+#include "yacsl/containers/option.hpp"
 #include "yacsl/containers/stack_array.hpp"
+#include "yacsl/debug/assert.hpp"
+#include "yacsl/debug/panic.hpp"
 #include "yacsl/math/arithmetic.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/meta/conditional.hpp"
 #include "yacsl/meta/limits.hpp"
 #include "yacsl/meta/qualifiers.hpp"
+#include "yacsl/meta/type_string.hpp"
 #include "yacsl/type_aliases.hpp"
+#include "yacsl/utils/nil.hpp"
 
 namespace yacsl::containers {
 
@@ -69,9 +75,37 @@ public:
     }());
   }
 
-private:
-  alignas(math::max(alignof(Ts)...))
-      StackArray<u8, math::max(sizeof(Ts)...)> bytes_;
+template <usize I, typename Self>
+constexpr auto get(this Self&& self) noexcept
+    -> meta::CopyCVRef<Self&&, Ts... [I]> {
+      debug::assert_eq(self.index_, I, "Union<{}> is not expected value",
+                       String(meta::TYPE_STRING<Ts>) + ", " ..., I);
+      auto ptr = reinterpret_cast<meta::CopyCV<Self, Ts...[I]>*>(
+          memory::forward<Self>(self).bytes_.data());
+      return memory::forward<meta::CopyCVRef<Self&&, Ts...[I]>>(*ptr);
+    }
+
+template <usize I, typename Self>
+constexpr auto get_unchecked(this Self&& self) noexcept
+    -> meta::CopyCVRef<Self&&, Ts... [I]> {
+      debug::assume_ifdef_ndebug(self.index_ == I);
+      return memory::forward<meta::CopyCVRef<Self&&, Ts...[I]>>(
+          memory::forward<Self>(self).template get<I>());
+    }
+
+template <usize I, typename Self>
+constexpr auto get_option(this Self&& self) noexcept
+    -> containers::Option<meta::CopyCVRef<Self&&, Ts... [I]>> {
+      if (self.index_ != I) [[unlikely]] {
+        return utils::NIL;
+      }
+      auto ptr = reinterpret_cast<meta::CopyCV<Self, Ts...[I]>*>(
+          memory::forward<Self>(self).bytes_.data());
+      return memory::forward<meta::CopyCVRef<Self&&, Ts...[I]>>(*ptr);
+    }
+
+private : alignas(math::max(alignof(Ts)...))
+              StackArray<u8, math::max(sizeof(Ts)...)> bytes_;
   meta::Conditional<sizeof...(Ts) <= meta::Limits<u8>::MAX, u8, usize> index_;
 };
 
