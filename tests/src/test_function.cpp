@@ -1,6 +1,6 @@
-#include "test_utils.hpp"
 #include "yacsl/containers/function.hpp"
 #include "yacsl/containers/option.hpp"
+#include "yacsl/containers/stack_array.hpp"
 #include "yacsl/containers/string.hpp"
 #include "yacsl/debug/log.hpp"
 #include "yacsl/fmt/format_string.hpp"
@@ -8,6 +8,8 @@
 #include "yacsl/fmt/formatter.hpp"
 #include "yacsl/memory/alignment.hpp"
 #include "yacsl/ranges/slice.hpp"
+#include "yacsl/testing/expect.hpp"
+#include "yacsl/testing/test.hpp"
 #include "yacsl/type_aliases.hpp"
 #include "yacsl/utils/nil.hpp"
 #include <stdint.h>
@@ -112,98 +114,94 @@ public:
 };
 } // namespace
 
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define CHECK_COUNTS(...)                                                      \
-  do {                                                                         \
-    Counts const expected = Counts{__VA_ARGS__};                               \
-    EXPECT_EQ(TestStruct::counts, expected);                                   \
-    TestStruct::reset_counts();                                                \
-  } while (false)
+static void check_counts(Counts expected) {
+  yacsl::testing::expect_eq(TestStruct::counts, expected);
+  TestStruct::reset_counts();
+}
 
-static int test_function_running() {
-  int                                 ret = 0;
+static void test_function_runs(yacsl::testing::Test& /*test*/) {
   bool                                ran = false;
   yacsl::containers::Function<void()> func([&ran] { ran = true; });
 
-  EXPECT(!ran);
+  yacsl::testing::expect(!ran);
   func();
-  EXPECT(ran);
-  return ret;
+  yacsl::testing::expect(ran);
 }
 
-static int test_moved_lambda() {
-  int ret = 0;
+static void test_moved_lambda(yacsl::testing::Test& /*test*/) {
   {
-    CHECK_COUNTS(0);
+    check_counts({});
 
     // test must be non-to const be moved.
     // NOLINTNEXTLINE(misc-const-correctness)
     TestStruct test;
 
-    CHECK_COUNTS(.constructor_call_count = 1);
+    check_counts({.constructor_call_count = 1});
 
     yacsl::containers::Function<int(int)> func(
         [test](int value) { return value * 2; });
 
-    CHECK_COUNTS(.copy_constructor_call_count = 1,
-                 .move_constructor_call_count = 1, .destructor_call_count = 1);
+    check_counts({
+        .copy_constructor_call_count = 1,
+        .move_constructor_call_count = 1,
+        .destructor_call_count       = 1,
+    });
 
     int const result = func(10);
     if (result != 20) {
-      (void)fprintf(stderr, "function returned %d, not 20", result);
+      (void)fprintf(stderr, "function returned %d, not 20\n", result);
     }
   }
-  CHECK_COUNTS(.destructor_call_count = 2);
-  return ret;
+  check_counts({.destructor_call_count = 2});
 }
 
-static int test_copied_lambda() {
-  int ret = 0;
+static void test_copied_lambda(yacsl::testing::Test& /*test*/) {
   {
     TestStruct const test;
-    CHECK_COUNTS(.constructor_call_count = 1);
+    check_counts({.constructor_call_count = 1});
 
     yacsl::containers::Function<void(), 0, TestAllocator> const func(
         [&test] { (void)test; });
 
-    CHECK_COUNTS(0);
+    check_counts({});
 
     if (TestAllocator::allocate_call_count != 1) {
-      (void)fprintf(stderr, "Expected 1 allocation, got %u",
+      (void)fprintf(stderr, "Expected 1 allocation, got %u.\n",
                     TestAllocator::allocate_call_count);
     }
     if (TestAllocator::free_call_count != 0) {
-      (void)fprintf(stderr, "Expected 0 frees, got %u",
+      (void)fprintf(stderr, "Expected 0 frees, got %u.\n",
                     TestAllocator::free_call_count);
     }
   }
-  CHECK_COUNTS(.destructor_call_count = 1);
-  return ret;
+  check_counts({.destructor_call_count = 1});
 }
 
-static int test_ref_capture_lamdba() {
-  int ret = 0;
+static void test_ref_capture_lamdba(yacsl::testing::Test& /*test*/) {
   {
     TestStruct const test;
-    CHECK_COUNTS(.constructor_call_count = 1);
+    check_counts({.constructor_call_count = 1});
 
     auto lambda = [test] {};
-    CHECK_COUNTS(.copy_constructor_call_count = 1);
+    check_counts({.copy_constructor_call_count = 1});
 
     yacsl::containers::Function<void()> const func(lambda);
-    CHECK_COUNTS(.copy_constructor_call_count = 1);
+    check_counts({.copy_constructor_call_count = 1});
   }
-  CHECK_COUNTS(.destructor_call_count = 3);
-
-  return ret;
+  check_counts({.destructor_call_count = 3});
 }
 
 int main() {
-  int ret = 0;
-  EXPECT(test_function_running() == 0);
-  EXPECT(test_moved_lambda() == 0);
-  EXPECT(test_copied_lambda() == 0);
-  EXPECT(test_ref_capture_lamdba() == 0);
+  int                           ret   = 0;
+  yacsl::containers::StackArray tests = {
+      yacsl::testing::Test("function runs", test_function_runs),
+      yacsl::testing::Test("moved lambda", test_moved_lambda),
+      yacsl::testing::Test("copied lambda", test_copied_lambda),
+      yacsl::testing::Test("ref capture lambda", test_ref_capture_lamdba),
+  };
+  for (auto& test : tests) {
+    test.run();
+  }
   yacsl::debug::flush_logger();
   return ret;
 }

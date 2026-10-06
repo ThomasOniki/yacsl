@@ -6,14 +6,12 @@
 #include <unordered_set>
 #include <vector>
 
-#include "test_utils.hpp"
 #include "yacsl/containers/option.hpp"
-#include "yacsl/debug/log.hpp"
-#include "yacsl/fmt/formatter.hpp"
+#include "yacsl/containers/stack_array.hpp"
 #include "yacsl/memory/alignment.hpp"
 #include "yacsl/memory/singleton_allocator.hpp"
 #include "yacsl/ranges/slice.hpp"
-#include "yacsl/ranges/string_view.hpp"
+#include "yacsl/testing/test.hpp"
 #include "yacsl/type_aliases.hpp"
 #include "yacsl/utils/nil.hpp"
 
@@ -154,51 +152,47 @@ using TestAllocatorSingleton =
 
 } // namespace
 
-template <> class yacsl::fmt::Formatter<std::string> {
-public:
-  constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
-    return self.impl_.parse(fmt);
-  }
-  void format(this Formatter const& self, containers::String& buf,
-              std::string const& str) noexcept {
-    self.impl_.format(buf, {str.data(), str.size()});
-  }
-
-private:
-  yacsl::fmt::Formatter<yacsl::ranges::StringView> impl_;
-};
-
-static int test_allocator() {
-  int ret = 0;
+static void test_allocator(yacsl::testing::Test& test) {
   TestAllocator::events.clear();
   TestAllocator allocator;
   // NOLINTNEXTLINE(misc-const-correctness)
   auto mem = allocator.allocate(10, yacsl::memory::Alignment{16});
 
-  EXPECT_EQ(TestAllocator::events,
-            std::vector<TestAllocator::Event>({{
-                .kind       = TestAllocator::Event::Kind::Alloc,
-                .address    = mem.data(),
-                .byte_count = mem.size(),
-            }}));
+  if (TestAllocator::events != std::vector<TestAllocator::Event>({{
+                                   .kind    = TestAllocator::Event::Kind::Alloc,
+                                   .address = mem.data(),
+                                   .byte_count = mem.size(),
+                               }})) {
+    test.fail_quietly();
+    fprintf(stderr, "TestAllocator::events is incorrect.");
+  }
   TestAllocator::events.clear();
 
   allocator.deallocate(mem);
 
-  EXPECT_EQ(TestAllocator::events, std::vector<TestAllocator::Event>({{
-                                       .kind = TestAllocator::Event::Kind::Free,
-                                       .address    = mem.data(),
-                                       .byte_count = mem.size(),
-                                   }}));
-
-  return ret;
+  if (TestAllocator::events != std::vector<TestAllocator::Event>({{
+                                   .kind    = TestAllocator::Event::Kind::Alloc,
+                                   .address = mem.data(),
+                                   .byte_count = mem.size(),
+                               }})) {
+    test.fail_quietly();
+    fprintf(stderr, "TestAllocator::events is incorrect.");
+  }
 }
 
 int main() {
   int ret = 0;
-  EXPECT(test_allocator() == 0);
-  yacsl::debug::log_warning("TODO: vector tests");
-  yacsl::debug::flush_logger();
+  fputs("TODO: proper vector tests\n", stderr);
+  yacsl::containers::StackArray tests = {
+      yacsl::testing::Test("allocator", test_allocator),
+  };
+  for (auto& test : tests) {
+    printf("Running test '%s'...\n", test.cstr_name());
+    if (test.run_quietly() == yacsl::testing::Test::Result::Failure) {
+      fprintf(stderr, "test '%s' failed.\n", test.cstr_name());
+      ret = 1;
+    }
+  }
   return ret;
 }
 
