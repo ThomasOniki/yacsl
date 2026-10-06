@@ -7,6 +7,7 @@
 #include "yacsl/meta/conditional.hpp"
 #include "yacsl/meta/limits.hpp"
 #include "yacsl/meta/qualifiers.hpp"
+#include "yacsl/meta/same_as.hpp"
 #include "yacsl/ranges/integer_range.hpp"
 #include "yacsl/ranges/slice.hpp"
 #include "yacsl/type_aliases.hpp"
@@ -157,6 +158,10 @@ public:
   constexpr bool operator==(this StackArray const& self,
                             StackArray const&      other) noexcept = default;
 };
+
+template <typename T, typename... U>
+  requires(... && meta::SameAs<T, U>)
+StackArray(T, U...) -> StackArray<T, 1 + sizeof...(U)>;
 
 template <typename T, usize N, meta::Integral SizeT>
 struct TupleSize<StackArray<T, N, SizeT>> {
