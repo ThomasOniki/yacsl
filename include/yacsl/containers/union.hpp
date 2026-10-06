@@ -55,12 +55,16 @@ public:
     return self.index_;
   }
 
-  template <typename F>
-  constexpr void visit(this Union& self, F&& func) noexcept {
+  template <typename Self, typename F>
+  constexpr void visit(this Self&& self, F&& func) noexcept {
     usize index = 0;
     (..., [&] {
       if (index++ == self.index_) {
-        memory::forward<F>(func)(*reinterpret_cast<Ts*>(self.bytes_.data()));
+        auto* bytes = memory::forward<Self>(self).bytes_.data();
+        using Ptr   = meta::CopyCV<Self, Ts>*;
+        Ptr ptr     = reinterpret_cast<Ptr>(bytes);
+        using Ref   = meta::CopyCVRef<Self&&, Ts>;
+        memory::forward<F>(func)(memory::forward<Ref>(*ptr));
       }
     }());
   }
