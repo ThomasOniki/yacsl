@@ -36,6 +36,7 @@ Checks: >
   -modernize-deprecated-headers,
   -modernize-avoid-c-arrays,
   -modernize-use-trailing-return-type,
+  -modernize-use-std-print,
   -google-explicit-constructor,
   -cppcoreguidelines-explicit-constructor,
   -misc-explicit-constructor,
