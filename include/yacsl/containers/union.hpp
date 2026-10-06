@@ -5,69 +5,62 @@
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/meta/conditional.hpp"
 #include "yacsl/meta/limits.hpp"
-#include "yacsl/meta/pack.hpp"
 #include "yacsl/meta/qualifiers.hpp"
 #include "yacsl/type_aliases.hpp"
 
 namespace yacsl::containers {
 
-template <typename... Ts> class Union {
+template <typename... Ts>
+  requires(... && (!meta::ReferenceType<Ts> && meta::MutableType<Ts>))
+class Union {
 public:
-  template <typename T,
-            usize I = meta::first_type_index<meta::RemoveCVRef<T>, Ts...>>
-  constexpr Union(T&& value) noexcept : index_(I) {
-    memory::construct_at(reinterpret_cast<T*>(bytes_.data()),
-                         memory::forward<T>(value));
+  constexpr Union() noexcept : index_(sizeof...(Ts)) {}
+
+  template <usize I, typename... Args>
+  [[nodiscard]] constexpr Union create(Args&&... args) noexcept {
+    Union ret;
+    ret.index_ = I;
+    ret.visit([&](auto& value) {
+      memory::construct_at(&value, memory::forward<Args>(args)...);
+    });
   }
-  ~Union() noexcept { destroy(); }
+
+  ~Union() noexcept {
+    visit([]<typename T>(T const& value) { value->~T(); });
+  }
 
   constexpr Union(Union const& other) noexcept { assign(other); }
   constexpr Union(Union&& other) noexcept { assign(memory::move(other)); }
+
   constexpr Union& operator=(this Union& self, Union const& other) noexcept {
-    self.destroy();
-    self.assign(other);
+    self.visit([&]<typename T>(T& value) {
+      value.~T();
+      T const& other_value = *reinterpret_cast<T const*>(other.bytes_.data());
+      memory::construct_at(&value, other_value);
+    });
   }
   constexpr Union& operator=(this Union& self, Union&& other) noexcept {
-    self.destroy();
-    self.assign(memory::move(other));
+    self.visit([&other]<typename T>(T& value) {
+      value->~T();
+      value.~T();
+      T&& other_value =
+          memory::move(*reinterpret_cast<T*>(other.bytes_.data()));
+      memory::construct_at(&value, memory::move(other_value));
+      other_value.~T();
+    });
+    other.index_ = sizeof...(Ts);
   }
 
   [[nodiscard]] constexpr usize index(this Union const& self) noexcept {
     return self.index_;
   }
 
-private:
-  constexpr void assign(this Union& self, Union const& other) noexcept {
-    self.index_ = other.index_;
-    usize index = 0;
-    (..., [&] {
-      if (index++ == other.index_) {
-        memory::construct_at(reinterpret_cast<Ts*>(self.bytes_.data()),
-                             *reinterpret_cast<Ts const*>(other.bytes_.data()));
-      }
-    }());
-  }
-
-  constexpr void assign(this Union& self, Union&& other) noexcept {
-    self.index_ = other.index_;
-    usize index = 0;
-    (..., [&] {
-      if (index++ == other.index_) {
-        Ts&& to_move = memory::move(
-            *reinterpret_cast<Ts*>(memory::move(other).bytes_.data()));
-        memory::construct_at(reinterpret_cast<Ts*>(self.bytes_.data()),
-                             memory::move(to_move));
-        to_move->~Ts();
-      }
-    }());
-    other.index_ = sizeof...(Ts);
-  }
-
-  constexpr void destroy(this Union& self) noexcept {
+  template <typename F>
+  constexpr void visit(this Union& self, F&& func) noexcept {
     usize index = 0;
     (..., [&] {
       if (index++ == self.index_) {
-        reinterpret_cast<Ts const*>(self.bytes_.data())->~Ts();
+        memory::forward<F>(func)(*reinterpret_cast<Ts*>(self.bytes_.data()));
       }
     }());
   }
