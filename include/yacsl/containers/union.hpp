@@ -1,10 +1,8 @@
 #pragma once
 
-#include "yacsl/containers/nttp_string.hpp"
 #include "yacsl/containers/option.hpp"
 #include "yacsl/containers/stack_array.hpp"
 #include "yacsl/debug/assert.hpp"
-#include "yacsl/debug/panic.hpp"
 #include "yacsl/math/arithmetic.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/meta/conditional.hpp"
@@ -23,12 +21,19 @@ public:
   constexpr Union() noexcept : index_(sizeof...(Ts)) {}
 
   template <usize I, typename... Args>
-  [[nodiscard]] constexpr Union create(Args&&... args) noexcept {
-    Union ret;
-    ret.index_ = I;
-    ret.visit([&](auto& value) {
+  constexpr void emplace(this Union& self, Args&&... args) noexcept {
+    self.visit([&]<typename T>(T const& value) { value.~T(); });
+    self.index_ = I;
+    self.visit([&](auto& value) {
       memory::construct_at(&value, memory::forward<Args>(args)...);
     });
+  }
+
+  template <usize I, typename... Args>
+  [[nodiscard]] static constexpr Union create(Args&&... args) noexcept {
+    Union ret;
+    ret.emplace<I>(memory::forward<Args>(args)...);
+    return ret;
   }
 
   ~Union() noexcept {
