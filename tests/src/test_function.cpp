@@ -200,7 +200,9 @@ int main() {
       yacsl::testing::Test("ref capture lambda", test_ref_capture_lamdba),
   };
   for (auto& test : tests) {
-    test.run();
+    if (test.run() == yacsl::testing::Test::Result::Failure) {
+      ret = 1;
+    }
   }
   yacsl::debug::flush_logger();
   return ret;

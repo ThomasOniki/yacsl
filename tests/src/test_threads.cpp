@@ -1,12 +1,11 @@
 #include "yacsl/containers/stack_array.hpp"
 #include "yacsl/containers/vector.hpp"
-#include "yacsl/debug/log.hpp"
 #include "yacsl/testing/test.hpp"
 #include "yacsl/threads/atomic.hpp"
 #include "yacsl/threads/mutex.hpp"
 #include "yacsl/threads/thread.hpp"
-#include <cstdint>
 #include <stdint.h>
+#include <stdio.h>
 
 template <uint32_t ThreadCount>
 static void test_atomic(yacsl::testing::Test& test) {
@@ -14,7 +13,7 @@ static void test_atomic(yacsl::testing::Test& test) {
   yacsl::threads::Atomic<uint32_t>                  count = 0;
 
   {
-    uint32_t loaded = count.load(yacsl::threads::MemoryOrder::Relaxed);
+    uint32_t const loaded = count.load(yacsl::threads::MemoryOrder::Relaxed);
     if (loaded != 0) {
       test.fail_quietly();
       fprintf(stderr, "Loaded %u 0 from zero initialized atomic.\n", loaded);
@@ -33,7 +32,7 @@ static void test_atomic(yacsl::testing::Test& test) {
     threads[i].join();
   }
 
-  uint32_t loaded = count.load(yacsl::threads::MemoryOrder::Relaxed);
+  uint32_t const loaded = count.load(yacsl::threads::MemoryOrder::Relaxed);
   if (loaded != ThreadCount) {
     test.fail_quietly();
     fprintf(stderr, "Atomic counter contains %u, not %u.\n", loaded,
