@@ -1,6 +1,8 @@
+#include "yacsl/debug/assert.hpp"
+#include "yacsl/testing/expect.hpp"
+#include "yacsl/testing/test.hpp"
 #ifndef __EMSCRIPTEN__
 
-#include "test_utils.hpp"
 #include "yacsl/containers/stack_array.hpp"
 #include "yacsl/containers/stack_storage.hpp"
 #include "yacsl/containers/string.hpp"
@@ -211,7 +213,7 @@ get_pipe_output(Process::Output* output, yacsl::ranges::StringView expected) {
   str.resize(expected.size() + 256);
   // NOLINTNEXTLINE(misc-const-correctness)
   yacsl::ranges::Slice<yacsl::u8> bytes      = str.bytes();
-  yacsl::usize                       total_read = output->read(bytes);
+  yacsl::usize                    total_read = output->read(bytes);
   while (total_read < expected.size()) {
     total_read +=
         output->read({bytes.data() + total_read, bytes.size() - total_read});
@@ -220,9 +222,7 @@ get_pipe_output(Process::Output* output, yacsl::ranges::StringView expected) {
   return str;
 }
 
-static int check_file(char const* path, yacsl::ranges::StringView expected) {
-  int ret = 0;
-
+static void check_file(char const* path, yacsl::ranges::StringView expected) {
   int const fildes =
       TRY_SYSCALL(open(path, O_RDWR | O_CREAT | O_CLOEXEC, 0644));
 
@@ -231,7 +231,7 @@ static int check_file(char const* path, yacsl::ranges::StringView expected) {
   ssize_t result = ::read(fildes, buf.grow(64), 64);
 
   while (result != 0) {
-    ASSERT(result != -1);
+    yacsl::debug::assert_(result != -1);
 #ifdef _WIN32
     result = ::read(fildes, buf.grow(static_cast<yacsl::usize>(result)),
                     static_cast<unsigned int>(result));
@@ -240,71 +240,64 @@ static int check_file(char const* path, yacsl::ranges::StringView expected) {
                     static_cast<size_t>(result));
 #endif
   }
-  EXPECT_EQ(result, 0);
+  yacsl::testing::expect_eq(result, 0);
 
   buf.resize(buf.size() - 64);
-  EXPECT_SVEQ(buf.view(), expected);
+  yacsl::testing::expect_eq(buf.view(), expected);
 
   TRY_SYSCALL(close(fildes));
   TRY_SYSCALL(remove(path));
-
-  return ret;
 }
 
-static int check_file_output(IoTypes types) noexcept {
-  int ret = 0;
+static void check_file_output(IoTypes types) noexcept {
   if (types.output == Type::File) {
-    EXPECT(check_file(CHILD_STDOUT_FILE_PATH, "arguments (to stdout):\n"
-                                              "arg1\n"
-                                              "arg2\n"
-                                              "argument with spaces\n"
-                                              "exiting (to stdout)\n") == 0);
+    check_file(CHILD_STDOUT_FILE_PATH, "arguments (to stdout):\n"
+                                       "arg1\n"
+                                       "arg2\n"
+                                       "argument with spaces\n"
+                                       "exiting (to stdout)\n");
   }
   if (types.error == Type::File) {
     if (types.input == Type::Null) {
-      EXPECT(check_file(CHILD_STDERR_FILE_PATH, "stdin (to stderr):\n"
-                                                "exiting (to stderr)\n") == 0);
+      check_file(CHILD_STDERR_FILE_PATH, "stdin (to stderr):\n"
+                                         "exiting (to stderr)\n");
     } else {
-      EXPECT(check_file(CHILD_STDERR_FILE_PATH, "stdin (to stderr):\n"
-                                                "hello world\n"
-                                                "exiting (to stderr)\n") == 0);
+      check_file(CHILD_STDERR_FILE_PATH, "stdin (to stderr):\n"
+                                         "hello world\n"
+                                         "exiting (to stderr)\n");
     }
   }
-  return ret;
 }
 
-static int
+static void
 check_other_pipe_output(yacsl::containers::StackArray<Process, 3>& processes,
                         IoTypes types) noexcept {
-  int ret = 0;
   if (types.output == Type::OtherPipe) {
     Process::ExitStatus const status = processes[1].wait();
-    EXPECT_SVEQ(status.unread_stdout, "arguments (to stdout):\n"
-                                      "arg1\n"
-                                      "arg2\n"
-                                      "argument with spaces\n"
-                                      "exiting (to stdout)\n");
+    yacsl::testing::expect_eq(status.unread_stdout, "arguments (to stdout):\n"
+                                                    "arg1\n"
+                                                    "arg2\n"
+                                                    "argument with spaces\n"
+                                                    "exiting (to stdout)\n");
   }
   if (types.error == Type::OtherPipe) {
     Process::ExitStatus const status = processes[2].wait();
     if (types.input == Type::Null) {
-      EXPECT_SVEQ(status.unread_stdout, "stdin (to stderr):\n"
-                                        "exiting (to stderr)\n");
+      yacsl::testing::expect_eq(status.unread_stdout, "stdin (to stderr):\n"
+                                                      "exiting (to stderr)\n");
     } else {
-      EXPECT_SVEQ(status.unread_stdout, "stdin (to stderr):\n"
-                                        "hello world\n"
-                                        "exiting (to stderr)\n");
+      yacsl::testing::expect_eq(status.unread_stdout, "stdin (to stderr):\n"
+                                                      "hello world\n"
+                                                      "exiting (to stderr)\n");
     }
   }
-  return ret;
 }
 
 #ifdef _WIN32
-static int check_fd_output(HANDLE file, yacsl::ranges::StringView expected) {
+static void check_fd_output(HANDLE file, yacsl::ranges::StringView expected) {
 #else
-static int check_fd_output(int file, yacsl::ranges::StringView expected) {
+static void check_fd_output(int file, yacsl::ranges::StringView expected) {
 #endif
-  int                       ret = 0;
   yacsl::containers::String output;
 #ifdef _WIN32
   DWORD   result  = 0;
@@ -333,30 +326,29 @@ static int check_fd_output(int file, yacsl::ranges::StringView expected) {
   while (result > 0) {
     result = ::read(file, output.grow(static_cast<yacsl::usize>(result)), 512);
   }
-  ASSERT(result != -1);
+  yacsl::debug::assert_(result != -1);
 #endif
   output.resize(output.size() - 512);
-  EXPECT_SVEQ(output.view(), expected);
-  return ret;
+  yacsl::testing::expect_eq(output.view(), expected);
 }
 
 static int check_inherited_output(IoTypes types, Pipes const& pipes) {
   int ret = 0;
   if (types.output == Type::Inherit) {
-    EXPECT(check_fd_output(pipes.output[0], "arguments (to stdout):\n"
-                                            "arg1\n"
-                                            "arg2\n"
-                                            "argument with spaces\n"
-                                            "exiting (to stdout)\n") == 0);
+    check_fd_output(pipes.output[0], "arguments (to stdout):\n"
+                                     "arg1\n"
+                                     "arg2\n"
+                                     "argument with spaces\n"
+                                     "exiting (to stdout)\n");
   }
   if (types.error == Type::Inherit) {
     if (types.input == Type::Null) {
-      EXPECT(check_fd_output(pipes.error[0], "stdin (to stderr):\n"
-                                             "exiting (to stderr)\n") == 0);
+      check_fd_output(pipes.error[0], "stdin (to stderr):\n"
+                                      "exiting (to stderr)\n");
     } else {
-      EXPECT(check_fd_output(pipes.error[0], "stdin (to stderr):\n"
-                                             "hello world\n"
-                                             "exiting (to stderr)\n") == 0);
+      check_fd_output(pipes.error[0], "stdin (to stderr):\n"
+                                      "hello world\n"
+                                      "exiting (to stderr)\n");
     }
   }
   return ret;
@@ -374,47 +366,45 @@ static int check_piped_output(IoTypes types, RuntimeOutput runtime_out,
   int ret = 0;
   if (types.output == Type::Pipe) {
     if (types.input == Type::Pipe || types.input == Type::Inherit) {
-      EXPECT_SVEQ(runtime_out.out, "arguments (to stdout):\n"
-                                   "arg1\n"
-                                   "arg2\n"
-                                   "argument with spaces\n");
-      EXPECT_SVEQ(status.unread_stdout, "exiting (to stdout)\n");
+      yacsl::testing::expect_eq(runtime_out.out, "arguments (to stdout):\n"
+                                                 "arg1\n"
+                                                 "arg2\n"
+                                                 "argument with spaces\n");
+      yacsl::testing::expect_eq(status.unread_stdout, "exiting (to stdout)\n");
     } else {
-      EXPECT_SVEQ(runtime_out.out, "arguments (to stdout):\n"
-                                   "arg1\n"
-                                   "arg2\n"
-                                   "argument with spaces\n"
-                                   "exiting (to stdout)\n");
-      EXPECT_SVEQ(status.unread_stdout, "");
+      yacsl::testing::expect_eq(runtime_out.out, "arguments (to stdout):\n"
+                                                 "arg1\n"
+                                                 "arg2\n"
+                                                 "argument with spaces\n"
+                                                 "exiting (to stdout)\n");
+      yacsl::testing::expect_eq(status.unread_stdout, "");
     }
   } else {
-    EXPECT_SVEQ(status.unread_stdout, "");
+    yacsl::testing::expect_eq(status.unread_stdout, "");
   }
   if (types.error == Type::Pipe) {
     if (types.input == Type::Pipe || types.input == Type::Inherit) {
-      EXPECT_SVEQ(runtime_out.err, "stdin (to stderr):\n"
-                                   "hello world\n");
-      EXPECT_SVEQ(status.unread_stderr, "exiting (to stderr)\n");
+      yacsl::testing::expect_eq(runtime_out.err, "stdin (to stderr):\n"
+                                                 "hello world\n");
+      yacsl::testing::expect_eq(status.unread_stderr, "exiting (to stderr)\n");
     } else if (types.input == Type::Null) {
-      EXPECT_SVEQ(runtime_out.err, "stdin (to stderr):\n"
-                                   "exiting (to stderr)\n");
-      EXPECT_SVEQ(status.unread_stderr, "");
+      yacsl::testing::expect_eq(runtime_out.err, "stdin (to stderr):\n"
+                                                 "exiting (to stderr)\n");
+      yacsl::testing::expect_eq(status.unread_stderr, "");
     } else {
-      EXPECT_SVEQ(runtime_out.err, "stdin (to stderr):\n"
-                                   "hello world\n"
-                                   "exiting (to stderr)\n");
-      EXPECT_SVEQ(status.unread_stderr, "");
+      yacsl::testing::expect_eq(runtime_out.err, "stdin (to stderr):\n"
+                                                 "hello world\n"
+                                                 "exiting (to stderr)\n");
+      yacsl::testing::expect_eq(status.unread_stderr, "");
     }
   } else {
-    EXPECT_SVEQ(status.unread_stderr, "");
+    yacsl::testing::expect_eq(status.unread_stderr, "");
   }
 
   return ret;
 }
 
-static int test_run_c(IoTypes types) {
-  int ret = 0;
-
+static void test_run_c(IoTypes types) {
   Pipes pipes;
 
   yacsl::containers::StackArray<Process, 3> other_pipes;
@@ -485,12 +475,11 @@ static int test_run_c(IoTypes types) {
   Process::ExitStatus const status = process.wait();
   pipes.restore_original_io();
 
-  EXPECT(check_file_output(types) == 0);
-  EXPECT(check_other_pipe_output(other_pipes, types) == 0);
-  EXPECT(check_inherited_output(types, pipes) == 0);
-  EXPECT(check_piped_output(
-             types, {.out = piped_output.view(), .err = piped_error.view()},
-             status) == 0);
+  check_file_output(types);
+  check_other_pipe_output(other_pipes, types);
+  check_inherited_output(types, pipes);
+  check_piped_output(
+      types, {.out = piped_output.view(), .err = piped_error.view()}, status);
 
 #ifdef _WIN32
   TRY_SYSCALL_WIN32(CloseHandle(pipes.output[0]));
@@ -499,20 +488,22 @@ static int test_run_c(IoTypes types) {
   TRY_SYSCALL(::close(pipes.output[0]));
   TRY_SYSCALL(::close(pipes.error[0]));
 #endif
+}
 
-  return ret;
+static IoTypes& io_types() {
+  static IoTypes instance = {};
+  return instance;
 }
 
 int main() {
-  int ret = 0;
-
   int const file = ::open(CHILD_STDIN_FILE_PATH,
                           O_WRONLY | O_CREAT | O_CLOEXEC | O_TRUNC, 0644);
-  EXPECT(file != -1);
+  yacsl::testing::expect(file != -1);
   [[maybe_unused]] ssize_t const written =
       ::write(file, INPUT_DATA.data(), INPUT_DATA.size());
-  EXPECT(written == INPUT_DATA.size());
-  EXPECT(close(file) == 0);
+  yacsl::testing::expect_eq(static_cast<yacsl::usize>(written),
+                            INPUT_DATA.size());
+  yacsl::testing::expect(close(file) == 0);
 
   (void)yacsl::debug::Logger::get_default_instance();
 
@@ -522,31 +513,24 @@ int main() {
   for (Type stdin_type : types) {
     for (Type stdout_type : types) {
       for (Type stderr_type : types) {
-        yacsl::debug::log_info(
-            "calling test_run_c() with input type {}, output type "
-            "{} and error type {}",
-            stdin_type, stdout_type, stderr_type);
-        yacsl::debug::flush_logger();
-        if (test_run_c({
-                .input  = stdin_type,
-                .output = stdout_type,
-                .error  = stderr_type,
-            }) != 0) {
-          yacsl::debug::log_error(
-              "test_run_c() failed with input type {}, output type "
-              "{} and error type {}",
-              stdin_type, stdout_type, stderr_type);
-          ret = 1;
-        }
+        io_types() = {
+            .input  = stdin_type,
+            .output = stdout_type,
+            .error  = stderr_type,
+        };
+
+        yacsl::testing::Test test(
+            yacsl::fmt::format("{}, {}, {}", stdin_type, stdout_type,
+                               stderr_type)
+                .c_str(),
+            [](yacsl::testing::Test& /*test*/) { test_run_c(io_types()); });
+
+        test.run();
       }
     }
   }
 
-  EXPECT(remove(CHILD_STDIN_FILE_PATH) == 0);
-
-  yacsl::debug::flush_logger();
-
-  return ret;
+  yacsl::testing::expect(remove(CHILD_STDIN_FILE_PATH) == 0);
 }
 
 #else
