@@ -69,7 +69,7 @@ public:
   }
 
   template <typename Self>
-  auto optional_value_ref(this Self&& self YACSL_LIFETIMEBOUND) noexcept
+  auto value_option(this Self&& self YACSL_LIFETIMEBOUND) noexcept
       -> Option<decltype((memory::forward<Self>(self).value_))> {
     if (self.is_error_) {
       return utils::NIL;
@@ -96,7 +96,7 @@ public:
   }
 
   template <typename Self>
-  auto optional_error_ref(this Self&& self YACSL_LIFETIMEBOUND) noexcept
+  auto error_option(this Self&& self YACSL_LIFETIMEBOUND) noexcept
       -> Option<decltype((memory::forward<Self>(self).error_))> {
     if (self.is_error_) {
       return utils::NIL;
