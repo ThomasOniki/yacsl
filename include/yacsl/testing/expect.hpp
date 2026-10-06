@@ -31,7 +31,7 @@ template <typename T, typename U>
 constexpr void expect_eq(T&& lhs, U&& rhs,
                          debug::SourceLocation location =
                              debug::SourceLocation::current()) noexcept {
-  if (memory::forward<T>(lhs) != memory::forward<T>(rhs)) [[unlikely]] {
+  if (lhs != rhs) [[unlikely]] {
     fail(fmt::format("expect_eq failed in test {?} at {}\n"
                      "lhs: {}\n"
                      "rhs: {}\n"
@@ -44,7 +44,7 @@ constexpr void expect_eq(T&& lhs, U&& rhs,
 template <typename T, typename U, typename... Args>
 constexpr void expect_eq(T&& lhs, U&& rhs, fmt::FormatString<Args...> fmt,
                          Args&&... args) noexcept {
-  if (memory::forward<T>(lhs) != memory::forward<T>(rhs)) [[unlikely]] {
+  if (lhs != rhs) [[unlikely]] {
     fail(fmt::format("expect_eq failed in test {?} at {}\n"
                      "lhs: {}\n"
                      "rhs: {}\n",

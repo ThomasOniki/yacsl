@@ -2,6 +2,7 @@
 #include "yacsl/testing/test.hpp"
 #include "yacsl/type_aliases.hpp"
 #include "yacsl/yacsl.hpp"
+#include <stdio.h>
 
 static constexpr yacsl::usize SLOTS = 64;
 
@@ -38,6 +39,7 @@ static void test(yacsl::testing::Test& test) noexcept {
     }
   }
   if (ring.try_pop().is_value()) {
+    test.fail_quietly();
     fputs("try_pop() succeeded on an empty ring buffer.\n", stderr);
   }
   for (yacsl::usize i = 0; i < Producers; ++i) {
@@ -68,16 +70,17 @@ static void test(yacsl::testing::Test& test) noexcept {
 
   start.store(true, yacsl::threads::MemoryOrder::Release);
 
-  for (yacsl::usize i = 0; i < Producers; ++i) {
-    producers[i].join();
+  for (auto& producer : producers) {
+    producer.join();
   }
-  for (yacsl::usize i = 0; i < Consumers; ++i) {
-    consumers[i].join();
+  for (auto& consumer : consumers) {
+    consumer.join();
   }
 
-  for (yacsl::usize i : did_pop.indices()) {
-    if (!did_pop[i]) {
-      fprintf(stderr, "%zuth value was not poped/consumed\n", i);
+  for (yacsl::usize const index : did_pop.indices()) {
+    if (!did_pop[index]) {
+      test.fail_quietly();
+      fprintf(stderr, "%zuth value was not poped/consumed\n", index);
     }
   }
 }

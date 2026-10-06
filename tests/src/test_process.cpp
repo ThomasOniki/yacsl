@@ -6,6 +6,7 @@
 #include "yacsl/containers/stack_array.hpp"
 #include "yacsl/containers/stack_storage.hpp"
 #include "yacsl/containers/string.hpp"
+#include "yacsl/fmt/format_string.hpp"
 #include "yacsl/os/file.hpp"
 #include "yacsl/os/process.hpp"
 #include "yacsl/ranges/slice.hpp"
@@ -332,8 +333,7 @@ static void check_fd_output(int file, yacsl::ranges::StringView expected) {
   yacsl::testing::expect_eq(output.view(), expected);
 }
 
-static int check_inherited_output(IoTypes types, Pipes const& pipes) {
-  int ret = 0;
+static void check_inherited_output(IoTypes types, Pipes const& pipes) {
   if (types.output == Type::Inherit) {
     check_fd_output(pipes.output[0], "arguments (to stdout):\n"
                                      "arg1\n"
@@ -351,7 +351,6 @@ static int check_inherited_output(IoTypes types, Pipes const& pipes) {
                                       "exiting (to stderr)\n");
     }
   }
-  return ret;
 }
 
 namespace {
@@ -361,9 +360,8 @@ struct RuntimeOutput {
 };
 } // namespace
 
-static int check_piped_output(IoTypes types, RuntimeOutput runtime_out,
-                              Process::ExitStatus const& status) {
-  int ret = 0;
+static void check_piped_output(IoTypes types, RuntimeOutput runtime_out,
+                               Process::ExitStatus const& status) {
   if (types.output == Type::Pipe) {
     if (types.input == Type::Pipe || types.input == Type::Inherit) {
       yacsl::testing::expect_eq(runtime_out.out, "arguments (to stdout):\n"
@@ -400,8 +398,6 @@ static int check_piped_output(IoTypes types, RuntimeOutput runtime_out,
   } else {
     yacsl::testing::expect_eq(status.unread_stderr, "");
   }
-
-  return ret;
 }
 
 static void test_run_c(IoTypes types) {
