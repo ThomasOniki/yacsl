@@ -52,7 +52,7 @@ public:
     while (self.slots_[index].epoch.load(MemoryOrder::Acquire) != read + 1) {
       sched_yield();
     }
-    T ret(memory::move(*self.slots_[index].value));
+    T ret = memory::move(*self.slots_[index].value);
     self.slots_[index].value.destruct();
     self.slots_[index].epoch.store(read + N, MemoryOrder::Release);
     return ret;
@@ -107,7 +107,7 @@ public:
       if (diff == 0) {
         if (self.read_.compare_exchange_weak(
                 read, read + 1, MemoryOrder::Relaxed, MemoryOrder::Relaxed)) {
-          T ret(*self.slots_[index].value);
+          T ret = *self.slots_[index].value;
           self.slots_[index].value.destruct();
           self.slots_[index].epoch.store(read + N, MemoryOrder::Release);
           return ret;

@@ -52,7 +52,7 @@ public:
            self.read_ + 1) {
       sched_yield();
     }
-    T ret(memory::move(*self.slots_[index].value));
+    T ret = memory::move(*self.slots_[index].value);
     self.slots_[index].value.destruct();
     self.slots_[index].epoch.store(self.read_ + N, MemoryOrder::Release);
     ++self.read_;
@@ -105,7 +105,7 @@ public:
     if (self.slots_[index].epoch.load(MemoryOrder::Acquire) != self.read_ + 1) {
       return utils::NIL;
     }
-    T ret(*self.slots_[index].value);
+    T ret = *self.slots_[index].value;
     self.slots_[index].value.destruct();
     self.slots_[index].epoch.store(self.read_ + N, MemoryOrder::Release);
     ++self.read_;

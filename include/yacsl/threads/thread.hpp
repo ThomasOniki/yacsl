@@ -103,7 +103,7 @@ private:
       using StoredFunction =
           internal::StorableFunctionType<meta::RemoveReference<Func>>::Type;
       using Pack = containers::Tuple<StoredFunction, Atomic<bool>&, Args...>;
-      Pack pack(memory::move(*static_cast<Pack*>(data)));
+      Pack pack  = memory::move(*static_cast<Pack*>(data));
 
       pack.template get<1>().store(true, MemoryOrder::Release);
 
