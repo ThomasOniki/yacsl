@@ -54,8 +54,8 @@ public:
   [[nodiscard]] ranges::Slice<T, SizeT> push_array(this Arena& self,
                                                    SizeT       count);
 
-  [[nodiscard]] ranges::Slice<u8, SizeT>
-  allocate(this Arena& self, SizeT size, Alignment align) noexcept {
+  [[nodiscard]] ranges::Slice<u8, SizeT> allocate(this Arena& self, SizeT size,
+                                                  Alignment align) noexcept {
     auto const u_align = static_cast<usize>(align);
     uptr       top     = reinterpret_cast<uptr>(self.ptr_);
     top                = (top + u_align - 1) / u_align * u_align;
@@ -111,7 +111,7 @@ public:
 
   private:
     Arena& arena_;
-    u8* ptr_;
+    u8*    ptr_;
   };
 
 private:
@@ -119,10 +119,10 @@ private:
   void free_all(this Arena& self) noexcept YACSL_API;
 
 private:
-  u8* begin_            = nullptr;
-  u8* end_              = nullptr;
-  u8* ptr_              = nullptr;
-  usize  initial_capacity_ = 64 * utils::KiB;
+  u8*   begin_            = nullptr;
+  u8*   end_              = nullptr;
+  u8*   ptr_              = nullptr;
+  usize initial_capacity_ = 64 * utils::KiB;
 };
 
 using MainArenaAllocator    = SingletonAllocator<Arena, "main", true>;

@@ -45,14 +45,14 @@ struct State {
   } while (false)
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-usize Process::Output::read(this Output&         self,
+usize Process::Output::read(this Output&      self,
                             ranges::Slice<u8> buffer) noexcept {
   return static_cast<usize>(
       YACSL_TRY_SYSCALL(::read(self.handle_, buffer.data(), buffer.size())));
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void Process::Input::write(this Input&                self,
+void Process::Input::write(this Input&             self,
                            ranges::Slice<u8 const> bytes) noexcept {
   usize written = static_cast<usize>(
       YACSL_TRY_SYSCALL(::write(self.handle_, bytes.data(), bytes.size())));
@@ -219,8 +219,8 @@ Process::spawn(char const* const* argv, Stdio const& stdio) noexcept {
 }
 
 static containers::String drain_pipe(Process::Output* output) noexcept {
-  containers::String   data;
-  ranges::Slice<u8> bytes =
+  containers::String data;
+  ranges::Slice<u8>  bytes =
       ranges::Slice<char>(data.grow(PIPE_BUF), PIPE_BUF).bytes();
   usize result = output->read(bytes);
   while (result != 0) {

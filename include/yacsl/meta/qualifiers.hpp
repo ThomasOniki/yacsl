@@ -28,7 +28,6 @@ template <typename T> struct RemoveVolatileImpl<volatile T> {
   using Type = T;
 };
 } // namespace internal
-
 template <typename T>
 using RemoveReference = internal::RemoveReferenceImpl<T>::Type;
 template <typename T> using RemoveConst = internal::RemoveConstImpl<T>::Type;

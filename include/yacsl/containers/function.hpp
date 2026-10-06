@@ -40,8 +40,7 @@ public:
 private:
   YACSL_NO_UNIQUE_ADDRESS A allocator_;
 
-  alignas(8)
-      YACSL_NO_UNIQUE_ADDRESS StackArray<u8, BufSz, usize> fixed_buffer_;
+  alignas(8) YACSL_NO_UNIQUE_ADDRESS StackArray<u8, BufSz, usize> fixed_buffer_;
 
   void* data_ = fixed_buffer_.data();
 
