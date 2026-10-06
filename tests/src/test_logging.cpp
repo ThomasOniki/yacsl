@@ -5,6 +5,7 @@
 #include "yacsl/os/file.hpp"
 #include "yacsl/ranges/initializer_list.hpp"
 #include "yacsl/ranges/string_view.hpp"
+#include "yacsl/testing/test.hpp"
 #include "yacsl/type_aliases.hpp"
 #include <assert.h>
 #include <inttypes.h>
@@ -12,11 +13,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-
-static int& status() {
-  static int status;
-  return status;
-}
 
 static void check(char const* expected) {
   static constexpr size_t buf_size     = 4096;
@@ -44,9 +40,9 @@ static void check(char const* expected) {
   if (memcmp(static_cast<void*>(logs.data()),
              static_cast<void const*>(buf.data()),
              buf_size) != 0) { // NOLINTNEXTLINE(modernize-use-std-print)
-    printf("Logging test failed. Expected\n%s,got\n%s.\n", buf.data(),
-           logs.data());
-    status() = 1;
+    fprintf(stderr, "Logging test failed. Expected\n%s,got\n%s.\n", buf.data(),
+            logs.data());
+    yacsl::testing::fail_quietly();
   }
 }
 
@@ -68,9 +64,9 @@ static void log_to_file(yacsl::debug::Logger::Level              lvl,
                         yacsl::fmt::FormatString<Args...> const& fmt,
                         Args&&... args) {
   yacsl::os::File::OpenFlags const flags = yacsl::os::File::OpenFlags::Write |
-                                       yacsl::os::File::OpenFlags::Create |
-                                       yacsl::os::File::OpenFlags::Trunc;
-  yacsl::debug::Logger         logger(
+                                           yacsl::os::File::OpenFlags::Create |
+                                           yacsl::os::File::OpenFlags::Trunc;
+  yacsl::debug::Logger             logger(
       yacsl::os::File::open("test_logs.txt", flags).value(),
       yacsl::os::File::open("test_logs.txt", flags).value(),
       yacsl::debug::Logger::Level::Trace3);
@@ -79,7 +75,7 @@ static void log_to_file(yacsl::debug::Logger::Level              lvl,
 
 using enum yacsl::debug::Logger::Level;
 
-int main() {
+static void test_logging(yacsl::testing::Test& /*test*/) {
   log_to_file(Trace3, "Hello, {}", "world!");
   check("[TRACE 3] Hello, world!");
 
@@ -96,7 +92,8 @@ int main() {
 
   log_to_file(Debug, "aligned: {010}, centered: {*^7}, left, binary: {<#8b}.",
               96, 737, 0b1101);
-  check("[DEBUG] aligned: 0000000096, centered: **737**, left, binary: 0b1101  "
+  check("[DEBUG] aligned: 0000000096, centered: **737**, left, binary: "
+        "0b1101  "
         ".");
 
   log_to_file(
@@ -143,7 +140,8 @@ int main() {
           u"bar",
           u"🤓",
           u"⭐",
-          u"The emoji aren't padded correctly because they use 4 UTF-8 chars.",
+          (u"The emoji aren't padded correctly because they use 4 "
+           u"UTF-8 chars."),
       });
   check("[INFO] char16_t string range: [***foo****, ***bar****, ***🤓***, "
         "***⭐****, "
@@ -151,8 +149,8 @@ int main() {
 
   log_to_file(Info, "debug char16_t string: {?}",
               u"nerd emoji (again): 🤓, newline: \n");
-  check(
-      "[INFO] debug char16_t string: \"nerd emoji (again): 🤓, newline: \\n\"");
+  check("[INFO] debug char16_t string: \"nerd emoji (again): 🤓, newline: "
+        "\\n\"");
 
   log_to_file(Info, "enum format: {}", test_ns::Enum1::Zero);
   check("[INFO] enum format: test_ns::Zero");
@@ -186,6 +184,20 @@ int main() {
   check("[INFO] Goodbye, world!");
 
   (void)remove("test_logs.txt");
+}
 
-  return status();
+int main() {
+  int                           ret   = 0;
+  yacsl::containers::StackArray tests = {
+      yacsl::testing::Test("logging", test_logging),
+      yacsl::testing::Test("logging", test_logging),
+  };
+  for (auto& test : tests) {
+    printf("Running test '%s'...\n", test.cstr_name());
+    if (test.run_quietly() == yacsl::testing::Test::Result::Failure) {
+      fprintf(stderr, "test '%s' failed.\n", test.cstr_name());
+      ret = 1;
+    }
+  }
+  return ret;
 }

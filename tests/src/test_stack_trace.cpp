@@ -1,29 +1,26 @@
-#include "test_utils.hpp"
 #include "yacsl/attributes.hpp"
-#include "yacsl/debug/log.hpp"
+#include "yacsl/containers/stack_array.hpp"
 #include "yacsl/debug/stack_trace.hpp"
-#include "yacsl/ranges/string_view.hpp"
-
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define CHECK_ENTRY(entry_idx, expected_caller)                                \
-  EXPECT_EQ(stack_trace.entries()[entry_idx].caller.view(),                    \
-            yacsl::ranges::StringView(expected_caller))
+#include "yacsl/testing/expect.hpp"
+#include "yacsl/testing/test.hpp"
 
 YACSL_NOINLINE static int f1(bool /*unused*/, char /*unused*/) {
-  int                            ret = 0;
   yacsl::debug::StackTrace const stack_trace =
       yacsl::debug::StackTrace::current();
   stack_trace.compute_entries();
-  CHECK_ENTRY(0, "yacsl::debug::StackTrace::current()");
-  CHECK_ENTRY(1, "f1(bool, char)");
-  CHECK_ENTRY(2, "ns1::ns2::f2(void*)");
-  CHECK_ENTRY(
-      3, "int ns1::ns2::(anonymous namespace)::S<void, 0>::f3<void, 15>()");
-  CHECK_ENTRY(
-      4,
+  yacsl::testing::expect_eq(stack_trace.entries()[0].caller,
+                            "yacsl::debug::StackTrace::current()");
+  yacsl::testing::expect_eq(stack_trace.entries()[1].caller, "f1(bool, char)");
+  yacsl::testing::expect_eq(stack_trace.entries()[2].caller,
+                            "ns1::ns2::f2(void*)");
+  yacsl::testing::expect_eq(stack_trace.entries()[3].caller,
+                            "int ns1::ns2::(anonymous namespace)::S<void, "
+                            "0>::f3<void, 15>()");
+  yacsl::testing::expect_eq(
+      stack_trace.entries()[4].caller,
       "int (anonymous namespace)::f4<ns1::ns2::(anonymous namespace)::S<void, "
       "0>{(void*)0, (char)97}>()");
-  return ret;
+  return 0;
 }
 
 namespace ns1::ns2 {
@@ -46,16 +43,22 @@ template <typename T = void, int I = 0> struct S {
 } // namespace ns1::ns2
 
 namespace {
+template <ns1::ns2::S<> S = ns1::ns2::S<>{}>
 // NOLINTNEXTLINE(llvm-prefer-static-over-anonymous-namespace)
-template <ns1::ns2::S<> S = ns1::ns2::S<>{}> YACSL_NOINLINE int f4() noexcept {
-  volatile const int result = ns1::ns2::S<>::f3();
-  return result;
+YACSL_NOINLINE void f4(yacsl::testing::Test& /*test*/) noexcept {
+  [[maybe_unused]] volatile const int result = ns1::ns2::S<>::f3();
 }
 } // namespace
 
 int main() {
-  int ret = 0;
-  EXPECT(f4() == 0);
-  yacsl::debug::flush_logger();
+  int                           ret   = 0;
+  yacsl::containers::StackArray tests = {
+      yacsl::testing::Test("stack trace", f4),
+  };
+  for (auto& test : tests) {
+    if (test.run() == yacsl::testing::Test::Result::Failure) {
+      ret = 1;
+    }
+  }
   return ret;
 }
