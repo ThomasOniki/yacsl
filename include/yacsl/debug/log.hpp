@@ -239,9 +239,9 @@ private:
     Flush = 1,
     Stop  = 2,
   };
-  threads::Thread       worker_{work, static_cast<void*>(this)};
-  threads::Atomic<Work> work_  = Work::Spin;
-  Level                 level_ = DEFAULT_LOG_LEVEL;
+  threads::Thread       worker_ = {work, static_cast<void*>(this)};
+  threads::Atomic<Work> work_   = Work::Spin;
+  Level                 level_  = DEFAULT_LOG_LEVEL;
 };
 
 inline void flush_logger() noexcept { Logger::get_default_instance().flush(); }

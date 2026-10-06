@@ -51,7 +51,7 @@ public:
   }
 
 private:
-  Err value_{0};
+  Err value_ = Err{0};
 };
 
 template <meta::Enum Err> Error(Err) -> Error<Err>;
