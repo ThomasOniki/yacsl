@@ -40,7 +40,7 @@ struct State {
 } // namespace
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-usize Process::Output::read(this Output&         self,
+usize Process::Output::read(this Output&      self,
                             ranges::Slice<u8> buffer) noexcept {
   DWORD   ret    = 0;
   WINBOOL result = ReadFile(self.handle_, buffer.data(),
@@ -55,7 +55,7 @@ usize Process::Output::read(this Output&         self,
   return static_cast<usize>(ret);
 }
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void Process::Input::write(this Input&                self,
+void Process::Input::write(this Input&             self,
                            ranges::Slice<u8 const> bytes) noexcept {
   usize to_write = bytes.size();
   while (to_write > 0) {
@@ -267,7 +267,7 @@ Process::spawn(char const* const* argv, Stdio const& stdio) noexcept {
   spawned.open_files(&state);
   spawned.create_pipes(&state);
 
-  PROCESS_INFORMATION proc_info{};
+  PROCESS_INFORMATION proc_info = {};
 
   containers::String cmdline = make_command_line_string(argv);
 
@@ -292,7 +292,7 @@ Process::spawn(char const* const* argv, Stdio const& stdio) noexcept {
 static containers::String drain_pipe(Process::Output* output) noexcept {
   static constexpr usize read_size = 1024;
   containers::String     data;
-  ranges::Slice<u8>   bytes =
+  ranges::Slice<u8>      bytes =
       ranges::Slice<char>(data.grow(read_size), read_size).bytes();
   usize result = output->read(bytes);
   while (result != 0) {

@@ -37,7 +37,7 @@ public:
 template <meta::Integral T> class Formatter<T> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
-    FormatStringParser parser(fmt);
+    auto parser = FormatStringParser(fmt);
     self.fill_  = parser.check_fill();
     self.align_ = parser.check_align(FormatStringParser::Align::Right);
     self.sign_  = parser.check_sign();
@@ -195,7 +195,7 @@ private:
 template <> class Formatter<bool> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
-    FormatStringParser parser(fmt);
+    auto parser = FormatStringParser(fmt);
     self.fill_  = parser.check_fill();
     self.align_ = parser.check_align(FormatStringParser::Align::Right);
     self.width_ = parser.check_width();
@@ -236,7 +236,7 @@ private:
 template <meta::FloatingPoint T> class Formatter<T> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) {
-    FormatStringParser parser(fmt);
+    auto parser = FormatStringParser(fmt);
     self.fill_  = parser.check_fill();
     self.align_ = parser.check_align(FormatStringParser::Align::Right);
     self.sign_  = parser.check_sign();
@@ -274,7 +274,7 @@ private:
 template <typename T> class Formatter<T*> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
-    FormatStringParser parser(fmt);
+    auto parser = FormatStringParser(fmt);
     self.fill_  = parser.check_fill();
     self.align_ = parser.check_align(FormatStringParser::Align::Right);
     self.width_ = parser.check_width();
@@ -302,7 +302,7 @@ template <meta::Character T, meta::Integral SizeT>
 class Formatter<ranges::BasicStringView<T, SizeT>> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
-    FormatStringParser parser(fmt);
+    auto parser = FormatStringParser(fmt);
     self.fill_  = parser.check_fill();
     self.align_ = parser.check_align(FormatStringParser::Align::Left);
     self.width_ = parser.check_width();
@@ -362,7 +362,7 @@ private:
 template <meta::Character T> class Formatter<T*> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
-    FormatStringParser parser(fmt);
+    auto parser = FormatStringParser(fmt);
     self.fill_  = parser.check_fill();
     self.align_ = parser.check_align(FormatStringParser::Align::Left);
     self.width_ = parser.check_width();
@@ -478,7 +478,7 @@ private:
 template <meta::Enum T> class Formatter<T> {
 public:
   constexpr char const* parse(this Formatter& self, char const* fmt) noexcept {
-    FormatStringParser parser(fmt);
+    auto parser = FormatStringParser(fmt);
     self.fill_  = parser.check_fill();
     self.align_ = parser.check_align(FormatStringParser::Align::Left);
     self.width_ = parser.check_width();
