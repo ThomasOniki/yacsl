@@ -11,6 +11,7 @@
 #include "yacsl/meta/meta.hpp"
 #include "yacsl/os/os.hpp"
 #include "yacsl/ranges/ranges.hpp"
+#include "yacsl/testing/testing.hpp"
 #include "yacsl/threads/threads.hpp"
 #include "yacsl/type_aliases.hpp"
 #include "yacsl/utils/utils.hpp"
