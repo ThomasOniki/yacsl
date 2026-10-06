@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string>
 #include <string_view>
@@ -110,11 +111,11 @@ public:
                   yacsl::ranges::Slice<yacsl::u8, SizeT> mem) noexcept {
     if (mem.data() != nullptr) {
       if (freed.contains(mem.data())) {
-        yacsl::debug::log_error("double free");
+        fputs("double free\n", stderr);
         return;
       }
       if (!allocated.contains(mem.data())) {
-        yacsl::debug::log_error("unallocated free");
+        fputs("unallocated free\n", stderr);
         return;
       }
 
@@ -158,11 +159,14 @@ static void test_allocator(yacsl::testing::Test& test) {
   // NOLINTNEXTLINE(misc-const-correctness)
   auto mem = allocator.allocate(10, yacsl::memory::Alignment{16});
 
-  if (TestAllocator::events != std::vector<TestAllocator::Event>({{
-                                   .kind    = TestAllocator::Event::Kind::Alloc,
-                                   .address = mem.data(),
-                                   .byte_count = mem.size(),
-                               }})) {
+  if (TestAllocator::events !=
+      std::vector<TestAllocator::Event>({
+          {
+              .kind       = TestAllocator::Event::Kind::Alloc,
+              .address    = mem.data(),
+              .byte_count = mem.size(),
+          },
+      })) {
     test.fail_quietly();
     fprintf(stderr, "TestAllocator::events is incorrect.");
   }
@@ -170,11 +174,14 @@ static void test_allocator(yacsl::testing::Test& test) {
 
   allocator.deallocate(mem);
 
-  if (TestAllocator::events != std::vector<TestAllocator::Event>({{
-                                   .kind    = TestAllocator::Event::Kind::Alloc,
-                                   .address = mem.data(),
-                                   .byte_count = mem.size(),
-                               }})) {
+  if (TestAllocator::events !=
+      std::vector<TestAllocator::Event>({
+          {
+              .kind       = TestAllocator::Event::Kind::Alloc,
+              .address    = mem.data(),
+              .byte_count = mem.size(),
+          },
+      })) {
     test.fail_quietly();
     fprintf(stderr, "TestAllocator::events is incorrect.");
   }

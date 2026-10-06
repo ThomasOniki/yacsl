@@ -30,7 +30,7 @@ template <typename T, typename U>
 constexpr void
 assert_eq(T&& lhs, U&& rhs,
           SourceLocation location = SourceLocation::current()) noexcept {
-  if (memory::forward<T>(lhs) != memory::forward<T>(rhs)) [[unlikely]] {
+  if (lhs != rhs) [[unlikely]] {
     panic_impl(fmt::format("assert_eq failed at {}\n"
                            "lhs: {}\n"
                            "rhs: {}\n"
@@ -42,7 +42,7 @@ assert_eq(T&& lhs, U&& rhs,
 template <typename T, typename U, typename... Args>
 constexpr void assert_eq(T&& lhs, U&& rhs, fmt::FormatString<Args...> fmt,
                          Args&&... args) noexcept {
-  if (memory::forward<T>(lhs) != memory::forward<T>(rhs)) [[unlikely]] {
+  if (lhs != rhs) [[unlikely]] {
     panic_impl(fmt::format("assert_eq failed at {}\n"
                            "lhs: {}\n"
                            "rhs: {}\n",
@@ -79,14 +79,14 @@ constexpr void assert_unchecked(bool                              cond,
 
 template <typename T, typename U>
 constexpr void assert_eq_unchecked(T&& lhs, U&& rhs) noexcept {
-  assume_ifdef_ndebug(memory::forward<T>(lhs) == memory::forward<T>(rhs));
+  assume_ifdef_ndebug(lhs == rhs);
   assert_eq(memory::forward<T>(lhs), memory::forward<T>(rhs));
 }
 template <typename T, typename U, typename... Args>
 constexpr void assert_eq_unchecked(T&& lhs, U&& rhs,
                                    fmt::FormatString<Args...> fmt,
                                    Args&&... args) noexcept {
-  assume_ifdef_ndebug(memory::forward<T>(lhs) == memory::forward<T>(rhs));
+  assume_ifdef_ndebug(lhs == rhs);
   assert_eq(memory::forward<T>(lhs), memory::forward<T>(rhs), fmt,
             memory::forward<Args>(args)...);
 }
