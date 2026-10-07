@@ -35,7 +35,7 @@ static void test(yacsl::testing::Test& /*test*/) noexcept {
   }
   EXPECT(ring.try_pop().is_nil(), "ring buffer should be empty");
   for (yacsl::usize i = 0; i < Producers; ++i) {
-    producers.emplace_back([&ring, &start, i] {
+    producers.push([&ring, &start, i] {
       while (!start.load(yacsl::threads::MemoryOrder::Acquire)) {
       }
       ring.push(i);
@@ -50,7 +50,7 @@ static void test(yacsl::testing::Test& /*test*/) noexcept {
   yacsl::threads::Atomic<yacsl::usize> pop_count;
 
   for (yacsl::usize i = 0; i < Consumers; ++i) {
-    consumers.emplace_back([&ring, &start, &did_pop, &pop_count] {
+    consumers.push([&ring, &start, &did_pop, &pop_count] {
       while (!start.load(yacsl::threads::MemoryOrder::Acquire)) {
       }
       while (pop_count.fetch_add(1, yacsl::threads::MemoryOrder::Relaxed) <

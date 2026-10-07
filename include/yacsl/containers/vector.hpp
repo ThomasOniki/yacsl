@@ -47,15 +47,8 @@ public:
   constexpr Vector& operator=(this Vector& self YACSL_LIFETIMEBOUND,
                               ranges::InitializerList<T> const& init);
 
-  constexpr T& push_back(this Vector& self, T const& value) {
-    return self.emplace_back(value);
-  }
-  constexpr T& push_back(this Vector& self, T&& value) {
-    return self.emplace_back(memory::move(value));
-  }
-
   template <typename... Args>
-  constexpr T& emplace_back(this Vector& self, Args&&... args);
+  constexpr T& push(this Vector& self, Args&&... args);
 
   constexpr void pop_back(this Vector& self) noexcept;
   constexpr void clear(this Vector& self) noexcept;
@@ -196,7 +189,7 @@ constexpr Vector<T, N, A, SizeT>::Vector(Range const& range, A const& allocator)
     }
   } else {
     for (auto&& element : range) {
-      emplace_back(memory::forward<decltype(element)>(element));
+      push(memory::forward<decltype(element)>(element));
     }
   }
 }
@@ -287,8 +280,7 @@ Vector<T, N, A, SizeT>::operator=(this Vector& self YACSL_LIFETIMEBOUND,
 
 template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
 template <typename... Args>
-constexpr T& Vector<T, N, A, SizeT>::emplace_back(this Vector& self,
-                                                  Args&&... args) {
+constexpr T& Vector<T, N, A, SizeT>::push(this Vector& self, Args&&... args) {
   if (self.len_ == self.capacity_) [[unlikely]] {
     self.definitely_reserve(static_cast<SizeT>(self.capacity_ * 2 + 1));
   }
