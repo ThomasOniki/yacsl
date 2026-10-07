@@ -68,6 +68,18 @@ public:
   [[nodiscard]] constexpr T const& last(this BasicStringView self) noexcept {
     return self.data_[self.len_ - 1];
   }
+  [[nodiscard]] constexpr BasicStringView
+  subview(this BasicStringView self, SizeT start, SizeT len) noexcept {
+    return {self.data_ + start, len};
+  }
+  [[nodiscard]] constexpr BasicStringView first_n(this BasicStringView self,
+                                                  SizeT count) noexcept {
+    return {self.data_, count};
+  }
+  [[nodiscard]] constexpr BasicStringView last_n(this BasicStringView self,
+                                                 SizeT count) noexcept {
+    return {self.data_ + self.len_ - count, count};
+  }
 
   [[nodiscard]] constexpr T const* begin(this BasicStringView self) noexcept {
     return self.data_;
@@ -90,6 +102,15 @@ public:
       return true;
     }
     return memcmp(self.data_, other.data_, self.len_) == 0;
+  }
+
+  [[nodiscard]] constexpr bool starts_with(this BasicStringView self,
+                                           BasicStringView prefix) noexcept {
+    return self.len_ >= prefix.len_ && self.first_n(prefix.len_) == prefix;
+  }
+  [[nodiscard]] constexpr bool ends_with(this BasicStringView self,
+                                         BasicStringView      prefix) noexcept {
+    return self.len_ >= prefix.len_ && self.last_n(prefix.len_) == prefix;
   }
 
 private:
