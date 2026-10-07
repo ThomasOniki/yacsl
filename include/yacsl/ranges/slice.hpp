@@ -36,13 +36,15 @@ public:
   // instead of not defining it.
   constexpr Slice(
       Slice<meta::Conditional<meta::ConstType<T>, meta::RemoveConst<T>, void>,
-            SizeT> const& mutable_slice) noexcept
+            SizeT>
+          mutable_slice) noexcept
     requires meta::ConstType<T>
       : data_(mutable_slice.data_), len_(mutable_slice.len_) {}
 
   constexpr Slice& operator=(
       Slice<meta::Conditional<meta::ConstType<T>, meta::RemoveConst<T>, void>,
-            SizeT> const& mutable_slice) noexcept
+            SizeT>
+          mutable_slice) noexcept
     requires meta::ConstType<T>
   {
     data_ = mutable_slice.data_;
@@ -59,7 +61,7 @@ public:
   data(this Self&& self) noexcept {
     return self.data_;
   }
-  [[nodiscard]] constexpr SizeT len(this Slice const& self) noexcept {
+  [[nodiscard]] constexpr SizeT len(this Slice self) noexcept {
     return self.len_;
   }
 
@@ -99,12 +101,12 @@ public:
   }
 
   [[nodiscard]] constexpr IntegerRange<SizeT>
-  indices(this Slice const& self) noexcept {
+  indices(this Slice self) noexcept {
     return {0, self.len_};
   }
 
-  [[nodiscard]] constexpr bool operator==(this Slice const& self,
-                                          Slice const&      other) noexcept {
+  [[nodiscard]] constexpr bool operator==(this Slice self,
+                                          Slice      other) noexcept {
     if (other.len_ != self.len_) {
       return false;
     }

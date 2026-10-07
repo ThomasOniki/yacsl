@@ -41,7 +41,7 @@ public:
     return self.len_;
   }
 
-  [[nodiscard]] constexpr T const& operator[](this BasicStringView const& self,
+  [[nodiscard]] constexpr T const& operator[](this BasicStringView self,
                                               SizeT index) noexcept {
     return self.data_[index];
   }
@@ -62,12 +62,10 @@ public:
     };
   }
 
-  [[nodiscard]] constexpr T const&
-  first(this BasicStringView const& self) noexcept {
+  [[nodiscard]] constexpr T const& first(this BasicStringView self) noexcept {
     return self.data_[0];
   }
-  [[nodiscard]] constexpr T const&
-  last(this BasicStringView const& self) noexcept {
+  [[nodiscard]] constexpr T const& last(this BasicStringView self) noexcept {
     return self.data_[self.len_ - 1];
   }
 
