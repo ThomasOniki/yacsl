@@ -199,9 +199,9 @@ static void write_input(Type type, Process* proc, Pipes* pipes) {
 #ifdef _WIN32
     DWORD written = 0;
     TRY_SYSCALL_WIN32(WriteFile(pipes->input[1], INPUT_DATA.data(),
-                                INPUT_DATA.size(), &written, nullptr));
+                                INPUT_DATA.len(), &written, nullptr));
 #else
-    ::write(pipes->input[1], INPUT_DATA.data(), INPUT_DATA.size());
+    ::write(pipes->input[1], INPUT_DATA.data(), INPUT_DATA.len());
 #endif
   } else if (type == Type::Pipe) {
     proc->get_stdin().write(INPUT_DATA.bytes());
@@ -211,13 +211,13 @@ static void write_input(Type type, Process* proc, Pipes* pipes) {
 static yacsl::containers::String
 get_pipe_output(Process::Output* output, yacsl::ranges::StringView expected) {
   yacsl::containers::String str;
-  str.resize(expected.size() + 256);
+  str.resize(expected.len() + 256);
   // NOLINTNEXTLINE(misc-const-correctness)
   yacsl::ranges::Slice<yacsl::u8> bytes      = str.bytes();
   yacsl::usize                    total_read = output->read(bytes);
-  while (total_read < expected.size()) {
+  while (total_read < expected.len()) {
     total_read +=
-        output->read({bytes.data() + total_read, bytes.size() - total_read});
+        output->read({bytes.data() + total_read, bytes.len() - total_read});
   }
   str.resize(total_read);
   return str;
@@ -243,7 +243,7 @@ static void check_file(char const* path, yacsl::ranges::StringView expected) {
   }
   yacsl::testing::expect_eq(result, 0);
 
-  buf.resize(buf.size() - 64);
+  buf.resize(buf.len() - 64);
   yacsl::testing::expect_eq(buf.view(), expected);
 
   TRY_SYSCALL(close(fildes));
@@ -329,7 +329,7 @@ static void check_fd_output(int file, yacsl::ranges::StringView expected) {
   }
   yacsl::debug::assert_(result != -1);
 #endif
-  output.resize(output.size() - 512);
+  output.resize(output.len() - 512);
   yacsl::testing::expect_eq(output.view(), expected);
 }
 
@@ -496,9 +496,9 @@ int main() {
                           O_WRONLY | O_CREAT | O_CLOEXEC | O_TRUNC, 0644);
   yacsl::testing::expect(file != -1);
   [[maybe_unused]] ssize_t const written =
-      ::write(file, INPUT_DATA.data(), INPUT_DATA.size());
+      ::write(file, INPUT_DATA.data(), INPUT_DATA.len());
   yacsl::testing::expect_eq(static_cast<yacsl::usize>(written),
-                            INPUT_DATA.size());
+                            INPUT_DATA.len());
   yacsl::testing::expect(close(file) == 0);
 
   (void)yacsl::debug::Logger::get_default_instance();

@@ -14,12 +14,12 @@ constexpr usize TYPE_STRING_IMPL_OFFSET_FROM_BEGIN = [] -> usize {
   using yacsl::ranges::operator""_sv;
   constexpr ranges::StringView pretty  = type_string_impl_pretty<int>();
   constexpr ranges::StringView to_find = "T = ";
-  for (char const* it = pretty.begin(); it < pretty.end() - to_find.size();
+  for (char const* it = pretty.begin(); it < pretty.end() - to_find.len();
        ++it) {
     for (usize i = 0;; ++i) {
-      if (i == to_find.size()) {
+      if (i == to_find.len()) {
         return static_cast<usize>(it - pretty.begin()) + i -
-               "_pretty"_sv.size();
+               "_pretty"_sv.len();
       }
       if (it[i] != to_find[i]) {
         break;
@@ -32,7 +32,7 @@ constexpr usize TYPE_STRING_IMPL_OFFSET_FROM_BEGIN = [] -> usize {
 constexpr usize TYPE_STRING_IMPL_OFFSET_FROM_END = [] -> usize {
   constexpr ranges::StringView pretty    = type_string_impl_pretty<int>();
   usize                        templates = 0;
-  for (usize i = TYPE_STRING_IMPL_OFFSET_FROM_BEGIN; i < pretty.size(); ++i) {
+  for (usize i = TYPE_STRING_IMPL_OFFSET_FROM_BEGIN; i < pretty.len(); ++i) {
     if (pretty[i] == '<') {
       ++templates;
     } else if (pretty[i] == '>') {
@@ -42,10 +42,10 @@ constexpr usize TYPE_STRING_IMPL_OFFSET_FROM_END = [] -> usize {
       continue;
     }
     if (pretty[i] == ',' || pretty[i] == ';' || pretty[i] == ']') {
-      return pretty.size() - i;
+      return pretty.len() - i;
     }
   }
-  return pretty.size();
+  return pretty.len();
 }();
 
 template <typename T> constexpr ranges::StringView type_string_impl() {

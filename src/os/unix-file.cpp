@@ -65,12 +65,12 @@ File File::open_stderr() noexcept {
 // NOLINTBEGIN(readability-make-member-function-const)
 usize File::write(this File& self, ranges::Slice<u8 const> data) noexcept {
   ssize_t const result =
-      YACSL_TRY_SYSCALL(::write(self.handle_, data.data(), data.size()));
+      YACSL_TRY_SYSCALL(::write(self.handle_, data.data(), data.len()));
   return static_cast<usize>(result);
 }
 usize File::read(this File& self, ranges::Slice<u8> buffer) noexcept {
   ssize_t const result =
-      YACSL_TRY_SYSCALL(::read(self.handle_, buffer.data(), buffer.size()));
+      YACSL_TRY_SYSCALL(::read(self.handle_, buffer.data(), buffer.len()));
   return static_cast<usize>(result);
 }
 

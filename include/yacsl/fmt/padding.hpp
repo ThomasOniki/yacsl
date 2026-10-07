@@ -85,10 +85,10 @@ template <bool IsDebug, meta::Character T>
 void pad_string_left_aligned(containers::String&               buf,
                              ranges::BasicStringView<T, usize> str,
                              PaddingOptions                    opts) noexcept {
-  usize const original_size = buf.size();
+  usize const original_size = buf.len();
   write_maybe_debug_string<IsDebug>(buf, str);
 
-  usize const real_len = buf.size() - original_size;
+  usize const real_len = buf.len() - original_size;
 
   if (real_len >= opts.width) {
     return;
@@ -133,12 +133,12 @@ void pad_string(containers::String& buf, ranges::BasicStringView<T, usize> str,
                 PaddingOptions opts) noexcept {
   if constexpr (IsDebug) {
     // + 2 for the 2 quotes
-    if (str.size() + 2 > opts.width) {
+    if (str.len() + 2 > opts.width) {
       write_maybe_debug_string<IsDebug>(buf, str);
       return;
     }
   } else {
-    if (str.size() > opts.width) {
+    if (str.len() > opts.width) {
       write_maybe_debug_string<IsDebug>(buf, str);
       return;
     }
@@ -158,7 +158,7 @@ constexpr containers::StackArray<T, 129 + Offset> gen_powers() noexcept {
   containers::StackArray<T, 129 + Offset> ret = {};
   T                                       pow = Base;
 
-  for (u32 i = Offset + 1; i < ret.size(); ++i) {
+  for (u32 i = Offset + 1; i < ret.len(); ++i) {
     ret[i] = pow;
     if (pow <= meta::Limits<T>::MAX / Base) {
       pow = static_cast<T>(pow * Base);
@@ -173,16 +173,16 @@ template <containers::NTTPString Charset = "0123456789",
           containers::NTTPString Prefix  = "", meta::UnsignedIntegral T>
 void pad_integral(containers::String& buf, T value,
                   PaddingOptions opts) noexcept {
-  // Prefix.size() zeroes, 0, Base, Base^2, Base^3... Base^128
-  static constexpr containers::StackArray<T, 129 + Prefix.size()> powers =
-      gen_powers<Charset.size(), Prefix.size(), T>();
+  // Prefix.len() zeroes, 0, Base, Base^2, Base^3... Base^128
+  static constexpr containers::StackArray<T, 129 + Prefix.len()> powers =
+      gen_powers<Charset.len(), Prefix.len(), T>();
 
-  constexpr u32 max_len = count_digits(meta::Limits<T>::MAX, Charset.size());
+  constexpr u32 max_len = count_digits(meta::Limits<T>::MAX, Charset.len());
 
   // If value >= powers[opts.width], value has width or more digits. If it does,
   // you should skip padding and just use itoa.
   if (opts.width < max_len && value >= powers[opts.width]) {
-    char* str = buf.grow(count_digits(value, Charset.size()) + Prefix.size());
+    char* str = buf.grow(count_digits(value, Charset.len()) + Prefix.len());
     memory::copy(Prefix.slice(), str);
     itoa_from_end(buf.end(), value, Charset.view());
     return;
@@ -191,22 +191,22 @@ void pad_integral(containers::String& buf, T value,
   char* begin = buf.grow(opts.width);
   if (opts.align == FormatStringParser::Align::Right) {
     char* prefix_begin =
-        itoa_from_end(buf.end(), value, Charset.view()) - Prefix.size();
+        itoa_from_end(buf.end(), value, Charset.view()) - Prefix.len();
     memory::copy(Prefix.slice(), prefix_begin);
     memset(begin, opts.fill, static_cast<usize>(prefix_begin - begin));
   } else if (opts.align == FormatStringParser::Align::Left) {
-    usize const len = count_digits(value, Charset.size());
+    usize const len = count_digits(value, Charset.len());
     memory::copy(Prefix.slice(), begin);
-    char* num_end = begin + Prefix.size() + len;
+    char* num_end = begin + Prefix.len() + len;
     itoa_from_end(num_end, value, Charset.view());
     memset(num_end, opts.fill, static_cast<usize>(buf.end() - num_end));
   } else {
     memset(begin, opts.fill, opts.width);
-    usize const len     = count_digits(value, Charset.size());
-    usize       padding = opts.width - (len + Prefix.size());
+    usize const len     = count_digits(value, Charset.len());
+    usize       padding = opts.width - (len + Prefix.len());
     padding /= 2;
     memory::copy(Prefix.slice(), begin + padding);
-    itoa_from_end(begin + padding + Prefix.size() + len, value, Charset.view());
+    itoa_from_end(begin + padding + Prefix.len() + len, value, Charset.view());
   }
 }
 

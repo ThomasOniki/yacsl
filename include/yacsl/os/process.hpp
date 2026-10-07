@@ -2,11 +2,11 @@
 
 #ifndef __EMSCRIPTEN__
 #include "yacsl/compiler/attributes.hpp"
+#include "yacsl/compiler/export.hpp"
 #include "yacsl/containers/result.hpp"
 #include "yacsl/containers/string.hpp"
 #include "yacsl/containers/vector.hpp"
 #include "yacsl/debug/assert.hpp"
-#include "yacsl/compiler/export.hpp"
 #include "yacsl/meta/concepts.hpp"
 #include "yacsl/os/file.hpp"
 #include "yacsl/ranges/initializer_list.hpp"
@@ -105,7 +105,7 @@ public:
   public:
     ~Output() noexcept = default;
 
-    // returns 0 on EOF, between 1 and buffer.size() when sucessful.
+    // returns 0 on EOF, between 1 and buffer.len() when sucessful.
     usize read(this Output& self, ranges::Slice<u8> buffer) noexcept YACSL_API;
 
     using Init = StdioInit<false>;
@@ -190,7 +190,7 @@ public:
   spawn(Range const& argv, Stdio const& stdio) noexcept {
     containers::Vector<containers::BasicString<char, 16>, 6> cstrs(argv);
     containers::Vector<char const*, 6>                       cstr_ptrs;
-    cstr_ptrs.reserve(cstrs.size() + 1);
+    cstr_ptrs.reserve(cstrs.len() + 1);
     for (auto& cstr : cstrs) {
       cstr_ptrs.push_back(cstr.c_str());
     }
