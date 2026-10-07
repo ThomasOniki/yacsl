@@ -18,7 +18,7 @@ static void test_atomic(yacsl::testing::Test& /*test*/) {
     EXPECT(loaded == 0);
 
     for (uint32_t i = 0; i < ThreadCount; ++i) {
-      threads.emplace_back(
+      threads.push(
           [](yacsl::threads::Atomic<uint32_t>& lambda_count) {
             ++lambda_count;
           },
@@ -43,7 +43,7 @@ static void test_mutex(yacsl::testing::Test& /*test*/) {
 
   {
     for (uint32_t i = 0; i < ThreadCount; ++i) {
-      threads.emplace_back(
+      threads.push(
           [&mutex](uint32_t& lambda_count) {
             yacsl::threads::MutexLock const lock(mutex);
             ++lambda_count;
