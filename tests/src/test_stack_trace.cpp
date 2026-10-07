@@ -1,4 +1,4 @@
-#include "yacsl/attributes.hpp"
+#include "yacsl/compiler/attributes.hpp"
 #include "yacsl/containers/stack_array.hpp"
 #include "yacsl/debug/stack_trace.hpp"
 #include "yacsl/testing/expect.hpp"

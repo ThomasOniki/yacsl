@@ -2,7 +2,7 @@
 
 #include "yacsl/containers/result.hpp"
 #include "yacsl/containers/string.hpp"
-#include "yacsl/export.hpp"
+#include "yacsl/compiler/export.hpp"
 #include "yacsl/ranges/slice.hpp"
 #include "yacsl/ranges/string_view.hpp"
 #include "yacsl/type_aliases.hpp"

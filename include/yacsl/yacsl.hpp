@@ -1,10 +1,10 @@
 #pragma once
 
 // IWYU pragma: begin_exports
-#include "yacsl/attributes.hpp"
+#include "yacsl/compiler/compiler.hpp"
 #include "yacsl/containers/containers.hpp"
 #include "yacsl/debug/debug.hpp"
-#include "yacsl/export.hpp"
+#include "yacsl/compiler/export.hpp"
 #include "yacsl/fmt/fmt.hpp"
 #include "yacsl/math/math.hpp"
 #include "yacsl/memory/memory.hpp"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "yacsl/attributes.hpp"
+#include "yacsl/compiler/attributes.hpp"
 #include "yacsl/meta/concepts.hpp"
 #include "yacsl/ranges/string_view.hpp"
 #include "yacsl/type_aliases.hpp"

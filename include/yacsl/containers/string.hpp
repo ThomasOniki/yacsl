@@ -1,6 +1,6 @@
 #pragma once
 
-#include "yacsl/attributes.hpp"
+#include "yacsl/compiler/attributes.hpp"
 #include "yacsl/containers/vector.hpp"
 #include "yacsl/memory/allocator_type.hpp"
 #include "yacsl/memory/arena.hpp"
