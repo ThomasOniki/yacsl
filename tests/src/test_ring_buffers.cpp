@@ -1,3 +1,4 @@
+#include "test_utils.hpp"
 #include "yacsl/containers/stack_array.hpp"
 #include "yacsl/testing/test.hpp"
 #include "yacsl/type_aliases.hpp"
@@ -12,36 +13,27 @@ template <typename _, yacsl::usize Producers, yacsl::usize Consumers>
 #else
 template <typename Ring, yacsl::usize Producers, yacsl::usize Consumers>
 #endif
-static void test(yacsl::testing::Test& test) noexcept {
+static void test(yacsl::testing::Test& /*test*/) noexcept {
   yacsl::threads::Atomic<bool>                      start = false;
   yacsl::containers::Vector<yacsl::threads::Thread> producers;
   Ring                                              ring;
 
   for (yacsl::usize i = 0; i < SLOTS; ++i) {
-    if (!ring.try_push(i)) {
-      test.fail_quietly();
-      fprintf(stderr, "Failed to try_push %zu to ring buffer.\n", i);
-    }
+    EXPECT(ring.try_push(i));
   }
-  if (ring.try_push(0)) {
-    test.fail_quietly();
-    fputs("try_push() succeeded on a full ring buffer.\n", stderr);
-  }
+  EXPECT(!ring.try_push(0), "ring buffer should be full");
   for (yacsl::usize i = 0; i < SLOTS; ++i) {
     auto opt = ring.try_pop();
     if (opt != i) {
-      test.fail_quietly();
       if (opt.is_nil()) {
-        fputs("Failed to pop from ring buffer.\n", stderr);
+        FAIL("Failed to pop from ring buffer.\n", stderr);
+      } else {
+        FAIL("The value poped from ring buffer was %zu, not %zu.\n",
+             opt.value_unchecked(), i);
       }
-      fprintf(stderr, "The value poped from ring buffer was %zu, not %zu.\n",
-              opt.value_unchecked(), i);
     }
   }
-  if (ring.try_pop().is_value()) {
-    test.fail_quietly();
-    fputs("try_pop() succeeded on an empty ring buffer.\n", stderr);
-  }
+  EXPECT(ring.try_pop().is_nil(), "ring buffer should be empty");
   for (yacsl::usize i = 0; i < Producers; ++i) {
     producers.emplace_back([&ring, &start, i] {
       while (!start.load(yacsl::threads::MemoryOrder::Acquire)) {
@@ -78,15 +70,11 @@ static void test(yacsl::testing::Test& test) noexcept {
   }
 
   for (yacsl::usize const index : did_pop.indices()) {
-    if (!did_pop[index]) {
-      test.fail_quietly();
-      fprintf(stderr, "%zuth value was not poped/consumed\n", index);
-    }
+    EXPECT(did_pop[index]);
   }
 }
 
 int main() {
-  int                           ret   = 0;
   yacsl::containers::StackArray tests = {
       yacsl::testing::Test(
           "MPSC",
@@ -95,12 +83,5 @@ int main() {
           "MPMC",
           test<yacsl::threads::MPMCRingBuffer<yacsl::usize, SLOTS>, 50, 50>),
   };
-  for (auto& test : tests) {
-    printf("Running test '%s'...\n", test.cstr_name());
-    if (test.run_quietly() == yacsl::testing::Test::Result::Failure) {
-      fprintf(stderr, "test '%s' failed.\n", test.cstr_name());
-      ret = 1;
-    }
-  }
-  return ret;
+  return run_tests(tests.slice());
 }

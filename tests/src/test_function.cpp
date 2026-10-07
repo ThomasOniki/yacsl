@@ -1,3 +1,4 @@
+#include "test_utils.hpp"
 #include "yacsl/containers/function.hpp"
 #include "yacsl/containers/option.hpp"
 #include "yacsl/containers/stack_array.hpp"
@@ -147,10 +148,7 @@ static void test_moved_lambda(yacsl::testing::Test& /*test*/) {
         .destructor_call_count       = 1,
     });
 
-    int const result = func(10);
-    if (result != 20) {
-      (void)fprintf(stderr, "function returned %d, not 20\n", result);
-    }
+    EXPECT(func(10) == 20);
   }
   check_counts({.destructor_call_count = 2});
 }
@@ -165,14 +163,8 @@ static void test_copied_lambda(yacsl::testing::Test& /*test*/) {
 
     check_counts({});
 
-    if (TestAllocator::allocate_call_count != 1) {
-      (void)fprintf(stderr, "Expected 1 allocation, got %u.\n",
-                    TestAllocator::allocate_call_count);
-    }
-    if (TestAllocator::free_call_count != 0) {
-      (void)fprintf(stderr, "Expected 0 frees, got %u.\n",
-                    TestAllocator::free_call_count);
-    }
+    EXPECT(TestAllocator::allocate_call_count == 1);
+    EXPECT(TestAllocator::free_call_count == 0);
   }
   check_counts({.destructor_call_count = 1});
 }

@@ -1,3 +1,4 @@
+#include "test_utils.hpp"
 #include "yacsl/containers/stack_array.hpp"
 #include "yacsl/memory/arena.hpp"
 #include "yacsl/testing/test.hpp"
@@ -11,9 +12,9 @@ constexpr uint32_t iteration_count = 10000;
 namespace {
 struct CtorCounter {
   inline static uint32_t ctor_call_count = 0;
-  explicit CtorCounter(uint32_t num) : i_(num) { ++ctor_call_count; }
+  explicit CtorCounter(uint32_t num) : member(num) { ++ctor_call_count; }
   [[maybe_unused]] CtorCounter() { ++ctor_call_count; }
-  uint32_t i_ = 0;
+  uint32_t member = 0;
 };
 
 struct Aligned {
@@ -21,7 +22,7 @@ struct Aligned {
 };
 } // namespace
 
-static void test_ctors(yacsl::testing::Test& test) {
+static void test_ctors(yacsl::testing::Test& /*test*/) {
   CtorCounter::ctor_call_count = 0;
 
   CtorCounter* ptrs[iteration_count] = {};
@@ -29,19 +30,11 @@ static void test_ctors(yacsl::testing::Test& test) {
     ptrs[i] = &yacsl::memory::MainArenaAllocator::get().push<CtorCounter>(i);
   }
 
-  if (CtorCounter::ctor_call_count != iteration_count) {
-    test.fail_quietly();
-    fprintf(stderr, "%u constructors were called instead of %u\n",
-            CtorCounter::ctor_call_count, iteration_count);
-  }
+  EXPECT(CtorCounter::ctor_call_count == iteration_count,
+         "%u constructors were called.\n", CtorCounter::ctor_call_count);
 
   for (uint32_t i = 0; i < iteration_count; ++i) {
-    if (ptrs[i]->i_ != i) {
-      test.fail_quietly();
-      fprintf(stderr,
-              "%uth arena allocated object held value %u instead of %u\n", i,
-              ptrs[i]->i_, i);
-    }
+    EXPECT(ptrs[i]->member == i, "The actual value was %u\n", ptrs[i]->member);
   }
 
   CtorCounter::ctor_call_count = 0;
@@ -52,20 +45,12 @@ static void test_ctors(yacsl::testing::Test& test) {
               .data();
   }
 
-  if (CtorCounter::ctor_call_count != iteration_count * 10) {
-    test.fail_quietly();
-    fprintf(stderr, "%u constructors were called instead of %u\n",
-            CtorCounter::ctor_call_count, iteration_count * 10);
-  }
+  EXPECT(CtorCounter::ctor_call_count == iteration_count * 10,
+         "%u constructors were called.\n", CtorCounter::ctor_call_count);
 
-  for (uint32_t i = 0; i < iteration_count; ++i) {
+  for (auto const* ptr : ptrs) {
     for (uint32_t j = 0; j < 10; ++j) {
-      if (ptrs[j]->i_ != 0) {
-        test.fail_quietly();
-        fprintf(stderr,
-                "%uth arena allocated object held value %u instead of 0\n",
-                i * 10 + j, ptrs[j]->i_);
-      }
+      EXPECT(ptr[j].member == 0, "The actual value was %u\n", ptr[j].member);
     }
   }
 }
@@ -75,28 +60,20 @@ static bool is_aligned(Aligned const* ptr) {
   return uptr % alignof(Aligned) == 0;
 }
 
-static void test_align(yacsl::testing::Test& test) {
+static void test_align(yacsl::testing::Test& /*test*/) {
   (void)yacsl::memory::MainArenaAllocator::get().push_array<char>(15);
 
   Aligned const* aligned =
       &yacsl::memory::MainArenaAllocator::get().push<Aligned>();
 
-  if (!is_aligned(aligned)) {
-    test.fail_quietly();
-    fprintf(stderr,
-            "Pointer %p allocated with Arena::push is not aligned properly.\n",
-            static_cast<void const*>(aligned));
-  }
+  EXPECT(is_aligned(aligned));
 
   (void)yacsl::memory::MainArenaAllocator::get().push_array<char>(15);
 
   aligned =
       yacsl::memory::MainArenaAllocator::get().push_array<Aligned>(10).data();
 
-  fprintf(
-      stderr,
-      "Pointer %p allocated with Arena::push_array is not aligned properly.\n",
-      static_cast<void const*>(aligned));
+  EXPECT(is_aligned(aligned));
 }
 
 static void test_rewind(yacsl::testing::Test& test) {
@@ -118,25 +95,16 @@ static void test_rewind(yacsl::testing::Test& test) {
     test_ctors(test);
   }
 
-  if (yacsl::memory::MainArenaAllocator::get().push_array<char>(1).data() !=
-      ptr) {
-    fprintf(stderr, "Arena didn't rewind to address %p.\n", ptr);
-  }
+  EXPECT(yacsl::memory::MainArenaAllocator::get().push_array<char>(1).data() ==
+             ptr,
+         "Arena didn't rewind.\n");
 }
 
 int main() {
-  int                           ret   = 0;
   yacsl::containers::StackArray tests = {
       yacsl::testing::Test("constructors", test_ctors),
       yacsl::testing::Test("pointer alignment", test_align),
       yacsl::testing::Test("rewinding", test_rewind),
   };
-  for (auto& test : tests) {
-    printf("Running test '%s'...\n", test.cstr_name());
-    if (test.run_quietly() == yacsl::testing::Test::Result::Failure) {
-      fprintf(stderr, "test '%s' failed.\n", test.cstr_name());
-      ret = 1;
-    }
-  }
-  return ret;
+  return run_tests(tests.slice());
 }
