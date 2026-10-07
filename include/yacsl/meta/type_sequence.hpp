@@ -7,7 +7,7 @@ namespace yacsl::meta {
 
 template <typename... Ts> struct TypeSequence {};
 
-namespace internal {
+namespace detail {
 template <typename... Ts> struct MergeTypeSequencesImpl {
   using Type = TypeSequence<>;
 };
@@ -37,10 +37,10 @@ struct RepeatTypeImpl<T, IndexSequence<Indices...>> {
   using Type = TypeSequence<DependantTypedef<T, Indices>...>;
 };
 
-} // namespace internal
+} // namespace detail
 
 template <typename... Ts>
-using MergeTypeSequences = internal::MergeTypeSequencesImpl<Ts...>::Type;
+using MergeTypeSequences = detail::MergeTypeSequencesImpl<Ts...>::Type;
 template <typename T, typename... Ts>
 using PrependToTypeSequence = MergeTypeSequences<TypeSequence<Ts...>, T>;
 template <typename T, typename... Ts>
@@ -48,8 +48,8 @@ using AppendToTypeSequence = MergeTypeSequences<T, TypeSequence<Ts...>>;
 
 template <typename T, usize N>
 using RepeatTypeSequence =
-    internal::RepeatTypeSequenceImpl<T, IndexSequenceToN<N>>;
+    detail::RepeatTypeSequenceImpl<T, IndexSequenceToN<N>>;
 template <typename T, usize N>
-using RepeatType = internal::RepeatTypeImpl<T, IndexSequenceToN<N>>;
+using RepeatType = detail::RepeatTypeImpl<T, IndexSequenceToN<N>>;
 
 } // namespace yacsl::meta

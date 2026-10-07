@@ -8,7 +8,7 @@
 #include "yacsl/type_aliases.hpp"
 
 namespace yacsl::containers {
-namespace internal {
+namespace detail {
 
 template <usize Index, typename T> class TupleLeaf {
 public:
@@ -73,10 +73,10 @@ public:
   }
 };
 
-} // namespace internal
+} // namespace detail
 
 template <typename... Ts>
-using Tuple = internal::TupleImpl<meta::IndexSequenceToN<sizeof...(Ts)>, Ts...>;
+using Tuple = detail::TupleImpl<meta::IndexSequenceToN<sizeof...(Ts)>, Ts...>;
 
 template <typename... Ts> struct TupleSize<Tuple<Ts...>> {
   static constexpr usize value = sizeof...(Ts);
