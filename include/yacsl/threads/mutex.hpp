@@ -27,9 +27,9 @@ public:
 
 private:
   YACSL_GCC_PRAGMA(GCC diagnostic push)
-  YACSL_GCC_PRAGMA(diagnostic ignored "-Wzero-as-null-pointer-constant")
+  YACSL_GCC_PRAGMA(GCC diagnostic ignored "-Wzero-as-null-pointer-constant")
   pthread_mutex_t handle_ = PTHREAD_MUTEX_INITIALIZER;
-  YACSL_GCC_PRAGMA(diagnostic pop)
+  YACSL_GCC_PRAGMA(GCC diagnostic pop)
 };
 
 class MutexLock {
