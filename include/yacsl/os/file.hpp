@@ -32,8 +32,8 @@ public:
   [[nodiscard]] static containers::Result<File, OpenError>
   open(char const* path, OpenFlags flags) noexcept YACSL_API;
   [[nodiscard]] static containers::Result<File, OpenError>
-  open(ranges::StringView path, OpenFlags flags) noexcept {
-    return open(containers::String(path).c_str(), flags);
+  open(containers::String path, OpenFlags flags) noexcept {
+    return open(path.c_str(), flags);
   }
 
   // This doesn't duplicate the standard streams, it just sets handle_ to the
