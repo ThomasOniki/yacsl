@@ -29,7 +29,7 @@ template <typename T> struct RemoveVolatileImpl<volatile T> {
 };
 } // namespace detail
 template <typename T>
-using RemoveReference = detail::RemoveReferenceImpl<T>::Type;
+using RemoveReference                   = detail::RemoveReferenceImpl<T>::Type;
 template <typename T> using RemoveConst = detail::RemoveConstImpl<T>::Type;
 template <typename T>
 using RemoveVolatile                    = detail::RemoveVolatileImpl<T>::Type;
@@ -143,8 +143,7 @@ template <typename Src, typename Dst> struct CopyReferenceImpl<Src&&, Dst> {
 template <typename Src, typename Dst>
 using CopyConst = detail::CopyConstImpl<RemoveReference<Src>, Dst>::Type;
 template <typename Src, typename Dst>
-using CopyVolatile =
-    detail::CopyVolatileImpl<RemoveReference<Src>, Dst>::Type;
+using CopyVolatile = detail::CopyVolatileImpl<RemoveReference<Src>, Dst>::Type;
 template <typename Src, typename Dst>
 using CopyCV = detail::CopyCVImpl<RemoveReference<Src>, Dst>::Type;
 

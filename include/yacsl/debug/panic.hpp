@@ -1,9 +1,9 @@
 #pragma once
 
+#include "yacsl/compiler/export.hpp"
 #include "yacsl/containers/string.hpp"
 #include "yacsl/debug/source_location.hpp"
 #include "yacsl/debug/stack_trace.hpp"
-#include "yacsl/compiler/export.hpp"
 #include "yacsl/fmt/format_string.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 

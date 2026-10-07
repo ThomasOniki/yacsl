@@ -46,7 +46,7 @@ public:
     requires meta::ConstType<T>
   {
     data_ = mutable_slice.data_;
-    len_ = mutable_slice.len_;
+    len_  = mutable_slice.len_;
     return *this;
   }
 

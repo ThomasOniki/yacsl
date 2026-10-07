@@ -141,7 +141,7 @@ NTTPString(T const (&str)[N]) -> NTTPString<N - 1, T, usize>;
 template <NTTPString... Strings>
 constexpr NTTPString cat_nttpstrings = [] {
   NTTPString<(... + Strings.len())> ret;
-  usize                              offset = 0;
+  usize                             offset = 0;
   (..., (offset += memory::copy(Strings.slice(), ret.data() + offset).len()));
   return ret;
 }();
