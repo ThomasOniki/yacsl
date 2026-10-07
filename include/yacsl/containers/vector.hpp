@@ -118,12 +118,12 @@ public:
 
   template <typename Self>
   [[nodiscard]] constexpr auto&&
-  front(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
+  first(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
     return memory::forward<Self>(self)[0];
   }
   template <typename Self>
   [[nodiscard]] constexpr auto&&
-  back(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
+  last(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
     return memory::forward<Self>(self)[self.len_ - 1];
   }
 
