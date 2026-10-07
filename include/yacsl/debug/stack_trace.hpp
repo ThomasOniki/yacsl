@@ -1,9 +1,9 @@
 #pragma once
 
 #include "yacsl/compiler/attributes.hpp"
+#include "yacsl/compiler/export.hpp"
 #include "yacsl/containers/string.hpp"
 #include "yacsl/containers/vector.hpp"
-#include "yacsl/compiler/export.hpp"
 #include "yacsl/fmt/format_string.hpp"
 #include "yacsl/fmt/format_string_parser.hpp"
 #include "yacsl/fmt/formatter.hpp"

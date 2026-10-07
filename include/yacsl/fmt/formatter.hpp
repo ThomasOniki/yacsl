@@ -321,15 +321,15 @@ public:
         .align = self.align_,
     };
     if (self.type_ == Type::Normal) [[likely]] {
-      pad_string(buf,
-                 ranges::BasicStringView<T>(str.data(),
-                                            static_cast<usize>(str.len())),
-                 opts);
+      pad_string(
+          buf,
+          ranges::BasicStringView<T>(str.data(), static_cast<usize>(str.len())),
+          opts);
     } else {
-      pad_string<true>(buf,
-                       ranges::BasicStringView<T>(
-                           str.data(), static_cast<usize>(str.len())),
-                       opts);
+      pad_string<true>(
+          buf,
+          ranges::BasicStringView<T>(str.data(), static_cast<usize>(str.len())),
+          opts);
     }
   }
 
@@ -505,7 +505,7 @@ private:
   static constexpr containers::StackArray<char, meta::TYPE_STRING<T>.len() + 2>
       CAST_STRING_ARR = [] {
         containers::StackArray<char, meta::TYPE_STRING<T>.len() + 2> arr{};
-        arr[0]              = '(';
+        arr[0]             = '(';
         arr[arr.len() - 1] = ')';
         memory::copy(meta::TYPE_STRING<T>.slice(), &arr[1]);
         return arr;

@@ -13,8 +13,8 @@ namespace yacsl::debug {
 StackTrace StackTrace::current() noexcept {
   StackTrace ret;
   ret.addresses_.resize(ret.addresses_.capacity());
-  auto size = static_cast<usize>(backtrace(
-      ret.addresses_.data(), static_cast<int>(ret.addresses_.len())));
+  auto size = static_cast<usize>(
+      backtrace(ret.addresses_.data(), static_cast<int>(ret.addresses_.len())));
   while (size == ret.addresses_.len()) {
     ret.addresses_.resize(ret.addresses_.capacity() * 2);
     size = static_cast<usize>(backtrace(

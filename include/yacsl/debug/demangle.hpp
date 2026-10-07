@@ -1,7 +1,7 @@
 #pragma once
 
-#include "yacsl/containers/string.hpp"
 #include "yacsl/compiler/export.hpp"
+#include "yacsl/containers/string.hpp"
 #include "yacsl/ranges/string_view.hpp"
 
 namespace yacsl::debug {
