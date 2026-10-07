@@ -8,7 +8,7 @@ add_library(yacsl::yacsl ALIAS yacsl)
 
 source_directory(yacsl "${CMAKE_CURRENT_SOURCE_DIR}/src")
 public_include_directory(yacsl "${CMAKE_CURRENT_SOURCE_DIR}/include")
-gen_export_header(yacsl "yacsl/export.hpp" "YACSL_API")
+gen_export_header(yacsl "yacsl/compiler/export.hpp" "YACSL_API")
 
 add_warnings(yacsl)
 set_utf8(yacsl)

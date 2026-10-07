@@ -1,7 +1,7 @@
 #ifdef YACSL_NO_LIBCPP
 
-#include "yacsl/export.hpp"
-#include "yacsl/pragmas.hpp"
+#include "yacsl/compiler/export.hpp"
+#include "yacsl/compiler/pragmas.hpp"
 #include "yacsl/type_aliases.hpp"
 #include <sched.h>
 

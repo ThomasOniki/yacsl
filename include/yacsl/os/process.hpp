@@ -1,12 +1,12 @@
 #pragma once
 
 #ifndef __EMSCRIPTEN__
-#include "yacsl/attributes.hpp"
+#include "yacsl/compiler/attributes.hpp"
 #include "yacsl/containers/result.hpp"
 #include "yacsl/containers/string.hpp"
 #include "yacsl/containers/vector.hpp"
 #include "yacsl/debug/assert.hpp"
-#include "yacsl/export.hpp"
+#include "yacsl/compiler/export.hpp"
 #include "yacsl/meta/concepts.hpp"
 #include "yacsl/os/file.hpp"
 #include "yacsl/ranges/initializer_list.hpp"

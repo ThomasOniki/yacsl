@@ -1,6 +1,7 @@
 #pragma once
 
-#include "yacsl/attributes.hpp"
+#include "yacsl/compiler/attributes.hpp"
+#include "yacsl/compiler/pragmas.hpp"
 #include <pthread.h>
 
 namespace yacsl::threads {
@@ -25,14 +26,10 @@ public:
   }
 
 private:
-#ifdef YACSL_COMPILER_GCC
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+  YACSL_GCC_PRAGMA(GCC diagnostic push)
+  YACSL_GCC_PRAGMA(diagnostic ignored "-Wzero-as-null-pointer-constant")
   pthread_mutex_t handle_ = PTHREAD_MUTEX_INITIALIZER;
-#pragma GCC diagnostic pop
-#else
-  pthread_mutex_t handle_ = PTHREAD_MUTEX_INITIALIZER;
-#endif
+  YACSL_GCC_PRAGMA(diagnostic pop)
 };
 
 class MutexLock {

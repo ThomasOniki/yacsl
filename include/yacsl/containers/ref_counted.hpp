@@ -1,6 +1,6 @@
 #pragma once
 
-#include "yacsl/attributes.hpp"
+#include "yacsl/compiler/attributes.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/meta/allocator.hpp"
 #include "yacsl/threads/atomic.hpp"
