@@ -2,12 +2,12 @@
 
 namespace yacsl::meta {
 
-namespace internal {
+namespace detail {
 template <typename T> struct TypeIdentityImpl {
   using Type = T;
 };
-} // namespace internal
+} // namespace detail
 
-template <typename T> using TypeIdentity = internal::TypeIdentityImpl<T>::Type;
+template <typename T> using TypeIdentity = detail::TypeIdentityImpl<T>::Type;
 
 } // namespace yacsl::meta

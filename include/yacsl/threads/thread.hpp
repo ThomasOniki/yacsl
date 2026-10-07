@@ -9,7 +9,7 @@
 #include "yacsl/type_aliases.hpp"
 #include <pthread.h>
 
-namespace yacsl::threads::internal {
+namespace yacsl::threads::detail {
 template <typename T> struct StorableFunctionType {
   using Type = T;
 };
@@ -17,7 +17,7 @@ template <typename Ret, typename... Args>
 struct StorableFunctionType<Ret(Args...)> {
   using Type = Ret (*)(Args...);
 };
-} // namespace yacsl::threads::internal
+} // namespace yacsl::threads::detail
 
 namespace yacsl::threads {
 
@@ -54,7 +54,7 @@ public:
         meta::SameAs<void, decltype(func(memory::forward<Args>(args)...))>);
 
     using StoredFunction =
-        internal::StorableFunctionType<meta::RemoveReference<Func>>::Type;
+        detail::StorableFunctionType<meta::RemoveReference<Func>>::Type;
     using Pack = containers::Tuple<StoredFunction, Atomic<bool>&, Args...>;
     Atomic<bool> ready = false;
     Pack         pack  = Pack(memory::forward<Func>(func), ready,
@@ -101,7 +101,7 @@ private:
   struct Callback<Func, meta::IndexSequence<Indices...>, Args...> {
     static void* callback(void* data) {
       using StoredFunction =
-          internal::StorableFunctionType<meta::RemoveReference<Func>>::Type;
+          detail::StorableFunctionType<meta::RemoveReference<Func>>::Type;
       using Pack = containers::Tuple<StoredFunction, Atomic<bool>&, Args...>;
       Pack pack  = memory::move(*static_cast<Pack*>(data));
 
