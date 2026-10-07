@@ -1,6 +1,8 @@
+#include "yacsl/utils/nil.hpp"
 #ifdef _WIN32
 
 #include "win32-utils.hpp"
+#include "yacsl/debug/assert.hpp"
 #include "yacsl/debug/panic.hpp"
 #include "yacsl/meta/limits.hpp"
 #include "yacsl/type_aliases.hpp"
@@ -123,6 +125,49 @@ bool File::is_tty(this File const& self) noexcept {
         static_cast<IsTtyFlag>(GetFileType(self.handle_) == FILE_TYPE_CHAR);
   }
   return static_cast<bool>(self.is_tty_);
+}
+
+[[nodiscard]] containers::Error<File::OpenError>
+File::access(char const* path, AccessFlags flags) {
+  SECURITY_DESCRIPTOR desc       = {};
+  DWORD               needed_len = 0;
+  if (GetFileSecurityA(path, DACL_SECURITY_INFORMATION, &desc, sizeof(desc),
+                       &needed_len) == FALSE) {
+    DWORD const err = GetLastError();
+    switch (err) {
+    case ERROR_FILE_NOT_FOUND:
+      return OpenError::FileNotFound;
+    case ERROR_NOACCESS:
+      return OpenError::PermissionDenied;
+    default:
+      debug::panic("GetFileSecurityA() failed: {}", win32_err_str(err));
+    }
+  }
+  debug::assert_eq(sizeof(desc), needed_len);
+  TRUSTEE_A trustee = {
+      .pMultipleTrustee         = nullptr,
+      .MultipleTrusteeOperation = NO_MULTIPLE_TRUSTEE,
+      .TrusteeForm              = TRUSTEE_IS_NAME,
+      .TrusteeType              = TRUSTEE_IS_USER,
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+      .ptstrName = const_cast<char*>("CURRENT_USER"),
+  };
+  ACCESS_MASK access = 0;
+  YACSL_TRY_SYSCALL(GetEffectiveRightsFromAclA(desc.Dacl, &trustee, &access));
+
+  if (static_cast<u8>(flags & AccessFlags::Read) > 0 &&
+      (access & GENERIC_READ) == 0) {
+    return OpenError::PermissionDenied;
+  }
+  if (static_cast<u8>(flags & AccessFlags::Write) > 0 &&
+      (access & GENERIC_WRITE) == 0) {
+    return OpenError::PermissionDenied;
+  }
+  if (static_cast<u8>(flags & AccessFlags::Execute) > 0 &&
+      (access & GENERIC_EXECUTE) == 0) {
+    return OpenError::PermissionDenied;
+  }
+  return utils::NIL;
 }
 
 } // namespace yacsl::os
