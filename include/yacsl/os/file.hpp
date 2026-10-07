@@ -1,6 +1,7 @@
 #pragma once
 
 #include "yacsl/compiler/export.hpp"
+#include "yacsl/containers/error.hpp"
 #include "yacsl/containers/result.hpp"
 #include "yacsl/containers/string.hpp"
 #include "yacsl/ranges/slice.hpp"
@@ -21,7 +22,6 @@ public:
     SeekEnd         = 1U << 4U,
     DontCloseOnExec = 1U << 5U,
   };
-  constexpr File() noexcept = default;
 
   enum class OpenError : u8 {
     None,
@@ -36,6 +36,13 @@ public:
     return open(containers::String(path).c_str(), flags);
   }
 
+  // This doesn't duplicate the standard streams, it just sets handle_ to the
+  // sentinel values for the standard handles.
+  [[nodiscard]] static File open_stdin() noexcept YACSL_API;
+  [[nodiscard]] static File open_stdout() noexcept YACSL_API;
+  [[nodiscard]] static File open_stderr() noexcept YACSL_API;
+
+  constexpr File() noexcept = default;
   ~File() noexcept { close(); }
 
   File(File const&) = delete;
@@ -55,12 +62,6 @@ public:
     other.handle_    = NIL_HANDLE;
     return self;
   }
-
-  // This doesn't duplicate the standard streams, it just sets handle_ to the
-  // sentinel values for the standard handles.
-  [[nodiscard]] static File open_stdin() noexcept YACSL_API;
-  [[nodiscard]] static File open_stdout() noexcept YACSL_API;
-  [[nodiscard]] static File open_stderr() noexcept YACSL_API;
 
   usize write(this File& self, ranges::Slice<u8 const> data) noexcept YACSL_API;
   usize read(this File& self, ranges::Slice<u8> buffer) noexcept YACSL_API;
