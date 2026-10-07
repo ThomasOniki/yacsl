@@ -10,7 +10,7 @@ template <typename T, T... Ints> struct IntegerSequence {
   template <usize I> static constexpr T at_index = Ints...[I];
 };
 
-namespace internal {
+namespace detail {
 template <typename First, typename... Others> struct MergeIntegerSequencesImpl {
   using Type = MergeIntegerSequencesImpl<
       First, typename MergeIntegerSequencesImpl<Others...>::Type>::Type;
@@ -23,7 +23,7 @@ struct MergeIntegerSequencesImpl<IntegerSequence<T, Ints1...>,
 template <typename T> struct MergeIntegerSequencesImpl<T> {
   using Type = T;
 };
-} // namespace internal
+} // namespace detail
 
 template <usize... Indices>
 using IndexSequence = IntegerSequence<usize, Indices...>;
@@ -41,7 +41,7 @@ using IndexSequenceToN = IntegerSequence<usize, __integer_pack(N)...>;
 #endif
 
 template <typename... Ts>
-using MergeIntegerSequences = internal::MergeIntegerSequencesImpl<Ts...>::Type;
+using MergeIntegerSequences = detail::MergeIntegerSequencesImpl<Ts...>::Type;
 
 template <typename Seq, Seq::Type... Ints>
 using PrependToIntegerSequence =

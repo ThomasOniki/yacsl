@@ -127,7 +127,7 @@ public:
   value(this Self&& self, debug::SourceLocation location =
                               debug::SourceLocation::current()) noexcept {
     if (!self.is_value_) [[unlikely]] {
-      debug::internal::extern_panic(
+      debug::detail::extern_panic(
           cat_nttpstrings<"Option<",
                           NTTPString<meta::TYPE_STRING<T>.size()>(
                               meta::TYPE_STRING<T>),
@@ -222,7 +222,7 @@ public:
   value(this Self&& self, debug::SourceLocation location =
                               debug::SourceLocation::current()) noexcept {
     if (!self.is_value_) [[unlikely]] {
-      debug::internal::extern_panic(
+      debug::detail::extern_panic(
           cat_nttpstrings<"Option<",
                           NTTPString<meta::TYPE_STRING<T>.size()>(
                               meta::TYPE_STRING<T>),

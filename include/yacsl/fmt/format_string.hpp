@@ -12,7 +12,7 @@
 #include "yacsl/ranges/string_view.hpp"
 #include "yacsl/type_aliases.hpp"
 
-namespace yacsl::fmt::internal {
+namespace yacsl::fmt::detail {
 
 template <typename Indices, typename... Args> class FormatStringImpl;
 template <usize... Indices, typename... Args>
@@ -26,7 +26,7 @@ public:
       char const* segment_begin = fmt;
       for (; *fmt != '{'; ++fmt) {
         if (*fmt == '\0') {
-          debug::internal::extern_log_error(
+          debug::detail::extern_log_error(
               "Too few format specifiers for the argument count.");
         }
       }
@@ -37,7 +37,7 @@ public:
     char const* segment_begin = fmt;
     for (; *fmt != '\0'; ++fmt) {
       if (*fmt == '{') {
-        debug::internal::extern_log_error(
+        debug::detail::extern_log_error(
             "Too many format specifiers for the arguments count.");
       }
     }
@@ -95,13 +95,13 @@ private:
   ranges::StringView    msg_;
 };
 
-} // namespace yacsl::fmt::internal
+} // namespace yacsl::fmt::detail
 
 namespace yacsl::fmt {
 
 template <typename... Args>
 using FormatString =
-    internal::FormatStringImpl<meta::IndexSequenceToN<sizeof...(Args)>,
+    detail::FormatStringImpl<meta::IndexSequenceToN<sizeof...(Args)>,
                                meta::RemoveCVRef<Args>...>::TypeIdentity;
 
 template <typename... Args>

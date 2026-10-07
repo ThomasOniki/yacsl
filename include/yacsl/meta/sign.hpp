@@ -13,7 +13,7 @@ template <Integral T> using MakeUnsigned = __make_unsigned(T);
 template <Integral T> using MakeSigned   = __make_signed(T);
 #else
 
-namespace internal {
+namespace detail {
 
 template <typename T> struct MakeUnsignedImpl {
   using Type =
@@ -62,10 +62,10 @@ template <> struct MakeSignedImpl<unsigned long long> {
   using Type = long long;
 };
 
-} // namespace internal
+} // namespace detail
 
-template <Integral T> using MakeUnsigned = internal::MakeUnsignedImpl<T>::Type;
-template <Integral T> using MakeSigned   = internal::MakeSignedImpl<T>::Type;
+template <Integral T> using MakeUnsigned = detail::MakeUnsignedImpl<T>::Type;
+template <Integral T> using MakeSigned   = detail::MakeSignedImpl<T>::Type;
 
 #endif
 

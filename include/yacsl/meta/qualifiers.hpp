@@ -11,7 +11,7 @@ template <typename T> using RemoveVolatile  = __remove_volatile(T);
 template <typename T> using RemoveCV        = __remove_cv(T);
 template <typename T> using RemoveCVRef     = __remove_cvref(T);
 #else
-namespace internal {
+namespace detail {
 template <typename T> struct RemoveReferenceImpl {
   using Type = __remove_reference(T);
 };
@@ -27,12 +27,12 @@ template <typename T> struct RemoveVolatileImpl {
 template <typename T> struct RemoveVolatileImpl<volatile T> {
   using Type = T;
 };
-} // namespace internal
+} // namespace detail
 template <typename T>
-using RemoveReference = internal::RemoveReferenceImpl<T>::Type;
-template <typename T> using RemoveConst = internal::RemoveConstImpl<T>::Type;
+using RemoveReference = detail::RemoveReferenceImpl<T>::Type;
+template <typename T> using RemoveConst = detail::RemoveConstImpl<T>::Type;
 template <typename T>
-using RemoveVolatile                    = internal::RemoveVolatileImpl<T>::Type;
+using RemoveVolatile                    = detail::RemoveVolatileImpl<T>::Type;
 template <typename T> using RemoveCV    = RemoveConst<RemoveVolatile<T>>;
 template <typename T> using RemoveCVRef = RemoveCV<RemoveReference<T>>;
 #endif
@@ -83,7 +83,7 @@ concept MaybeCVRef =
     OneOf<T, BaseType, BaseType&, BaseType&&, BaseType volatile,
           BaseType volatile&, BaseType volatile&&>;
 
-namespace internal {
+namespace detail {
 
 template <typename Src, typename Dst> struct CopyConstImpl {
   using Type = Dst;
@@ -138,22 +138,22 @@ template <typename Src, typename Dst> struct CopyReferenceImpl<Src&&, Dst> {
   using Type = Dst&&;
 };
 
-} // namespace internal
+} // namespace detail
 
 template <typename Src, typename Dst>
-using CopyConst = internal::CopyConstImpl<RemoveReference<Src>, Dst>::Type;
+using CopyConst = detail::CopyConstImpl<RemoveReference<Src>, Dst>::Type;
 template <typename Src, typename Dst>
 using CopyVolatile =
-    internal::CopyVolatileImpl<RemoveReference<Src>, Dst>::Type;
+    detail::CopyVolatileImpl<RemoveReference<Src>, Dst>::Type;
 template <typename Src, typename Dst>
-using CopyCV = internal::CopyCVImpl<RemoveReference<Src>, Dst>::Type;
+using CopyCV = detail::CopyCVImpl<RemoveReference<Src>, Dst>::Type;
 
 template <typename Src, typename Dst>
-using CopyRValueRef = internal::CopyRValueRefImpl<Src, Dst>::Type;
+using CopyRValueRef = detail::CopyRValueRefImpl<Src, Dst>::Type;
 template <typename Src, typename Dst>
-using CopyLValueRef = internal::CopyLValueRefImpl<Src, Dst>::Type;
+using CopyLValueRef = detail::CopyLValueRefImpl<Src, Dst>::Type;
 template <typename Src, typename Dst>
-using CopyReference = internal::CopyReferenceImpl<Src, Dst>::Type;
+using CopyReference = detail::CopyReferenceImpl<Src, Dst>::Type;
 
 template <typename Src, typename Dst>
 using CopyCVRef = CopyReference<Src, CopyCV<Src, Dst>>;

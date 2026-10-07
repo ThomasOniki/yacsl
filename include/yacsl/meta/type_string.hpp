@@ -5,7 +5,7 @@
 
 namespace yacsl::meta {
 
-namespace internal {
+namespace detail {
 template <typename T> constexpr ranges::StringView type_string_impl_pretty() {
   return __PRETTY_FUNCTION__;
 }
@@ -53,9 +53,9 @@ template <typename T> constexpr ranges::StringView type_string_impl() {
   return {pretty_function.begin() + TYPE_STRING_IMPL_OFFSET_FROM_BEGIN,
           pretty_function.end() - TYPE_STRING_IMPL_OFFSET_FROM_END};
 }
-} // namespace internal
+} // namespace detail
 
 template <typename T>
-constexpr ranges::StringView TYPE_STRING = internal::type_string_impl<T>();
+constexpr ranges::StringView TYPE_STRING = detail::type_string_impl<T>();
 
 } // namespace yacsl::meta
