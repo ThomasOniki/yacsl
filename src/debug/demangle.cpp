@@ -25,7 +25,7 @@ namespace yacsl::debug {
 //     self.demangle_string();
 //
 //     // There is no substitute for the whole function name for some reason.
-//     self.substitutes_.pop_back();
+//     self.substitutes_.pop();
 //
 //     containers::String return_type;
 //
@@ -122,7 +122,7 @@ namespace yacsl::debug {
 //         break;
 //       }
 //     }
-//     self.substitute_beginings_.pop_back();
+//     self.substitute_beginings_.pop();
 //   }
 //
 //   void demangle_type(this Demangler& self) noexcept {

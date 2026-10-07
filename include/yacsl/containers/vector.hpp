@@ -50,7 +50,7 @@ public:
   template <typename... Args>
   constexpr T& push(this Vector& self, Args&&... args);
 
-  constexpr void pop_back(this Vector& self) noexcept;
+  constexpr void pop(this Vector& self) noexcept;
   constexpr void clear(this Vector& self) noexcept;
 
   constexpr void reserve(this Vector& self, SizeT capacity);
@@ -289,14 +289,14 @@ constexpr T& Vector<T, N, A, SizeT>::push(this Vector& self, Args&&... args) {
 }
 
 template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
-constexpr void Vector<T, N, A, SizeT>::pop_back(this Vector& self) noexcept {
+constexpr void Vector<T, N, A, SizeT>::pop(this Vector& self) noexcept {
   self.data_[--self.len_].~T();
 }
 
 template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
 constexpr void Vector<T, N, A, SizeT>::clear(this Vector& self) noexcept {
   while (self.len_ > 0) {
-    self.pop_back();
+    self.pop();
   }
 }
 
@@ -315,7 +315,7 @@ constexpr void Vector<T, N, A, SizeT>::resize(this Vector& self, SizeT count) {
       self.len_ = count;
     } else {
       while (self.len_ > count) {
-        self.pop_back();
+        self.pop();
       }
     }
   } else {
