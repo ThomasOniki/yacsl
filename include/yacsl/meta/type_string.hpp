@@ -18,8 +18,7 @@ constexpr usize TYPE_STRING_IMPL_OFFSET_FROM_BEGIN = [] -> usize {
        ++it) {
     for (usize i = 0;; ++i) {
       if (i == to_find.len()) {
-        return static_cast<usize>(it - pretty.begin()) + i -
-               "_pretty"_sv.len();
+        return static_cast<usize>(it - pretty.begin()) + i - "_pretty"_sv.len();
       }
       if (it[i] != to_find[i]) {
         break;

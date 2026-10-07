@@ -96,7 +96,7 @@ public:
 
 private:
   T const* data_ = nullptr;
-  SizeT    len_ = 0;
+  SizeT    len_  = 0;
 };
 
 template <meta::Character T, meta::Integral SizeT>

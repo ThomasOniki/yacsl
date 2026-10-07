@@ -102,7 +102,7 @@ namespace yacsl::fmt {
 template <typename... Args>
 using FormatString =
     detail::FormatStringImpl<meta::IndexSequenceToN<sizeof...(Args)>,
-                               meta::RemoveCVRef<Args>...>::TypeIdentity;
+                             meta::RemoveCVRef<Args>...>::TypeIdentity;
 
 template <typename... Args>
 void format_to(containers::String& buf, FormatString<Args...> const& fmt,
