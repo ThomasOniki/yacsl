@@ -113,6 +113,40 @@ public:
     return self.len_ >= prefix.len_ && self.last_n(prefix.len_) == prefix;
   }
 
+  [[nodiscard]] constexpr BasicStringView
+  without_prefix(this BasicStringView self, usize len) noexcept {
+    return {self.data_ + len, self.len_ - len};
+  }
+  [[nodiscard]] constexpr BasicStringView
+  without_suffix(this BasicStringView self, usize len) noexcept {
+    return {self.data_, self.len_ - len};
+  }
+
+  constexpr void remove_prefix(this BasicStringView& self, usize len) noexcept {
+    self.data_ += len;
+    self.len_ -= len;
+  }
+  constexpr void remove_suffix(this BasicStringView& self, usize len) noexcept {
+    self.len_ -= len;
+  }
+
+  constexpr bool remove_prefix(this BasicStringView& self,
+                               BasicStringView       prefix) noexcept {
+    if (self.starts_with(prefix)) {
+      self.remove_prefix(prefix.len_);
+      return true;
+    }
+    return false;
+  }
+  constexpr bool remove_suffix(this BasicStringView& self,
+                               BasicStringView       suffix) noexcept {
+    if (self.ends_with(suffix)) {
+      self.remove_suffix(suffix.len_);
+      return true;
+    }
+    return false;
+  }
+
 private:
   T const* data_ = nullptr;
   SizeT    len_  = 0;
