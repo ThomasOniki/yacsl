@@ -2,6 +2,8 @@
 
 #include "yacsl/compiler/attributes.hpp"
 #include "yacsl/containers/structured_bindings.hpp"
+#include "yacsl/debug/_extern_functions.hpp"
+#include "yacsl/debug/source_location.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/meta/concepts.hpp"
 #include "yacsl/meta/conditional.hpp"
@@ -104,9 +106,13 @@ public:
     return utils::implicit_cast<meta::CopyCV<Self, T>*>(nullptr);
   }
   template <typename Self>
-  [[nodiscard]] constexpr auto&& operator[](this Self&& /*self*/,
-                                            SizeT /*index*/) noexcept {
-    return utils::implicit_cast<meta::CopyCV<Self, T>*>(nullptr)[0];
+  [[nodiscard]] constexpr auto&&
+  operator[](this Self&& /*self*/, SizeT /*index*/
+             ,
+             debug::SourceLocation location =
+                 debug::SourceLocation::current()) noexcept {
+    debug::detail::extern_panic("Cannot index zero-length StackArray!\n",
+                                location);
   }
 
   template <typename Self>
@@ -134,25 +140,40 @@ public:
   }
 
   template <typename Self>
-  [[nodiscard]] constexpr auto&& front(this Self&& /*self*/) noexcept {
-    return utils::implicit_cast<meta::CopyCV<Self, T>*>(nullptr)[0];
+  [[nodiscard]] constexpr auto&&
+  front(this Self&& /*self*/, debug::SourceLocation location =
+                                  debug::SourceLocation::current()) noexcept {
+    debug::detail::extern_panic("Cannot index zero-length StackArray!\n",
+                                location);
   }
   template <typename Self>
-  [[nodiscard]] constexpr auto&& back(this Self&& /*self*/) noexcept {
-    return utils::implicit_cast<meta::CopyCV<Self, T>*>(nullptr)[0];
+  [[nodiscard]] constexpr auto&&
+  back(this Self&& /*self*/, debug::SourceLocation location =
+                                 debug::SourceLocation::current()) noexcept {
+    debug::detail::extern_panic("Cannot index zero-length StackArray!\n",
+                                location);
   }
 
   template <typename Self>
-  [[nodiscard]] constexpr auto begin(this Self&& /*self*/) noexcept {
-    return utils::implicit_cast<meta::CopyCV<Self, T>*>(nullptr);
+  [[nodiscard]] constexpr auto
+  begin(this Self&& /*self*/, debug::SourceLocation location =
+                                  debug::SourceLocation::current()) noexcept {
+    debug::detail::extern_panic("Cannot index zero-length StackArray!\n",
+                                location);
   }
   template <typename Self>
-  [[nodiscard]] constexpr auto end(this Self&& /*self */) noexcept {
-    return utils::implicit_cast<meta::CopyCV<Self, T>*>(nullptr);
+  [[nodiscard]] constexpr auto
+  end(this Self&& /*self */, debug::SourceLocation location =
+                                 debug::SourceLocation::current()) noexcept {
+    debug::detail::extern_panic("Cannot index zero-length StackArray!\n",
+                                location);
   }
   template <usize I, typename Self>
-  [[nodiscard]] constexpr auto&& get(this Self&& /*self*/) noexcept {
-    return utils::implicit_cast<meta::CopyCV<Self, T>*>(nullptr)[0];
+  [[nodiscard]] constexpr auto&&
+  get(this Self&& /*self*/, debug::SourceLocation location =
+                                debug::SourceLocation::current()) noexcept {
+    debug::detail::extern_panic("Cannot index zero-length StackArray!\n",
+                                location);
   }
 
   constexpr bool operator==(this StackArray const& self,
