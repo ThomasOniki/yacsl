@@ -52,7 +52,7 @@ public:
   }
 
   [[nodiscard]] constexpr SizeT
-  size(this StackArrayStorage const& /*self*/) noexcept {
+  len(this StackArrayStorage const& /*self*/) noexcept {
     return static_cast<SizeT>(N);
   }
 

@@ -160,7 +160,7 @@ template <meta::Character T> u32 char_len(T chr) {
 template <meta::Character T>
 usize real_string_len(ranges::BasicStringView<T, usize> str) {
   if constexpr (sizeof(T) == 1) {
-    return str.size();
+    return str.len();
   }
   usize ret = 0;
   for (T const chr : str) {
@@ -184,7 +184,7 @@ template <meta::Character T>
 void write_string(containers::String&               buf,
                   ranges::BasicStringView<T, usize> str) {
   if constexpr (sizeof(T) == 1) {
-    memory::copy(str.bytes(), reinterpret_cast<u8*>(buf.grow(str.size())));
+    memory::copy(str.bytes(), reinterpret_cast<u8*>(buf.grow(str.len())));
     return;
   }
   for (T const chr : str) {

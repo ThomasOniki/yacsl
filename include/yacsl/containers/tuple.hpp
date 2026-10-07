@@ -62,7 +62,7 @@ public:
     requires(sizeof...(Args) == sizeof...(Ts))
       : TupleLeaf<Indices, Ts>(memory::forward<Args>(args))... {}
 
-  constexpr usize size(this TupleImpl const& /*self*/) noexcept {
+  constexpr usize len(this TupleImpl const& /*self*/) noexcept {
     return sizeof...(Ts);
   }
 

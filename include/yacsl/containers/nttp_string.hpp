@@ -20,14 +20,14 @@ public:
   }
 
   constexpr NTTPString(ranges::BasicStringView<T, SizeT> view) noexcept {
-    for (SizeT i = 0; i < view.size(); ++i) {
+    for (SizeT i = 0; i < view.len(); ++i) {
       data_[i] = view[i];
     }
   }
 
   constexpr NTTPString() noexcept = default;
 
-  [[nodiscard]] constexpr SizeT size(this const NTTPString& /*self*/) noexcept {
+  [[nodiscard]] constexpr SizeT len(this const NTTPString& /*self*/) noexcept {
     return static_cast<SizeT>(N);
   }
   template <typename Self>
@@ -83,7 +83,7 @@ public:
   constexpr NTTPString(T const (& /*str*/)[1]) noexcept {}
   constexpr NTTPString() noexcept = default;
 
-  [[nodiscard]] constexpr SizeT size(this NTTPString const& /*self*/) noexcept {
+  [[nodiscard]] constexpr SizeT len(this NTTPString const& /*self*/) noexcept {
     return 0;
   }
   template <typename Self>
@@ -140,9 +140,9 @@ NTTPString(T const (&str)[N]) -> NTTPString<N - 1, T, usize>;
 
 template <NTTPString... Strings>
 constexpr NTTPString cat_nttpstrings = [] {
-  NTTPString<(... + Strings.size())> ret;
+  NTTPString<(... + Strings.len())> ret;
   usize                              offset = 0;
-  (..., (offset += memory::copy(Strings.slice(), ret.data() + offset).size()));
+  (..., (offset += memory::copy(Strings.slice(), ret.data() + offset).len()));
   return ret;
 }();
 

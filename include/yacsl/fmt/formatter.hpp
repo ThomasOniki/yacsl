@@ -323,12 +323,12 @@ public:
     if (self.type_ == Type::Normal) [[likely]] {
       pad_string(buf,
                  ranges::BasicStringView<T>(str.data(),
-                                            static_cast<usize>(str.size())),
+                                            static_cast<usize>(str.len())),
                  opts);
     } else {
       pad_string<true>(buf,
                        ranges::BasicStringView<T>(
-                           str.data(), static_cast<usize>(str.size())),
+                           str.data(), static_cast<usize>(str.len())),
                        opts);
     }
   }
@@ -352,7 +352,7 @@ public:
   }
   void format(this Formatter const& self, containers::String& buf,
               ranges::Slice<T, SizeT> str) noexcept {
-    return self.impl_.format(buf, {str.data(), str.size()});
+    return self.impl_.format(buf, {str.data(), str.len()});
   }
 
 private:
@@ -497,23 +497,23 @@ public:
       pad_string(buf, TABLE[u_val], opts);
       return;
     }
-    pad_integral<"0123456789", containers::NTTPString<CAST_STRING.size()>(
+    pad_integral<"0123456789", containers::NTTPString<CAST_STRING.len()>(
                                    CAST_STRING)>(buf, scalar, opts);
   }
 
 private:
-  static constexpr containers::StackArray<char, meta::TYPE_STRING<T>.size() + 2>
+  static constexpr containers::StackArray<char, meta::TYPE_STRING<T>.len() + 2>
       CAST_STRING_ARR = [] {
-        containers::StackArray<char, meta::TYPE_STRING<T>.size() + 2> arr{};
+        containers::StackArray<char, meta::TYPE_STRING<T>.len() + 2> arr{};
         arr[0]              = '(';
-        arr[arr.size() - 1] = ')';
+        arr[arr.len() - 1] = ')';
         memory::copy(meta::TYPE_STRING<T>.slice(), &arr[1]);
         return arr;
       }();
 
   static constexpr ranges::StringView CAST_STRING{
       CAST_STRING_ARR.data(),
-      CAST_STRING_ARR.size(),
+      CAST_STRING_ARR.len(),
   };
 
   using UnderlyingType = meta::UnderlyingEnumType<T>;
@@ -533,13 +533,13 @@ private:
     constexpr ranges::StringView pretty =
         table_entry_pretty<static_cast<T>(0)>();
     constexpr ranges::StringView to_find = "Value = ";
-    for (char const* it = pretty.begin(); it < pretty.end() - to_find.size();
+    for (char const* it = pretty.begin(); it < pretty.end() - to_find.len();
          ++it) {
       for (usize i = 0;; ++i) {
-        if (i == to_find.size()) {
+        if (i == to_find.len()) {
           using ranges::operator""_sv;
           return static_cast<usize>(it - pretty.begin()) + i -
-                 "_pretty"_sv.size();
+                 "_pretty"_sv.len();
         }
         if (it[i] != to_find[i]) {
           break;
@@ -553,7 +553,7 @@ private:
     constexpr ranges::StringView pretty =
         table_entry_pretty<static_cast<T>(0)>();
     usize templates = 0;
-    for (usize i = TABLE_ENTRY_OFFSET_FROM_BEGIN; i < pretty.size(); ++i) {
+    for (usize i = TABLE_ENTRY_OFFSET_FROM_BEGIN; i < pretty.len(); ++i) {
       if (pretty[i] == '<') {
         ++templates;
       } else if (pretty[i] == '>') {
@@ -563,10 +563,10 @@ private:
         continue;
       }
       if (pretty[i] == ',' || pretty[i] == ';' || pretty[i] == ']') {
-        return pretty.size() - i;
+        return pretty.len() - i;
       }
     }
-    return pretty.size();
+    return pretty.len();
   }();
 
   template <T Value> static constexpr ranges::StringView table_entry() {

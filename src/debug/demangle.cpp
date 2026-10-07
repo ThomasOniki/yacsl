@@ -65,7 +65,7 @@ namespace yacsl::debug {
 //
 // private:
 //   void demangle_string(this Demangler& self) noexcept {
-//     self.substitute_beginings_.push_back(self.demangled_.size());
+//     self.substitute_beginings_.push_back(self.demangled_.len());
 //     bool const is_nested = self.skip('N');
 //
 //     for (bool is_first = true;; is_first = false) {
@@ -86,8 +86,8 @@ namespace yacsl::debug {
 //
 //         ranges::StringView const     chunk(end, len);
 //         constexpr ranges::StringView anonymous_ns = "_GLOBAL__N_";
-//         if (chunk.size() >= anonymous_ns.size() &&
-//             ranges::StringView(chunk.data(), anonymous_ns.size()) ==
+//         if (chunk.len() >= anonymous_ns.len() &&
+//             ranges::StringView(chunk.data(), anonymous_ns.len()) ==
 //                 anonymous_ns) {
 //           self.demangled_ += "(anonymous namespace)";
 //         } else {
@@ -100,22 +100,22 @@ namespace yacsl::debug {
 //         if (submodule.is_substitution) {
 //           continue;
 //         }
-//         self.substitutes_.emplace_back(self.demangled_.size() + 1,
+//         self.substitutes_.emplace_back(self.demangled_.len() + 1,
 //                                        submodule.end +
-//                                        self.demangled_.size());
+//                                        self.demangled_.len());
 //       }
 //       if (!is_substituted) {
 //         self.substitutes_.emplace_back(
-//             self.substitute_beginings_[self.substitute_beginings_.size() -
-//             1], self.demangled_.size());
+//             self.substitute_beginings_[self.substitute_beginings_.len() -
+//             1], self.demangled_.len());
 //       }
 //       self.demangled_ += modules.module_string;
 //
 //       if (*self.mangled_ == 'I') {
 //         self.demangle_template_args();
 //         self.substitutes_.emplace_back(
-//             self.substitute_beginings_[self.substitute_beginings_.size() -
-//             1], self.demangled_.size());
+//             self.substitute_beginings_[self.substitute_beginings_.len() -
+//             1], self.demangled_.len());
 //       }
 //
 //       if (!is_nested || self.skip('E')) {
@@ -144,7 +144,7 @@ namespace yacsl::debug {
 //         end   = fmt::num_end(self.mangled_);
 //         index = fmt::atoi<usize>(self.mangled_, end) + 1;
 //       }
-//       if (index < self.template_args_.size()) {
+//       if (index < self.template_args_.len()) {
 //         self.demangled_.append(
 //             &self.demangled_[self.template_args_[index].begin],
 //             self.template_args_[index].end -
@@ -165,7 +165,7 @@ namespace yacsl::debug {
 //   demangle_template_parameter_pack(this Demangler&    self,
 //                                    ranges::StringView qualifiers) noexcept {
 //     using yacsl::ranges::operator""_sv;
-//     self.mangled_ += "Dp"_sv.size();
+//     self.mangled_ += "Dp"_sv.len();
 //     if (*self.mangled_ == 'T') {
 //       self.demangle_type();
 //       self.demangle_type_qualifiers(qualifiers);
@@ -184,15 +184,15 @@ namespace yacsl::debug {
 //     self.mangled_ = end + 1;
 //     self.demangle_type();
 //     ranges::StringView prefix = " [";
-//     if (qualifiers.size() > 0) {
+//     if (qualifiers.len() > 0) {
 //       self.demangled_ += " (";
 //       self.demangle_type_qualifiers(qualifiers);
 //       prefix = ") [";
 //     }
-//     char* data = self.demangled_.grow(prefix.size() + arr_len.size() + 1);
+//     char* data = self.demangled_.grow(prefix.len() + arr_len.len() + 1);
 //     memory::copy(prefix.slice(), data);
-//     memory::copy(arr_len.slice(), data + prefix.size());
-//     data[prefix.size() + arr_len.size()] = ']';
+//     memory::copy(arr_len.slice(), data + prefix.len());
+//     data[prefix.len() + arr_len.len()] = ']';
 //   }
 //
 //   void demangle_type_qualifiers(this Demangler&    self,
@@ -243,7 +243,7 @@ namespace yacsl::debug {
 //
 //     ++self.template_nesting_level_;
 //     for (;;) {
-//       usize arg_begin = self.demangled_.size();
+//       usize arg_begin = self.demangled_.len();
 //       if (self.skip('J')) {
 //         if (!self.skip('E')) {
 //           for (;;) {
@@ -258,12 +258,12 @@ namespace yacsl::debug {
 //         self.demangle_template_arg();
 //       }
 //       if (self.template_nesting_level_ == 1) {
-//         self.template_args_.emplace_back(arg_begin, self.demangled_.size());
+//         self.template_args_.emplace_back(arg_begin, self.demangled_.len());
 //       }
 //       if (self.skip('E')) {
 //         break;
 //       }
-//       if (arg_begin != self.demangled_.size()) {
+//       if (arg_begin != self.demangled_.len()) {
 //         self.demangled_ += ", ";
 //       }
 //     }
@@ -390,7 +390,7 @@ namespace yacsl::debug {
 //         index *= 36;
 //       }
 //     }
-//     if (index >= self.substitutes_.size()) {
+//     if (index >= self.substitutes_.len()) {
 //       return {self.demangled_.data(), static_cast<usize>(0)};
 //     }
 //     return {&self.demangled_[self.substitutes_[index].begin],
@@ -429,16 +429,16 @@ namespace yacsl::debug {
 //         to_add          = ranges::StringView(end, self.mangled_);
 //       }
 //
-//       char* bytes = ret.module_string.grow(to_add.size() + 1);
+//       char* bytes = ret.module_string.grow(to_add.len() + 1);
 //
-//       if (ret.module_string.size() == to_add.size() + 1) {
+//       if (ret.module_string.len() == to_add.len() + 1) {
 //         bytes[0] = '@';
 //       } else {
 //         bytes[0] = '.';
 //       }
 //
 //       memory::copy(to_add.slice(), bytes + 1);
-//       ret.submodules.emplace_back(ret.module_string.size(), is_substituted);
+//       ret.submodules.emplace_back(ret.module_string.len(), is_substituted);
 //     }
 //     return ret;
 //   }
@@ -531,16 +531,16 @@ namespace yacsl::debug {
 //       default:
 //         if (self.mangled_[3] == '6') {
 //           self.demangled_ += "_Float16";
-//           self.mangled_ += "DF16_"_sv.size() - 1;
+//           self.mangled_ += "DF16_"_sv.len() - 1;
 //         } else if (self.mangled_[2] == '3') {
 //           self.demangled_ += "_Float32";
-//           self.mangled_ += "DF32_"_sv.size() - 1;
+//           self.mangled_ += "DF32_"_sv.len() - 1;
 //         } else if (self.mangled_[2] == '6') {
 //           self.demangled_ += "_Float64";
-//           self.mangled_ += "DF64_"_sv.size() - 1;
+//           self.mangled_ += "DF64_"_sv.len() - 1;
 //         } else if (self.mangled_[2] == '1') {
 //           self.demangled_ += "_Float128";
-//           self.mangled_ += "DF128_"_sv.size() - 1;
+//           self.mangled_ += "DF128_"_sv.len() - 1;
 //         }
 //         if (self.mangled_[4] == 'x') {
 //           self.demangled_ += 'x';
@@ -563,9 +563,9 @@ namespace yacsl::debug {
 //   }
 //
 //   bool skip(this Demangler& self, ranges::StringView str) noexcept {
-//     if (ranges::StringView(self.mangled_, self.mangled_ + str.size()) == str)
+//     if (ranges::StringView(self.mangled_, self.mangled_ + str.len()) == str)
 //     {
-//       self.mangled_ += str.size();
+//       self.mangled_ += str.len();
 //       return true;
 //     }
 //     return false;

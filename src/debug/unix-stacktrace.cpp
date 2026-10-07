@@ -14,11 +14,11 @@ StackTrace StackTrace::current() noexcept {
   StackTrace ret;
   ret.addresses_.resize(ret.addresses_.capacity());
   auto size = static_cast<usize>(backtrace(
-      ret.addresses_.data(), static_cast<int>(ret.addresses_.size())));
-  while (size == ret.addresses_.size()) {
+      ret.addresses_.data(), static_cast<int>(ret.addresses_.len())));
+  while (size == ret.addresses_.len()) {
     ret.addresses_.resize(ret.addresses_.capacity() * 2);
     size = static_cast<usize>(backtrace(
-        ret.addresses_.data(), static_cast<int>(ret.addresses_.size())));
+        ret.addresses_.data(), static_cast<int>(ret.addresses_.len())));
   }
   ret.addresses_.resize(size);
   return ret;
@@ -26,11 +26,11 @@ StackTrace StackTrace::current() noexcept {
 
 containers::Vector<StackTraceEntry, 16> const&
 StackTrace::compute_entries(this StackTrace const& self) noexcept {
-  if (self.entries_.size() == self.addresses_.size()) {
+  if (self.entries_.len() == self.addresses_.len()) {
     return self.entries_;
   }
-  self.entries_.resize(self.addresses_.size());
-  for (usize i = 0; i < self.addresses_.size(); ++i) {
+  self.entries_.resize(self.addresses_.len());
+  for (usize i = 0; i < self.addresses_.len(); ++i) {
     Dl_info info;
     dladdr(self.addresses_[i], &info);
     self.entries_[i] = {

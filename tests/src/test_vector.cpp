@@ -125,7 +125,7 @@ public:
     events.push_back(Event{
         .kind       = Event::Kind::Free,
         .address    = mem.data(),
-        .byte_count = mem.size(),
+        .byte_count = mem.len(),
     });
   }
 
@@ -159,7 +159,7 @@ static void test_allocator(yacsl::testing::Test& /*test*/) {
              {
                  .kind       = TestAllocator::Event::Kind::Alloc,
                  .address    = mem.data(),
-                 .byte_count = mem.size(),
+                 .byte_count = mem.len(),
              },
          }));
   TestAllocator::events.clear();
@@ -171,7 +171,7 @@ static void test_allocator(yacsl::testing::Test& /*test*/) {
              {
                  .kind       = TestAllocator::Event::Kind::Free,
                  .address    = mem.data(),
-                 .byte_count = mem.size(),
+                 .byte_count = mem.len(),
              },
          }));
 }

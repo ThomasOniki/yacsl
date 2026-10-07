@@ -43,7 +43,7 @@ public:
   void format_to(this StackTrace const& self,
                  containers::String&    buf) noexcept {
     self.compute_entries();
-    for (usize i = 1; i < self.entries_.size(); ++i) {
+    for (usize i = 1; i < self.entries_.len(); ++i) {
       fmt::format_to(buf, "#{} {} in {} ({}+{#x})\n", i,
                      self.entries_[i].address, self.entries_[i].caller,
                      self.entries_[i].object,

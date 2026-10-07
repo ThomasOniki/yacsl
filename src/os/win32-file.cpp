@@ -66,13 +66,13 @@ File File::open_stderr() noexcept {
 usize File::write(this File& self, ranges::Slice<u8 const> data) noexcept {
   DWORD ret = 0;
   YACSL_TRY_SYSCALL(WriteFile(self.handle_, data.data(),
-                              static_cast<DWORD>(data.size()), &ret, nullptr));
+                              static_cast<DWORD>(data.len()), &ret, nullptr));
   return static_cast<usize>(ret);
 }
 usize File::read(this File& self, ranges::Slice<u8> buffer) noexcept {
   DWORD ret = 0;
   YACSL_TRY_SYSCALL(ReadFile(self.handle_, buffer.data(),
-                             static_cast<DWORD>(buffer.size()), &ret, nullptr));
+                             static_cast<DWORD>(buffer.len()), &ret, nullptr));
   return static_cast<usize>(ret);
 }
 

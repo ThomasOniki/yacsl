@@ -188,20 +188,20 @@ private:
         containers::String       buf;
         ranges::StringView const lvl_str =
             self.log_lvl_strings_.error[static_cast<u8>(msg.level)];
-        char* data = buf.grow(lvl_str.size() + msg.formatted.size() + 1);
+        char* data = buf.grow(lvl_str.len() + msg.formatted.len() + 1);
         memory::copy(lvl_str.slice(), data);
-        memory::copy(msg.formatted.slice(), data + lvl_str.size());
-        data[lvl_str.size() + msg.formatted.size()] = '\n';
+        memory::copy(msg.formatted.slice(), data + lvl_str.len());
+        data[lvl_str.len() + msg.formatted.len()] = '\n';
         self.error_.write(buf.bytes());
       }
     } else {
       containers::String       buf;
       ranges::StringView const lvl_str =
           self.log_lvl_strings_.output[static_cast<u8>(msg.level)];
-      char* data = buf.grow(lvl_str.size() + msg.formatted.size() + 1);
+      char* data = buf.grow(lvl_str.len() + msg.formatted.len() + 1);
       memory::copy(lvl_str.slice(), data);
-      memory::copy(msg.formatted.slice(), data + lvl_str.size());
-      data[lvl_str.size() + msg.formatted.size()] = '\n';
+      memory::copy(msg.formatted.slice(), data + lvl_str.len());
+      data[lvl_str.len() + msg.formatted.len()] = '\n';
       self.output_.write(buf.bytes());
     }
   }

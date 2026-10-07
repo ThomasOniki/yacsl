@@ -85,7 +85,7 @@ public:
 
   [[nodiscard]] containers::Option<ranges::Slice<u8, SizeT>>
   resize_in_place(ranges::Slice<u8, SizeT> data, SizeT new_size) noexcept {
-    u8* new_ptr = ptr_ + new_size - data.size();
+    u8* new_ptr = ptr_ + new_size - data.len();
     if (data.end() == ptr_ && new_ptr <= end_) {
       ptr_ = new_ptr;
       return {data.data(), new_size};

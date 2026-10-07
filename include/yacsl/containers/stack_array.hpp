@@ -20,7 +20,7 @@ template <typename T, usize N,
               meta::Conditional<(N > meta::Limits<u32>::MAX), usize, u32>>
 class StackArray {
 public:
-  [[nodiscard]] constexpr SizeT size(this StackArray const& /*self*/) noexcept {
+  [[nodiscard]] constexpr SizeT len(this StackArray const& /*self*/) noexcept {
     return static_cast<SizeT>(N);
   }
 
@@ -95,7 +95,7 @@ public:
 
 template <typename T, meta::Integral SizeT> class StackArray<T, 0, SizeT> {
 public:
-  [[nodiscard]] constexpr SizeT size(this StackArray const& /*self*/) noexcept {
+  [[nodiscard]] constexpr SizeT len(this StackArray const& /*self*/) noexcept {
     return 0;
   }
 
