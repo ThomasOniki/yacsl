@@ -1,3 +1,4 @@
+#include "test_utils.hpp"
 #include "yacsl/containers/stack_array.hpp"
 #include "yacsl/debug/log.hpp"
 #include "yacsl/fmt/format_string.hpp"
@@ -37,13 +38,9 @@ static void check(char const* expected) {
   // NOLINTNEXTLINE(android-cloexec-fopen)
   (void)fclose(truncated);
 
-  if (memcmp(static_cast<void*>(logs.data()),
-             static_cast<void const*>(buf.data()),
-             buf_size) != 0) { // NOLINTNEXTLINE(modernize-use-std-print)
-    fprintf(stderr, "Logging test failed. Expected\n%s,got\n%s.\n", buf.data(),
-            logs.data());
-    yacsl::testing::fail_quietly();
-  }
+  EXPECT(memcmp(static_cast<void*>(logs.data()),
+                static_cast<void const*>(buf.data()), buf_size) == 0,
+         "Expected\n%s,got\n%s.\n", buf.data(), logs.data());
 }
 
 namespace test_ns {
@@ -140,8 +137,7 @@ static void test_logging(yacsl::testing::Test& /*test*/) {
           u"bar",
           u"🤓",
           u"⭐",
-          (u"The emoji aren't padded correctly because they use 4 "
-           u"UTF-8 chars."),
+          u"The emoji aren't padded correctly because they use 4 UTF-8 chars.",
       });
   check("[INFO] char16_t string range: [***foo****, ***bar****, ***🤓***, "
         "***⭐****, "
@@ -187,17 +183,9 @@ static void test_logging(yacsl::testing::Test& /*test*/) {
 }
 
 int main() {
-  int                           ret   = 0;
   yacsl::containers::StackArray tests = {
       yacsl::testing::Test("logging", test_logging),
       yacsl::testing::Test("logging", test_logging),
   };
-  for (auto& test : tests) {
-    printf("Running test '%s'...\n", test.cstr_name());
-    if (test.run_quietly() == yacsl::testing::Test::Result::Failure) {
-      fprintf(stderr, "test '%s' failed.\n", test.cstr_name());
-      ret = 1;
-    }
-  }
-  return ret;
+  return run_tests(tests.slice());
 }

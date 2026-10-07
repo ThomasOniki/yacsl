@@ -23,6 +23,7 @@ Checks: >
   -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
   -cppcoreguidelines-c-copy-assignment-signature,
   -cppcoreguidelines-no-malloc,
+  -cppcoreguidelines-macro-usage,
   -misc-unconventional-assign-operator,
   -misc-non-private-member-variables-in-classes,
   -misc-use-anonymous-namespace,
