@@ -26,7 +26,7 @@ static void test(yacsl::testing::Test& /*test*/) noexcept {
     auto opt = ring.try_pop();
     if (opt != i) {
       if (opt.is_nil()) {
-        FAIL("Failed to pop from ring buffer.\n", stderr);
+        FAIL("Failed to pop from ring buffer.\n");
       } else {
         FAIL("The value poped from ring buffer was %zu, not %zu.\n",
              opt.value_unchecked(), i);
