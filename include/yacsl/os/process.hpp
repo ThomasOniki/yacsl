@@ -173,9 +173,9 @@ public:
     containers::Vector<char const*, 6> cstrs;
     cstrs.reserve(argv.size());
     for (char const* str : argv) {
-      cstrs.push_back(str);
+      cstrs.push(str);
     }
-    cstrs.push_back(nullptr);
+    cstrs.push(nullptr);
     return spawn(cstrs.data(), stdio);
   }
 
@@ -192,9 +192,9 @@ public:
     containers::Vector<char const*, 6>                       cstr_ptrs;
     cstr_ptrs.reserve(cstrs.len() + 1);
     for (auto& cstr : cstrs) {
-      cstr_ptrs.push_back(cstr.c_str());
+      cstr_ptrs.push(cstr.c_str());
     }
-    cstr_ptrs.push_back(nullptr);
+    cstr_ptrs.push(nullptr);
     return spawn(cstr_ptrs.data(), stdio);
   }
 

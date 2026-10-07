@@ -65,7 +65,7 @@ namespace yacsl::debug {
 //
 // private:
 //   void demangle_string(this Demangler& self) noexcept {
-//     self.substitute_beginings_.push_back(self.demangled_.len());
+//     self.substitute_beginings_.push(self.demangled_.len());
 //     bool const is_nested = self.skip('N');
 //
 //     for (bool is_first = true;; is_first = false) {
@@ -100,12 +100,12 @@ namespace yacsl::debug {
 //         if (submodule.is_substitution) {
 //           continue;
 //         }
-//         self.substitutes_.emplace_back(self.demangled_.len() + 1,
+//         self.substitutes_.push(self.demangled_.len() + 1,
 //                                        submodule.end +
 //                                        self.demangled_.len());
 //       }
 //       if (!is_substituted) {
-//         self.substitutes_.emplace_back(
+//         self.substitutes_.push(
 //             self.substitute_beginings_[self.substitute_beginings_.len() -
 //             1], self.demangled_.len());
 //       }
@@ -113,7 +113,7 @@ namespace yacsl::debug {
 //
 //       if (*self.mangled_ == 'I') {
 //         self.demangle_template_args();
-//         self.substitutes_.emplace_back(
+//         self.substitutes_.push(
 //             self.substitute_beginings_[self.substitute_beginings_.len() -
 //             1], self.demangled_.len());
 //       }
@@ -258,7 +258,7 @@ namespace yacsl::debug {
 //         self.demangle_template_arg();
 //       }
 //       if (self.template_nesting_level_ == 1) {
-//         self.template_args_.emplace_back(arg_begin, self.demangled_.len());
+//         self.template_args_.push(arg_begin, self.demangled_.len());
 //       }
 //       if (self.skip('E')) {
 //         break;
@@ -438,7 +438,7 @@ namespace yacsl::debug {
 //       }
 //
 //       memory::copy(to_add.slice(), bytes + 1);
-//       ret.submodules.emplace_back(ret.module_string.len(), is_substituted);
+//       ret.submodules.push(ret.module_string.len(), is_substituted);
 //     }
 //     return ret;
 //   }
