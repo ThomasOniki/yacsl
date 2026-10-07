@@ -63,11 +63,11 @@ public:
   }
 
   [[nodiscard]] constexpr T const&
-  front(this BasicStringView const& self) noexcept {
+  first(this BasicStringView const& self) noexcept {
     return self.data_[0];
   }
   [[nodiscard]] constexpr T const&
-  back(this BasicStringView const& self) noexcept {
+  last(this BasicStringView const& self) noexcept {
     return self.data_[self.len_ - 1];
   }
 

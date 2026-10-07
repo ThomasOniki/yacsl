@@ -62,12 +62,12 @@ public:
 
   template <typename Self>
   [[nodiscard]] constexpr auto&&
-  front(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
+  first(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
     return memory::forward<Self>(self).data_[0];
   }
   template <typename Self>
   [[nodiscard]] constexpr auto&&
-  back(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
+  last(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
     return memory::forward<Self>(self).data_[N - 1];
   }
 
@@ -141,14 +141,14 @@ public:
 
   template <typename Self>
   [[nodiscard]] constexpr auto&&
-  front(this Self&& /*self*/, debug::SourceLocation location =
+  first(this Self&& /*self*/, debug::SourceLocation location =
                                   debug::SourceLocation::current()) noexcept {
     debug::detail::extern_panic("Cannot index zero-length StackArray!\n",
                                 location);
   }
   template <typename Self>
   [[nodiscard]] constexpr auto&&
-  back(this Self&& /*self*/, debug::SourceLocation location =
+  last(this Self&& /*self*/, debug::SourceLocation location =
                                  debug::SourceLocation::current()) noexcept {
     debug::detail::extern_panic("Cannot index zero-length StackArray!\n",
                                 location);
