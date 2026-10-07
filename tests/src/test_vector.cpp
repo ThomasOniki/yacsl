@@ -7,6 +7,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "test_utils.hpp"
 #include "yacsl/containers/option.hpp"
 #include "yacsl/containers/stack_array.hpp"
 #include "yacsl/memory/alignment.hpp"
@@ -110,15 +111,9 @@ public:
   void deallocate(this TestAllocator& /*self*/,
                   yacsl::ranges::Slice<yacsl::u8, SizeT> mem) noexcept {
     if (mem.data() != nullptr) {
-      if (freed.contains(mem.data())) {
-        fputs("double free\n", stderr);
-        return;
-      }
-      if (!allocated.contains(mem.data())) {
-        fputs("unallocated free\n", stderr);
-        return;
-      }
-
+      EXPECT(!freed.contains(mem.data()), "double free\n");
+      EXPECT(allocated.contains(mem.data()),
+             "Tried to free unallocated pointer.\n");
       freed.emplace(mem.data());
 
 #ifdef _WIN32
@@ -153,54 +148,40 @@ using TestAllocatorSingleton =
 
 } // namespace
 
-static void test_allocator(yacsl::testing::Test& test) {
+static void test_allocator(yacsl::testing::Test& /*test*/) {
   TestAllocator::events.clear();
   TestAllocator allocator;
   // NOLINTNEXTLINE(misc-const-correctness)
   auto mem = allocator.allocate(10, yacsl::memory::Alignment{16});
 
-  if (TestAllocator::events !=
-      std::vector<TestAllocator::Event>({
-          {
-              .kind       = TestAllocator::Event::Kind::Alloc,
-              .address    = mem.data(),
-              .byte_count = mem.size(),
-          },
-      })) {
-    test.fail_quietly();
-    fprintf(stderr, "TestAllocator::events is incorrect.");
-  }
+  EXPECT(TestAllocator::events ==
+         std::vector<TestAllocator::Event>({
+             {
+                 .kind       = TestAllocator::Event::Kind::Alloc,
+                 .address    = mem.data(),
+                 .byte_count = mem.size(),
+             },
+         }));
   TestAllocator::events.clear();
 
   allocator.deallocate(mem);
 
-  if (TestAllocator::events !=
-      std::vector<TestAllocator::Event>({
-          {
-              .kind       = TestAllocator::Event::Kind::Alloc,
-              .address    = mem.data(),
-              .byte_count = mem.size(),
-          },
-      })) {
-    test.fail_quietly();
-    fprintf(stderr, "TestAllocator::events is incorrect.");
-  }
+  EXPECT(TestAllocator::events ==
+         std::vector<TestAllocator::Event>({
+             {
+                 .kind       = TestAllocator::Event::Kind::Free,
+                 .address    = mem.data(),
+                 .byte_count = mem.size(),
+             },
+         }));
 }
 
 int main() {
-  int ret = 0;
   fputs("TODO: proper vector tests\n", stderr);
   yacsl::containers::StackArray tests = {
       yacsl::testing::Test("allocator", test_allocator),
   };
-  for (auto& test : tests) {
-    printf("Running test '%s'...\n", test.cstr_name());
-    if (test.run_quietly() == yacsl::testing::Test::Result::Failure) {
-      fprintf(stderr, "test '%s' failed.\n", test.cstr_name());
-      ret = 1;
-    }
-  }
-  return ret;
+  return run_tests(tests.slice());
 }
 
 // NOLINTEND(bugprone-exception-escape)

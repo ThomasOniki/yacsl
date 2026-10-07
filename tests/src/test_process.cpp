@@ -1,16 +1,16 @@
-#include "yacsl/debug/assert.hpp"
-#include "yacsl/testing/expect.hpp"
-#include "yacsl/testing/test.hpp"
 #ifndef __EMSCRIPTEN__
 
 #include "yacsl/containers/stack_array.hpp"
 #include "yacsl/containers/stack_storage.hpp"
 #include "yacsl/containers/string.hpp"
+#include "yacsl/debug/assert.hpp"
 #include "yacsl/fmt/format_string.hpp"
 #include "yacsl/os/file.hpp"
 #include "yacsl/os/process.hpp"
 #include "yacsl/ranges/slice.hpp"
 #include "yacsl/ranges/string_view.hpp"
+#include "yacsl/testing/expect.hpp"
+#include "yacsl/testing/test.hpp"
 #include "yacsl/type_aliases.hpp"
 #include <fcntl.h>
 #include <limits.h>
