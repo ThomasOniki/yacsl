@@ -5,7 +5,6 @@
 #include "yacsl/containers/result.hpp"
 #include "yacsl/containers/string.hpp"
 #include "yacsl/ranges/slice.hpp"
-#include "yacsl/ranges/string_view.hpp"
 #include "yacsl/type_aliases.hpp"
 #include "yacsl/utils/isize.hpp"
 
@@ -41,6 +40,18 @@ public:
   [[nodiscard]] static File open_stdin() noexcept YACSL_API;
   [[nodiscard]] static File open_stdout() noexcept YACSL_API;
   [[nodiscard]] static File open_stderr() noexcept YACSL_API;
+
+  enum class AccessFlags : u8 {
+    Read    = 1U << 0U,
+    Write   = 1U << 1U,
+    Execute = 1U << 2U,
+  };
+  [[nodiscard]] static containers::Error<OpenError> access(char const* path,
+                                                           AccessFlags flags);
+  [[nodiscard]] static containers::Error<OpenError>
+  access(containers::String path, AccessFlags flags) {
+    return access(path.c_str(), flags);
+  }
 
   constexpr File() noexcept = default;
   ~File() noexcept { close(); }
@@ -118,6 +129,20 @@ constexpr File::OpenFlags operator&(File::OpenFlags lhs,
 }
 constexpr File::OpenFlags operator~(File::OpenFlags flags) noexcept {
   return File::OpenFlags(~static_cast<u8>(flags));
+}
+
+constexpr File::AccessFlags operator|(File::AccessFlags lhs,
+                                      File::AccessFlags rhs) noexcept {
+  return File::AccessFlags(
+      static_cast<u8>(static_cast<u8>(lhs) | static_cast<u8>(rhs)));
+}
+constexpr File::AccessFlags operator&(File::AccessFlags lhs,
+                                      File::AccessFlags rhs) noexcept {
+  return File::AccessFlags(
+      static_cast<u8>(static_cast<u8>(lhs) & static_cast<u8>(rhs)));
+}
+constexpr File::AccessFlags operator~(File::AccessFlags flags) noexcept {
+  return File::AccessFlags(~static_cast<u8>(flags));
 }
 
 } // namespace yacsl::os

@@ -7,6 +7,7 @@
 #include "yacsl/ranges/slice.hpp"
 #include "yacsl/type_aliases.hpp"
 #include "yacsl/utils/isize.hpp"
+#include "yacsl/utils/nil.hpp"
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -96,6 +97,31 @@ bool File::is_tty(this File const& self) noexcept {
     self.is_tty_ = static_cast<IsTtyFlag>(isatty(self.handle_));
   }
   return static_cast<bool>(self.is_tty_);
+}
+
+[[nodiscard]] containers::Error<File::OpenError>
+File::access(char const* path, AccessFlags flags) {
+  int mode = 0;
+  if (static_cast<u8>(flags & AccessFlags::Read) > 0) {
+    mode |= R_OK;
+  }
+  if (static_cast<u8>(flags & AccessFlags::Write) > 0) {
+    mode |= W_OK;
+  }
+  if (static_cast<u8>(flags & AccessFlags::Execute) > 0) {
+    mode |= X_OK;
+  }
+  if (::access(path, mode) == 0) {
+    return utils::NIL;
+  }
+  switch (errno) {
+  case ENOENT:
+    return OpenError::FileNotFound;
+  case EACCES:
+    return OpenError::PermissionDenied;
+  default:
+    debug::panic("access() failed: {}", errno_str());
+  }
 }
 
 } // namespace yacsl::os
