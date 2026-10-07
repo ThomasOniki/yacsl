@@ -12,7 +12,7 @@ template <meta::UnsignedIntegral T>
 constexpr char*
 itoa_from_end(YACSL_LIFETIMEBOUND char* buf_end, T value,
               ranges::StringView charset = "0123456789") noexcept {
-  u32 const base = static_cast<u32>(charset.size());
+  u32 const base = static_cast<u32>(charset.len());
   while (value >= base) {
     *--buf_end = charset[static_cast<u32>(value % base)];
     value      = static_cast<T>(value / base);
@@ -55,13 +55,13 @@ constexpr u32 count_digits(T value, u32 base = 10) noexcept {
 template <meta::Integral T>
 constexpr void itoa(char* buf, T value,
                     ranges::StringView charset = "0123456789") noexcept {
-  u32 const len = count_digits(value, static_cast<u32>(charset.size()));
+  u32 const len = count_digits(value, static_cast<u32>(charset.len()));
   itoa_from_end(buf + len, value, charset);
 }
 template <meta::Integral T>
 constexpr void itoa(containers::String& buf, T value,
                     ranges::StringView charset = "0123456789") noexcept {
-  u32 const len = count_digits(value, static_cast<u32>(charset.size()));
+  u32 const len = count_digits(value, static_cast<u32>(charset.len()));
   buf.grow(len);
   itoa_from_end(buf.end(), value, charset);
 }

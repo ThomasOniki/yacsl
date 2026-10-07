@@ -129,7 +129,7 @@ public:
     if (!self.is_value_) [[unlikely]] {
       debug::detail::extern_panic(
           cat_nttpstrings<"Option<",
-                          NTTPString<meta::TYPE_STRING<T>.size()>(
+                          NTTPString<meta::TYPE_STRING<T>.len()>(
                               meta::TYPE_STRING<T>),
                           "> is nil.">.view(),
           location);
@@ -224,7 +224,7 @@ public:
     if (!self.is_value_) [[unlikely]] {
       debug::detail::extern_panic(
           cat_nttpstrings<"Option<",
-                          NTTPString<meta::TYPE_STRING<T>.size()>(
+                          NTTPString<meta::TYPE_STRING<T>.len()>(
                               meta::TYPE_STRING<T>),
                           "> is nil.">.view(),
           location);

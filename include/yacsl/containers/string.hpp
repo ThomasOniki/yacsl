@@ -69,7 +69,7 @@ public:
   constexpr BasicString&
   append(this BasicString& self            YACSL_LIFETIMEBOUND,
          ranges::BasicStringView<T, SizeT> str) noexcept {
-    return self.append(str.data(), str.size());
+    return self.append(str.data(), str.len());
   }
   constexpr BasicString& append(this BasicString& self YACSL_LIFETIMEBOUND,
                                 T const*               cstr) noexcept {
@@ -77,7 +77,7 @@ public:
   }
   constexpr BasicString& append(this BasicString& self YACSL_LIFETIMEBOUND,
                                 BasicString const&     other) noexcept {
-    return self.append(other.begin(), other.size());
+    return self.append(other.begin(), other.len());
   }
 
   constexpr BasicString& append(this BasicString& self YACSL_LIFETIMEBOUND,
@@ -140,7 +140,7 @@ public:
   // for characters you want to memcpy into. It returns new_end - count.
   constexpr T* grow(this BasicString& self YACSL_LIFETIMEBOUND,
                     SizeT                  count) noexcept {
-    self.data_.resize(self.data_.size() + count);
+    self.data_.resize(self.data_.len() + count);
     return self.data_.end() - count;
   }
 
@@ -153,13 +153,13 @@ public:
   template <typename Self>
   [[nodiscard]] constexpr T*
   c_str(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
-    self.data_.reserve(self.data_.size() + 1);
-    self.data_[self.data_.size()] = '\0';
+    self.data_.reserve(self.data_.len() + 1);
+    self.data_[self.data_.len()] = '\0';
     return memory::forward<Self>(self).data_.data();
   }
 
-  [[nodiscard]] constexpr SizeT size(this BasicString const& self) noexcept {
-    return self.data_.size();
+  [[nodiscard]] constexpr SizeT len(this BasicString const& self) noexcept {
+    return self.data_.len();
   }
   [[nodiscard]] constexpr SizeT
   capacity(this BasicString const& self) noexcept {
@@ -188,7 +188,7 @@ public:
 
   [[nodiscard]] constexpr ranges::BasicStringView<T, SizeT>
   view(this BasicString const& self YACSL_LIFETIMEBOUND) noexcept {
-    return {self.data_.data(), self.data_.size()};
+    return {self.data_.data(), self.data_.len()};
   }
   template <typename Self>
   [[nodiscard]] constexpr ranges::Slice<meta::CopyCV<Self, T>, SizeT>

@@ -44,7 +44,7 @@ usize Process::Output::read(this Output&      self,
                             ranges::Slice<u8> buffer) noexcept {
   DWORD   ret    = 0;
   WINBOOL result = ReadFile(self.handle_, buffer.data(),
-                            static_cast<DWORD>(buffer.size()), &ret, nullptr);
+                            static_cast<DWORD>(buffer.len()), &ret, nullptr);
   if (result == FALSE) [[unlikely]] {
     DWORD err = GetLastError();
     if (err == ERROR_BROKEN_PIPE) {
@@ -57,11 +57,11 @@ usize Process::Output::read(this Output&      self,
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void Process::Input::write(this Input&             self,
                            ranges::Slice<u8 const> bytes) noexcept {
-  usize to_write = bytes.size();
+  usize to_write = bytes.len();
   while (to_write > 0) {
     DWORD written = 0;
     YACSL_TRY_SYSCALL(WriteFile(self.handle_, bytes.data(),
-                                static_cast<DWORD>(bytes.size()), &written,
+                                static_cast<DWORD>(bytes.len()), &written,
                                 nullptr));
     to_write -= static_cast<usize>(written);
   }
@@ -218,7 +218,7 @@ static containers::String make_command_line_string(char const* const* argv) {
 
     str += "\" ";
   }
-  str[str.size() - 1] = '\0';
+  str[str.len() - 1] = '\0';
 
   return str;
 }
@@ -299,7 +299,7 @@ static containers::String drain_pipe(Process::Output* output) noexcept {
     bytes  = ranges::Slice<char>(data.grow(result), read_size).bytes();
     result = output->read(bytes);
   }
-  return data.resize(data.size() - read_size);
+  return data.resize(data.len() - read_size);
 }
 
 void Process::cleanup_before_wait(this Process& self,

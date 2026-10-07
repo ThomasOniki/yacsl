@@ -54,7 +54,7 @@ template <meta::MutableType T>
 constexpr ranges::Slice<T>
 copy(ranges::Slice<meta::TypeIdentity<T> const> src,
      ranges::Slice<T> dst                       YACSL_LIFETIMEBOUND) noexcept {
-  usize const size = dst.size() < src.size() ? dst.size() : src.size();
+  usize const size = dst.len() < src.len() ? dst.len() : src.len();
   if (!utils::is_constant_evaluated() && meta::TriviallyCopyable<T>) {
     return {
         static_cast<T*>(::memcpy(dst.data(), src.data(), size * sizeof(T))),
@@ -71,14 +71,14 @@ constexpr ranges::Slice<T> copy(ranges::Slice<meta::TypeIdentity<T> const> src,
                                 T* dst YACSL_LIFETIMEBOUND) noexcept {
   if (!utils::is_constant_evaluated() && meta::TriviallyCopyable<T>) {
     return {
-        static_cast<T*>(::memcpy(dst, src.data(), src.size() * sizeof(T))),
-        src.size(),
+        static_cast<T*>(::memcpy(dst, src.data(), src.len() * sizeof(T))),
+        src.len(),
     };
   }
-  for (usize i = 0; i < src.size(); ++i) {
+  for (usize i = 0; i < src.len(); ++i) {
     dst[i] = src[i];
   }
-  return {dst, src.size()};
+  return {dst, src.len()};
 }
 
 } // namespace yacsl::memory

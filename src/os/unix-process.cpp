@@ -48,17 +48,17 @@ struct State {
 usize Process::Output::read(this Output&      self,
                             ranges::Slice<u8> buffer) noexcept {
   return static_cast<usize>(
-      YACSL_TRY_SYSCALL(::read(self.handle_, buffer.data(), buffer.size())));
+      YACSL_TRY_SYSCALL(::read(self.handle_, buffer.data(), buffer.len())));
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void Process::Input::write(this Input&             self,
                            ranges::Slice<u8 const> bytes) noexcept {
   usize written = static_cast<usize>(
-      YACSL_TRY_SYSCALL(::write(self.handle_, bytes.data(), bytes.size())));
-  while (written < bytes.size()) {
+      YACSL_TRY_SYSCALL(::write(self.handle_, bytes.data(), bytes.len())));
+  while (written < bytes.len()) {
     written += static_cast<usize>(YACSL_TRY_SYSCALL(
-        ::write(self.handle_, &bytes[written], bytes.size() - written)));
+        ::write(self.handle_, &bytes[written], bytes.len() - written)));
   }
 }
 
@@ -227,7 +227,7 @@ static containers::String drain_pipe(Process::Output* output) noexcept {
     bytes  = ranges::Slice<char>(data.grow(result), PIPE_BUF).bytes();
     result = output->read(bytes);
   }
-  return data.resize(data.size() - PIPE_BUF);
+  return data.resize(data.len() - PIPE_BUF);
 }
 
 void Process::cleanup_before_wait(this Process& self,
