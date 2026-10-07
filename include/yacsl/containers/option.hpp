@@ -105,11 +105,6 @@ public:
                                           utils::Nil /*nil*/) noexcept {
     return !self.is_value_;
   }
-  [[nodiscard]] constexpr bool operator!=(this Option const& self,
-                                          utils::Nil /*nil*/) noexcept {
-    return self.is_value_;
-  }
-
   [[nodiscard]] constexpr bool operator==(this Option const& self,
                                           T const&           value) noexcept {
     return self.is_value_ && *self.value_ == value;
@@ -200,10 +195,6 @@ public:
   [[nodiscard]] constexpr bool operator==(this Option const& self,
                                           utils::Nil /*nil*/) noexcept {
     return self.ptr_ == nullptr;
-  }
-  [[nodiscard]] constexpr bool operator!=(this Option const& self,
-                                          utils::Nil /*nil*/) noexcept {
-    return self.ptr_ != nullptr;
   }
   [[nodiscard]] constexpr bool operator==(
       this Option const&                                     self,
