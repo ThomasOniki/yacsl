@@ -76,6 +76,6 @@ CheckOptions:
   - key: readability-function-size.IgnoreMacros
     value: true
   - key: misc-include-cleaner.IgnoreHeaders
-    value: 'sys/fcntl\.h;sys/types\.h;sys/_types/.*\.h;_abort\.h;sys/syslimits\.h;_stdio\.h;stdio\.h'
+    value: 'sys/fcntl\.h;sys/unistd\.h;sys/types\.h;sys/_types/.*\.h;_abort\.h;sys/syslimits\.h;_stdio\.h;stdio\.h'
   - key: performance-unnecessary-value-param.AllowedTypes
     value: "yacsl::Slice.*"
