@@ -159,9 +159,9 @@ public:
   };
 
   struct Stdio {
-    alignas(128) Input::Init input;
-    Output::Init output;
-    Output::Init error;
+    alignas(128) Input::Init input = Input::Null;
+    Output::Init output            = Output::Null;
+    Output::Init error             = Output::Null;
   };
 
   [[nodiscard]] static containers::Result<Process, SpawnError>
