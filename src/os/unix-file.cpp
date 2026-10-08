@@ -1,6 +1,7 @@
 #ifndef _WIN32
 
 #include "unix-utils.hpp"
+#include "yacsl/containers/error.hpp"
 #include "yacsl/containers/result.hpp"
 #include "yacsl/debug/panic.hpp"
 #include "yacsl/os/file.hpp"
@@ -101,7 +102,7 @@ bool File::is_tty(this File const& self) noexcept {
 
 [[nodiscard]] containers::Error<File::OpenError>
 File::access(char const* path, AccessFlags flags) {
-  int mode = 0;
+  unsigned int mode = 0;
   if (static_cast<u8>(flags & AccessFlags::Read) > 0) {
     mode |= R_OK;
   }
@@ -111,7 +112,7 @@ File::access(char const* path, AccessFlags flags) {
   if (static_cast<u8>(flags & AccessFlags::Execute) > 0) {
     mode |= X_OK;
   }
-  if (::access(path, mode) == 0) {
+  if (::access(path, static_cast<int>(mode)) == 0) {
     return utils::NIL;
   }
   switch (errno) {
