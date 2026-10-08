@@ -69,16 +69,15 @@ void Process::Input::write(this Input&             self,
 void Process::open_files(this Process& self, void* pvoid_state) noexcept {
   State& state = *static_cast<State*>(pvoid_state);
   if (self.stdin_type_ == TYPE_FILE) {
-    state.info.hStdInput =
-        open_file_handle(state.opts->input.file_info_.path,
-                         state.opts->input.file_info_.flags |
-                             File::OpenFlags::Read |
-                             File::OpenFlags::DontCloseOnExec)
-            .value();
+    state.info.hStdInput = open_file_handle(state.opts->input.file_info_.path,
+                                            state.opts->input.file_info_.flags |
+                                                File::OpenFlags::Read |
+                                                File::OpenFlags::Inheritable)
+                               .value();
   } else if (self.stdin_type_ == Null) {
     state.info.hStdInput =
-        open_file_handle("NUL", File::OpenFlags::Read |
-                                    File::OpenFlags::DontCloseOnExec)
+        open_file_handle("NUL",
+                         File::OpenFlags::Read | File::OpenFlags::Inheritable)
             .value();
   }
   if (self.stdout_type_ == TYPE_FILE) {
@@ -86,25 +85,24 @@ void Process::open_files(this Process& self, void* pvoid_state) noexcept {
         open_file_handle(state.opts->output.file_info_.path,
                          state.opts->output.file_info_.flags |
                              File::OpenFlags::Write |
-                             File::OpenFlags::DontCloseOnExec)
+                             File::OpenFlags::Inheritable)
             .value();
   } else if (self.stdout_type_ == Null) {
     state.info.hStdOutput =
-        open_file_handle("NUL", File::OpenFlags::Write |
-                                    File::OpenFlags::DontCloseOnExec)
+        open_file_handle("NUL",
+                         File::OpenFlags::Write | File::OpenFlags::Inheritable)
             .value();
   }
   if (self.stderr_type_ == TYPE_FILE) {
-    state.info.hStdError =
-        open_file_handle(state.opts->error.file_info_.path,
-                         state.opts->error.file_info_.flags |
-                             File::OpenFlags::Write |
-                             File::OpenFlags::DontCloseOnExec)
-            .value();
+    state.info.hStdError = open_file_handle(state.opts->error.file_info_.path,
+                                            state.opts->error.file_info_.flags |
+                                                File::OpenFlags::Write |
+                                                File::OpenFlags::Inheritable)
+                               .value();
   } else if (self.stderr_type_ == Null) {
     state.info.hStdError =
-        open_file_handle("NUL", File::OpenFlags::Write |
-                                    File::OpenFlags::DontCloseOnExec)
+        open_file_handle("NUL",
+                         File::OpenFlags::Write | File::OpenFlags::Inheritable)
             .value();
   }
 }

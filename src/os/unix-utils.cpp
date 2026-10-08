@@ -18,7 +18,7 @@ int unix_flags(File::OpenFlags flags) noexcept {
   if (strip_file_open_flag(&flags, File::OpenFlags::Create)) {
     ret |= O_CREAT;
   }
-  if (!strip_file_open_flag(&flags, File::OpenFlags::DontCloseOnExec)) {
+  if (!strip_file_open_flag(&flags, File::OpenFlags::Inheritable)) {
     ret |= O_CLOEXEC;
   }
   if (flags == File::OpenFlags::Read) {
