@@ -7,7 +7,6 @@
 #include "yacsl/os/process.hpp"
 #include "yacsl/ranges/slice.hpp"
 #include "yacsl/type_aliases.hpp"
-#include "yacsl/utils/nil.hpp"
 #include <consoleapi.h>
 #include <consoleapi2.h>
 #include <errhandlingapi.h>
@@ -32,7 +31,7 @@ static constexpr auto TYPE_OTHER_PIPE = Type{255};
 namespace {
 struct State {
   STARTUPINFOA                      info;
-  Process::Stdio const*             stdio;
+  Process::SpawnOpts const*         opts;
   containers::StackArray<HANDLE, 2> stdin_pipe;
   containers::StackArray<HANDLE, 2> stdout_pipe;
   containers::StackArray<HANDLE, 2> stderr_pipe;
@@ -71,8 +70,8 @@ void Process::open_files(this Process& self, void* pvoid_state) noexcept {
   State& state = *static_cast<State*>(pvoid_state);
   if (self.stdin_type_ == TYPE_FILE) {
     state.info.hStdInput =
-        open_file_handle(state.stdio->input.file_info_.path,
-                         state.stdio->input.file_info_.flags |
+        open_file_handle(state.opts->input.file_info_.path,
+                         state.opts->input.file_info_.flags |
                              File::OpenFlags::Read |
                              File::OpenFlags::DontCloseOnExec)
             .value();
@@ -84,8 +83,8 @@ void Process::open_files(this Process& self, void* pvoid_state) noexcept {
   }
   if (self.stdout_type_ == TYPE_FILE) {
     state.info.hStdOutput =
-        open_file_handle(state.stdio->output.file_info_.path,
-                         state.stdio->output.file_info_.flags |
+        open_file_handle(state.opts->output.file_info_.path,
+                         state.opts->output.file_info_.flags |
                              File::OpenFlags::Write |
                              File::OpenFlags::DontCloseOnExec)
             .value();
@@ -97,8 +96,8 @@ void Process::open_files(this Process& self, void* pvoid_state) noexcept {
   }
   if (self.stderr_type_ == TYPE_FILE) {
     state.info.hStdError =
-        open_file_handle(state.stdio->error.file_info_.path,
-                         state.stdio->error.file_info_.flags |
+        open_file_handle(state.opts->error.file_info_.path,
+                         state.opts->error.file_info_.flags |
                              File::OpenFlags::Write |
                              File::OpenFlags::DontCloseOnExec)
             .value();
@@ -131,7 +130,7 @@ void Process::create_pipes(this Process& self, void* pvoid_state) noexcept {
     state.info.hStdInput      = state.stdin_pipe[0];
     self.stdin_input_.handle_ = state.stdin_pipe[1];
   } else if (self.stdin_type_ == TYPE_OTHER_PIPE) {
-    state.info.hStdInput = state.stdio->input.other_pipe_handle_;
+    state.info.hStdInput = state.opts->input.other_pipe_handle_;
     YACSL_TRY_SYSCALL(SetHandleInformation(
         state.info.hStdInput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT));
   }
@@ -142,7 +141,7 @@ void Process::create_pipes(this Process& self, void* pvoid_state) noexcept {
     state.info.hStdOutput       = state.stdout_pipe[1];
     self.stdout_output_.handle_ = state.stdout_pipe[0];
   } else if (self.stdout_type_ == TYPE_OTHER_PIPE) {
-    state.info.hStdOutput = state.stdio->output.other_pipe_handle_;
+    state.info.hStdOutput = state.opts->output.other_pipe_handle_;
     YACSL_TRY_SYSCALL(SetHandleInformation(
         state.info.hStdOutput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT));
   }
@@ -153,7 +152,7 @@ void Process::create_pipes(this Process& self, void* pvoid_state) noexcept {
     state.info.hStdError        = state.stderr_pipe[1];
     self.stderr_output_.handle_ = state.stderr_pipe[0];
   } else if (self.stderr_type_ == TYPE_OTHER_PIPE) {
-    state.info.hStdError = state.stdio->error.other_pipe_handle_;
+    state.info.hStdError = state.opts->error.other_pipe_handle_;
     YACSL_TRY_SYSCALL(SetHandleInformation(
         state.info.hStdError, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT));
   }
@@ -168,21 +167,21 @@ void Process::cleanup_after_spawn(this Process& self,
   } else if (self.stdin_type_ == Pipe) {
     YACSL_TRY_SYSCALL(CloseHandle(state.stdin_pipe[0]));
   } else if (self.stdin_type_ == TYPE_OTHER_PIPE) {
-    YACSL_TRY_SYSCALL(CloseHandle(state.stdio->input.other_pipe_handle_));
+    YACSL_TRY_SYSCALL(CloseHandle(state.opts->input.other_pipe_handle_));
   }
   if (self.stdout_type_ == TYPE_FILE || self.stdout_type_ == Type::Null) {
     YACSL_TRY_SYSCALL(CloseHandle(state.info.hStdOutput));
   } else if (self.stdout_type_ == Pipe) {
     YACSL_TRY_SYSCALL(CloseHandle(state.stdout_pipe[1]));
   } else if (self.stdout_type_ == TYPE_OTHER_PIPE) {
-    YACSL_TRY_SYSCALL(CloseHandle(state.stdio->output.other_pipe_handle_));
+    YACSL_TRY_SYSCALL(CloseHandle(state.opts->output.other_pipe_handle_));
   }
   if (self.stderr_type_ == TYPE_FILE || self.stderr_type_ == Type::Null) {
     YACSL_TRY_SYSCALL(CloseHandle(state.info.hStdError));
   } else if (self.stderr_type_ == Pipe) {
     YACSL_TRY_SYSCALL(CloseHandle(state.stderr_pipe[1]));
   } else if (self.stderr_type_ == TYPE_OTHER_PIPE) {
-    YACSL_TRY_SYSCALL(CloseHandle(state.stdio->error.other_pipe_handle_));
+    YACSL_TRY_SYSCALL(CloseHandle(state.opts->error.other_pipe_handle_));
   }
 }
 
@@ -224,11 +223,11 @@ static containers::String make_command_line_string(char const* const* argv) {
 }
 
 containers::Result<Process, Process::SpawnError>
-Process::spawn(char const* const* argv, Stdio const& stdio) noexcept {
+Process::spawn(char const* const* argv, SpawnOpts const& opts) noexcept {
   Process spawned;
-  spawned.stdin_type_  = stdio.input.type_;
-  spawned.stdout_type_ = stdio.output.type_;
-  spawned.stderr_type_ = stdio.error.type_;
+  spawned.stdin_type_  = opts.input.type_;
+  spawned.stdout_type_ = opts.output.type_;
+  spawned.stderr_type_ = opts.error.type_;
 
   State state = {
       .info =
@@ -258,7 +257,7 @@ Process::spawn(char const* const* argv, Stdio const& stdio) noexcept {
                                      ? GetStdHandle(STD_ERROR_HANDLE)
                                      : nullptr,
           },
-      .stdio       = &stdio,
+      .opts        = &opts,
       .stdin_pipe  = {},
       .stdout_pipe = {},
       .stderr_pipe = {},
@@ -270,10 +269,15 @@ Process::spawn(char const* const* argv, Stdio const& stdio) noexcept {
   PROCESS_INFORMATION proc_info = {};
 
   containers::String cmdline = make_command_line_string(argv);
+  containers::String cwd;
+  if (opts.cwd.data() != nullptr) {
+    cwd = opts.cwd;
+  }
 
   if (CreateProcessA(nullptr, cmdline.c_str(), nullptr, nullptr, TRUE,
-                     CREATE_NEW_PROCESS_GROUP, nullptr, nullptr, &state.info,
-                     &proc_info) == FALSE) [[unlikely]] {
+                     CREATE_NEW_PROCESS_GROUP, nullptr,
+                     opts.cwd.data() == nullptr ? nullptr : cwd.c_str(),
+                     &state.info, &proc_info) == FALSE) [[unlikely]] {
     DWORD const err = GetLastError();
     if (err == ERROR_FILE_NOT_FOUND) {
       return SpawnError::FileNotFound;
