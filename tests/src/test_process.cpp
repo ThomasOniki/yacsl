@@ -515,11 +515,13 @@ int main() {
             .error  = stderr_type,
         };
 
-        yacsl::testing::Test test(
-            yacsl::fmt::format("{}, {}, {}", stdin_type, stdout_type,
-                               stderr_type)
-                .c_str(),
-            [](yacsl::testing::Test& /*test*/) { test_run_c(io_types()); });
+        yacsl::testing::Test test(yacsl::fmt::format("{}, {}, {}", stdin_type,
+                                                     stdout_type, stderr_type)
+                                      .c_str(),
+                                  [](yacsl::testing::Test& /*test*/) {
+                                    yacsl::debug::flush_logger();
+                                    test_run_c(io_types());
+                                  });
 
         test.run();
       }
