@@ -13,13 +13,13 @@ namespace yacsl::os {
 class File {
 public:
   enum class OpenFlags : u8 {
-    None            = 0,
-    Read            = 1U << 0U,
-    Write           = 1U << 1U,
-    Trunc           = 1U << 2U,
-    Create          = 1U << 3U,
-    SeekEnd         = 1U << 4U,
-    DontCloseOnExec = 1U << 5U,
+    None        = 0,
+    Read        = 1U << 0U,
+    Write       = 1U << 1U,
+    Trunc       = 1U << 2U,
+    Create      = 1U << 3U,
+    SeekEnd     = 1U << 4U,
+    Inheritable = 1U << 5U,
   };
 
   enum class OpenError : u8 {
