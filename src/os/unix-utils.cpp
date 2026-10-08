@@ -20,6 +20,9 @@ int unix_flags(File::OpenFlags flags) noexcept {
   }
   if (!strip_file_open_flag(&flags, File::OpenFlags::Inheritable)) {
     ret |= O_CLOEXEC;
+#ifdef O_CLOFORK
+    ret |= O_CLOFORK;
+#endif
   }
   if (flags == File::OpenFlags::Read) {
     ret |= O_RDONLY;
