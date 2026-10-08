@@ -129,11 +129,11 @@ public:
     });
   }
 
-  yacsl::containers::Option<yacsl::ranges::Slice<yacsl::u8, SizeT>>
+  yacsl::ranges::Slice<yacsl::u8, SizeT>
   resize_in_place(this TestAllocator& /*self*/,
                   yacsl::ranges::Slice<yacsl::u8, SizeT> /*mem*/,
                   SizeT /*new_size*/) {
-    return yacsl::utils::NIL;
+    return {nullptr, 0UZ};
   }
 
 private:

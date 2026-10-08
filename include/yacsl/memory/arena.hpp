@@ -2,7 +2,6 @@
 
 #include "yacsl/compiler/attributes.hpp"
 #include "yacsl/compiler/export.hpp"
-#include "yacsl/containers/option.hpp"
 #include "yacsl/memory/alignment.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/memory/singleton_allocator.hpp"
@@ -10,7 +9,6 @@
 #include "yacsl/ranges/slice.hpp"
 #include "yacsl/type_aliases.hpp"
 #include "yacsl/utils/constants.hpp"
-#include "yacsl/utils/nil.hpp"
 
 namespace yacsl::memory {
 
@@ -83,14 +81,14 @@ public:
     }
   }
 
-  [[nodiscard]] containers::Option<ranges::Slice<u8, SizeT>>
+  [[nodiscard]] ranges::Slice<u8, SizeT>
   resize_in_place(ranges::Slice<u8, SizeT> data, SizeT new_size) noexcept {
     u8* new_ptr = ptr_ + new_size - data.len();
     if (data.end() == ptr_ && new_ptr <= end_) {
       ptr_ = new_ptr;
       return {data.data(), new_size};
     }
-    return utils::NIL;
+    return {nullptr, 0UZ};
   }
 
   [[nodiscard]] constexpr bool operator==(this Arena const& self,
