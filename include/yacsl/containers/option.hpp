@@ -1,9 +1,7 @@
 #pragma once
 
-#include "yacsl/containers/nttp_string.hpp"
 #include "yacsl/containers/stack_storage.hpp"
-#include "yacsl/debug/_extern_functions.hpp"
-#include "yacsl/debug/source_location.hpp"
+#include "yacsl/debug/assert.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/meta/conditional.hpp"
 #include "yacsl/meta/qualifiers.hpp"
@@ -118,29 +116,16 @@ public:
   }
 
   template <typename Self>
-  [[nodiscard]] constexpr auto&&
-  value(this Self&& self, debug::SourceLocation location =
-                              debug::SourceLocation::current()) noexcept {
-    if (!self.is_value_) [[unlikely]] {
-      debug::detail::extern_panic(
-          cat_nttpstrings<"Option<",
-                          NTTPString<meta::TYPE_STRING<T>.len()>(
-                              meta::TYPE_STRING<T>),
-                          "> is nil.">.view(),
-          location);
-    }
+  [[nodiscard]] constexpr auto&& value(this Self&& self) noexcept {
+    yacsl::debug::assert_(self.is_value_, "Option<{}> is nil.",
+                          meta::TYPE_STRING<T>);
     return *memory::forward<Self>(self).value_;
   }
   template <typename Self>
   [[nodiscard]] constexpr auto&& value_unchecked(this Self&& self) noexcept {
-#ifdef NDEBUG
-    if (!self.is_value_) [[unlikely]] {
-      __builtin_unreachable();
-    }
+    yacsl::debug::assert_unchecked(self.is_value_, "Option<{}> is nil.",
+                                   meta::TYPE_STRING<T>);
     return *memory::forward<Self>(self).value_;
-#else
-    return memory::forward<Self>(self).value();
-#endif
   }
 
   template <typename Self, typename F>
@@ -209,30 +194,17 @@ private:
 
 public:
   template <typename Self>
-  [[nodiscard]] constexpr Forwarded<Self>
-  value(this Self&& self, debug::SourceLocation location =
-                              debug::SourceLocation::current()) noexcept {
-    if (!self.is_value_) [[unlikely]] {
-      debug::detail::extern_panic(
-          cat_nttpstrings<"Option<",
-                          NTTPString<meta::TYPE_STRING<T>.len()>(
-                              meta::TYPE_STRING<T>),
-                          "> is nil.">.view(),
-          location);
-    }
+  [[nodiscard]] constexpr Forwarded<Self> value(this Self&& self) noexcept {
+    yacsl::debug::assert_(self.ptr_ != nullptr, "Option<{}> is nil.",
+                          meta::TYPE_STRING<T>);
     return *memory::forward<Self>(self).ptr_;
   }
   template <typename Self>
   [[nodiscard]] constexpr Forwarded<Self>
   value_unchecked(this Self&& self) noexcept {
-#ifdef NDEBUG
-    if (!self.is_value_) [[unlikely]] {
-      __builtin_unreachable();
-    }
+    yacsl::debug::assert_unchecked(self.ptr_ != nullptr, "Option<{}> is nil.",
+                                   meta::TYPE_STRING<T>);
     return *memory::forward<Self>(self).ptr_;
-#else
-    return memory::forward<Self>(self).value();
-#endif
   }
 
 private:
