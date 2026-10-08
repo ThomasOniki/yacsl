@@ -31,7 +31,7 @@ static constexpr auto TYPE_OTHER_PIPE = Type{255};
 namespace {
 struct State {
   alignas(64) posix_spawn_file_actions_t file_actions;
-  Process::Stdio const*          stdio;
+  Process::SpawnOpts const*      opts;
   containers::StackArray<int, 2> stdin_pipe;
   containers::StackArray<int, 2> stdout_pipe;
   containers::StackArray<int, 2> stderr_pipe;
@@ -79,24 +79,24 @@ void Process::open_files(this Process& self, void* pvoid_state) noexcept {
   State& state = *static_cast<State*>(pvoid_state);
   if (self.stdin_type_ == TYPE_FILE) {
     redirect_child_stdio_to_file(
-        &state.file_actions, state.stdio->input.file_info_.flags,
-        state.stdio->input.file_info_.path, STDIN_FILENO);
+        &state.file_actions, state.opts->input.file_info_.flags,
+        state.opts->input.file_info_.path, STDIN_FILENO);
   } else if (self.stdin_type_ == Null) {
     redirect_child_stdio_to_file(&state.file_actions, File::OpenFlags::None,
                                  "/dev/null", STDIN_FILENO);
   }
   if (self.stdout_type_ == TYPE_FILE) {
     redirect_child_stdio_to_file(
-        &state.file_actions, state.stdio->output.file_info_.flags,
-        state.stdio->output.file_info_.path, STDOUT_FILENO);
+        &state.file_actions, state.opts->output.file_info_.flags,
+        state.opts->output.file_info_.path, STDOUT_FILENO);
   } else if (self.stdout_type_ == Null) {
     redirect_child_stdio_to_file(&state.file_actions, File::OpenFlags::None,
                                  "/dev/null", STDOUT_FILENO);
   }
   if (self.stderr_type_ == TYPE_FILE) {
     redirect_child_stdio_to_file(
-        &state.file_actions, state.stdio->error.file_info_.flags,
-        state.stdio->error.file_info_.path, STDERR_FILENO);
+        &state.file_actions, state.opts->error.file_info_.flags,
+        state.opts->error.file_info_.path, STDERR_FILENO);
   } else if (self.stderr_type_ == Null) {
     redirect_child_stdio_to_file(&state.file_actions, File::OpenFlags::None,
                                  "/dev/null", STDERR_FILENO);
@@ -117,10 +117,10 @@ void Process::create_pipes(this Process& self, void* pvoid_state) noexcept {
                                                    state.stdin_pipe[1]));
   } else if (self.stdin_type_ == TYPE_OTHER_PIPE) {
     CHECK_RETURN(posix_spawn_file_actions_adddup2(
-        &state.file_actions, state.stdio->input.other_pipe_handle_,
+        &state.file_actions, state.opts->input.other_pipe_handle_,
         STDIN_FILENO));
     CHECK_RETURN(posix_spawn_file_actions_addclose(
-        &state.file_actions, state.stdio->input.other_pipe_handle_));
+        &state.file_actions, state.opts->input.other_pipe_handle_));
   }
   if (self.stdout_type_ == Pipe) {
     YACSL_TRY_SYSCALL(::pipe(state.stdout_pipe.data()));
@@ -133,10 +133,10 @@ void Process::create_pipes(this Process& self, void* pvoid_state) noexcept {
                                                    state.stdout_pipe[1]));
   } else if (self.stdout_type_ == TYPE_OTHER_PIPE) {
     CHECK_RETURN(posix_spawn_file_actions_adddup2(
-        &state.file_actions, state.stdio->output.other_pipe_handle_,
+        &state.file_actions, state.opts->output.other_pipe_handle_,
         STDOUT_FILENO));
     CHECK_RETURN(posix_spawn_file_actions_addclose(
-        &state.file_actions, state.stdio->output.other_pipe_handle_));
+        &state.file_actions, state.opts->output.other_pipe_handle_));
   }
   if (self.stderr_type_ == Pipe) {
     YACSL_TRY_SYSCALL(::pipe(state.stderr_pipe.data()));
@@ -149,10 +149,10 @@ void Process::create_pipes(this Process& self, void* pvoid_state) noexcept {
                                                    state.stderr_pipe[1]));
   } else if (self.stderr_type_ == TYPE_OTHER_PIPE) {
     CHECK_RETURN(posix_spawn_file_actions_adddup2(
-        &state.file_actions, state.stdio->error.other_pipe_handle_,
+        &state.file_actions, state.opts->error.other_pipe_handle_,
         STDERR_FILENO));
     CHECK_RETURN(posix_spawn_file_actions_addclose(
-        &state.file_actions, state.stdio->error.other_pipe_handle_));
+        &state.file_actions, state.opts->error.other_pipe_handle_));
   }
   // NOLINTEND(android-cloexec-pipe)
 }
@@ -165,38 +165,43 @@ void Process::cleanup_after_spawn(this Process& self,
   if (self.stdin_type_ == Pipe) {
     YACSL_TRY_SYSCALL(close(state.stdin_pipe[0]));
   } else if (self.stdin_type_ == TYPE_OTHER_PIPE) {
-    YACSL_TRY_SYSCALL(close(state.stdio->input.other_pipe_handle_));
+    YACSL_TRY_SYSCALL(close(state.opts->input.other_pipe_handle_));
   }
   if (self.stdout_type_ == Pipe) {
     YACSL_TRY_SYSCALL(close(state.stdout_pipe[1]));
   } else if (self.stdout_type_ == TYPE_OTHER_PIPE) {
-    YACSL_TRY_SYSCALL(close(state.stdio->output.other_pipe_handle_));
+    YACSL_TRY_SYSCALL(close(state.opts->output.other_pipe_handle_));
   }
   if (self.stderr_type_ == Pipe) {
     YACSL_TRY_SYSCALL(close(state.stderr_pipe[1]));
   } else if (self.stderr_type_ == TYPE_OTHER_PIPE) {
-    YACSL_TRY_SYSCALL(close(state.stdio->error.other_pipe_handle_));
+    YACSL_TRY_SYSCALL(close(state.opts->error.other_pipe_handle_));
   }
 }
 
 extern "C" char** environ;
 
 containers::Result<Process, Process::SpawnError>
-Process::spawn(char const* const* argv, Stdio const& stdio) noexcept {
+Process::spawn(char const* const* argv, SpawnOpts const& opts) noexcept {
   Process spawned;
-  spawned.stdin_type_  = stdio.input.type_;
-  spawned.stdout_type_ = stdio.output.type_;
-  spawned.stderr_type_ = stdio.error.type_;
+  spawned.stdin_type_  = opts.input.type_;
+  spawned.stdout_type_ = opts.output.type_;
+  spawned.stderr_type_ = opts.error.type_;
 
   State state = {
       .file_actions = {},
-      .stdio        = &stdio,
+      .opts         = &opts,
       .stdin_pipe   = {-1, -1},
       .stdout_pipe  = {-1, -1},
       .stderr_pipe  = {-1, -1},
   };
 
   CHECK_RETURN(posix_spawn_file_actions_init(&state.file_actions));
+
+  if (opts.cwd.data() != nullptr) {
+    posix_spawn_file_actions_addchdir(&state.file_actions,
+                                      containers::String(opts.cwd).c_str());
+  }
 
   spawned.open_files(&state);
   spawned.create_pipes(&state);

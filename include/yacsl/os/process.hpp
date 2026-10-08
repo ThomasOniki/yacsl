@@ -3,6 +3,7 @@
 #ifndef __EMSCRIPTEN__
 #include "yacsl/compiler/attributes.hpp"
 #include "yacsl/compiler/export.hpp"
+#include "yacsl/containers/option.hpp"
 #include "yacsl/containers/result.hpp"
 #include "yacsl/containers/string.hpp"
 #include "yacsl/containers/vector.hpp"
@@ -158,18 +159,19 @@ public:
     FileNotFound = 1,
   };
 
-  struct Stdio {
-    alignas(128) Input::Init input = Input::Null;
-    Output::Init output            = Output::Null;
-    Output::Init error             = Output::Null;
+  struct SpawnOpts {
+    Input::Init        input  = Input::Null;
+    Output::Init       output = Output::Null;
+    Output::Init       error  = Output::Null;
+    ranges::StringView cwd    = {nullptr, 0UZ};
   };
 
   [[nodiscard]] static containers::Result<Process, SpawnError>
-  spawn(char const* const* argv, Stdio const& stdio) noexcept YACSL_API;
+  spawn(char const* const* argv, SpawnOpts const& opts) noexcept YACSL_API;
 
   [[nodiscard]] static containers::Result<Process, SpawnError>
   spawn(ranges::InitializerList<char const*> argv,
-        Stdio const&                         stdio) noexcept {
+        SpawnOpts const&                     stdio) noexcept {
     containers::Vector<char const*, 6> cstrs;
     cstrs.reserve(argv.size());
     for (char const* str : argv) {
@@ -181,13 +183,13 @@ public:
 
   [[nodiscard]] static containers::Result<Process, SpawnError>
   spawn(ranges::InitializerList<ranges::StringView> argv,
-        Stdio const&                                stdio) noexcept {
+        SpawnOpts const&                            stdio) noexcept {
     return spawn<ranges::InitializerList<ranges::StringView>>(argv, stdio);
   }
 
   template <meta::RangeOf<ranges::StringView> Range>
   [[nodiscard]] static containers::Result<Process, SpawnError>
-  spawn(Range const& argv, Stdio const& stdio) noexcept {
+  spawn(Range const& argv, SpawnOpts const& stdio) noexcept {
     containers::Vector<containers::BasicString<char, 16>, 6> cstrs(argv);
     containers::Vector<char const*, 6>                       cstr_ptrs;
     cstr_ptrs.reserve(cstrs.len() + 1);

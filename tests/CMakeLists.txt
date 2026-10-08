@@ -26,9 +26,12 @@ add_executable(test_process_std_streams
                "${CMAKE_CURRENT_SOURCE_DIR}/share/test_process/std_streams.c")
 add_executable(test_process_hello_world
                "${CMAKE_CURRENT_SOURCE_DIR}/share/test_process/hello_world.c")
+add_executable(test_process_pwd
+               "${CMAKE_CURRENT_SOURCE_DIR}/share/test_process/pwd.c")
 
 target_compile_definitions(
   test_process
   PRIVATE "CAT_EXECUTABLE=\"$<TARGET_FILE:test_process_cat>\""
           "STD_STREAMS_EXECUTABLE=\"$<TARGET_FILE:test_process_std_streams>\""
-          "HELLO_WORLD_EXECUTABLE=\"$<TARGET_FILE:test_process_hello_world>\"")
+          "HELLO_WORLD_EXECUTABLE=\"$<TARGET_FILE:test_process_hello_world>\""
+          "PWD_EXECUTABLE=\"$<TARGET_FILE:test_process_pwd>\"")

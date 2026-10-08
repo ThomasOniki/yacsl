@@ -45,7 +45,7 @@
   }()
 
 using yacsl::os::Process;
-using Stdio = Process::Stdio;
+using Stdio = Process::SpawnOpts;
 
 namespace {
 enum class Type : yacsl::u8 {
@@ -165,14 +165,14 @@ static void
 create_other_pipes(yacsl::containers::StackArray<Process, 3>& processes,
                    IoTypes                                    types) {
   if (types.input == Type::OtherPipe) {
-    Process::Stdio const stdio = {
+    Process::SpawnOpts const stdio = {
         .input  = Process::Input::Inherit,
         .output = Process::Output::Pipe,
         .error  = Process::Output::Inherit,
     };
     processes[0] = Process::spawn({HELLO_WORLD_EXECUTABLE}, stdio).value();
   }
-  Process::Stdio const stdio = {
+  Process::SpawnOpts const stdio = {
       .input  = Process::Input::Pipe,
       .output = Process::Output::Pipe,
       .error  = Process::Output::Inherit,
@@ -406,7 +406,7 @@ static void test_run_c(IoTypes types) {
   yacsl::containers::StackArray<Process, 3> other_pipes;
   create_other_pipes(other_pipes, types);
 
-  Process::Stdio const stdio = {
+  Process::SpawnOpts const stdio = {
       .input = create_io<Process::Input::Init>(
           types.input, CHILD_STDIN_FILE_PATH, other_pipes[0].get_stdout()),
       .output = create_io<Process::Output::Init>(
@@ -491,15 +491,47 @@ static IoTypes& io_types() {
   return instance;
 }
 
-int main() {
+static void create_input_file() noexcept {
   int const file = ::open(CHILD_STDIN_FILE_PATH,
                           O_WRONLY | O_CREAT | O_CLOEXEC | O_TRUNC, 0644);
-  yacsl::testing::expect(file != -1);
+  yacsl::debug::assert_(file != -1);
   [[maybe_unused]] ssize_t const written =
       ::write(file, INPUT_DATA.data(), INPUT_DATA.len());
-  yacsl::testing::expect_eq(static_cast<yacsl::usize>(written),
-                            INPUT_DATA.len());
-  yacsl::testing::expect(close(file) == 0);
+  yacsl::debug::assert_eq(static_cast<yacsl::usize>(written), INPUT_DATA.len());
+  yacsl::debug::assert_(close(file) == 0);
+}
+
+static void test_cwd(yacsl::testing::Test& /*test*/) noexcept {
+#ifdef _WIN32
+  auto process = Process::spawn({PWD_EXECUTABLE},
+                                {
+                                    .output = Process::Output::Pipe,
+                                    .error  = Process::Output::Inherit,
+                                    .cwd    = "C:\\",
+                                })
+                     .value();
+  yacsl::testing::expect_eq(process.wait().unread_stdout, "cwd: 'C:\\'\r\n");
+#else
+  auto process = Process::spawn({PWD_EXECUTABLE},
+                                {
+                                    .output = Process::Output::Pipe,
+                                    .error  = Process::Output::Inherit,
+                                    .cwd    = "/",
+                                })
+                     .value();
+  yacsl::testing::expect_eq(process.wait().unread_stdout, "cwd: '/'\n");
+#endif
+}
+
+int main() {
+  yacsl::containers::StackArray tests = {
+      yacsl::testing::Test("current working directory", test_cwd),
+  };
+  for (auto& test : tests) {
+    test.run();
+  }
+
+  create_input_file();
 
   (void)yacsl::debug::Logger::get_default_instance();
 
