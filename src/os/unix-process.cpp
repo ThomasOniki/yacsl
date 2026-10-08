@@ -67,7 +67,7 @@ static void redirect_child_stdio_to_file(posix_spawn_file_actions_t* actions,
                                          char const*                 path,
                                          int stream) noexcept {
   int const oflag =
-      unix_flags(flags | File::OpenFlags::DontCloseOnExec |
+      unix_flags(flags | File::OpenFlags::Inheritable |
                  (stream == STDIN_FILENO ? File::OpenFlags::Read
                                          : File::OpenFlags::Write));
 
