@@ -1,6 +1,6 @@
 #ifdef _WIN32
 
-#include "win32-utils.hpp"
+#include "utils.hpp"
 #include "yacsl/debug/assert.hpp"
 #include "yacsl/debug/panic.hpp"
 #include "yacsl/meta/limits.hpp"
