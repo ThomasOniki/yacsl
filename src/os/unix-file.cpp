@@ -19,22 +19,14 @@ namespace yacsl::os {
 
 containers::Result<File, File::OpenError>
 File::open(char const* path, File::OpenFlags flags) noexcept {
-  bool const seek_end =
-      strip_file_open_flag(&flags, File::OpenFlags::SeekEnd) &&
-      (flags & File::OpenFlags::Trunc) == File::OpenFlags::None;
-  File opened;
-  opened.handle_ = ::open(path, unix_flags(flags), 0644);
-  if (opened.handle_ == -1) [[unlikely]] {
-    switch (errno) {
-    case ENOENT:
-      return OpenError::FileNotFound;
-    case EACCES:
-      return OpenError::PermissionDenied;
-    default:
-      debug::panic("::open() failed: {}", errno_str());
-    }
+  auto const result = open_file_handle(path, flags);
+  if (result.is_error()) {
+    return result.error_unchecked();
   }
-  if (seek_end) {
+  File opened;
+  opened.handle_ = result.value_unchecked();
+  if (strip_file_open_flag(&flags, File::OpenFlags::SeekEnd) &&
+      (flags & File::OpenFlags::Trunc) == File::OpenFlags::None) {
     opened.cursor_pos_ = static_cast<usize>(
         YACSL_TRY_SYSCALL(::lseek(opened.handle_, 0, SEEK_END)));
   }

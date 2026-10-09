@@ -28,6 +28,11 @@ struct OpenedFile {
 int                       unix_flags(File::OpenFlags flags) noexcept;
 ranges::StringView        errno_str(int err) noexcept;
 inline ranges::StringView errno_str() noexcept { return errno_str(errno); }
+
+// SeekEnd will be ignored
+containers::Result<int, File::OpenError>
+open_file_handle(char const* path, File::OpenFlags flags);
+
 } // namespace yacsl::os
 
 #define YACSL_TRY_SYSCALL(syscall)                                             \

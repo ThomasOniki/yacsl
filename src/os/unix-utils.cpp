@@ -34,6 +34,22 @@ int unix_flags(File::OpenFlags flags) noexcept {
   return static_cast<int>(ret);
 }
 
+containers::Result<int, File::OpenError>
+open_file_handle(char const* path, File::OpenFlags flags) {
+  int handle = ::open(path, unix_flags(flags), 0644);
+  if (handle == -1) [[unlikely]] {
+    switch (errno) {
+    case ENOENT:
+      return File::OpenError::FileNotFound;
+    case EACCES:
+      return File::OpenError::PermissionDenied;
+    default:
+      debug::panic("::open() failed: {}", errno_str());
+    }
+  }
+  return handle;
+}
+
 // NOLINTNEXTLINE(google-readability-function-size,readability-function-cognitive-complexity)
 ranges::StringView errno_str(int err) noexcept {
   // clang-format off
