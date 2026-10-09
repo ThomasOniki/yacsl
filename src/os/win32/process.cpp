@@ -1,10 +1,10 @@
 #ifdef _WIN32
 
-#include "win32-utils.hpp"
+#include "yacsl/os/process.hpp"
+#include "utils.hpp"
 #include "yacsl/containers/string.hpp"
 #include "yacsl/debug/assert.hpp"
 #include "yacsl/debug/panic.hpp"
-#include "yacsl/os/process.hpp"
 #include "yacsl/ranges/slice.hpp"
 #include "yacsl/type_aliases.hpp"
 #include <consoleapi.h>
