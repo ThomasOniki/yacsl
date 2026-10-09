@@ -9,7 +9,7 @@ CompileFlags:
   Add: [-DYACSL_NO_LIBCPP, -nostdinc++]
 --- 
 If:
-  PathMatch: [".*win32-.*"]
+  PathMatch: [".*win32/.*"]
 CompileFlags:
   Add: [--target=x86_64-windows-gnu, -isystem, /opt/homebrew/opt/mingw-w64/toolchain-x86_64/mingw/include, -isystem, /opt/homebrew/opt/mingw-w64/toolchain-x86_64/mingw/include/c++/16.2.0, -isystem, /opt/homebrew/opt/mingw-w64/toolchain-x86_64/mingw/include/c++/16.2.0/x86_64-w64-mingw32]
   Remove: ["-arch", "-fsanitize=*"]

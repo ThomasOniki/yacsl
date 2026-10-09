@@ -1,6 +1,6 @@
 #ifdef _WIN32
 
-#include "../os/win32-utils.hpp"
+#include "../../os/win32/utils.hpp"
 #include "yacsl/containers/string.hpp"
 #include "yacsl/containers/vector.hpp"
 #include "yacsl/debug/assert.hpp"
