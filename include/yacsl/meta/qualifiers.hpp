@@ -79,9 +79,7 @@ concept MaybeVolatileRef =
     OneOf<T, BaseType, BaseType&, BaseType&&, BaseType volatile,
           BaseType volatile&, BaseType volatile&&>;
 template <typename T, typename BaseType>
-concept MaybeCVRef =
-    OneOf<T, BaseType, BaseType&, BaseType&&, BaseType volatile,
-          BaseType volatile&, BaseType volatile&&>;
+concept MaybeCVRef = SameAs<RemoveCVRef<T>, BaseType>;
 
 namespace detail {
 
