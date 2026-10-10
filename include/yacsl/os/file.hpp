@@ -18,13 +18,14 @@ public:
     Write       = 1U << 1U,
     Truncate    = 1U << 2U,
     Create      = 1U << 3U,
-    SeekEnd     = 1U << 4U,
-    Inheritable = 1U << 5U,
+    Exclusive   = 1U << 4U,
+    SeekEnd     = 1U << 5U,
+    Inheritable = 1U << 6U,
   };
-
   enum class OpenError : u8 {
     None,
     NotFound,
+    AlreadyExists,
     PermissionDenied,
   };
 

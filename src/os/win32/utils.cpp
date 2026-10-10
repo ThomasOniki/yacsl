@@ -1,3 +1,4 @@
+#include "yacsl/os/file.hpp"
 #ifdef _WIN32
 
 #include "utils.hpp"
@@ -28,10 +29,13 @@ open_file_handle(char const* path, File::OpenFlags flags) {
 
   bool const trunc  = strip_file_open_flag(&flags, File::OpenFlags::Truncate);
   bool const create = strip_file_open_flag(&flags, File::OpenFlags::Create);
+  bool const excl   = strip_file_open_flag(&flags, File::OpenFlags::Exclusive);
   DWORD      creation_disposition = 0;
 
   if (create) {
-    if (trunc) {
+    if (excl) {
+      creation_disposition = CREATE_NEW;
+    } else if (trunc) {
       creation_disposition = CREATE_ALWAYS;
     } else {
       creation_disposition = OPEN_ALWAYS;
@@ -53,6 +57,8 @@ open_file_handle(char const* path, File::OpenFlags flags) {
     switch (err) {
     case ERROR_FILE_NOT_FOUND:
       return File::OpenError::NotFound;
+    case ERROR_ALREADY_EXISTS:
+      return File::OpenError::AlreadyExists;
     case ERROR_ACCESS_DENIED:
       return File::OpenError::PermissionDenied;
     default:
