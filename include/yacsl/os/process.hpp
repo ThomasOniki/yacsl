@@ -54,8 +54,8 @@ private:
         : type_(TYPE_FILE),
           file_info_{
               .path =
-                  containers::BasicString<char, 0, memory::MainArenaAllocator>(
-                      path)
+                  containers::GenericString<char, 0,
+                                            memory::MainArenaAllocator>(path)
                       .c_str(),
               .flags = flags,
           } {}
@@ -190,8 +190,8 @@ public:
   template <meta::RangeOf<ranges::StringView> Range>
   [[nodiscard]] static containers::Result<Process, SpawnError>
   spawn(Range const& argv, SpawnOpts const& stdio) noexcept {
-    containers::Vector<containers::BasicString<char, 16>, 6> cstrs(argv);
-    containers::Vector<char const*, 6>                       cstr_ptrs;
+    containers::Vector<containers::GenericString<char, 16>, 6> cstrs(argv);
+    containers::Vector<char const*, 6>                         cstr_ptrs;
     cstr_ptrs.reserve(cstrs.len() + 1);
     for (auto& cstr : cstrs) {
       cstr_ptrs.push(cstr.c_str());

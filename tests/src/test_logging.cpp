@@ -132,7 +132,7 @@ static void test_logging(yacsl::testing::Test& /*test*/) {
 
   log_to_file(
       Info, "char16_t string range: {*^10}",
-      yacsl::ranges::InitializerList<yacsl::ranges::BasicStringView<char16_t>>{
+      yacsl::ranges::InitializerList<yacsl::ranges::GenericStringView<char16_t>>{
           u"foo",
           u"bar",
           u"🤓",

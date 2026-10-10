@@ -158,7 +158,7 @@ template <meta::Character T> u32 char_len(T chr) {
 }
 
 template <meta::Character T>
-usize real_string_len(ranges::BasicStringView<T, usize> str) {
+usize real_string_len(ranges::GenericStringView<T, usize> str) {
   if constexpr (sizeof(T) == 1) {
     return str.len();
   }
@@ -170,7 +170,7 @@ usize real_string_len(ranges::BasicStringView<T, usize> str) {
 }
 
 template <meta::Character T>
-void write_string(char* buf, ranges::BasicStringView<T, usize> str) {
+void write_string(char* buf, ranges::GenericStringView<T, usize> str) {
   if constexpr (sizeof(T) == 1) {
     memory::copy(str.bytes(), reinterpret_cast<u8*>(buf));
     return;
@@ -181,8 +181,8 @@ void write_string(char* buf, ranges::BasicStringView<T, usize> str) {
 }
 
 template <meta::Character T>
-void write_string(containers::String&               buf,
-                  ranges::BasicStringView<T, usize> str) {
+void write_string(containers::String&                 buf,
+                  ranges::GenericStringView<T, usize> str) {
   if constexpr (sizeof(T) == 1) {
     memory::copy(str.bytes(), reinterpret_cast<u8*>(buf.grow(str.len())));
     return;

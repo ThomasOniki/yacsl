@@ -82,9 +82,9 @@ void pad_debug_char(containers::String& buf, T chr, PaddingOptions opts) {
 }
 
 template <bool IsDebug, meta::Character T>
-void pad_string_left_aligned(containers::String&               buf,
-                             ranges::BasicStringView<T, usize> str,
-                             PaddingOptions                    opts) noexcept {
+void pad_string_left_aligned(containers::String&                 buf,
+                             ranges::GenericStringView<T, usize> str,
+                             PaddingOptions opts) noexcept {
   usize const original_size = buf.len();
   write_maybe_debug_string<IsDebug>(buf, str);
 
@@ -99,9 +99,9 @@ void pad_string_left_aligned(containers::String&               buf,
 }
 
 template <bool IsDebug, meta::Character T>
-void pad_string_right_aligned(containers::String&               buf,
-                              ranges::BasicStringView<T, usize> str,
-                              PaddingOptions                    opts) noexcept {
+void pad_string_right_aligned(containers::String&                 buf,
+                              ranges::GenericStringView<T, usize> str,
+                              PaddingOptions opts) noexcept {
   usize const real_len = maybe_debug_string_len<IsDebug>(str);
   if (opts.width <= real_len) {
     write_maybe_debug_string<IsDebug>(buf, str);
@@ -114,8 +114,8 @@ void pad_string_right_aligned(containers::String&               buf,
 }
 
 template <bool IsDebug, meta::Character T>
-void pad_string_middle_aligned(containers::String&               buf,
-                               ranges::BasicStringView<T, usize> str,
+void pad_string_middle_aligned(containers::String&                 buf,
+                               ranges::GenericStringView<T, usize> str,
                                PaddingOptions opts) noexcept {
   usize const real_len = maybe_debug_string_len<IsDebug>(str);
   if (opts.width <= real_len) {
@@ -129,8 +129,9 @@ void pad_string_middle_aligned(containers::String&               buf,
 }
 
 template <bool IsDebug = false, meta::Character T>
-void pad_string(containers::String& buf, ranges::BasicStringView<T, usize> str,
-                PaddingOptions opts) noexcept {
+void pad_string(containers::String&                 buf,
+                ranges::GenericStringView<T, usize> str,
+                PaddingOptions                      opts) noexcept {
   if constexpr (IsDebug) {
     // + 2 for the 2 quotes
     if (str.len() + 2 > opts.width) {

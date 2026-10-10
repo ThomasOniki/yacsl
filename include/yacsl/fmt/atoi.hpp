@@ -17,7 +17,7 @@ constexpr T const* num_end(YACSL_LIFETIMEBOUND T const* begin) {
 
 template <meta::Integral T, meta::Character C = char,
           meta::Integral SizeT = usize>
-constexpr T atoi(ranges::BasicStringView<C, SizeT> str) noexcept {
+constexpr T atoi(ranges::GenericStringView<C, SizeT> str) noexcept {
   T ret = 0;
   for (char const chr : str) {
     ret *= 10;
@@ -28,12 +28,12 @@ constexpr T atoi(ranges::BasicStringView<C, SizeT> str) noexcept {
 template <meta::Integral T, meta::Character C = char,
           meta::Integral SizeT = usize>
 constexpr T atoi(C const* begin, C const* end) {
-  return fmt::atoi<T>(ranges::BasicStringView<C, SizeT>(begin, end));
+  return fmt::atoi<T>(ranges::GenericStringView<C, SizeT>(begin, end));
 }
 template <meta::Integral T, meta::Character C = char,
           meta::Integral SizeT = usize>
 constexpr T atoi(C const* ptr, SizeT len) {
-  return fmt::atoi<T>(ranges::BasicStringView<C, SizeT>(ptr, len));
+  return fmt::atoi<T>(ranges::GenericStringView<C, SizeT>(ptr, len));
 }
 
 } // namespace yacsl::fmt
