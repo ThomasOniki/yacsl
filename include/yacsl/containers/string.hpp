@@ -16,136 +16,141 @@ namespace yacsl::containers {
 template <meta::Character T, usize N = 0,
           memory::AllocatorType A     = memory::MainArenaAllocator,
           meta::Integral        SizeT = usize>
-class BasicString {
+class GenericString {
 public:
-  constexpr BasicString() noexcept = default;
-  constexpr explicit BasicString(A const& allocator) : data_(allocator) {}
+  constexpr GenericString() noexcept = default;
+  constexpr explicit GenericString(A const& allocator) : data_(allocator) {}
 
-  constexpr ~BasicString() noexcept = default;
+  constexpr ~GenericString() noexcept = default;
 
-  constexpr BasicString(T const* cstr, A const& allocator = A()) noexcept
-      : data_(ranges::BasicStringView<T, usize>(cstr), allocator) {}
+  constexpr GenericString(T const* cstr, A const& allocator = A()) noexcept
+      : data_(ranges::GenericStringView<T, usize>(cstr), allocator) {}
 
-  constexpr BasicString(T const* data, SizeT len,
-                        A const& allocator = A()) noexcept
-      : data_(ranges::BasicStringView<T, usize>(data, len), allocator) {}
+  constexpr GenericString(T const* data, SizeT len,
+                          A const& allocator = A()) noexcept
+      : data_(ranges::GenericStringView<T, usize>(data, len), allocator) {}
 
-  constexpr BasicString(T const* begin, T const* end,
-                        A const& allocator = A()) noexcept
-      : data_(ranges::BasicStringView<T, usize>(begin, end), allocator) {}
+  constexpr GenericString(T const* begin, T const* end,
+                          A const& allocator = A()) noexcept
+      : data_(ranges::GenericStringView<T, usize>(begin, end), allocator) {}
 
-  constexpr BasicString(ranges::BasicStringView<T, SizeT> str,
-                        A const& allocator = A()) noexcept
+  constexpr GenericString(ranges::GenericStringView<T, SizeT> str,
+                          A const& allocator = A()) noexcept
       : data_(str, allocator) {}
 
-  constexpr BasicString(BasicString const& other) noexcept
+  constexpr GenericString(GenericString const& other) noexcept
       : data_(other.data_) {}
 
-  constexpr BasicString(BasicString&& other) noexcept
+  constexpr GenericString(GenericString&& other) noexcept
       : data_(memory::move(other.data_)) {}
 
-  constexpr BasicString& operator=(this BasicString& self YACSL_LIFETIMEBOUND,
-                                   BasicString const&     other) noexcept {
+  constexpr GenericString&
+  operator=(this GenericString& self YACSL_LIFETIMEBOUND,
+            GenericString const&     other) noexcept {
     self.data_ = other.data_;
     return self;
   }
 
-  constexpr BasicString& operator=(this BasicString& self YACSL_LIFETIMEBOUND,
-                                   BasicString&&          other) noexcept {
+  constexpr GenericString&
+  operator=(this GenericString& self YACSL_LIFETIMEBOUND,
+            GenericString&&          other) noexcept {
     self.data_ = memory::move(other.data_);
     return self;
   }
 
-  constexpr BasicString& append(this BasicString& self YACSL_LIFETIMEBOUND,
-                                T const* ptr, SizeT len) noexcept {
+  constexpr GenericString& append(this GenericString& self YACSL_LIFETIMEBOUND,
+                                  T const* ptr, SizeT len) noexcept {
     memory::copy({ptr, len}, self.grow(len));
     return self;
   }
-  constexpr BasicString& append(this BasicString& self YACSL_LIFETIMEBOUND,
-                                T const* begin, T const* end) noexcept {
+  constexpr GenericString& append(this GenericString& self YACSL_LIFETIMEBOUND,
+                                  T const* begin, T const* end) noexcept {
     return self.append(begin, static_cast<SizeT>(end - begin));
   }
 
-  constexpr BasicString&
-  append(this BasicString& self            YACSL_LIFETIMEBOUND,
-         ranges::BasicStringView<T, SizeT> str) noexcept {
+  constexpr GenericString&
+  append(this GenericString& self            YACSL_LIFETIMEBOUND,
+         ranges::GenericStringView<T, SizeT> str) noexcept {
     return self.append(str.data(), str.len());
   }
-  constexpr BasicString& append(this BasicString& self YACSL_LIFETIMEBOUND,
-                                T const*               cstr) noexcept {
-    return self.append(ranges::BasicStringView<T, usize>(cstr));
+  constexpr GenericString& append(this GenericString& self YACSL_LIFETIMEBOUND,
+                                  T const*                 cstr) noexcept {
+    return self.append(ranges::GenericStringView<T, usize>(cstr));
   }
-  constexpr BasicString& append(this BasicString& self YACSL_LIFETIMEBOUND,
-                                BasicString const&     other) noexcept {
+  constexpr GenericString& append(this GenericString& self YACSL_LIFETIMEBOUND,
+                                  GenericString const&     other) noexcept {
     return self.append(other.begin(), other.len());
   }
 
-  constexpr BasicString& append(this BasicString& self YACSL_LIFETIMEBOUND,
-                                T                      chr) noexcept {
+  constexpr GenericString& append(this GenericString& self YACSL_LIFETIMEBOUND,
+                                  T                        chr) noexcept {
     *self.grow(1) = chr;
     return self;
   }
 
-  constexpr BasicString& operator+=(this BasicString& self YACSL_LIFETIMEBOUND,
-                                    ranges::BasicStringView<T, SizeT> str) {
+  constexpr GenericString&
+  operator+=(this GenericString& self            YACSL_LIFETIMEBOUND,
+             ranges::GenericStringView<T, SizeT> str) {
     return self.append(str);
   }
-  constexpr BasicString& operator+=(this BasicString& self YACSL_LIFETIMEBOUND,
-                                    BasicString const&     str) {
+  constexpr GenericString&
+  operator+=(this GenericString& self YACSL_LIFETIMEBOUND,
+             GenericString const&     str) {
     return self.append(str);
   }
-  constexpr BasicString& operator+=(this BasicString& self YACSL_LIFETIMEBOUND,
-                                    T const*               cstr) {
+  constexpr GenericString&
+  operator+=(this GenericString& self YACSL_LIFETIMEBOUND, T const* cstr) {
     return self.append(cstr);
   }
-  constexpr BasicString& operator+=(this BasicString& self YACSL_LIFETIMEBOUND,
-                                    T                      chr) {
+  constexpr GenericString&
+  operator+=(this GenericString& self YACSL_LIFETIMEBOUND, T chr) {
     return self.append(chr);
   }
 
   template <typename Self>
-  constexpr BasicString operator+(this Self&& self, BasicString const& rhs) {
-    BasicString lhs = memory::forward<Self>(self);
+  constexpr GenericString operator+(this Self&&          self,
+                                    GenericString const& rhs) {
+    GenericString lhs = memory::forward<Self>(self);
     return lhs += rhs;
   }
   template <typename Self>
-  constexpr BasicString operator+(this Self&&                       self,
-                                  ranges::BasicStringView<T, SizeT> rhs) {
-    BasicString lhs = memory::forward<Self>(self);
+  constexpr GenericString operator+(this Self&&                         self,
+                                    ranges::GenericStringView<T, SizeT> rhs) {
+    GenericString lhs = memory::forward<Self>(self);
     return lhs += rhs;
   }
   template <typename Self>
-  constexpr BasicString operator+(this Self&& self, T const* cstr) {
-    BasicString lhs = memory::forward<Self>(self);
+  constexpr GenericString operator+(this Self&& self, T const* cstr) {
+    GenericString lhs = memory::forward<Self>(self);
     return lhs += cstr;
   }
   template <typename Self>
-  constexpr BasicString operator+(this Self&& self, T chr) {
-    BasicString lhs = memory::forward<Self>(self);
+  constexpr GenericString operator+(this Self&& self, T chr) {
+    GenericString lhs = memory::forward<Self>(self);
     return lhs += chr;
   }
 
-  constexpr BasicString& reserve(this BasicString& self YACSL_LIFETIMEBOUND,
-                                 SizeT                  capacity) noexcept {
+  constexpr GenericString& reserve(this GenericString& self YACSL_LIFETIMEBOUND,
+                                   SizeT                    capacity) noexcept {
     self.data_.reserve(capacity);
     return self;
   }
-  constexpr BasicString& resize(this BasicString& self YACSL_LIFETIMEBOUND,
-                                SizeT                  size) noexcept {
+  constexpr GenericString& resize(this GenericString& self YACSL_LIFETIMEBOUND,
+                                  SizeT                    size) noexcept {
     self.data_.resize(size);
     return self;
   }
 
   // This doesn't initialize the new memory but adds count to size. It is useful
   // for characters you want to memcpy into. It returns new_end - count.
-  constexpr T* grow(this BasicString& self YACSL_LIFETIMEBOUND,
-                    SizeT                  count) noexcept {
+  constexpr T* grow(this GenericString& self YACSL_LIFETIMEBOUND,
+                    SizeT                    count) noexcept {
     self.data_.resize(self.data_.len() + count);
     return self.data_.end() - count;
   }
 
-  constexpr BasicString&
-  clear(this BasicString& self YACSL_LIFETIMEBOUND) noexcept {
+  constexpr GenericString&
+  clear(this GenericString& self YACSL_LIFETIMEBOUND) noexcept {
     self.data_.clear();
     return self;
   }
@@ -158,11 +163,11 @@ public:
     return memory::forward<Self>(self).data_.data();
   }
 
-  [[nodiscard]] constexpr SizeT len(this BasicString const& self) noexcept {
+  [[nodiscard]] constexpr SizeT len(this GenericString const& self) noexcept {
     return self.data_.len();
   }
   [[nodiscard]] constexpr SizeT
-  capacity(this BasicString const& self) noexcept {
+  capacity(this GenericString const& self) noexcept {
     return self.data_.capacity();
   }
 
@@ -172,22 +177,22 @@ public:
     return memory::forward<Self>(self).data_[index];
   }
 
-  [[nodiscard]] constexpr bool operator==(this BasicString const& self,
-                                          BasicString const& other) noexcept {
+  [[nodiscard]] constexpr bool operator==(this GenericString const& self,
+                                          GenericString const& other) noexcept {
     return self.view() == other.view();
   }
   [[nodiscard]] constexpr bool
-  operator==(this BasicString const&                  self,
-             ranges::BasicStringView<T, SizeT> const& rhs) noexcept {
+  operator==(this GenericString const&                  self,
+             ranges::GenericStringView<T, SizeT> const& rhs) noexcept {
     return self.view() == rhs;
   }
-  [[nodiscard]] constexpr bool operator==(this BasicString const& self,
+  [[nodiscard]] constexpr bool operator==(this GenericString const& self,
                                           T const* cstr) noexcept {
-    return self.view() == ranges::BasicStringView(cstr);
+    return self.view() == ranges::GenericStringView(cstr);
   }
 
-  [[nodiscard]] constexpr ranges::BasicStringView<T, SizeT>
-  view(this BasicString const& self YACSL_LIFETIMEBOUND) noexcept {
+  [[nodiscard]] constexpr ranges::GenericStringView<T, SizeT>
+  view(this GenericString const& self YACSL_LIFETIMEBOUND) noexcept {
     return {self.data_.data(), self.data_.len()};
   }
   template <typename Self>
@@ -227,24 +232,24 @@ private:
   Vector<T, N, A, SizeT> data_;
 };
 
-using String = BasicString<char>;
+using String = GenericString<char>;
 
 constexpr String operator""_s(char const* cstr YACSL_LIFETIMEBOUND, usize len) {
   return {cstr, len};
 }
-constexpr BasicString<wchar_t>
+constexpr GenericString<wchar_t>
 operator""_s(wchar_t const* cstr YACSL_LIFETIMEBOUND, usize len) {
   return {cstr, len};
 }
-constexpr BasicString<char8_t>
+constexpr GenericString<char8_t>
 operator""_s(char8_t const* cstr YACSL_LIFETIMEBOUND, usize len) {
   return {cstr, len};
 }
-constexpr BasicString<char16_t>
+constexpr GenericString<char16_t>
 operator""_s(char16_t const* cstr YACSL_LIFETIMEBOUND, usize len) {
   return {cstr, len};
 }
-constexpr BasicString<char32_t>
+constexpr GenericString<char32_t>
 operator""_s(char32_t const* cstr YACSL_LIFETIMEBOUND, usize len) {
   return {cstr, len};
 }

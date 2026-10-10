@@ -10,13 +10,13 @@
 namespace yacsl::ranges {
 
 template <meta::Character T, meta::Integral SizeT = usize>
-class BasicStringView {
+class GenericStringView {
 public:
-  constexpr BasicStringView() = default;
-  constexpr BasicStringView(T const* data YACSL_LIFETIMEBOUND, SizeT size)
+  constexpr GenericStringView() = default;
+  constexpr GenericStringView(T const* data YACSL_LIFETIMEBOUND, SizeT size)
       : data_(data), len_(size) {}
 
-  constexpr BasicStringView(T const* cstr YACSL_LIFETIMEBOUND) : data_(cstr) {
+  constexpr GenericStringView(T const* cstr YACSL_LIFETIMEBOUND) : data_(cstr) {
     if constexpr (meta::SameAs<char, T>) {
       if !consteval {
         len_ = static_cast<SizeT>(strlen(cstr));
@@ -30,66 +30,66 @@ public:
     len_ = len;
   }
 
-  constexpr BasicStringView(T const* begin YACSL_LIFETIMEBOUND,
-                            T const* end   YACSL_LIFETIMEBOUND)
+  constexpr GenericStringView(T const* begin YACSL_LIFETIMEBOUND,
+                              T const* end   YACSL_LIFETIMEBOUND)
       : data_(begin), len_(static_cast<SizeT>(end - begin)) {}
 
-  [[nodiscard]] constexpr T const* data(this BasicStringView self) noexcept {
+  [[nodiscard]] constexpr T const* data(this GenericStringView self) noexcept {
     return self.data_;
   }
-  [[nodiscard]] constexpr SizeT len(this BasicStringView self) noexcept {
+  [[nodiscard]] constexpr SizeT len(this GenericStringView self) noexcept {
     return self.len_;
   }
 
-  [[nodiscard]] constexpr T const& operator[](this BasicStringView self,
+  [[nodiscard]] constexpr T const& operator[](this GenericStringView self,
                                               SizeT index) noexcept {
     return self.data_[index];
   }
 
   [[nodiscard]] constexpr Slice<T const, SizeT>
-  slice(this BasicStringView self) noexcept {
+  slice(this GenericStringView self) noexcept {
     return {self.data_, self.len_};
   }
   [[nodiscard]] constexpr ReversedSlice<T const, SizeT>
-  reversed_slice(this BasicStringView self) noexcept {
+  reversed_slice(this GenericStringView self) noexcept {
     return {self.data_, self.len_};
   }
   [[nodiscard]] constexpr Slice<u8 const, SizeT>
-  bytes(this BasicStringView self) noexcept {
+  bytes(this GenericStringView self) noexcept {
     return {
         reinterpret_cast<u8 const*>(self.data_),
         static_cast<SizeT>(self.len_ * sizeof(T)),
     };
   }
 
-  [[nodiscard]] constexpr T const& first(this BasicStringView self) noexcept {
+  [[nodiscard]] constexpr T const& first(this GenericStringView self) noexcept {
     return self.data_[0];
   }
-  [[nodiscard]] constexpr T const& last(this BasicStringView self) noexcept {
+  [[nodiscard]] constexpr T const& last(this GenericStringView self) noexcept {
     return self.data_[self.len_ - 1];
   }
-  [[nodiscard]] constexpr BasicStringView
-  subview(this BasicStringView self, SizeT start, SizeT len) noexcept {
+  [[nodiscard]] constexpr GenericStringView
+  subview(this GenericStringView self, SizeT start, SizeT len) noexcept {
     return {self.data_ + start, len};
   }
-  [[nodiscard]] constexpr BasicStringView first_n(this BasicStringView self,
-                                                  SizeT count) noexcept {
+  [[nodiscard]] constexpr GenericStringView first_n(this GenericStringView self,
+                                                    SizeT count) noexcept {
     return {self.data_, count};
   }
-  [[nodiscard]] constexpr BasicStringView last_n(this BasicStringView self,
-                                                 SizeT count) noexcept {
+  [[nodiscard]] constexpr GenericStringView last_n(this GenericStringView self,
+                                                   SizeT count) noexcept {
     return {self.data_ + self.len_ - count, count};
   }
 
-  [[nodiscard]] constexpr T const* begin(this BasicStringView self) noexcept {
+  [[nodiscard]] constexpr T const* begin(this GenericStringView self) noexcept {
     return self.data_;
   }
-  [[nodiscard]] constexpr T const* end(this BasicStringView self) noexcept {
+  [[nodiscard]] constexpr T const* end(this GenericStringView self) noexcept {
     return self.data_ + self.len_;
   }
 
-  [[nodiscard]] constexpr bool operator==(this BasicStringView self,
-                                          BasicStringView      other) noexcept {
+  [[nodiscard]] constexpr bool operator==(this GenericStringView self,
+                                          GenericStringView other) noexcept {
     if (self.len_ != other.len_) {
       return false;
     }
@@ -104,42 +104,44 @@ public:
     return memcmp(self.data_, other.data_, self.len_) == 0;
   }
 
-  [[nodiscard]] constexpr bool starts_with(this BasicStringView self,
-                                           BasicStringView prefix) noexcept {
+  [[nodiscard]] constexpr bool starts_with(this GenericStringView self,
+                                           GenericStringView prefix) noexcept {
     return self.len_ >= prefix.len_ && self.first_n(prefix.len_) == prefix;
   }
-  [[nodiscard]] constexpr bool ends_with(this BasicStringView self,
-                                         BasicStringView      prefix) noexcept {
+  [[nodiscard]] constexpr bool ends_with(this GenericStringView self,
+                                         GenericStringView prefix) noexcept {
     return self.len_ >= prefix.len_ && self.last_n(prefix.len_) == prefix;
   }
 
-  [[nodiscard]] constexpr BasicStringView
-  without_prefix(this BasicStringView self, usize len) noexcept {
+  [[nodiscard]] constexpr GenericStringView
+  without_prefix(this GenericStringView self, usize len) noexcept {
     return {self.data_ + len, self.len_ - len};
   }
-  [[nodiscard]] constexpr BasicStringView
-  without_suffix(this BasicStringView self, usize len) noexcept {
+  [[nodiscard]] constexpr GenericStringView
+  without_suffix(this GenericStringView self, usize len) noexcept {
     return {self.data_, self.len_ - len};
   }
 
-  constexpr void remove_prefix(this BasicStringView& self, usize len) noexcept {
+  constexpr void remove_prefix(this GenericStringView& self,
+                               usize                   len) noexcept {
     self.data_ += len;
     self.len_ -= len;
   }
-  constexpr void remove_suffix(this BasicStringView& self, usize len) noexcept {
+  constexpr void remove_suffix(this GenericStringView& self,
+                               usize                   len) noexcept {
     self.len_ -= len;
   }
 
-  constexpr bool remove_prefix(this BasicStringView& self,
-                               BasicStringView       prefix) noexcept {
+  constexpr bool remove_prefix(this GenericStringView& self,
+                               GenericStringView       prefix) noexcept {
     if (self.starts_with(prefix)) {
       self.remove_prefix(prefix.len_);
       return true;
     }
     return false;
   }
-  constexpr bool remove_suffix(this BasicStringView& self,
-                               BasicStringView       suffix) noexcept {
+  constexpr bool remove_suffix(this GenericStringView& self,
+                               GenericStringView       suffix) noexcept {
     if (self.ends_with(suffix)) {
       self.remove_suffix(suffix.len_);
       return true;
@@ -153,31 +155,31 @@ private:
 };
 
 template <meta::Character T, meta::Integral SizeT>
-BasicStringView(T const*, SizeT) -> BasicStringView<T, SizeT>;
+GenericStringView(T const*, SizeT) -> GenericStringView<T, SizeT>;
 template <meta::Character T>
-BasicStringView(T const*) -> BasicStringView<T, usize>;
+GenericStringView(T const*) -> GenericStringView<T, usize>;
 template <meta::Character T>
-BasicStringView(T const*, T const*) -> BasicStringView<T, usize>;
+GenericStringView(T const*, T const*) -> GenericStringView<T, usize>;
 
-using StringView = BasicStringView<char>;
+using StringView = GenericStringView<char>;
 
-constexpr BasicStringView<char>
+constexpr GenericStringView<char>
 operator""_sv(char const* cstr YACSL_LIFETIMEBOUND, usize len) {
   return {cstr, len};
 }
-constexpr BasicStringView<wchar_t>
+constexpr GenericStringView<wchar_t>
 operator""_sv(wchar_t const* cstr YACSL_LIFETIMEBOUND, usize len) {
   return {cstr, len};
 }
-constexpr BasicStringView<char8_t>
+constexpr GenericStringView<char8_t>
 operator""_sv(char8_t const* cstr YACSL_LIFETIMEBOUND, usize len) {
   return {cstr, len};
 }
-constexpr BasicStringView<char16_t>
+constexpr GenericStringView<char16_t>
 operator""_sv(char16_t const* cstr YACSL_LIFETIMEBOUND, usize len) {
   return {cstr, len};
 }
-constexpr BasicStringView<char32_t>
+constexpr GenericStringView<char32_t>
 operator""_sv(char32_t const* cstr YACSL_LIFETIMEBOUND, usize len) {
   return {cstr, len};
 }
