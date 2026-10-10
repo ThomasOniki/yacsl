@@ -26,7 +26,7 @@ open_file_handle(char const* path, File::OpenFlags flags) {
                                                                      : FALSE,
   };
 
-  bool const trunc  = strip_file_open_flag(&flags, File::OpenFlags::Trunc);
+  bool const trunc  = strip_file_open_flag(&flags, File::OpenFlags::Truncate);
   bool const create = strip_file_open_flag(&flags, File::OpenFlags::Create);
   DWORD      creation_disposition = 0;
 

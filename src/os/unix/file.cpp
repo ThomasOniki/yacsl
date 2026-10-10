@@ -26,7 +26,7 @@ File::open(char const* path, File::OpenFlags flags) noexcept {
   File opened;
   opened.handle_ = result.value_unchecked();
   if (strip_file_open_flag(&flags, File::OpenFlags::SeekEnd) &&
-      (flags & File::OpenFlags::Trunc) == File::OpenFlags::None) {
+      (flags & File::OpenFlags::Truncate) == File::OpenFlags::None) {
     opened.cursor_pos_ = static_cast<usize>(
         YACSL_TRY_SYSCALL(::lseek(opened.handle_, 0, SEEK_END)));
   }
