@@ -135,7 +135,7 @@ File::access(char const* path, AccessFlags flags) {
     DWORD const err = GetLastError();
     switch (err) {
     case ERROR_FILE_NOT_FOUND:
-      return OpenError::FileNotFound;
+      return OpenError::NotFound;
     case ERROR_NOACCESS:
       return OpenError::PermissionDenied;
     default:

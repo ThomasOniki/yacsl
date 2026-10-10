@@ -214,7 +214,7 @@ Process::spawn(char const* const* argv, SpawnOpts const& opts) noexcept {
   int const result = posix_spawnp(&pid, argv[0], &state.file_actions, nullptr,
                                   argv_mut, environ);
   if (result == ENOENT) {
-    return SpawnError::FileNotFound;
+    return SpawnError::NotFound;
   }
   debug::assert_(result == 0, "posix_spawnp failed: {}", errno_str(result));
   spawned.handle_ = pid;

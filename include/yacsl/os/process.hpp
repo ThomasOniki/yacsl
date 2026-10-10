@@ -3,7 +3,6 @@
 #ifndef __EMSCRIPTEN__
 #include "yacsl/compiler/attributes.hpp"
 #include "yacsl/compiler/export.hpp"
-#include "yacsl/containers/option.hpp"
 #include "yacsl/containers/result.hpp"
 #include "yacsl/containers/string.hpp"
 #include "yacsl/containers/vector.hpp"
@@ -156,7 +155,7 @@ public:
   }
 
   enum class SpawnError : u8 {
-    FileNotFound = 1,
+    NotFound = 1,
   };
 
   struct SpawnOpts {
