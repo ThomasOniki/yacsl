@@ -22,7 +22,7 @@ template <meta::Character T> u32 debug_char_len(T chr) {
 }
 
 template <meta::Character T>
-usize debug_string_len(ranges::BasicStringView<T, usize> str) noexcept {
+usize debug_string_len(ranges::GenericStringView<T, usize> str) noexcept {
   usize len = 0;
   for (T const chr : str) {
     len += debug_char_len(chr);
@@ -149,7 +149,7 @@ void write_debug_char(containers::String& buf, T chr) {
 }
 
 template <meta::Character T>
-void write_debug_string(char* buf, ranges::BasicStringView<T, usize> str) {
+void write_debug_string(char* buf, ranges::GenericStringView<T, usize> str) {
   *buf = '"';
   ++buf;
   for (T const chr : str) {
@@ -158,8 +158,8 @@ void write_debug_string(char* buf, ranges::BasicStringView<T, usize> str) {
   *buf = '"';
 }
 template <meta::Character T>
-void write_debug_string(containers::String&               buf,
-                        ranges::BasicStringView<T, usize> str) {
+void write_debug_string(containers::String&                 buf,
+                        ranges::GenericStringView<T, usize> str) {
   buf += '"';
   for (T const chr : str) {
     write_debug_char(buf, chr);
@@ -168,8 +168,8 @@ void write_debug_string(containers::String&               buf,
 }
 
 template <bool IsDebug, meta::Character T>
-void write_maybe_debug_string(containers::String&               buf,
-                              ranges::BasicStringView<T, usize> str) {
+void write_maybe_debug_string(containers::String&                 buf,
+                              ranges::GenericStringView<T, usize> str) {
   if constexpr (IsDebug) {
     write_debug_string(buf, str);
   } else {
@@ -177,8 +177,8 @@ void write_maybe_debug_string(containers::String&               buf,
   }
 }
 template <bool IsDebug, meta::Character T>
-void write_maybe_debug_string(char*                             buf,
-                              ranges::BasicStringView<T, usize> str) {
+void write_maybe_debug_string(char*                               buf,
+                              ranges::GenericStringView<T, usize> str) {
   if constexpr (IsDebug) {
     write_debug_string(buf, str);
   } else {
@@ -187,7 +187,7 @@ void write_maybe_debug_string(char*                             buf,
 }
 
 template <bool IsDebug, meta::Character T>
-usize maybe_debug_string_len(ranges::BasicStringView<T, usize> str) {
+usize maybe_debug_string_len(ranges::GenericStringView<T, usize> str) {
   if constexpr (IsDebug) {
     return debug_string_len(str);
   } else {

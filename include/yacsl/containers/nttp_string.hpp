@@ -19,7 +19,7 @@ public:
     }
   }
 
-  constexpr NTTPString(ranges::BasicStringView<T, SizeT> view) noexcept {
+  constexpr NTTPString(ranges::GenericStringView<T, SizeT> view) noexcept {
     for (SizeT i = 0; i < view.len(); ++i) {
       data_[i] = view[i];
     }
@@ -42,7 +42,7 @@ public:
   }
 
   template <typename Self>
-  [[nodiscard]] constexpr ranges::BasicStringView<T, SizeT>
+  [[nodiscard]] constexpr ranges::GenericStringView<T, SizeT>
   view(this Self&& self YACSL_LIFETIMEBOUND) noexcept {
     return {memory::forward<Self>(self).data_.data(), static_cast<SizeT>(N)};
   }
@@ -99,7 +99,7 @@ public:
     return memory::forward<Self>(self).char_;
   }
 
-  [[nodiscard]] constexpr ranges::BasicStringView<T, SizeT>
+  [[nodiscard]] constexpr ranges::GenericStringView<T, SizeT>
   view(this NTTPString const& self YACSL_LIFETIMEBOUND) noexcept {
     return {&self.char_, static_cast<SizeT>(0)};
   }
