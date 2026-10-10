@@ -12,7 +12,7 @@ namespace yacsl::os {
 int unix_flags(File::OpenFlags flags) noexcept {
   unsigned int ret = 0;
 
-  if (strip_file_open_flag(&flags, File::OpenFlags::Trunc)) {
+  if (strip_file_open_flag(&flags, File::OpenFlags::Truncate)) {
     ret |= O_TRUNC;
   }
   if (strip_file_open_flag(&flags, File::OpenFlags::Create)) {
