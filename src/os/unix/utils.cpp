@@ -18,6 +18,9 @@ int unix_flags(File::OpenFlags flags) noexcept {
   if (strip_file_open_flag(&flags, File::OpenFlags::Create)) {
     ret |= O_CREAT;
   }
+  if (strip_file_open_flag(&flags, File::OpenFlags::Exclusive)) {
+    ret |= O_EXCL;
+  }
   if (!strip_file_open_flag(&flags, File::OpenFlags::Inheritable)) {
     ret |= O_CLOEXEC;
 #ifdef O_CLOFORK
@@ -41,6 +44,8 @@ open_file_handle(char const* path, File::OpenFlags flags) {
     switch (errno) {
     case ENOENT:
       return File::OpenError::NotFound;
+    case EEXIST:
+      return File::OpenError::AlreadyExists;
     case EACCES:
       return File::OpenError::PermissionDenied;
     default:
