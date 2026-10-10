@@ -109,7 +109,7 @@ File::access(char const* path, AccessFlags flags) {
   }
   switch (errno) {
   case ENOENT:
-    return OpenError::FileNotFound;
+    return OpenError::NotFound;
   case EACCES:
     return OpenError::PermissionDenied;
   default:

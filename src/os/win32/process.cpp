@@ -278,7 +278,7 @@ Process::spawn(char const* const* argv, SpawnOpts const& opts) noexcept {
                      &state.info, &proc_info) == FALSE) [[unlikely]] {
     DWORD const err = GetLastError();
     if (err == ERROR_FILE_NOT_FOUND) {
-      return SpawnError::FileNotFound;
+      return SpawnError::NotFound;
     }
     debug::panic("CreateProcessA() failed: {}", win32_err_str(err));
   }

@@ -52,7 +52,7 @@ open_file_handle(char const* path, File::OpenFlags flags) {
     DWORD const err = GetLastError();
     switch (err) {
     case ERROR_FILE_NOT_FOUND:
-      return File::OpenError::FileNotFound;
+      return File::OpenError::NotFound;
     case ERROR_ACCESS_DENIED:
       return File::OpenError::PermissionDenied;
     default:

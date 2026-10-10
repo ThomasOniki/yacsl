@@ -24,7 +24,7 @@ public:
 
   enum class OpenError : u8 {
     None,
-    FileNotFound,
+    NotFound,
     PermissionDenied,
   };
 

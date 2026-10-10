@@ -40,7 +40,7 @@ open_file_handle(char const* path, File::OpenFlags flags) {
   if (handle == -1) [[unlikely]] {
     switch (errno) {
     case ENOENT:
-      return File::OpenError::FileNotFound;
+      return File::OpenError::NotFound;
     case EACCES:
       return File::OpenError::PermissionDenied;
     default:
