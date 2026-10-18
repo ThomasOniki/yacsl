@@ -1,10 +1,11 @@
 #ifdef _WIN32
 
 #include "yacsl/os/process.hpp"
-#include "utils.hpp"
 #include "yacsl/containers/string.hpp"
 #include "yacsl/debug/assert.hpp"
 #include "yacsl/debug/panic.hpp"
+#include "yacsl/os/windows/handle.hpp"
+#include "yacsl/os/windows/win_err.hpp"
 #include "yacsl/ranges/slice.hpp"
 #include "yacsl/type_aliases.hpp"
 #include <consoleapi.h>
@@ -49,7 +50,7 @@ usize Process::Output::read(this Output&      self,
     if (err == ERROR_BROKEN_PIPE) {
       return 0;
     }
-    debug::panic("ReadFile() failed: {}", win32_err_str(err));
+    debug::panic("ReadFile() failed: {}", windows::win_err_str(err));
   }
   return static_cast<usize>(ret);
 }
@@ -59,9 +60,9 @@ void Process::Input::write(this Input&             self,
   usize to_write = bytes.len();
   while (to_write > 0) {
     DWORD written = 0;
-    YACSL_TRY_SYSCALL(WriteFile(self.handle_, bytes.data(),
-                                static_cast<DWORD>(bytes.len()), &written,
-                                nullptr));
+    windows::try_win32(WriteFile(self.handle_, bytes.data(),
+                                 static_cast<DWORD>(bytes.len()), &written,
+                                 nullptr));
     to_write -= static_cast<usize>(written);
   }
 }
@@ -69,40 +70,42 @@ void Process::Input::write(this Input&             self,
 void Process::open_files(this Process& self, void* pvoid_state) noexcept {
   State& state = *static_cast<State*>(pvoid_state);
   if (self.stdin_type_ == TYPE_FILE) {
-    state.info.hStdInput = open_file_handle(state.opts->input.file_info_.path,
-                                            state.opts->input.file_info_.flags |
-                                                File::OpenFlags::Read |
-                                                File::OpenFlags::Inheritable)
-                               .value();
+    state.info.hStdInput =
+        windows::open_file_handle(state.opts->input.file_info_.path,
+                                  state.opts->input.file_info_.flags |
+                                      File::OpenFlags::Read |
+                                      File::OpenFlags::Inheritable)
+            .value();
   } else if (self.stdin_type_ == Null) {
     state.info.hStdInput =
-        open_file_handle("NUL",
-                         File::OpenFlags::Read | File::OpenFlags::Inheritable)
+        windows::open_file_handle("NUL", File::OpenFlags::Read |
+                                             File::OpenFlags::Inheritable)
             .value();
   }
   if (self.stdout_type_ == TYPE_FILE) {
     state.info.hStdOutput =
-        open_file_handle(state.opts->output.file_info_.path,
-                         state.opts->output.file_info_.flags |
-                             File::OpenFlags::Write |
-                             File::OpenFlags::Inheritable)
+        windows::open_file_handle(state.opts->output.file_info_.path,
+                                  state.opts->output.file_info_.flags |
+                                      File::OpenFlags::Write |
+                                      File::OpenFlags::Inheritable)
             .value();
   } else if (self.stdout_type_ == Null) {
     state.info.hStdOutput =
-        open_file_handle("NUL",
-                         File::OpenFlags::Write | File::OpenFlags::Inheritable)
+        windows::open_file_handle("NUL", File::OpenFlags::Write |
+                                             File::OpenFlags::Inheritable)
             .value();
   }
   if (self.stderr_type_ == TYPE_FILE) {
-    state.info.hStdError = open_file_handle(state.opts->error.file_info_.path,
-                                            state.opts->error.file_info_.flags |
-                                                File::OpenFlags::Write |
-                                                File::OpenFlags::Inheritable)
-                               .value();
+    state.info.hStdError =
+        windows::open_file_handle(state.opts->error.file_info_.path,
+                                  state.opts->error.file_info_.flags |
+                                      File::OpenFlags::Write |
+                                      File::OpenFlags::Inheritable)
+            .value();
   } else if (self.stderr_type_ == Null) {
     state.info.hStdError =
-        open_file_handle("NUL",
-                         File::OpenFlags::Write | File::OpenFlags::Inheritable)
+        windows::open_file_handle("NUL", File::OpenFlags::Write |
+                                             File::OpenFlags::Inheritable)
             .value();
   }
 }
@@ -114,7 +117,8 @@ static containers::StackArray<HANDLE, 2> create_pipe() {
       .lpSecurityDescriptor = nullptr,
       .bInheritHandle       = TRUE,
   };
-  YACSL_TRY_SYSCALL(CreatePipe(handles.data(), &handles[1], &security_attr, 0));
+  windows::try_win32(
+      CreatePipe(handles.data(), &handles[1], &security_attr, 0));
   return handles;
 }
 
@@ -123,35 +127,35 @@ void Process::create_pipes(this Process& self, void* pvoid_state) noexcept {
 
   if (self.stdin_type_ == Pipe) {
     state.stdin_pipe = create_pipe();
-    YACSL_TRY_SYSCALL(
+    windows::try_win32(
         SetHandleInformation(state.stdin_pipe[1], HANDLE_FLAG_INHERIT, 0));
     state.info.hStdInput      = state.stdin_pipe[0];
     self.stdin_input_.handle_ = state.stdin_pipe[1];
   } else if (self.stdin_type_ == TYPE_OTHER_PIPE) {
     state.info.hStdInput = state.opts->input.other_pipe_handle_;
-    YACSL_TRY_SYSCALL(SetHandleInformation(
+    windows::try_win32(SetHandleInformation(
         state.info.hStdInput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT));
   }
   if (self.stdout_type_ == Pipe) {
     state.stdout_pipe = create_pipe();
-    YACSL_TRY_SYSCALL(
+    windows::try_win32(
         SetHandleInformation(state.stdout_pipe[0], HANDLE_FLAG_INHERIT, 0));
     state.info.hStdOutput       = state.stdout_pipe[1];
     self.stdout_output_.handle_ = state.stdout_pipe[0];
   } else if (self.stdout_type_ == TYPE_OTHER_PIPE) {
     state.info.hStdOutput = state.opts->output.other_pipe_handle_;
-    YACSL_TRY_SYSCALL(SetHandleInformation(
+    windows::try_win32(SetHandleInformation(
         state.info.hStdOutput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT));
   }
   if (self.stderr_type_ == Pipe) {
     state.stderr_pipe = create_pipe();
-    YACSL_TRY_SYSCALL(
+    windows::try_win32(
         SetHandleInformation(state.stderr_pipe[0], HANDLE_FLAG_INHERIT, 0));
     state.info.hStdError        = state.stderr_pipe[1];
     self.stderr_output_.handle_ = state.stderr_pipe[0];
   } else if (self.stderr_type_ == TYPE_OTHER_PIPE) {
     state.info.hStdError = state.opts->error.other_pipe_handle_;
-    YACSL_TRY_SYSCALL(SetHandleInformation(
+    windows::try_win32(SetHandleInformation(
         state.info.hStdError, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT));
   }
 }
@@ -161,25 +165,25 @@ void Process::cleanup_after_spawn(this Process& self,
   State& state = *static_cast<State*>(pvoid_state);
 
   if (self.stdin_type_ == TYPE_FILE || self.stdin_type_ == Type::Null) {
-    YACSL_TRY_SYSCALL(CloseHandle(state.info.hStdInput));
+    windows::try_win32(CloseHandle(state.info.hStdInput));
   } else if (self.stdin_type_ == Pipe) {
-    YACSL_TRY_SYSCALL(CloseHandle(state.stdin_pipe[0]));
+    windows::try_win32(CloseHandle(state.stdin_pipe[0]));
   } else if (self.stdin_type_ == TYPE_OTHER_PIPE) {
-    YACSL_TRY_SYSCALL(CloseHandle(state.opts->input.other_pipe_handle_));
+    windows::try_win32(CloseHandle(state.opts->input.other_pipe_handle_));
   }
   if (self.stdout_type_ == TYPE_FILE || self.stdout_type_ == Type::Null) {
-    YACSL_TRY_SYSCALL(CloseHandle(state.info.hStdOutput));
+    windows::try_win32(CloseHandle(state.info.hStdOutput));
   } else if (self.stdout_type_ == Pipe) {
-    YACSL_TRY_SYSCALL(CloseHandle(state.stdout_pipe[1]));
+    windows::try_win32(CloseHandle(state.stdout_pipe[1]));
   } else if (self.stdout_type_ == TYPE_OTHER_PIPE) {
-    YACSL_TRY_SYSCALL(CloseHandle(state.opts->output.other_pipe_handle_));
+    windows::try_win32(CloseHandle(state.opts->output.other_pipe_handle_));
   }
   if (self.stderr_type_ == TYPE_FILE || self.stderr_type_ == Type::Null) {
-    YACSL_TRY_SYSCALL(CloseHandle(state.info.hStdError));
+    windows::try_win32(CloseHandle(state.info.hStdError));
   } else if (self.stderr_type_ == Pipe) {
-    YACSL_TRY_SYSCALL(CloseHandle(state.stderr_pipe[1]));
+    windows::try_win32(CloseHandle(state.stderr_pipe[1]));
   } else if (self.stderr_type_ == TYPE_OTHER_PIPE) {
-    YACSL_TRY_SYSCALL(CloseHandle(state.opts->error.other_pipe_handle_));
+    windows::try_win32(CloseHandle(state.opts->error.other_pipe_handle_));
   }
 }
 
@@ -280,10 +284,10 @@ Process::spawn(char const* const* argv, SpawnOpts const& opts) noexcept {
     if (err == ERROR_FILE_NOT_FOUND) {
       return SpawnError::NotFound;
     }
-    debug::panic("CreateProcessA() failed: {}", win32_err_str(err));
+    debug::panic("CreateProcessA() failed: {}", windows::win_err_str(err));
   }
 
-  YACSL_TRY_SYSCALL(CloseHandle(proc_info.hThread));
+  windows::try_win32(CloseHandle(proc_info.hThread));
   spawned.handle_ = proc_info.hProcess;
   spawned.group_  = proc_info.dwProcessId;
 
@@ -308,19 +312,19 @@ void Process::cleanup_before_wait(this Process& self,
                                   ExitStatus*   status) noexcept {
   if (self.stdin_type_ == Pipe &&
       self.stdin_input_.handle_ != File::NIL_HANDLE) {
-    YACSL_TRY_SYSCALL(CloseHandle(self.stdin_input_.handle_));
+    windows::try_win32(CloseHandle(self.stdin_input_.handle_));
     self.stdin_input_.handle_ = File::NIL_HANDLE;
   }
   if (self.stdout_type_ == Pipe &&
       self.stdout_output_.handle_ != File::NIL_HANDLE) {
     status->unread_stdout = drain_pipe(&self.stdout_output_);
-    YACSL_TRY_SYSCALL(CloseHandle(self.stdout_output_.handle_));
+    windows::try_win32(CloseHandle(self.stdout_output_.handle_));
     self.stdout_output_.handle_ = File::NIL_HANDLE;
   }
   if (self.stderr_type_ == Pipe &&
       self.stderr_output_.handle_ != File::NIL_HANDLE) {
     status->unread_stderr = drain_pipe(&self.stderr_output_);
-    YACSL_TRY_SYSCALL(CloseHandle(self.stderr_output_.handle_));
+    windows::try_win32(CloseHandle(self.stderr_output_.handle_));
     self.stderr_output_.handle_ = File::NIL_HANDLE;
   }
 }
@@ -341,13 +345,13 @@ Process::ExitStatus Process::wait(this Process& self) noexcept {
   self.cleanup_before_wait(&status);
 
   debug::assert_(WaitForSingleObject(self.handle_, INFINITE) == WAIT_OBJECT_0,
-                 "WaitForSingleObject failed: {}", win32_err_str());
+                 "WaitForSingleObject failed: {}", windows::win_err_str());
 
   DWORD code = 0;
-  YACSL_TRY_SYSCALL(GetExitCodeProcess(self.handle_, &code));
+  windows::try_win32(GetExitCodeProcess(self.handle_, &code));
   status.exit_code = static_cast<u32>(code);
 
-  YACSL_TRY_SYSCALL(CloseHandle(self.handle_));
+  windows::try_win32(CloseHandle(self.handle_));
   self.handle_ = NIL_PROCESS_HANDLE;
 
   return status;
@@ -356,9 +360,9 @@ Process::ExitStatus Process::wait(this Process& self) noexcept {
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void Process::send_signal(this Process& self, Signal signal) noexcept {
   if (signal == Signal::SigInt) {
-    YACSL_TRY_SYSCALL(GenerateConsoleCtrlEvent(CTRL_C_EVENT, self.group_));
+    windows::try_win32(GenerateConsoleCtrlEvent(CTRL_C_EVENT, self.group_));
   } else {
-    YACSL_TRY_SYSCALL(TerminateProcess(self.handle_, 1));
+    windows::try_win32(TerminateProcess(self.handle_, 1));
   }
   self.handle_ = nullptr;
 }

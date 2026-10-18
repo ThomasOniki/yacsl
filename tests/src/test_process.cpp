@@ -7,6 +7,7 @@
 #include "yacsl/fmt/format_string.hpp"
 #include "yacsl/os/file.hpp"
 #include "yacsl/os/process.hpp"
+#include "yacsl/os/unix/errno.hpp"
 #include "yacsl/ranges/slice.hpp"
 #include "yacsl/ranges/string_view.hpp"
 #include "yacsl/testing/expect.hpp"
@@ -19,30 +20,14 @@
 #include <unistd.h>
 
 #ifdef _WIN32
+#include "yacsl/os/windows/win_err.hpp"
 #include <fileapi.h>
 #include <windows.h>
 #include <winerror.h>
 #include <winnt.h>
 
-#define TRY_SYSCALL_WIN32(syscall)                                             \
-  do {                                                                         \
-    if ((syscall) == FALSE) [[unlikely]] {                                     \
-      yacsl::debug::panic(#syscall " failed: {}", GetLastError());             \
-    }                                                                          \
-  } while (false)
-
 #define O_CLOEXEC _O_NOINHERIT
 #endif
-
-#define TRY_SYSCALL(syscall)                                                   \
-  [&] {                                                                        \
-    auto const _result = syscall;                                              \
-    if (_result == -1) [[unlikely]] {                                          \
-      perror(#syscall);                                                        \
-      abort();                                                                 \
-    }                                                                          \
-    return _result;                                                            \
-  }()
 
 using yacsl::os::Process;
 using Stdio = Process::SpawnOpts;
@@ -88,63 +73,64 @@ struct Pipes {
 #endif
   {
 #ifdef _WIN32
-    TRY_SYSCALL_WIN32(CreatePipe(&input[0], &input[1], nullptr, 0));
-    TRY_SYSCALL_WIN32(CreatePipe(&output[0], &output[1], nullptr, 0));
-    TRY_SYSCALL_WIN32(CreatePipe(&error[0], &error[1], nullptr, 0));
-    TRY_SYSCALL_WIN32(SetHandleInformation(input[0], HANDLE_FLAG_INHERIT,
-                                           HANDLE_FLAG_INHERIT));
-    TRY_SYSCALL_WIN32(SetHandleInformation(output[1], HANDLE_FLAG_INHERIT,
-                                           HANDLE_FLAG_INHERIT));
-    TRY_SYSCALL_WIN32(SetHandleInformation(error[1], HANDLE_FLAG_INHERIT,
-                                           HANDLE_FLAG_INHERIT));
+    yacsl::os::windows::try_win32(CreatePipe(&input[0], &input[1], nullptr, 0));
+    yacsl::os::windows::try_win32(
+        CreatePipe(&output[0], &output[1], nullptr, 0));
+    yacsl::os::windows::try_win32(CreatePipe(&error[0], &error[1], nullptr, 0));
+    yacsl::os::windows::try_win32(SetHandleInformation(
+        input[0], HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT));
+    yacsl::os::windows::try_win32(SetHandleInformation(
+        output[1], HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT));
+    yacsl::os::windows::try_win32(SetHandleInformation(
+        error[1], HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT));
 
     // NOLINTBEGIN(performance-no-int-to-ptr)
-    TRY_SYSCALL_WIN32(SetStdHandleEx(
+    yacsl::os::windows::try_win32(SetStdHandleEx(
         STD_INPUT_HANDLE, reinterpret_cast<HANDLE>(input[0]), &original[0]));
-    TRY_SYSCALL_WIN32(SetStdHandleEx(
+    yacsl::os::windows::try_win32(SetStdHandleEx(
         STD_OUTPUT_HANDLE, reinterpret_cast<HANDLE>(output[1]), &original[1]));
-    TRY_SYSCALL_WIN32(SetStdHandleEx(
+    yacsl::os::windows::try_win32(SetStdHandleEx(
         STD_ERROR_HANDLE, reinterpret_cast<HANDLE>(error[1]), &original[2]));
 
     //  NOLINTEND(performance-no-int-to-ptr)
 #else
     // NOLINTNEXTLINE(android-cloexec-pipe)
-    TRY_SYSCALL(::pipe(input.data()));
+    yacsl::os::unix::try_unix(::pipe(input.data()));
     // NOLINTNEXTLINE(android-cloexec-pipe)
-    TRY_SYSCALL(::pipe(output.data()));
+    yacsl::os::unix::try_unix(::pipe(output.data()));
     // NOLINTNEXTLINE(android-cloexec-pipe)
-    TRY_SYSCALL(::pipe(error.data()));
+    yacsl::os::unix::try_unix(::pipe(error.data()));
 
-    TRY_SYSCALL(::fcntl(input[1], F_SETFD, FD_CLOEXEC));
-    TRY_SYSCALL(::fcntl(output[0], F_SETFD, FD_CLOEXEC));
-    TRY_SYSCALL(::fcntl(error[0], F_SETFD, FD_CLOEXEC));
+    yacsl::os::unix::try_unix(::fcntl(input[1], F_SETFD, FD_CLOEXEC));
+    yacsl::os::unix::try_unix(::fcntl(output[0], F_SETFD, FD_CLOEXEC));
+    yacsl::os::unix::try_unix(::fcntl(error[0], F_SETFD, FD_CLOEXEC));
 
-    TRY_SYSCALL(::dup2(input[0], STDIN_FILENO));
-    TRY_SYSCALL(::dup2(output[1], STDOUT_FILENO));
-    TRY_SYSCALL(::dup2(error[1], STDERR_FILENO));
+    yacsl::os::unix::try_unix(::dup2(input[0], STDIN_FILENO));
+    yacsl::os::unix::try_unix(::dup2(output[1], STDOUT_FILENO));
+    yacsl::os::unix::try_unix(::dup2(error[1], STDERR_FILENO));
 
-    TRY_SYSCALL(::close(input[0]));
-    TRY_SYSCALL(::close(output[1]));
-    TRY_SYSCALL(::close(error[1]));
+    yacsl::os::unix::try_unix(::close(input[0]));
+    yacsl::os::unix::try_unix(::close(output[1]));
+    yacsl::os::unix::try_unix(::close(error[1]));
 #endif
   }
 
   void restore_original_io() {
 #ifdef _WIN32
-    TRY_SYSCALL_WIN32(SetStdHandle(STD_INPUT_HANDLE, original[0]));
-    TRY_SYSCALL_WIN32(SetStdHandle(STD_OUTPUT_HANDLE, original[1]));
-    TRY_SYSCALL_WIN32(SetStdHandle(STD_ERROR_HANDLE, original[2]));
+    yacsl::os::windows::try_win32(SetStdHandle(STD_INPUT_HANDLE, original[0]));
+    yacsl::os::windows::try_win32(SetStdHandle(STD_OUTPUT_HANDLE, original[1]));
+    yacsl::os::windows::try_win32(SetStdHandle(STD_ERROR_HANDLE, original[2]));
 
-    TRY_SYSCALL_WIN32(CloseHandle(input[0]));
-    TRY_SYSCALL_WIN32(CloseHandle(output[1]));
-    TRY_SYSCALL_WIN32(CloseHandle(error[1]));
+    yacsl::os::windows::try_win32(CloseHandle(input[0]));
+    yacsl::os::windows::try_win32(CloseHandle(output[1]));
+    yacsl::os::windows::try_win32(CloseHandle(error[1]));
 #else
-    TRY_SYSCALL(::dup2(original[0], STDIN_FILENO));
-    TRY_SYSCALL(::dup2(original[1], STDOUT_FILENO));
-    TRY_SYSCALL(::dup2(original[2], STDERR_FILENO));
-    TRY_SYSCALL(::close(original[0]));
-    TRY_SYSCALL(::close(original[1]));
-    TRY_SYSCALL(::close(original[2]));
+    yacsl::os::unix::try_unix(::dup2(original[0], STDIN_FILENO));
+    yacsl::os::unix::try_unix(::dup2(original[1], STDOUT_FILENO));
+    yacsl::os::unix::try_unix(::dup2(original[2], STDERR_FILENO));
+    yacsl::os::unix::try_unix(::close(original[0]));
+    yacsl::os::unix::try_unix(::close(original[1]));
+    yacsl::os::unix::try_unix(::close(original[2]));
 #endif
   }
 };
@@ -198,8 +184,9 @@ static void write_input(Type type, Process* proc, Pipes* pipes) {
   if (type == Type::Inherit) {
 #ifdef _WIN32
     DWORD written = 0;
-    TRY_SYSCALL_WIN32(WriteFile(pipes->input[1], INPUT_DATA.data(),
-                                INPUT_DATA.len(), &written, nullptr));
+    yacsl::os::windows::try_win32(WriteFile(pipes->input[1], INPUT_DATA.data(),
+                                            INPUT_DATA.len(), &written,
+                                            nullptr));
 #else
     ::write(pipes->input[1], INPUT_DATA.data(), INPUT_DATA.len());
 #endif
@@ -225,7 +212,7 @@ get_pipe_output(Process::Output* output, yacsl::ranges::StringView expected) {
 
 static void check_file(char const* path, yacsl::ranges::StringView expected) {
   int const fildes =
-      TRY_SYSCALL(open(path, O_RDWR | O_CREAT | O_CLOEXEC, 0644));
+      yacsl::os::unix::try_unix(open(path, O_RDWR | O_CREAT | O_CLOEXEC, 0644));
 
   yacsl::containers::String buf;
 
@@ -246,8 +233,8 @@ static void check_file(char const* path, yacsl::ranges::StringView expected) {
   buf.resize(buf.len() - 64);
   yacsl::testing::expect_eq(buf.view(), expected);
 
-  TRY_SYSCALL(close(fildes));
-  TRY_SYSCALL(remove(path));
+  yacsl::os::unix::try_unix(close(fildes));
+  yacsl::os::unix::try_unix(remove(path));
 }
 
 static void check_file_output(IoTypes types) noexcept {
@@ -464,9 +451,9 @@ static void test_run_c(IoTypes types) {
   }
 
 #ifdef _WIN32
-  TRY_SYSCALL_WIN32(CloseHandle(pipes.input[1]));
+  yacsl::os::windows::try_win32(CloseHandle(pipes.input[1]));
 #else
-  TRY_SYSCALL(::close(pipes.input[1]));
+  yacsl::os::unix::try_unix(::close(pipes.input[1]));
 #endif
   Process::ExitStatus const status = process.wait();
   pipes.restore_original_io();
@@ -478,11 +465,11 @@ static void test_run_c(IoTypes types) {
       types, {.out = piped_output.view(), .err = piped_error.view()}, status);
 
 #ifdef _WIN32
-  TRY_SYSCALL_WIN32(CloseHandle(pipes.output[0]));
-  TRY_SYSCALL_WIN32(CloseHandle(pipes.error[0]));
+  yacsl::os::windows::try_win32(CloseHandle(pipes.output[0]));
+  yacsl::os::windows::try_win32(CloseHandle(pipes.error[0]));
 #else
-  TRY_SYSCALL(::close(pipes.output[0]));
-  TRY_SYSCALL(::close(pipes.error[0]));
+  yacsl::os::unix::try_unix(::close(pipes.output[0]));
+  yacsl::os::unix::try_unix(::close(pipes.error[0]));
 #endif
 }
 

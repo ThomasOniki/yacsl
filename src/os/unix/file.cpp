@@ -1,10 +1,12 @@
 #ifndef _WIN32
 
 #include "yacsl/os/file.hpp"
-#include "utils.hpp"
 #include "yacsl/containers/error.hpp"
 #include "yacsl/containers/result.hpp"
 #include "yacsl/debug/panic.hpp"
+#include "yacsl/os/unix/errno.hpp"
+#include "yacsl/os/unix/handle.hpp"
+#include "yacsl/os/unix/oflag.hpp"
 #include "yacsl/ranges/slice.hpp"
 #include "yacsl/type_aliases.hpp"
 #include "yacsl/utils/isize.hpp"
@@ -19,23 +21,23 @@ namespace yacsl::os {
 
 containers::Result<File, File::OpenError>
 File::open(char const* path, File::OpenFlags flags) noexcept {
-  auto const result = open_file_handle(path, flags);
+  auto const result = unix::open_file_handle(path, flags);
   if (result.is_error()) {
     return result.error_unchecked();
   }
   File opened;
   opened.handle_ = result.value_unchecked();
-  if (strip_file_open_flag(&flags, File::OpenFlags::SeekEnd) &&
+  if (unix::strip_file_open_flag(&flags, File::OpenFlags::SeekEnd) &&
       (flags & File::OpenFlags::Truncate) == File::OpenFlags::None) {
     opened.cursor_pos_ = static_cast<usize>(
-        YACSL_TRY_SYSCALL(::lseek(opened.handle_, 0, SEEK_END)));
+        unix::try_unix(::lseek(opened.handle_, 0, SEEK_END)));
   }
   return opened;
 }
 
 void File::close(this File& self) noexcept {
   if (self.handle_ != NIL_HANDLE) {
-    YACSL_TRY_SYSCALL(::close(self.handle_));
+    unix::try_unix(::close(self.handle_));
     self.handle_ = NIL_HANDLE;
   }
 }
@@ -59,27 +61,27 @@ File File::open_stderr() noexcept {
 // NOLINTBEGIN(readability-make-member-function-const)
 usize File::write(this File& self, ranges::Slice<u8 const> data) noexcept {
   ssize_t const result =
-      YACSL_TRY_SYSCALL(::write(self.handle_, data.data(), data.len()));
+      unix::try_unix(::write(self.handle_, data.data(), data.len()));
   return static_cast<usize>(result);
 }
 usize File::read(this File& self, ranges::Slice<u8> buffer) noexcept {
   ssize_t const result =
-      YACSL_TRY_SYSCALL(::read(self.handle_, buffer.data(), buffer.len()));
+      unix::try_unix(::read(self.handle_, buffer.data(), buffer.len()));
   return static_cast<usize>(result);
 }
 
 void File::seek_begin(this File& self, utils::isize offset) noexcept {
-  off_t const result = YACSL_TRY_SYSCALL(
+  off_t const result = unix::try_unix(
       ::lseek(self.handle_, static_cast<off_t>(offset), SEEK_SET));
   self.cursor_pos_ = static_cast<usize>(result);
 }
 void File::seek_end(this File& self, utils::isize offset) noexcept {
-  off_t const result = YACSL_TRY_SYSCALL(
+  off_t const result = unix::try_unix(
       ::lseek(self.handle_, static_cast<off_t>(offset), SEEK_END));
   self.cursor_pos_ = static_cast<usize>(result);
 }
 void File::seek_cursor(this File& self, utils::isize offset) noexcept {
-  off_t const result = YACSL_TRY_SYSCALL(
+  off_t const result = unix::try_unix(
       ::lseek(self.handle_, static_cast<off_t>(offset), SEEK_CUR));
   self.cursor_pos_ = static_cast<usize>(result);
 }
@@ -113,7 +115,7 @@ File::access(char const* path, AccessFlags flags) {
   case EACCES:
     return OpenError::PermissionDenied;
   default:
-    debug::panic("access() failed: {}", errno_str());
+    debug::panic("access() failed: {}", unix::errno_str());
   }
 }
 

@@ -4,14 +4,13 @@
 
 #include "yacsl/containers/result.hpp"
 #include "yacsl/os/file.hpp"
-#include "yacsl/ranges/string_view.hpp"
 #include "yacsl/type_aliases.hpp"
 #include <errhandlingapi.h>
 #include <intsafe.h>
 #include <windef.h>
 #include <winnt.h>
 
-namespace yacsl::os {
+namespace yacsl::os::windows {
 
 inline bool strip_file_open_flag(File::OpenFlags* flags,
                                  File::OpenFlags  flag) noexcept {
@@ -28,19 +27,10 @@ struct OpenedFile {
   usize cursor_pos;
 };
 
-ranges::StringView        win32_err_str(DWORD err) noexcept;
-inline ranges::StringView win32_err_str() noexcept {
-  return win32_err_str(GetLastError());
-}
-
 // SeekEnd will be ignored
 containers::Result<HANDLE, File::OpenError>
 open_file_handle(char const* path, File::OpenFlags flags);
 
-} // namespace yacsl::os
-
-#define YACSL_TRY_SYSCALL(syscall)                                             \
-  if ((syscall) == FALSE) [[unlikely]]                                         \
-  debug::panic(#syscall " failed: {}", yacsl::os::win32_err_str())
+} // namespace yacsl::os::windows
 
 #endif

@@ -1,9 +1,10 @@
 #ifdef _WIN32
 
-#include "utils.hpp"
 #include "yacsl/debug/assert.hpp"
 #include "yacsl/debug/panic.hpp"
 #include "yacsl/meta/limits.hpp"
+#include "yacsl/os/windows/handle.hpp"
+#include "yacsl/os/windows/win_err.hpp"
 #include "yacsl/type_aliases.hpp"
 #include "yacsl/utils/isize.hpp"
 #include <accctrl.h>
@@ -18,14 +19,15 @@ namespace yacsl::os {
 
 containers::Result<File, File::OpenError>
 File::open(char const* path, File::OpenFlags flags) noexcept {
-  containers::Result<HANDLE, OpenError> handle = open_file_handle(path, flags);
+  containers::Result<HANDLE, OpenError> handle =
+      windows::open_file_handle(path, flags);
   if (handle.is_error()) [[unlikely]] {
     return handle.error_unchecked();
   }
   File opened;
   opened.handle_ = handle.value_unchecked();
 
-  if (strip_file_open_flag(&flags, File::OpenFlags::SeekEnd)) {
+  if (windows::strip_file_open_flag(&flags, File::OpenFlags::SeekEnd)) {
     LONG high = 0;
     opened.cursor_pos_ =
         static_cast<usize>(SetFilePointer(opened.handle_, 0, &high, FILE_END));
@@ -33,7 +35,7 @@ File::open(char const* path, File::OpenFlags flags) noexcept {
     if (opened.cursor_pos_ == static_cast<usize>(INVALID_SET_FILE_POINTER)) {
       DWORD const err = GetLastError();
       if (err != NO_ERROR) {
-        debug::panic("SetFilePointer failed: {}", win32_err_str(err));
+        debug::panic("SetFilePointer failed: {}", windows::win_err_str(err));
       }
     }
   }
@@ -43,7 +45,7 @@ File::open(char const* path, File::OpenFlags flags) noexcept {
 
 void File::close(this File& self) noexcept {
   if (self.handle_ != NIL_HANDLE) {
-    YACSL_TRY_SYSCALL(CloseHandle(self.handle_));
+    windows::try_win32(CloseHandle(self.handle_));
   }
 }
 
@@ -66,14 +68,14 @@ File File::open_stderr() noexcept {
 // NOLINTBEGIN(readability-make-member-function-const)
 usize File::write(this File& self, ranges::Slice<u8 const> data) noexcept {
   DWORD ret = 0;
-  YACSL_TRY_SYSCALL(WriteFile(self.handle_, data.data(),
-                              static_cast<DWORD>(data.len()), &ret, nullptr));
+  windows::try_win32(WriteFile(self.handle_, data.data(),
+                               static_cast<DWORD>(data.len()), &ret, nullptr));
   return static_cast<usize>(ret);
 }
 usize File::read(this File& self, ranges::Slice<u8> buffer) noexcept {
   DWORD ret = 0;
-  YACSL_TRY_SYSCALL(ReadFile(self.handle_, buffer.data(),
-                             static_cast<DWORD>(buffer.len()), &ret, nullptr));
+  windows::try_win32(ReadFile(self.handle_, buffer.data(),
+                              static_cast<DWORD>(buffer.len()), &ret, nullptr));
   return static_cast<usize>(ret);
 }
 
@@ -84,7 +86,7 @@ void File::seek_begin(this File& self, utils::isize offset) noexcept {
   if (pos_low == INVALID_SET_FILE_POINTER) {
     DWORD const err = GetLastError();
     if (err != NO_ERROR) {
-      debug::panic("SetFilePointer failed: {}", win32_err_str(err));
+      debug::panic("SetFilePointer failed: {}", windows::win_err_str(err));
     }
   }
   self.cursor_pos_ =
@@ -97,7 +99,7 @@ void File::seek_end(this File& self, utils::isize offset) noexcept {
   if (pos_low == INVALID_SET_FILE_POINTER) {
     DWORD const err = GetLastError();
     if (err != NO_ERROR) {
-      debug::panic("SetFilePointer failed: {}", win32_err_str(err));
+      debug::panic("SetFilePointer failed: {}", windows::win_err_str(err));
     }
   }
   self.cursor_pos_ =
@@ -110,7 +112,7 @@ void File::seek_cursor(this File& self, utils::isize offset) noexcept {
   if (pos_low == INVALID_SET_FILE_POINTER) {
     DWORD const err = GetLastError();
     if (err != NO_ERROR) {
-      debug::panic("SetFilePointer failed: {}", win32_err_str(err));
+      debug::panic("SetFilePointer failed: {}", windows::win_err_str(err));
     }
   }
   self.cursor_pos_ =
@@ -139,7 +141,7 @@ File::access(char const* path, AccessFlags flags) {
     case ERROR_NOACCESS:
       return OpenError::PermissionDenied;
     default:
-      debug::panic("GetFileSecurityA() failed: {}", win32_err_str(err));
+      debug::panic("GetFileSecurityA() failed: {}", windows::win_err_str(err));
     }
   }
   debug::assert_eq(sizeof(desc), needed_len);
@@ -152,7 +154,8 @@ File::access(char const* path, AccessFlags flags) {
       .ptstrName = const_cast<char*>("CURRENT_USER"),
   };
   ACCESS_MASK access = 0;
-  YACSL_TRY_SYSCALL(GetEffectiveRightsFromAclA(desc.Dacl, &trustee, &access));
+  windows::check_win_err(
+      GetEffectiveRightsFromAclA(desc.Dacl, &trustee, &access));
 
   if (static_cast<u8>(flags & AccessFlags::Read) > 0 &&
       (access & GENERIC_READ) == 0) {
