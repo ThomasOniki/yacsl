@@ -1,11 +1,11 @@
 #ifdef _WIN32
 
-#include "../../os/win32/utils.hpp"
 #include "yacsl/containers/string.hpp"
 #include "yacsl/containers/vector.hpp"
 #include "yacsl/debug/assert.hpp"
 #include "yacsl/debug/stack_trace.hpp"
 #include "yacsl/memory/lifetimes.hpp"
+#include "yacsl/os/windows/win_err.hpp"
 #include "yacsl/type_aliases.hpp"
 #include <libloaderapi.h>
 #include <processthreadsapi.h>
@@ -39,7 +39,7 @@ StackTrace::compute_entries(this StackTrace const& self) noexcept {
   self.entries_.resize(self.addresses_.len());
   for (usize i = 0; i < self.addresses_.len(); ++i) {
     HMODULE module = nullptr;
-    YACSL_TRY_SYSCALL(
+    os::windows::try_win32(
         GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
                            static_cast<LPCSTR>(self.addresses_[i]), &module));
 
@@ -53,7 +53,8 @@ StackTrace::compute_entries(this StackTrace const& self) noexcept {
                                static_cast<DWORD>(module_name.len()));
     }
     module_name.resize(len);
-    assert_(len > 0, "GetModuleFileNameA failed(): {}", os::win32_err_str());
+    assert_(len > 0, "GetModuleFileNameA failed(): {}",
+            os::windows::win_err_str());
 
     MODULEINFO info = {};
     GetModuleInformation(GetCurrentProcess(), module, &info,
