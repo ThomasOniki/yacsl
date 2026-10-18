@@ -1,12 +1,14 @@
 #if !defined(__EMSCRIPTEN__) && !defined(_WIN32)
 
 #include "yacsl/os/process.hpp"
-#include "utils.hpp"
 #include "yacsl/containers/result.hpp"
 #include "yacsl/containers/stack_array.hpp"
 #include "yacsl/containers/string.hpp"
 #include "yacsl/debug/assert.hpp"
+#include "yacsl/debug/source_location.hpp"
 #include "yacsl/os/file.hpp"
+#include "yacsl/os/unix/errno.hpp"
+#include "yacsl/os/unix/oflag.hpp"
 #include "yacsl/ranges/slice.hpp"
 #include "yacsl/type_aliases.hpp"
 #include <errno.h>
@@ -38,26 +40,26 @@ struct State {
 };
 } // namespace
 
-#define CHECK_RETURN(func)                                                     \
-  do {                                                                         \
-    int const _result = func;                                                  \
-    debug::assert_(_result == 0, #func " failed: {}", errno_str(_result));     \
-  } while (false)
+static void check_return(int value, debug::SourceLocation location =
+                                        debug::SourceLocation::current()) {
+  debug::assert_(value == 0, "Posix function failed at {}:\n{}", location,
+                 unix::errno_str(value));
+}
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 usize Process::Output::read(this Output&      self,
                             ranges::Slice<u8> buffer) noexcept {
   return static_cast<usize>(
-      YACSL_TRY_SYSCALL(::read(self.handle_, buffer.data(), buffer.len())));
+      unix::try_unix(::read(self.handle_, buffer.data(), buffer.len())));
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void Process::Input::write(this Input&             self,
                            ranges::Slice<u8 const> bytes) noexcept {
-  usize written = static_cast<usize>(
-      YACSL_TRY_SYSCALL(::write(self.handle_, bytes.data(), bytes.len())));
+  auto written = static_cast<usize>(
+      unix::try_unix(::write(self.handle_, bytes.data(), bytes.len())));
   while (written < bytes.len()) {
-    written += static_cast<usize>(YACSL_TRY_SYSCALL(
+    written += static_cast<usize>(unix::try_unix(
         ::write(self.handle_, &bytes[written], bytes.len() - written)));
   }
 }
@@ -67,11 +69,11 @@ static void redirect_child_stdio_to_file(posix_spawn_file_actions_t* actions,
                                          char const*                 path,
                                          int stream) noexcept {
   int const oflag =
-      unix_flags(flags | File::OpenFlags::Inheritable |
-                 (stream == STDIN_FILENO ? File::OpenFlags::Read
-                                         : File::OpenFlags::Write));
+      unix::to_oflag(flags | File::OpenFlags::Inheritable |
+                     (stream == STDIN_FILENO ? File::OpenFlags::Read
+                                             : File::OpenFlags::Write));
 
-  CHECK_RETURN(
+  check_return(
       posix_spawn_file_actions_addopen(actions, stream, path, oflag, 0644));
 }
 
@@ -107,51 +109,51 @@ void Process::create_pipes(this Process& self, void* pvoid_state) noexcept {
   // NOLINTBEGIN(android-cloexec-pipe)
   State& state = *static_cast<State*>(pvoid_state);
   if (self.stdin_type_ == Pipe) {
-    YACSL_TRY_SYSCALL(::pipe(state.stdin_pipe.data()));
+    unix::try_unix(::pipe(state.stdin_pipe.data()));
     self.stdin_input_.handle_ = state.stdin_pipe[1];
-    CHECK_RETURN(posix_spawn_file_actions_adddup2(
+    check_return(posix_spawn_file_actions_adddup2(
         &state.file_actions, state.stdin_pipe[0], STDIN_FILENO));
-    CHECK_RETURN(posix_spawn_file_actions_addclose(&state.file_actions,
+    check_return(posix_spawn_file_actions_addclose(&state.file_actions,
                                                    state.stdin_pipe[0]));
-    CHECK_RETURN(posix_spawn_file_actions_addclose(&state.file_actions,
+    check_return(posix_spawn_file_actions_addclose(&state.file_actions,
                                                    state.stdin_pipe[1]));
   } else if (self.stdin_type_ == TYPE_OTHER_PIPE) {
-    CHECK_RETURN(posix_spawn_file_actions_adddup2(
+    check_return(posix_spawn_file_actions_adddup2(
         &state.file_actions, state.opts->input.other_pipe_handle_,
         STDIN_FILENO));
-    CHECK_RETURN(posix_spawn_file_actions_addclose(
+    check_return(posix_spawn_file_actions_addclose(
         &state.file_actions, state.opts->input.other_pipe_handle_));
   }
   if (self.stdout_type_ == Pipe) {
-    YACSL_TRY_SYSCALL(::pipe(state.stdout_pipe.data()));
+    unix::try_unix(::pipe(state.stdout_pipe.data()));
     self.stdout_output_.handle_ = state.stdout_pipe[0];
-    CHECK_RETURN(posix_spawn_file_actions_adddup2(
+    check_return(posix_spawn_file_actions_adddup2(
         &state.file_actions, state.stdout_pipe[1], STDOUT_FILENO));
-    CHECK_RETURN(posix_spawn_file_actions_addclose(&state.file_actions,
+    check_return(posix_spawn_file_actions_addclose(&state.file_actions,
                                                    state.stdout_pipe[0]));
-    CHECK_RETURN(posix_spawn_file_actions_addclose(&state.file_actions,
+    check_return(posix_spawn_file_actions_addclose(&state.file_actions,
                                                    state.stdout_pipe[1]));
   } else if (self.stdout_type_ == TYPE_OTHER_PIPE) {
-    CHECK_RETURN(posix_spawn_file_actions_adddup2(
+    check_return(posix_spawn_file_actions_adddup2(
         &state.file_actions, state.opts->output.other_pipe_handle_,
         STDOUT_FILENO));
-    CHECK_RETURN(posix_spawn_file_actions_addclose(
+    check_return(posix_spawn_file_actions_addclose(
         &state.file_actions, state.opts->output.other_pipe_handle_));
   }
   if (self.stderr_type_ == Pipe) {
-    YACSL_TRY_SYSCALL(::pipe(state.stderr_pipe.data()));
+    unix::try_unix(::pipe(state.stderr_pipe.data()));
     self.stderr_output_.handle_ = state.stderr_pipe[0];
-    CHECK_RETURN(posix_spawn_file_actions_adddup2(
+    check_return(posix_spawn_file_actions_adddup2(
         &state.file_actions, state.stderr_pipe[1], STDERR_FILENO));
-    CHECK_RETURN(posix_spawn_file_actions_addclose(&state.file_actions,
+    check_return(posix_spawn_file_actions_addclose(&state.file_actions,
                                                    state.stderr_pipe[0]));
-    CHECK_RETURN(posix_spawn_file_actions_addclose(&state.file_actions,
+    check_return(posix_spawn_file_actions_addclose(&state.file_actions,
                                                    state.stderr_pipe[1]));
   } else if (self.stderr_type_ == TYPE_OTHER_PIPE) {
-    CHECK_RETURN(posix_spawn_file_actions_adddup2(
+    check_return(posix_spawn_file_actions_adddup2(
         &state.file_actions, state.opts->error.other_pipe_handle_,
         STDERR_FILENO));
-    CHECK_RETURN(posix_spawn_file_actions_addclose(
+    check_return(posix_spawn_file_actions_addclose(
         &state.file_actions, state.opts->error.other_pipe_handle_));
   }
   // NOLINTEND(android-cloexec-pipe)
@@ -160,22 +162,22 @@ void Process::create_pipes(this Process& self, void* pvoid_state) noexcept {
 void Process::cleanup_after_spawn(this Process& self,
                                   void*         pvoid_state) noexcept {
   State& state = *static_cast<State*>(pvoid_state);
-  CHECK_RETURN(posix_spawn_file_actions_destroy(&state.file_actions));
+  check_return(posix_spawn_file_actions_destroy(&state.file_actions));
 
   if (self.stdin_type_ == Pipe) {
-    YACSL_TRY_SYSCALL(close(state.stdin_pipe[0]));
+    unix::try_unix(close(state.stdin_pipe[0]));
   } else if (self.stdin_type_ == TYPE_OTHER_PIPE) {
-    YACSL_TRY_SYSCALL(close(state.opts->input.other_pipe_handle_));
+    unix::try_unix(close(state.opts->input.other_pipe_handle_));
   }
   if (self.stdout_type_ == Pipe) {
-    YACSL_TRY_SYSCALL(close(state.stdout_pipe[1]));
+    unix::try_unix(close(state.stdout_pipe[1]));
   } else if (self.stdout_type_ == TYPE_OTHER_PIPE) {
-    YACSL_TRY_SYSCALL(close(state.opts->output.other_pipe_handle_));
+    unix::try_unix(close(state.opts->output.other_pipe_handle_));
   }
   if (self.stderr_type_ == Pipe) {
-    YACSL_TRY_SYSCALL(close(state.stderr_pipe[1]));
+    unix::try_unix(close(state.stderr_pipe[1]));
   } else if (self.stderr_type_ == TYPE_OTHER_PIPE) {
-    YACSL_TRY_SYSCALL(close(state.opts->error.other_pipe_handle_));
+    unix::try_unix(close(state.opts->error.other_pipe_handle_));
   }
 }
 
@@ -196,7 +198,7 @@ Process::spawn(char const* const* argv, SpawnOpts const& opts) noexcept {
       .stderr_pipe  = {-1, -1},
   };
 
-  CHECK_RETURN(posix_spawn_file_actions_init(&state.file_actions));
+  check_return(posix_spawn_file_actions_init(&state.file_actions));
 
   if (opts.cwd.data() != nullptr) {
     posix_spawn_file_actions_addchdir(&state.file_actions,
@@ -216,7 +218,8 @@ Process::spawn(char const* const* argv, SpawnOpts const& opts) noexcept {
   if (result == ENOENT) {
     return SpawnError::NotFound;
   }
-  debug::assert_(result == 0, "posix_spawnp failed: {}", errno_str(result));
+  debug::assert_(result == 0, "posix_spawnp failed: {}",
+                 unix::errno_str(result));
   spawned.handle_ = pid;
 
   spawned.cleanup_after_spawn(&state);
@@ -238,17 +241,17 @@ static containers::String drain_pipe(Process::Output* output) noexcept {
 void Process::cleanup_before_wait(this Process& self,
                                   ExitStatus*   status) noexcept {
   if (self.stdin_type_ == Pipe && self.stdin_input_.handle_ != -1) {
-    YACSL_TRY_SYSCALL(close(self.stdin_input_.handle_));
+    unix::try_unix(close(self.stdin_input_.handle_));
     self.stdin_input_.handle_ = -1;
   }
   if (self.stdout_type_ == Pipe && self.stdout_output_.handle_ != -1) {
     status->unread_stdout = drain_pipe(&self.stdout_output_);
-    YACSL_TRY_SYSCALL(close(self.stdout_output_.handle_));
+    unix::try_unix(close(self.stdout_output_.handle_));
     self.stdout_output_.handle_ = -1;
   }
   if (self.stderr_type_ == Pipe && self.stderr_output_.handle_ != -1) {
     status->unread_stderr = drain_pipe(&self.stderr_output_);
-    YACSL_TRY_SYSCALL(close(self.stderr_output_.handle_));
+    unix::try_unix(close(self.stderr_output_.handle_));
     self.stderr_output_.handle_ = -1;
   }
 }
@@ -269,7 +272,7 @@ Process::ExitStatus Process::wait(this Process& self) noexcept {
   self.cleanup_before_wait(&status);
 
   int info = 0;
-  YACSL_TRY_SYSCALL(waitpid(static_cast<pid_t>(self.handle_), &info, 0));
+  unix::try_unix(waitpid(static_cast<pid_t>(self.handle_), &info, 0));
 
   self.handle_ = -1;
 
@@ -290,7 +293,7 @@ Process::ExitStatus Process::wait(this Process& self) noexcept {
 void Process::send_signal(this Process& self, Signal signal) noexcept {
   debug::assert_(self.handle_ == -1,
                  "Tried to send_signal to a Process that isn't running.");
-  YACSL_TRY_SYSCALL(
+  unix::try_unix(
       kill(static_cast<pid_t>(self.handle_), static_cast<int>(signal)));
   self.handle_ = -1;
 }

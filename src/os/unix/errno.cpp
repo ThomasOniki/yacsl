@@ -1,59 +1,10 @@
-#ifndef _WIN32
-
-#include "utils.hpp"
-#include "yacsl/os/file.hpp"
+#include "yacsl/os/unix/errno.hpp"
 #include "yacsl/ranges/string_view.hpp"
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 
-namespace yacsl::os {
-
-int unix_flags(File::OpenFlags flags) noexcept {
-  unsigned int ret = 0;
-
-  if (strip_file_open_flag(&flags, File::OpenFlags::Truncate)) {
-    ret |= O_TRUNC;
-  }
-  if (strip_file_open_flag(&flags, File::OpenFlags::Create)) {
-    ret |= O_CREAT;
-  }
-  if (strip_file_open_flag(&flags, File::OpenFlags::Exclusive)) {
-    ret |= O_EXCL;
-  }
-  if (!strip_file_open_flag(&flags, File::OpenFlags::Inheritable)) {
-    ret |= O_CLOEXEC;
-#ifdef O_CLOFORK
-    ret |= O_CLOFORK;
-#endif
-  }
-  if (flags == File::OpenFlags::Read) {
-    ret |= O_RDONLY;
-  } else if (flags == File::OpenFlags::Write) {
-    ret |= O_WRONLY;
-  } else {
-    ret |= O_RDWR;
-  }
-  return static_cast<int>(ret);
-}
-
-containers::Result<int, File::OpenError>
-open_file_handle(char const* path, File::OpenFlags flags) {
-  int handle = ::open(path, unix_flags(flags), 0644);
-  if (handle == -1) [[unlikely]] {
-    switch (errno) {
-    case ENOENT:
-      return File::OpenError::NotFound;
-    case EEXIST:
-      return File::OpenError::AlreadyExists;
-    case EACCES:
-      return File::OpenError::PermissionDenied;
-    default:
-      debug::panic("::open() failed: {}", errno_str());
-    }
-  }
-  return handle;
-}
+namespace yacsl::os::unix {
 
 // NOLINTNEXTLINE(google-readability-function-size,readability-function-cognitive-complexity)
 ranges::StringView errno_str(int err) noexcept {
@@ -480,6 +431,4 @@ ranges::StringView errno_str(int err) noexcept {
   return "Unkown error";
 }
 
-} // namespace yacsl::os
-
-#endif
+} // namespace yacsl::os::unix
