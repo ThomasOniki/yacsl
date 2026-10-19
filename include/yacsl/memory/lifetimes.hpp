@@ -70,6 +70,9 @@ template <meta::MutableType T>
 constexpr ranges::Slice<T> copy(ranges::Slice<meta::TypeIdentity<T> const> src,
                                 T* dst YACSL_LIFETIMEBOUND) noexcept {
   if (!utils::is_constant_evaluated() && meta::TriviallyCopyable<T>) {
+    if (src.len() == 0) {
+      return {dst, 0UZ};
+    }
     return {
         static_cast<T*>(::memcpy(dst, src.data(), src.len() * sizeof(T))),
         src.len(),
