@@ -1,6 +1,5 @@
 #include "test_utils.hpp"
 #include "yacsl/containers/function.hpp"
-#include "yacsl/containers/option.hpp"
 #include "yacsl/containers/stack_array.hpp"
 #include "yacsl/containers/string.hpp"
 #include "yacsl/debug/log.hpp"
@@ -10,9 +9,7 @@
 #include "yacsl/memory/alignment.hpp"
 #include "yacsl/ranges/slice.hpp"
 #include "yacsl/testing/expect.hpp"
-#include "yacsl/testing/test.hpp"
 #include "yacsl/type_aliases.hpp"
-#include "yacsl/utils/nil.hpp"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -110,7 +107,7 @@ public:
   resize_in_place(this TestAllocator& /*self*/,
                   yacsl::ranges::Slice<yacsl::u8, SizeT> /*mem*/,
                   SizeT /*new_size*/) {
-    return {nullptr, 0ZU};
+    return {nullptr, 0UZ};
   }
 };
 } // namespace
@@ -120,7 +117,7 @@ static void check_counts(Counts expected) {
   TestStruct::reset_counts();
 }
 
-static void test_function_runs(yacsl::testing::Test& /*test*/) {
+static void test_function_runs() {
   bool                                ran = false;
   yacsl::containers::Function<void()> func([&ran] { ran = true; });
 
@@ -129,7 +126,7 @@ static void test_function_runs(yacsl::testing::Test& /*test*/) {
   yacsl::testing::expect(ran);
 }
 
-static void test_moved_lambda(yacsl::testing::Test& /*test*/) {
+static void test_moved_lambda() {
   {
     check_counts({});
 
@@ -153,7 +150,7 @@ static void test_moved_lambda(yacsl::testing::Test& /*test*/) {
   check_counts({.destructor_call_count = 2});
 }
 
-static void test_copied_lambda(yacsl::testing::Test& /*test*/) {
+static void test_copied_lambda() {
   {
     TestStruct const test;
     check_counts({.constructor_call_count = 1});
@@ -169,7 +166,7 @@ static void test_copied_lambda(yacsl::testing::Test& /*test*/) {
   check_counts({.destructor_call_count = 1});
 }
 
-static void test_ref_capture_lamdba(yacsl::testing::Test& /*test*/) {
+static void test_ref_capture_lamdba() {
   {
     TestStruct const test;
     check_counts({.constructor_call_count = 1});
@@ -184,18 +181,10 @@ static void test_ref_capture_lamdba(yacsl::testing::Test& /*test*/) {
 }
 
 int main() {
-  int                           ret   = 0;
-  yacsl::containers::StackArray tests = {
-      yacsl::testing::Test("function runs", test_function_runs),
-      yacsl::testing::Test("moved lambda", test_moved_lambda),
-      yacsl::testing::Test("copied lambda", test_copied_lambda),
-      yacsl::testing::Test("ref capture lambda", test_ref_capture_lamdba),
-  };
-  for (auto& test : tests) {
-    if (test.run() == yacsl::testing::Test::Result::Failure) {
-      ret = 1;
-    }
-  }
+  yacsl::testing::run("function runs", test_function_runs);
+  yacsl::testing::run("moved lambda", test_moved_lambda);
+  yacsl::testing::run("copied lambda", test_copied_lambda);
+  yacsl::testing::run("ref capture lambda", test_ref_capture_lamdba);
   yacsl::debug::flush_logger();
-  return ret;
+  return yacsl::testing::status() ? EXIT_SUCCESS : EXIT_FAILURE;
 }

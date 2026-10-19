@@ -1,8 +1,8 @@
 #include "yacsl/compiler/attributes.hpp"
-#include "yacsl/containers/stack_array.hpp"
+#include "yacsl/debug/log.hpp"
 #include "yacsl/debug/stack_trace.hpp"
 #include "yacsl/testing/expect.hpp"
-#include "yacsl/testing/test.hpp"
+#include "yacsl/testing/run.hpp"
 
 YACSL_NOINLINE static int f1(bool /*unused*/, char /*unused*/) {
   yacsl::debug::StackTrace const stack_trace =
@@ -45,20 +45,13 @@ template <typename T = void, int I = 0> struct S {
 namespace {
 template <ns1::ns2::S<> S = ns1::ns2::S<>{}>
 // NOLINTNEXTLINE(llvm-prefer-static-over-anonymous-namespace)
-YACSL_NOINLINE void f4(yacsl::testing::Test& /*test*/) noexcept {
+YACSL_NOINLINE void f4() noexcept {
   [[maybe_unused]] volatile const int result = ns1::ns2::S<>::f3();
 }
 } // namespace
 
 int main() {
-  int                           ret   = 0;
-  yacsl::containers::StackArray tests = {
-      yacsl::testing::Test("stack trace", f4),
-  };
-  for (auto& test : tests) {
-    if (test.run() == yacsl::testing::Test::Result::Failure) {
-      ret = 1;
-    }
-  }
-  return ret;
+  yacsl::testing::run("stack trace", f4<>);
+  yacsl::debug::flush_logger();
+  return yacsl::testing::status() ? EXIT_SUCCESS : EXIT_FAILURE;
 }

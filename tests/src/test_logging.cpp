@@ -6,7 +6,6 @@
 #include "yacsl/os/file.hpp"
 #include "yacsl/ranges/initializer_list.hpp"
 #include "yacsl/ranges/string_view.hpp"
-#include "yacsl/testing/test.hpp"
 #include "yacsl/type_aliases.hpp"
 #include <assert.h>
 #include <inttypes.h>
@@ -72,7 +71,7 @@ static void log_to_file(yacsl::debug::Logger::Level              lvl,
 
 using enum yacsl::debug::Logger::Level;
 
-static void test_logging(yacsl::testing::Test& /*test*/) {
+static void test_logging() {
   log_to_file(Trace3, "Hello, {}", "world!");
   check("[TRACE 3] Hello, world!");
 
@@ -184,9 +183,6 @@ static void test_logging(yacsl::testing::Test& /*test*/) {
 }
 
 int main() {
-  yacsl::containers::StackArray tests = {
-      yacsl::testing::Test("logging", test_logging),
-      yacsl::testing::Test("logging", test_logging),
-  };
-  return run_tests(tests.slice());
+  run_test("logging", test_logging);
+  return yacsl::testing::status() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
