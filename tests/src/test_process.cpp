@@ -4,14 +4,14 @@
 #include "yacsl/containers/stack_storage.hpp"
 #include "yacsl/containers/string.hpp"
 #include "yacsl/debug/assert.hpp"
-#include "yacsl/fmt/format_string.hpp"
+#include "yacsl/debug/log.hpp"
 #include "yacsl/os/file.hpp"
 #include "yacsl/os/process.hpp"
 #include "yacsl/os/unix/errno.hpp"
 #include "yacsl/ranges/slice.hpp"
 #include "yacsl/ranges/string_view.hpp"
 #include "yacsl/testing/expect.hpp"
-#include "yacsl/testing/test.hpp"
+#include "yacsl/testing/run.hpp"
 #include "yacsl/type_aliases.hpp"
 #include <fcntl.h>
 #include <limits.h>
@@ -388,6 +388,8 @@ static void check_piped_output(IoTypes types, RuntimeOutput runtime_out,
 }
 
 static void test_run_c(IoTypes types) {
+  yacsl::debug::flush_logger();
+
   Pipes pipes;
 
   yacsl::containers::StackArray<Process, 3> other_pipes;
@@ -473,11 +475,6 @@ static void test_run_c(IoTypes types) {
 #endif
 }
 
-static IoTypes& io_types() {
-  static IoTypes instance = {};
-  return instance;
-}
-
 static void create_input_file() noexcept {
   int const file = ::open(CHILD_STDIN_FILE_PATH,
                           O_WRONLY | O_CREAT | O_CLOEXEC | O_TRUNC, 0644);
@@ -488,7 +485,7 @@ static void create_input_file() noexcept {
   yacsl::debug::assert_(close(file) == 0);
 }
 
-static void test_cwd(yacsl::testing::Test& /*test*/) noexcept {
+static void test_cwd() noexcept {
 #ifdef _WIN32
   auto process = Process::spawn({PWD_EXECUTABLE},
                                 {
@@ -511,12 +508,7 @@ static void test_cwd(yacsl::testing::Test& /*test*/) noexcept {
 }
 
 int main() {
-  yacsl::containers::StackArray tests = {
-      yacsl::testing::Test("current working directory", test_cwd),
-  };
-  for (auto& test : tests) {
-    test.run();
-  }
+  yacsl::testing::run("working directory", test_cwd);
 
   create_input_file();
 
@@ -528,26 +520,23 @@ int main() {
   for (Type stdin_type : types) {
     for (Type stdout_type : types) {
       for (Type stderr_type : types) {
-        io_types() = {
+        yacsl::containers::String name = yacsl::fmt::format(
+            "{}, {}, {}", stdin_type, stdout_type, stderr_type);
+        IoTypes iotypes{
             .input  = stdin_type,
             .output = stdout_type,
             .error  = stderr_type,
         };
 
-        yacsl::testing::Test test(yacsl::fmt::format("{}, {}, {}", stdin_type,
-                                                     stdout_type, stderr_type)
-                                      .c_str(),
-                                  [](yacsl::testing::Test& /*test*/) {
-                                    yacsl::debug::flush_logger();
-                                    test_run_c(io_types());
-                                  });
-
-        test.run();
+        yacsl::testing::run(name.view(), test_run_c, iotypes);
       }
     }
   }
 
   yacsl::testing::expect(remove(CHILD_STDIN_FILE_PATH) == 0);
+
+  yacsl::debug::flush_logger();
+  return yacsl::testing::status() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 #else

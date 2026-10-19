@@ -1,6 +1,6 @@
 #include "test_utils.hpp"
 #include "yacsl/containers/stack_array.hpp"
-#include "yacsl/testing/test.hpp"
+#include "yacsl/testing/run.hpp"
 #include "yacsl/type_aliases.hpp"
 #include "yacsl/yacsl.hpp"
 #include <stdio.h>
@@ -9,11 +9,12 @@ static constexpr yacsl::usize SLOTS = 64;
 
 #ifdef YACSL_LSP_ONLY
 using Ring = yacsl::threads::MPSCRingBuffer<yacsl::usize, SLOTS>;
-template <typename _, yacsl::usize Producers, yacsl::usize Consumers>
+template <typename _>
 #else
-template <typename Ring, yacsl::usize Producers, yacsl::usize Consumers>
+template <typename Ring>
 #endif
-static void test(yacsl::testing::Test& /*test*/) noexcept {
+static void test(yacsl::usize producer_count,
+                 yacsl::usize consumer_count) noexcept {
   yacsl::threads::Atomic<bool>                      start = false;
   yacsl::containers::Vector<yacsl::threads::Thread> producers;
   Ring                                              ring;
@@ -34,7 +35,7 @@ static void test(yacsl::testing::Test& /*test*/) noexcept {
     }
   }
   EXPECT(ring.try_pop().is_nil(), "ring buffer should be empty");
-  for (yacsl::usize i = 0; i < Producers; ++i) {
+  for (yacsl::usize i = 0; i < producer_count; ++i) {
     producers.push([&ring, &start, i] {
       while (!start.load(yacsl::threads::MemoryOrder::Acquire)) {
       }
@@ -45,16 +46,16 @@ static void test(yacsl::testing::Test& /*test*/) noexcept {
   yacsl::containers::Vector<yacsl::threads::Thread> consumers;
 
   yacsl::containers::Vector<bool> did_pop;
-  did_pop.resize(Producers);
+  did_pop.resize(producer_count);
 
   yacsl::threads::Atomic<yacsl::usize> pop_count;
 
-  for (yacsl::usize i = 0; i < Consumers; ++i) {
-    consumers.push([&ring, &start, &did_pop, &pop_count] {
+  for (yacsl::usize i = 0; i < consumer_count; ++i) {
+    consumers.push([&] {
       while (!start.load(yacsl::threads::MemoryOrder::Acquire)) {
       }
       while (pop_count.fetch_add(1, yacsl::threads::MemoryOrder::Relaxed) <
-             Producers) {
+             producer_count) {
         did_pop[ring.pop()] = true;
       }
     });
@@ -75,13 +76,9 @@ static void test(yacsl::testing::Test& /*test*/) noexcept {
 }
 
 int main() {
-  yacsl::containers::StackArray tests = {
-      yacsl::testing::Test(
-          "MPSC",
-          test<yacsl::threads::MPSCRingBuffer<yacsl::usize, SLOTS>, 50, 1>),
-      yacsl::testing::Test(
-          "MPMC",
-          test<yacsl::threads::MPMCRingBuffer<yacsl::usize, SLOTS>, 50, 50>),
-  };
-  return run_tests(tests.slice());
+  run_test("MPSC", test<yacsl::threads::MPSCRingBuffer<yacsl::usize, SLOTS>>,
+           50UZ, 1UZ);
+  run_test("MPMC", test<yacsl::threads::MPMCRingBuffer<yacsl::usize, SLOTS>>,
+           50UZ, 50UZ);
+  return yacsl::testing::status() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
