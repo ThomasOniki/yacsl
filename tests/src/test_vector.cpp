@@ -1,5 +1,4 @@
 #include <stddef.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
@@ -8,14 +7,11 @@
 #include <vector>
 
 #include "test_utils.hpp"
-#include "yacsl/containers/option.hpp"
-#include "yacsl/containers/stack_array.hpp"
 #include "yacsl/memory/alignment.hpp"
 #include "yacsl/memory/singleton_allocator.hpp"
 #include "yacsl/ranges/slice.hpp"
-#include "yacsl/testing/test.hpp"
+#include "yacsl/testing/run.hpp"
 #include "yacsl/type_aliases.hpp"
-#include "yacsl/utils/nil.hpp"
 
 using SMFCall  = std::string;
 using SMFCalls = std::vector<std::string>;
@@ -148,7 +144,7 @@ using TestAllocatorSingleton =
 
 } // namespace
 
-static void test_allocator(yacsl::testing::Test& /*test*/) {
+static void test_allocator() {
   TestAllocator::events.clear();
   TestAllocator allocator;
   // NOLINTNEXTLINE(misc-const-correctness)
@@ -178,10 +174,8 @@ static void test_allocator(yacsl::testing::Test& /*test*/) {
 
 int main() {
   fputs("TODO: proper vector tests\n", stderr);
-  yacsl::containers::StackArray tests = {
-      yacsl::testing::Test("allocator", test_allocator),
-  };
-  return run_tests(tests.slice());
+  run_test("allocator", test_allocator);
+  return yacsl::testing::status() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 // NOLINTEND(bugprone-exception-escape)

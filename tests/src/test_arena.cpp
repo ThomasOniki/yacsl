@@ -1,11 +1,12 @@
 #include "test_utils.hpp"
 #include "yacsl/containers/stack_array.hpp"
 #include "yacsl/memory/arena.hpp"
-#include "yacsl/testing/test.hpp"
-#include <cstdint>
+#include "yacsl/testing/expect.hpp"
+#include "yacsl/testing/run.hpp"
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 constexpr uint32_t iteration_count = 10000;
 
@@ -22,7 +23,7 @@ struct Aligned {
 };
 } // namespace
 
-static void test_ctors(yacsl::testing::Test& /*test*/) {
+static void test_ctors() {
   CtorCounter::ctor_call_count = 0;
 
   CtorCounter* ptrs[iteration_count] = {};
@@ -60,7 +61,7 @@ static bool is_aligned(Aligned const* ptr) {
   return uptr % alignof(Aligned) == 0;
 }
 
-static void test_align(yacsl::testing::Test& /*test*/) {
+static void test_align() {
   (void)yacsl::memory::MainArenaAllocator::get().push_array<char>(15);
 
   Aligned const* aligned =
@@ -76,7 +77,7 @@ static void test_align(yacsl::testing::Test& /*test*/) {
   EXPECT(is_aligned(aligned));
 }
 
-static void test_rewind(yacsl::testing::Test& test) {
+static void test_rewind() {
   {
     yacsl::memory::Arena::Scope const scope(
         yacsl::memory::MainArenaAllocator::get()); // test scope with ptr_ = 0
@@ -91,8 +92,8 @@ static void test_rewind(yacsl::testing::Test& test) {
 
     ptr = yacsl::memory::MainArenaAllocator::get().push_array<char>(10).data();
 
-    test_align(test);
-    test_ctors(test);
+    test_align();
+    test_ctors();
   }
 
   EXPECT(yacsl::memory::MainArenaAllocator::get().push_array<char>(1).data() ==
@@ -101,10 +102,8 @@ static void test_rewind(yacsl::testing::Test& test) {
 }
 
 int main() {
-  yacsl::containers::StackArray tests = {
-      yacsl::testing::Test("constructors", test_ctors),
-      yacsl::testing::Test("pointer alignment", test_align),
-      yacsl::testing::Test("rewinding", test_rewind),
-  };
-  return run_tests(tests.slice());
+  run_test("constructors", test_ctors);
+  run_test("pointer alignment", test_align);
+  run_test("rewinding", test_rewind);
+  return yacsl::testing::status() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
