@@ -32,13 +32,15 @@ StackTrace::compute_entries(this StackTrace const& self) noexcept {
   self.entries_.resize(self.addresses_.len());
   for (usize i = 0; i < self.addresses_.len(); ++i) {
     Dl_info info;
-    dladdr(self.addresses_[i], &info);
-    self.entries_[i] = {
-        .caller       = debug::demangle(info.dli_sname),
-        .object       = ranges::StringView(info.dli_fname),
-        .base_address = info.dli_fbase,
-        .address      = self.addresses_[i],
-    };
+    if (dladdr(self.addresses_[i], &info) != 0) {
+      self.entries_[i] = {
+          .caller =
+              info.dli_sname != nullptr ? debug::demangle(info.dli_sname) : "",
+          .object       = ranges::StringView(info.dli_fname),
+          .base_address = info.dli_fbase,
+          .address      = self.addresses_[i],
+      };
+    }
   }
   return self.entries_;
 }
