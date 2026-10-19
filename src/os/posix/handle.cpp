@@ -1,10 +1,10 @@
 #ifndef _WIN32
 
-#include "yacsl/os/unix/handle.hpp"
-#include "yacsl/os/unix/errno.hpp"
-#include "yacsl/os/unix/oflag.hpp"
+#include "yacsl/os/posix/handle.hpp"
+#include "yacsl/os/posix/errno.hpp"
+#include "yacsl/os/posix/oflag.hpp"
 
-namespace yacsl::os::unix {
+namespace yacsl::os::posix {
 
 containers::Result<int, File::OpenError>
 open_file_handle(char const* path, File::OpenFlags flags) {
@@ -24,6 +24,6 @@ open_file_handle(char const* path, File::OpenFlags flags) {
   return handle;
 }
 
-} // namespace yacsl::os::unix
+} // namespace yacsl::os::posix
 
 #endif

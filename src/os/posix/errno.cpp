@@ -1,10 +1,10 @@
-#include "yacsl/os/unix/errno.hpp"
+#include "yacsl/os/posix/errno.hpp"
 #include "yacsl/ranges/string_view.hpp"
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 
-namespace yacsl::os::unix {
+namespace yacsl::os::posix {
 
 // NOLINTNEXTLINE(google-readability-function-size,readability-function-cognitive-complexity)
 ranges::StringView errno_str(int err) noexcept {
@@ -431,4 +431,4 @@ ranges::StringView errno_str(int err) noexcept {
   return "Unkown error";
 }
 
-} // namespace yacsl::os::unix
+} // namespace yacsl::os::posix

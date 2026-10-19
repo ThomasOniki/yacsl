@@ -7,8 +7,8 @@
 #include "yacsl/debug/assert.hpp"
 #include "yacsl/debug/source_location.hpp"
 #include "yacsl/os/file.hpp"
-#include "yacsl/os/unix/errno.hpp"
-#include "yacsl/os/unix/oflag.hpp"
+#include "yacsl/os/posix/errno.hpp"
+#include "yacsl/os/posix/oflag.hpp"
 #include "yacsl/ranges/slice.hpp"
 #include "yacsl/type_aliases.hpp"
 #include <errno.h>
@@ -43,23 +43,23 @@ struct State {
 static void check_return(int value, debug::SourceLocation location =
                                         debug::SourceLocation::current()) {
   debug::assert_(value == 0, "Posix function failed at {}:\n{}", location,
-                 unix::errno_str(value));
+                 posix::errno_str(value));
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 usize Process::Output::read(this Output&      self,
                             ranges::Slice<u8> buffer) noexcept {
   return static_cast<usize>(
-      unix::try_unix(::read(self.handle_, buffer.data(), buffer.len())));
+      posix::try_unix(::read(self.handle_, buffer.data(), buffer.len())));
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void Process::Input::write(this Input&             self,
                            ranges::Slice<u8 const> bytes) noexcept {
   auto written = static_cast<usize>(
-      unix::try_unix(::write(self.handle_, bytes.data(), bytes.len())));
+      posix::try_unix(::write(self.handle_, bytes.data(), bytes.len())));
   while (written < bytes.len()) {
-    written += static_cast<usize>(unix::try_unix(
+    written += static_cast<usize>(posix::try_unix(
         ::write(self.handle_, &bytes[written], bytes.len() - written)));
   }
 }
@@ -69,7 +69,7 @@ static void redirect_child_stdio_to_file(posix_spawn_file_actions_t* actions,
                                          char const*                 path,
                                          int stream) noexcept {
   int const oflag =
-      unix::to_oflag(flags | File::OpenFlags::Inheritable |
+      posix::to_oflag(flags | File::OpenFlags::Inheritable |
                      (stream == STDIN_FILENO ? File::OpenFlags::Read
                                              : File::OpenFlags::Write));
 
@@ -109,7 +109,7 @@ void Process::create_pipes(this Process& self, void* pvoid_state) noexcept {
   // NOLINTBEGIN(android-cloexec-pipe)
   State& state = *static_cast<State*>(pvoid_state);
   if (self.stdin_type_ == Pipe) {
-    unix::try_unix(::pipe(state.stdin_pipe.data()));
+    posix::try_unix(::pipe(state.stdin_pipe.data()));
     self.stdin_input_.handle_ = state.stdin_pipe[1];
     check_return(posix_spawn_file_actions_adddup2(
         &state.file_actions, state.stdin_pipe[0], STDIN_FILENO));
@@ -125,7 +125,7 @@ void Process::create_pipes(this Process& self, void* pvoid_state) noexcept {
         &state.file_actions, state.opts->input.other_pipe_handle_));
   }
   if (self.stdout_type_ == Pipe) {
-    unix::try_unix(::pipe(state.stdout_pipe.data()));
+    posix::try_unix(::pipe(state.stdout_pipe.data()));
     self.stdout_output_.handle_ = state.stdout_pipe[0];
     check_return(posix_spawn_file_actions_adddup2(
         &state.file_actions, state.stdout_pipe[1], STDOUT_FILENO));
@@ -141,7 +141,7 @@ void Process::create_pipes(this Process& self, void* pvoid_state) noexcept {
         &state.file_actions, state.opts->output.other_pipe_handle_));
   }
   if (self.stderr_type_ == Pipe) {
-    unix::try_unix(::pipe(state.stderr_pipe.data()));
+    posix::try_unix(::pipe(state.stderr_pipe.data()));
     self.stderr_output_.handle_ = state.stderr_pipe[0];
     check_return(posix_spawn_file_actions_adddup2(
         &state.file_actions, state.stderr_pipe[1], STDERR_FILENO));
@@ -165,19 +165,19 @@ void Process::cleanup_after_spawn(this Process& self,
   check_return(posix_spawn_file_actions_destroy(&state.file_actions));
 
   if (self.stdin_type_ == Pipe) {
-    unix::try_unix(close(state.stdin_pipe[0]));
+    posix::try_unix(close(state.stdin_pipe[0]));
   } else if (self.stdin_type_ == TYPE_OTHER_PIPE) {
-    unix::try_unix(close(state.opts->input.other_pipe_handle_));
+    posix::try_unix(close(state.opts->input.other_pipe_handle_));
   }
   if (self.stdout_type_ == Pipe) {
-    unix::try_unix(close(state.stdout_pipe[1]));
+    posix::try_unix(close(state.stdout_pipe[1]));
   } else if (self.stdout_type_ == TYPE_OTHER_PIPE) {
-    unix::try_unix(close(state.opts->output.other_pipe_handle_));
+    posix::try_unix(close(state.opts->output.other_pipe_handle_));
   }
   if (self.stderr_type_ == Pipe) {
-    unix::try_unix(close(state.stderr_pipe[1]));
+    posix::try_unix(close(state.stderr_pipe[1]));
   } else if (self.stderr_type_ == TYPE_OTHER_PIPE) {
-    unix::try_unix(close(state.opts->error.other_pipe_handle_));
+    posix::try_unix(close(state.opts->error.other_pipe_handle_));
   }
 }
 
@@ -219,7 +219,7 @@ Process::spawn(char const* const* argv, SpawnOpts const& opts) noexcept {
     return SpawnError::NotFound;
   }
   debug::assert_(result == 0, "posix_spawnp failed: {}",
-                 unix::errno_str(result));
+                 posix::errno_str(result));
   spawned.handle_ = pid;
 
   spawned.cleanup_after_spawn(&state);
@@ -241,17 +241,17 @@ static containers::String drain_pipe(Process::Output* output) noexcept {
 void Process::cleanup_before_wait(this Process& self,
                                   ExitStatus*   status) noexcept {
   if (self.stdin_type_ == Pipe && self.stdin_input_.handle_ != -1) {
-    unix::try_unix(close(self.stdin_input_.handle_));
+    posix::try_unix(close(self.stdin_input_.handle_));
     self.stdin_input_.handle_ = -1;
   }
   if (self.stdout_type_ == Pipe && self.stdout_output_.handle_ != -1) {
     status->unread_stdout = drain_pipe(&self.stdout_output_);
-    unix::try_unix(close(self.stdout_output_.handle_));
+    posix::try_unix(close(self.stdout_output_.handle_));
     self.stdout_output_.handle_ = -1;
   }
   if (self.stderr_type_ == Pipe && self.stderr_output_.handle_ != -1) {
     status->unread_stderr = drain_pipe(&self.stderr_output_);
-    unix::try_unix(close(self.stderr_output_.handle_));
+    posix::try_unix(close(self.stderr_output_.handle_));
     self.stderr_output_.handle_ = -1;
   }
 }
@@ -272,7 +272,7 @@ Process::ExitStatus Process::wait(this Process& self) noexcept {
   self.cleanup_before_wait(&status);
 
   int info = 0;
-  unix::try_unix(waitpid(static_cast<pid_t>(self.handle_), &info, 0));
+  posix::try_unix(waitpid(static_cast<pid_t>(self.handle_), &info, 0));
 
   self.handle_ = -1;
 
@@ -293,7 +293,7 @@ Process::ExitStatus Process::wait(this Process& self) noexcept {
 void Process::send_signal(this Process& self, Signal signal) noexcept {
   debug::assert_(self.handle_ == -1,
                  "Tried to send_signal to a Process that isn't running.");
-  unix::try_unix(
+  posix::try_unix(
       kill(static_cast<pid_t>(self.handle_), static_cast<int>(signal)));
   self.handle_ = -1;
 }
