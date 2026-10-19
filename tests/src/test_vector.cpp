@@ -148,7 +148,7 @@ static void test_allocator() {
   TestAllocator::events.clear();
   TestAllocator allocator;
   // NOLINTNEXTLINE(misc-const-correctness)
-  auto mem = allocator.allocate(10, yacsl::memory::Alignment{16});
+  auto mem = allocator.allocate(32, yacsl::memory::Alignment{16});
 
   EXPECT(TestAllocator::events ==
          std::vector<TestAllocator::Event>({
