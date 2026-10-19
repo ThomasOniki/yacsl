@@ -1,9 +1,9 @@
 #ifndef _WIN32
 
-#include "yacsl/os/unix/oflag.hpp"
+#include "yacsl/os/posix/oflag.hpp"
 #include "yacsl/os/file.hpp"
 
-namespace yacsl::os::unix {
+namespace yacsl::os::posix {
 
 int to_oflag(File::OpenFlags flags) noexcept {
   unsigned int ret = 0;
@@ -33,6 +33,6 @@ int to_oflag(File::OpenFlags flags) noexcept {
   return static_cast<int>(ret);
 }
 
-} // namespace yacsl::os::unix
+} // namespace yacsl::os::posix
 
 #endif

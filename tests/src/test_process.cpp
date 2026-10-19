@@ -7,7 +7,7 @@
 #include "yacsl/debug/log.hpp"
 #include "yacsl/os/file.hpp"
 #include "yacsl/os/process.hpp"
-#include "yacsl/os/unix/errno.hpp"
+#include "yacsl/os/posix/errno.hpp"
 #include "yacsl/ranges/slice.hpp"
 #include "yacsl/ranges/string_view.hpp"
 #include "yacsl/testing/expect.hpp"
@@ -95,23 +95,23 @@ struct Pipes {
     //  NOLINTEND(performance-no-int-to-ptr)
 #else
     // NOLINTNEXTLINE(android-cloexec-pipe)
-    yacsl::os::unix::try_unix(::pipe(input.data()));
+    yacsl::os::posix::try_unix(::pipe(input.data()));
     // NOLINTNEXTLINE(android-cloexec-pipe)
-    yacsl::os::unix::try_unix(::pipe(output.data()));
+    yacsl::os::posix::try_unix(::pipe(output.data()));
     // NOLINTNEXTLINE(android-cloexec-pipe)
-    yacsl::os::unix::try_unix(::pipe(error.data()));
+    yacsl::os::posix::try_unix(::pipe(error.data()));
 
-    yacsl::os::unix::try_unix(::fcntl(input[1], F_SETFD, FD_CLOEXEC));
-    yacsl::os::unix::try_unix(::fcntl(output[0], F_SETFD, FD_CLOEXEC));
-    yacsl::os::unix::try_unix(::fcntl(error[0], F_SETFD, FD_CLOEXEC));
+    yacsl::os::posix::try_unix(::fcntl(input[1], F_SETFD, FD_CLOEXEC));
+    yacsl::os::posix::try_unix(::fcntl(output[0], F_SETFD, FD_CLOEXEC));
+    yacsl::os::posix::try_unix(::fcntl(error[0], F_SETFD, FD_CLOEXEC));
 
-    yacsl::os::unix::try_unix(::dup2(input[0], STDIN_FILENO));
-    yacsl::os::unix::try_unix(::dup2(output[1], STDOUT_FILENO));
-    yacsl::os::unix::try_unix(::dup2(error[1], STDERR_FILENO));
+    yacsl::os::posix::try_unix(::dup2(input[0], STDIN_FILENO));
+    yacsl::os::posix::try_unix(::dup2(output[1], STDOUT_FILENO));
+    yacsl::os::posix::try_unix(::dup2(error[1], STDERR_FILENO));
 
-    yacsl::os::unix::try_unix(::close(input[0]));
-    yacsl::os::unix::try_unix(::close(output[1]));
-    yacsl::os::unix::try_unix(::close(error[1]));
+    yacsl::os::posix::try_unix(::close(input[0]));
+    yacsl::os::posix::try_unix(::close(output[1]));
+    yacsl::os::posix::try_unix(::close(error[1]));
 #endif
   }
 
@@ -125,12 +125,12 @@ struct Pipes {
     yacsl::os::windows::try_win32(CloseHandle(output[1]));
     yacsl::os::windows::try_win32(CloseHandle(error[1]));
 #else
-    yacsl::os::unix::try_unix(::dup2(original[0], STDIN_FILENO));
-    yacsl::os::unix::try_unix(::dup2(original[1], STDOUT_FILENO));
-    yacsl::os::unix::try_unix(::dup2(original[2], STDERR_FILENO));
-    yacsl::os::unix::try_unix(::close(original[0]));
-    yacsl::os::unix::try_unix(::close(original[1]));
-    yacsl::os::unix::try_unix(::close(original[2]));
+    yacsl::os::posix::try_unix(::dup2(original[0], STDIN_FILENO));
+    yacsl::os::posix::try_unix(::dup2(original[1], STDOUT_FILENO));
+    yacsl::os::posix::try_unix(::dup2(original[2], STDERR_FILENO));
+    yacsl::os::posix::try_unix(::close(original[0]));
+    yacsl::os::posix::try_unix(::close(original[1]));
+    yacsl::os::posix::try_unix(::close(original[2]));
 #endif
   }
 };
@@ -212,7 +212,7 @@ get_pipe_output(Process::Output* output, yacsl::ranges::StringView expected) {
 
 static void check_file(char const* path, yacsl::ranges::StringView expected) {
   int const fildes =
-      yacsl::os::unix::try_unix(open(path, O_RDWR | O_CREAT | O_CLOEXEC, 0644));
+      yacsl::os::posix::try_unix(open(path, O_RDWR | O_CREAT | O_CLOEXEC, 0644));
 
   yacsl::containers::String buf;
 
@@ -233,8 +233,8 @@ static void check_file(char const* path, yacsl::ranges::StringView expected) {
   buf.resize(buf.len() - 64);
   yacsl::testing::expect_eq(buf.view(), expected);
 
-  yacsl::os::unix::try_unix(close(fildes));
-  yacsl::os::unix::try_unix(remove(path));
+  yacsl::os::posix::try_unix(close(fildes));
+  yacsl::os::posix::try_unix(remove(path));
 }
 
 static void check_file_output(IoTypes types) noexcept {
@@ -455,7 +455,7 @@ static void test_run_c(IoTypes types) {
 #ifdef _WIN32
   yacsl::os::windows::try_win32(CloseHandle(pipes.input[1]));
 #else
-  yacsl::os::unix::try_unix(::close(pipes.input[1]));
+  yacsl::os::posix::try_unix(::close(pipes.input[1]));
 #endif
   Process::ExitStatus const status = process.wait();
   pipes.restore_original_io();
@@ -470,8 +470,8 @@ static void test_run_c(IoTypes types) {
   yacsl::os::windows::try_win32(CloseHandle(pipes.output[0]));
   yacsl::os::windows::try_win32(CloseHandle(pipes.error[0]));
 #else
-  yacsl::os::unix::try_unix(::close(pipes.output[0]));
-  yacsl::os::unix::try_unix(::close(pipes.error[0]));
+  yacsl::os::posix::try_unix(::close(pipes.output[0]));
+  yacsl::os::posix::try_unix(::close(pipes.error[0]));
 #endif
 }
 

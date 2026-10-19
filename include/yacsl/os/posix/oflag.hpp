@@ -3,7 +3,7 @@
 #include "yacsl/os/file.hpp"
 #include "yacsl/type_aliases.hpp"
 
-namespace yacsl::os::unix {
+namespace yacsl::os::posix {
 
 inline bool strip_file_open_flag(File::OpenFlags* flags,
                                  File::OpenFlags  flag) noexcept {
@@ -22,4 +22,4 @@ struct OpenedFile {
 
 int to_oflag(File::OpenFlags flags) noexcept;
 
-} // namespace yacsl::os::unix
+} // namespace yacsl::os::posix

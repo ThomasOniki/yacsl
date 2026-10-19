@@ -5,7 +5,7 @@
 #include "yacsl/ranges/string_view.hpp"
 #include <errno.h>
 
-namespace yacsl::os::unix {
+namespace yacsl::os::posix {
 
 ranges::StringView        errno_str(int err) noexcept YACSL_API;
 inline ranges::StringView errno_str() noexcept { return errno_str(errno); }
@@ -18,4 +18,4 @@ inline auto try_unix(auto                  return_value,
   return return_value;
 }
 
-} // namespace yacsl::os::unix
+} // namespace yacsl::os::posix
