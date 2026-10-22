@@ -4,7 +4,7 @@
 
 namespace yacsl::meta {
 
-#ifdef __clang__
+#if __has_builtin(__remove_reference_t)
 template <typename T> using RemoveReference = __remove_reference_t(T);
 template <typename T> using RemoveConst     = __remove_const(T);
 template <typename T> using RemoveVolatile  = __remove_volatile(T);
