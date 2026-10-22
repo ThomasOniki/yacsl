@@ -56,7 +56,7 @@ concept Enum = __is_enum(T);
 template <typename T, typename U>
 concept ConvertibleTo = __is_convertible(T, U);
 
-#ifdef __clang__
+#if __has_builtin(__is_trivially_destructible)
 template <typename T>
 concept TriviallyDestructible = __is_trivially_destructible(T);
 #else

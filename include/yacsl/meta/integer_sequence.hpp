@@ -28,7 +28,7 @@ template <typename T> struct MergeIntegerSequencesImpl<T> {
 template <usize... Indices>
 using IndexSequence = IntegerSequence<usize, Indices...>;
 
-#ifdef __clang__
+#if __has_builtin(__make_integer_seq)
 template <typename T, T N>
 using IntegerSequenceToN = __make_integer_seq<IntegerSequence, T, N>;
 template <usize N>

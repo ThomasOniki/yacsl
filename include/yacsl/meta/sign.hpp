@@ -2,13 +2,13 @@
 
 #include "yacsl/meta/concepts.hpp"
 
-#ifndef __clang__
+#if !__has_builtin(__make_unsigned)
 #include "yacsl/meta/pack.hpp"
 #include "yacsl/utils/extended_types.hpp"
 #endif
 
 namespace yacsl::meta {
-#ifdef __clang__
+#if __has_builtin(__make_unsigned)
 template <Integral T> using MakeUnsigned = __make_unsigned(T);
 template <Integral T> using MakeSigned   = __make_signed(T);
 #else
