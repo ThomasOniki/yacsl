@@ -201,8 +201,14 @@ Process::spawn(char const* const* argv, SpawnOpts const& opts) noexcept {
   check_return(posix_spawn_file_actions_init(&state.file_actions));
 
   if (opts.cwd.data() != nullptr) {
+#if defined(__MAC_OS_X_VERSION_MIN_REQUIRED) &&                                \
+    __MAC_OS_X_VERSION_MIN_REQUIRED >= __MAC_26_0
     posix_spawn_file_actions_addchdir(&state.file_actions,
                                       containers::String(opts.cwd).c_str());
+#else
+    posix_spawn_file_actions_addchdir_np(&state.file_actions,
+                                         containers::String(opts.cwd).c_str());
+#endif
   }
 
   spawned.open_files(&state);
