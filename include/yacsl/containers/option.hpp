@@ -194,17 +194,16 @@ private:
 
 public:
   template <typename Self>
-  [[nodiscard]] constexpr Forwarded<Self> value(this Self&& self) noexcept {
+  [[nodiscard]] constexpr auto&& value(this Self&& self) noexcept {
     yacsl::debug::assert_(self.ptr_ != nullptr, "Option<{}> is nil.",
                           meta::TYPE_STRING<T>);
-    return *memory::forward<Self>(self).ptr_;
+    return memory::forward<Forwarded<Self>>(*memory::forward<Self>(self).ptr_);
   }
   template <typename Self>
-  [[nodiscard]] constexpr Forwarded<Self>
-  value_unchecked(this Self&& self) noexcept {
+  [[nodiscard]] constexpr auto&& value_unchecked(this Self&& self) noexcept {
     yacsl::debug::assert_unchecked(self.ptr_ != nullptr, "Option<{}> is nil.",
                                    meta::TYPE_STRING<T>);
-    return *memory::forward<Self>(self).ptr_;
+    return memory::forward<Forwarded<Self>>(*memory::forward<Self>(self).ptr_);
   }
 
 private:
