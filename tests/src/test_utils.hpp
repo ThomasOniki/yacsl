@@ -27,13 +27,11 @@
 
 #define EXPECT_STREQ(lhs, rhs, ...)                                            \
   do {                                                                         \
-    bool const _result = cond;                                                 \
     if (strcmp(lhs, rhs) != 0) [[unlikely]] {                                  \
       yacsl::testing::fail_quietly();                                          \
       fprintf(stderr,                                                          \
-              "EXPECT_STREQ(%s, %s) failed at " __FILE__                       \
-              ":" STRINGIFY(__LINE__) "\nlhs: '%s'\nrhs: '%s'",                \
-              #lhs, #rhs lhs, rhs);                                            \
+              "EXPECT_STREQ(%s, %s) failed at %s:%d\nlhs: '%s'\nrhs: '%s'",    \
+              #lhs, #rhs, __FILE__, __LINE__, lhs, rhs);                       \
       fprintf(stderr, "" __VA_ARGS__);                                         \
     }                                                                          \
   } while (false)
