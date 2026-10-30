@@ -37,3 +37,24 @@ void run_test(char const* name, F&& func, Args&&... args) noexcept {
     fprintf(stderr, "Test '%s' failed!\n", name);
   }
 }
+
+template <typename T> struct DynamicArray {
+  DynamicArray(DynamicArray&&)                 = delete;
+  DynamicArray(DynamicArray const&)            = delete;
+  DynamicArray& operator=(DynamicArray&&)      = delete;
+  DynamicArray& operator=(DynamicArray const&) = delete;
+  constexpr ~DynamicArray() noexcept { delete[] ptr; }
+
+  constexpr void push(this DynamicArray& self, T value) {
+    T* mem = new T[self.len + 1];
+    for (size_t i = 0; i < self.len; ++i) {
+      mem[i] = self.ptr[i];
+    }
+    delete[] self.ptr;
+    self.ptr             = mem;
+    self.ptr[self.len++] = value;
+  }
+
+  T*     ptr = nullptr;
+  size_t len = 0;
+};
