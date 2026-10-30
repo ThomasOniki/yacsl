@@ -3,6 +3,8 @@
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/testing/run.hpp"
 #include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
 
 #define STRINGIFY_IMPL(...) #__VA_ARGS__
 #define STRINGIFY(...) STRINGIFY_IMPL(__VA_ARGS__)
@@ -63,4 +65,38 @@ template <typename T> struct DynamicArray {
 
   T*     ptr = nullptr;
   size_t len = 0;
+};
+
+struct DynamicCString {
+  constexpr DynamicCString(char const* cstr) : len(strlen(cstr)) {
+    ptr = new char[len + 1];
+    memcpy(ptr, cstr, len + 1);
+  }
+
+  constexpr ~DynamicCString() noexcept { delete[] ptr; }
+
+  DynamicCString(DynamicCString&&)                 = delete;
+  DynamicCString(DynamicCString const&)            = delete;
+  DynamicCString& operator=(DynamicCString&&)      = delete;
+  DynamicCString& operator=(DynamicCString const&) = delete;
+
+  template <typename... Args>
+  void printf_to(this DynamicCString& self, char const* fmt, Args... args) {
+    char*      formatted = nullptr;
+    auto const len = static_cast<size_t>(asprintf(&formatted, fmt, args...));
+
+    char* mem = new char[self.len + len + 1];
+    memcpy(mem, self.ptr, self.len);
+    memcpy(mem + self.len, formatted, len);
+
+    free(formatted);
+    delete[] self.ptr;
+
+    self.ptr = mem;
+    self.len += len;
+    self.ptr[self.len] = '\0';
+  }
+
+  char*  ptr;
+  size_t len;
 };
