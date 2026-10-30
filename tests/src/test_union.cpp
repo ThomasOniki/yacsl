@@ -17,7 +17,7 @@ struct B {
 static void test_emplace() {
   SMFTracker::HISTORY.clear();
   {
-    yacsl::containers::Union<A, B> test;
+    yacsl::containers::Union<A, B> test = yacsl::utils::NIL;
     EXPECT_STREQ(SMFTracker::HISTORY.ptr, "");
 
     test.emplace<1>();
@@ -40,7 +40,7 @@ static void test_emplace() {
 static void test_get() {
   SMFTracker::HISTORY.clear();
   {
-    yacsl::containers::Union<A, B> test;
+    yacsl::containers::Union<A, B> test = yacsl::utils::NIL;
     test.emplace<0>(42);
     EXPECT(test.get<0>().value == 42);
     test.emplace<0>(5);
@@ -68,7 +68,7 @@ static void test_get() {
 }
 
 static void test_visit() {
-  yacsl::containers::Union<A, B> test;
+  yacsl::containers::Union<A, B> test = yacsl::utils::NIL;
   test.emplace<0>(42);
   int set_by_visit = 0;
   test.visit([&set_by_visit](auto&& value) {
@@ -82,7 +82,7 @@ static void test_visit() {
 static void test_copy() {
   SMFTracker::HISTORY.clear();
   {
-    yacsl::containers::Union<A, B> test1;
+    yacsl::containers::Union<A, B> test1 = yacsl::utils::NIL;
     yacsl::containers::Union<A, B> test2 = test1;
     EXPECT_STREQ(SMFTracker::HISTORY.ptr, "");
     test1 = test2;
@@ -105,7 +105,7 @@ static void test_copy() {
 static void test_move() {
   SMFTracker::HISTORY.clear();
   {
-    yacsl::containers::Union<A, B> test1;
+    yacsl::containers::Union<A, B> test1 = yacsl::utils::NIL;
     yacsl::containers::Union<A, B> test2 = yacsl::memory::move(test1);
     EXPECT_STREQ(SMFTracker::HISTORY.ptr, "");
     test1 = yacsl::memory::move(test2);
