@@ -97,6 +97,11 @@ struct DynamicCString {
     self.ptr[self.len] = '\0';
   }
 
+  constexpr bool operator==(this DynamicCString const& self,
+                            DynamicCString const&      other) {
+    return self.len == other.len && memcmp(self.ptr, other.ptr, self.len) == 0;
+  }
+
   char*  ptr;
   size_t len;
 };
