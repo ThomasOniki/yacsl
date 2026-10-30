@@ -3,6 +3,7 @@
 #include "yacsl/debug/stack_trace.hpp"
 #include "yacsl/testing/expect.hpp"
 #include "yacsl/testing/run.hpp"
+#include <stdlib.h>
 
 YACSL_NOINLINE static int f1(bool /*unused*/, char /*unused*/) {
   yacsl::debug::StackTrace const stack_trace =

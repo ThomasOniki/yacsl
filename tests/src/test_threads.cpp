@@ -6,6 +6,7 @@
 #include "yacsl/threads/thread.hpp"
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 static void test_atomic(uint32_t thread_count) {
   yacsl::containers::Vector<yacsl::threads::Thread> threads;

@@ -1,7 +1,9 @@
 #include "test_utils.hpp"
 #include "yacsl/containers/function.hpp"
 #include "yacsl/debug/log.hpp"
+#include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/testing/expect.hpp"
+#include "yacsl/testing/run.hpp"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
