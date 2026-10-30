@@ -27,11 +27,16 @@
 
 #define EXPECT_STREQ(lhs, rhs, ...)                                            \
   do {                                                                         \
-    if (strcmp(lhs, rhs) != 0) [[unlikely]] {                                  \
+    if (((lhs) == nullptr && (rhs) != nullptr && (rhs)[0] != '\0') ||          \
+        ((rhs) == nullptr && (lhs) != nullptr && (lhs)[0] != '\0') ||          \
+        ((lhs) != nullptr && (rhs) != nullptr) && strcmp(lhs, rhs) != 0)       \
+        [[unlikely]] {                                                         \
       yacsl::testing::fail_quietly();                                          \
       fprintf(stderr,                                                          \
               "EXPECT_STREQ(%s, %s) failed at %s:%d\nlhs: '%s'\nrhs: '%s'\n",  \
-              #lhs, #rhs, __FILE__, __LINE__, lhs, rhs);                       \
+              #lhs, #rhs, __FILE__, __LINE__,                                  \
+              (lhs) == nullptr ? "(nullptr)" : (lhs),                          \
+              (rhs) == nullptr ? "(nullptr)" : (rhs));                         \
       fprintf(stderr, "" __VA_ARGS__);                                         \
     }                                                                          \
   } while (false)
