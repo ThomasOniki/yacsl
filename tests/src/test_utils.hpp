@@ -42,11 +42,13 @@ void run_test(char const* name, F&& func, Args&&... args) noexcept {
 }
 
 template <typename T> struct DynamicArray {
+  constexpr DynamicArray() noexcept = default;
+  constexpr ~DynamicArray() noexcept { delete[] ptr; }
+
   DynamicArray(DynamicArray&&)                 = delete;
   DynamicArray(DynamicArray const&)            = delete;
   DynamicArray& operator=(DynamicArray&&)      = delete;
   DynamicArray& operator=(DynamicArray const&) = delete;
-  constexpr ~DynamicArray() noexcept { delete[] ptr; }
 
   constexpr void push(this DynamicArray& self, T value) {
     T* mem = new T[self.len + 1];
@@ -74,6 +76,7 @@ struct DynamicCString {
     memcpy(ptr, cstr, len + 1);
   }
 
+  constexpr DynamicCString() noexcept = default;
   constexpr ~DynamicCString() noexcept { delete[] ptr; }
 
   DynamicCString(DynamicCString&&)                 = delete;
@@ -114,6 +117,6 @@ struct DynamicCString {
     return self.len == other.len && memcmp(self.ptr, other.ptr, self.len) == 0;
   }
 
-  char*  ptr;
-  size_t len;
+  char*  ptr = nullptr;
+  size_t len = 0;
 };
