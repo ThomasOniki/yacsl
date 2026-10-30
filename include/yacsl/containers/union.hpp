@@ -18,7 +18,7 @@ template <typename... Ts>
   requires(... && (!meta::ReferenceType<Ts> && meta::MutableType<Ts>))
 class Union {
 public:
-  constexpr Union() noexcept = default;
+  constexpr Union(utils::Nil /*nil*/) noexcept {}
 
   template <usize I, typename... Args>
   constexpr void emplace(this Union& self, Args&&... args) noexcept {
