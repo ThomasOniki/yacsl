@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
-#include <string_view>
 #include <unordered_set>
 #include <vector>
 
@@ -19,42 +18,6 @@ using SMFCalls = std::vector<std::string>;
 // NOLINTBEGIN(bugprone-exception-escape)
 
 namespace {
-class SMFTracker {
-public:
-  explicit SMFTracker(std::string_view const& name) : name_(name) {
-
-    calls.push_back("default constructed " + name_);
-  }
-  SMFTracker(SMFTracker const& other) : name_(other.name_ + " (copied)") {
-
-    calls.push_back("memory::copy constructed " + name_);
-  }
-  SMFTracker(SMFTracker&& other) noexcept
-      : name_(other.name_ + " (memory::moved)") {
-
-    calls.push_back("memory::move constructed " + name_);
-  }
-  ~SMFTracker() noexcept { calls.push_back("destructed " + name_); }
-  SMFTracker& operator=(SMFTracker const& other) {
-    if (&other == this) {
-      return *this;
-    }
-    name_ = other.name_ + " (memory::copy assigned)";
-
-    calls.push_back("memory::copy assigned " + name_);
-    return *this;
-  }
-  [[maybe_unused]] SMFTracker& operator=(SMFTracker&& other) noexcept {
-    name_ = other.name_ + " (memory::move assigned)";
-    calls.push_back("memory::move assigned " + name_);
-    return *this;
-  }
-
-public:
-  inline static SMFCalls calls = {};
-
-  std::string name_;
-};
 
 class TestAllocator {
 public:
