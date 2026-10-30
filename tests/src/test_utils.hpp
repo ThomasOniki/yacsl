@@ -120,3 +120,39 @@ struct DynamicCString {
   char*  ptr = nullptr;
   size_t len = 0;
 };
+
+class SMFTracker {
+public:
+  explicit SMFTracker(char const* name) : name_(name) {
+    HISTORY.printf_to("default constructed '%s'\n", name);
+  }
+  SMFTracker(SMFTracker const& other) {
+    name_.printf_to("%s (copy)", other.name_.ptr);
+    HISTORY.printf_to("copy constructed '%s'\n", other.name_.ptr);
+  }
+  SMFTracker(SMFTracker&& other) noexcept {
+    name_.printf_to("%s (moved)", other.name_.ptr);
+    HISTORY.printf_to("move constructed '%s'\n", other.name_.ptr);
+  }
+  ~SMFTracker() noexcept { HISTORY.printf_to("destroyed '%s'\n", name_.ptr); }
+  SMFTracker& operator=(this SMFTracker& self, SMFTracker const& other) {
+    if (&other == &self) {
+      return self;
+    }
+    self.name_.clear();
+    self.name_.printf_to("%s (copy assigned)", other.name_.ptr);
+    HISTORY.printf_to("copy assigned '%s'\n", other.name_.ptr);
+    return self;
+  }
+  [[maybe_unused]] SMFTracker& operator=(this SMFTracker& self,
+                                         SMFTracker&&     other) noexcept {
+    self.name_.clear();
+    self.name_.printf_to("%s (move assigned)", other.name_.ptr);
+    HISTORY.printf_to("move assigned '%s'\n", other.name_.ptr);
+    return self;
+  }
+
+public:
+  inline static DynamicCString HISTORY;
+  DynamicCString               name_;
+};
