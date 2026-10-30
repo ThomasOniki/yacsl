@@ -6,12 +6,14 @@
 #include "yacsl/os/file.hpp"
 #include "yacsl/ranges/initializer_list.hpp"
 #include "yacsl/ranges/string_view.hpp"
+#include "yacsl/testing/run.hpp"
 #include "yacsl/type_aliases.hpp"
 #include <assert.h>
 #include <inttypes.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 static void check(char const* expected) {
