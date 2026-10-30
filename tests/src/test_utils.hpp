@@ -55,6 +55,12 @@ template <typename T> struct DynamicArray {
     self.ptr[self.len++] = value;
   }
 
+  constexpr void clear(this DynamicArray& self) {
+    delete[] self.ptr;
+    self.ptr = nullptr;
+    self.len = 0;
+  }
+
   T*     ptr = nullptr;
   size_t len = 0;
 };
