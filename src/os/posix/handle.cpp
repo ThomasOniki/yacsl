@@ -1,8 +1,12 @@
 #ifndef _WIN32
 
 #include "yacsl/os/posix/handle.hpp"
+#include "yacsl/containers/result.hpp"
+#include "yacsl/debug/panic.hpp"
+#include "yacsl/os/file.hpp"
 #include "yacsl/os/posix/errno.hpp"
 #include "yacsl/os/posix/oflag.hpp"
+#include <errno.h>
 
 namespace yacsl::os::posix {
 

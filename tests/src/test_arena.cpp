@@ -1,7 +1,5 @@
 #include "test_utils.hpp"
-#include "yacsl/containers/stack_array.hpp"
 #include "yacsl/memory/arena.hpp"
-#include "yacsl/testing/expect.hpp"
 #include "yacsl/testing/run.hpp"
 #include <stddef.h>
 #include <stdint.h>

@@ -22,6 +22,10 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#if __has_include(<AvailabilityMacros.h>)
+#include <AvailabilityMacros.h>
+#endif
+
 namespace yacsl::os {
 
 using Type = Process::StdioType;
@@ -70,8 +74,8 @@ static void redirect_child_stdio_to_file(posix_spawn_file_actions_t* actions,
                                          int stream) noexcept {
   int const oflag =
       posix::to_oflag(flags | File::OpenFlags::Inheritable |
-                     (stream == STDIN_FILENO ? File::OpenFlags::Read
-                                             : File::OpenFlags::Write));
+                      (stream == STDIN_FILENO ? File::OpenFlags::Read
+                                              : File::OpenFlags::Write));
 
   check_return(
       posix_spawn_file_actions_addopen(actions, stream, path, oflag, 0644));
@@ -201,8 +205,8 @@ Process::spawn(char const* const* argv, SpawnOpts const& opts) noexcept {
   check_return(posix_spawn_file_actions_init(&state.file_actions));
 
   if (opts.cwd.data() != nullptr) {
-#if defined(__MAC_OS_X_VERSION_MIN_REQUIRED) &&                                \
-    __MAC_OS_X_VERSION_MIN_REQUIRED >= __MAC_26_0
+#if defined(MAC_OS_X_VERSION_MIN_REQUIRED) &&                                  \
+    MAC_OS_X_VERSION_MIN_REQUIRED >= __MAC_26_0
     posix_spawn_file_actions_addchdir(&state.file_actions,
                                       containers::String(opts.cwd).c_str());
 #else
