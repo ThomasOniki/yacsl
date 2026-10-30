@@ -10,22 +10,20 @@
 
 namespace yacsl::containers {
 
-template <typename H, typename T>
+template <typename H, typename T, typename SizeT = usize>
 concept HashType = requires(H hash, T value) {
-  { hash(value) } -> meta::SameAs<typename H::SizeT>;
+  { hash(value) } -> meta::SameAs<SizeT>;
 };
 
 template <typename T, typename SizeT = usize> struct Hash;
 
-template <meta::Arithmetic T, typename S> struct Hash<T, S> {
-  using SizeT = S;
+template <meta::Arithmetic T, typename SizeT> struct Hash<T, SizeT> {
   constexpr SizeT operator()(T value) noexcept {
     return static_cast<SizeT>(value);
   }
 };
 
-template <meta::RangeLike R, typename S> struct Hash<R, S> {
-  using SizeT = S;
+template <meta::RangeLike R, typename SizeT> struct Hash<R, SizeT> {
 
   template <typename... Args>
   constexpr Hash(Args&&... args) noexcept
