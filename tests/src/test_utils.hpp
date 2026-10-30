@@ -29,6 +29,18 @@
     }                                                                          \
   } while (false)
 
+#define EXPECT_STREQ(lhs, rhs, ...)                                            \
+  do {                                                                         \
+    bool const _result = cond;                                                 \
+    if (strcmp(lhs, rhs) != 0) [[unlikely]] {                                  \
+      yacsl::testing::fail_quietly();                                          \
+      fprintf(stderr,                                                          \
+              "EXPECT_STREQ(%s, %s) failed at " __FILE__                       \
+              ":" STRINGIFY(__LINE__) "\nlhs: '%s'\nrhs: '%s'",                \
+              #lhs, #rhs lhs, rhs);                                            \
+      fprintf(stderr, "" __VA_ARGS__);                                         \
+    }                                                                          \
+  } while (false)
 template <typename F, typename... Args>
 void run_test(char const* name, F&& func, Args&&... args) noexcept {
   printf("Running test '%s'...\n", name);
