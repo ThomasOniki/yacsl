@@ -53,7 +53,7 @@ public:
       memory::construct_at(&value, memory::move(other_value));
       other_value.~T();
     });
-    other.index_ = sizeof...(Ts);
+    other.index_ = static_cast<IndexMemberType>(meta::Limits<usize>::MAX);
   }
 
   constexpr Union& operator=(this Union& self, Union const& other) noexcept {
@@ -77,7 +77,7 @@ public:
       memory::construct_at(&value, memory::move(other_value));
       other_value.~T();
     });
-    other.index_ = sizeof...(Ts);
+    other.index_ = static_cast<IndexMemberType>(meta::Limits<usize>::MAX);
     return self;
   }
 
@@ -128,8 +128,10 @@ constexpr auto get_option(this Self&& self) noexcept
 
 private : alignas(math::max(alignof(Ts)...))
               StackArray<u8, math::max(sizeof(Ts)...)> bytes_;
-  meta::Conditional<sizeof...(Ts) <= meta::Limits<u8>::MAX, u8, usize> index_ =
-      sizeof...(Ts);
+  using IndexMemberType =
+      meta::Conditional<sizeof...(Ts) <= meta::Limits<u8>::MAX, u8, usize>;
+  IndexMemberType index_ =
+      static_cast<IndexMemberType>(meta::Limits<usize>::MAX);
 };
 
 } // namespace yacsl::containers
