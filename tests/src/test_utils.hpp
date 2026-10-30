@@ -30,7 +30,7 @@
     if (strcmp(lhs, rhs) != 0) [[unlikely]] {                                  \
       yacsl::testing::fail_quietly();                                          \
       fprintf(stderr,                                                          \
-              "EXPECT_STREQ(%s, %s) failed at %s:%d\nlhs: '%s'\nrhs: '%s'",    \
+              "EXPECT_STREQ(%s, %s) failed at %s:%d\nlhs: '%s'\nrhs: '%s'\n",  \
               #lhs, #rhs, __FILE__, __LINE__, lhs, rhs);                       \
       fprintf(stderr, "" __VA_ARGS__);                                         \
     }                                                                          \
