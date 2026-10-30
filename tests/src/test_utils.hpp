@@ -1,5 +1,6 @@
 #pragma once
 
+#include "yacsl/compiler/attributes.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/testing/run.hpp"
 #include <stdarg.h>
@@ -87,9 +88,14 @@ struct DynamicCString {
   }
 
   template <typename... Args>
-  void printf_to(this DynamicCString& self, char const* fmt, Args... args) {
-    char*      formatted = nullptr;
-    auto const len = static_cast<size_t>(asprintf(&formatted, fmt, args...));
+  YACSL_GCC_OR_CLANG_ATTR([[gnu::format(printf, 2, 3)]])
+  // NOLINTNEXTLINE(modernize-avoid-variadic-functions)
+  void printf_to(this DynamicCString& self, char const* fmt, ...) {
+    char*   formatted = nullptr;
+    va_list vargs     = {};
+    va_start(vargs, fmt);
+    auto const len = static_cast<size_t>(vasprintf(&formatted, fmt, vargs));
+    va_end(vargs);
 
     char* mem = new char[self.len + len + 1];
     memcpy(mem, self.ptr, self.len);
