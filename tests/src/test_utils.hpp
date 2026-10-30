@@ -80,6 +80,12 @@ struct DynamicCString {
   DynamicCString& operator=(DynamicCString&&)      = delete;
   DynamicCString& operator=(DynamicCString const&) = delete;
 
+  constexpr void clear(this DynamicCString& self) noexcept {
+    delete[] self.ptr;
+    self.ptr = nullptr;
+    self.len = 0;
+  }
+
   template <typename... Args>
   void printf_to(this DynamicCString& self, char const* fmt, Args... args) {
     char*      formatted = nullptr;
