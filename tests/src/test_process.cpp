@@ -5,9 +5,10 @@
 #include "yacsl/containers/string.hpp"
 #include "yacsl/debug/assert.hpp"
 #include "yacsl/debug/log.hpp"
+#include "yacsl/fmt/format_string.hpp"
 #include "yacsl/os/file.hpp"
-#include "yacsl/os/process.hpp"
 #include "yacsl/os/posix/errno.hpp"
+#include "yacsl/os/process.hpp"
 #include "yacsl/ranges/slice.hpp"
 #include "yacsl/ranges/string_view.hpp"
 #include "yacsl/testing/expect.hpp"
@@ -211,8 +212,8 @@ get_pipe_output(Process::Output* output, yacsl::ranges::StringView expected) {
 }
 
 static void check_file(char const* path, yacsl::ranges::StringView expected) {
-  int const fildes =
-      yacsl::os::posix::try_unix(open(path, O_RDWR | O_CREAT | O_CLOEXEC, 0644));
+  int const fildes = yacsl::os::posix::try_unix(
+      open(path, O_RDWR | O_CREAT | O_CLOEXEC, 0644));
 
   yacsl::containers::String buf;
 
@@ -520,7 +521,7 @@ int main() {
   for (Type stdin_type : types) {
     for (Type stdout_type : types) {
       for (Type stderr_type : types) {
-        yacsl::containers::String name = yacsl::fmt::format(
+        yacsl::containers::String const name = yacsl::fmt::format(
             "{}, {}, {}", stdin_type, stdout_type, stderr_type);
         IoTypes iotypes{
             .input  = stdin_type,
