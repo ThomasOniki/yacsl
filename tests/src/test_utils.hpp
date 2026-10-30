@@ -102,7 +102,6 @@ struct DynamicCString {
     self.len = 0;
   }
 
-  template <typename... Args>
   YACSL_GCC_OR_CLANG_ATTR([[gnu::format(printf, 2, 3)]])
   // NOLINTNEXTLINE(modernize-avoid-variadic-functions)
   void printf_to(this DynamicCString& self, char const* fmt, ...) {
