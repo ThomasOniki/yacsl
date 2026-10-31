@@ -82,7 +82,7 @@ static void test_emplace() {
                                           "constructed 'A'\n");
     SMFTracker::HISTORY.clear();
 
-    test.emplace<0>();
+    test.emplace<A>();
     EXPECT_STREQ(SMFTracker::HISTORY.ptr, "destroyed 'A'\n"
                                           "constructed 'A'\n");
     SMFTracker::HISTORY.clear();
@@ -90,28 +90,53 @@ static void test_emplace() {
   EXPECT_STREQ(SMFTracker::HISTORY.ptr, "destroyed 'A'\n");
 }
 
+static void test_is_a() {
+  auto test = yacsl::containers::Union<A, A, B, B>::create<0>();
+  EXPECT(test.is_a<A>());
+  EXPECT(!test.is_a<A&>() && !test.is_a<A&&>());
+  EXPECT(!test.is_a<const A>() && !test.is_a<const A&>() &&
+         !test.is_a<const A&&>());
+  EXPECT(!test.is_a<B>());
+  test.emplace<1>();
+  EXPECT(test.is_a<A>());
+  EXPECT(!test.is_a<B>());
+  test.emplace<2>();
+  EXPECT(!test.is_a<A>());
+  EXPECT(test.is_a<B>());
+  test.emplace<3>();
+  EXPECT(!test.is_a<A>());
+  EXPECT(test.is_a<B>());
+  test = yacsl::utils::NIL;
+  EXPECT(!test.is_a<A>());
+  EXPECT(!test.is_a<B>());
+}
+
 static void test_get() {
   SMFTracker::HISTORY.clear();
   {
-    yacsl::containers::Union<A, B> test = yacsl::utils::NIL;
-    test.emplace<0>(42);
+    auto test = yacsl::containers::Union<A, B>::create<A>(42);
     EXPECT(test.get<0>().value == 42);
     test.emplace<0>(5);
     A& ref = test.get<0>();
+    EXPECT(&ref == &test.get<A>());
     EXPECT(ref.value == 5);
     ref.value = 43;
     EXPECT(ref.value == 43);
-    EXPECT(test.get<0>().value == 43);
+    EXPECT(test.get<A>().value == 43);
     test.emplace<1>(44);
     EXPECT(test.get<1>().value == 44);
-    ref = test.emplace<0>(45);
+    ref = test.emplace<A>(45);
     EXPECT(test.get_unchecked<0>().value == 45);
+    EXPECT(test.get_unchecked<A>().value == 45);
     EXPECT(test.get_option<0>().is_value());
     EXPECT(test.get_option<0>().value().value == 45);
+    EXPECT(test.get_option<A>().value().value == 45);
     EXPECT(test.get_option<1>().is_nil());
+    EXPECT(test.get_option<B>().is_nil());
     ref.value = 46;
     EXPECT(test.get<0>().value == 46);
   }
+
   EXPECT_STREQ(SMFTracker::HISTORY.ptr, "constructed 'A'\n"
                                         "destroyed 'A'\n"
                                         "constructed 'A'\n"
@@ -197,6 +222,7 @@ static void test_move() {
 
 int main() {
   run_test("emplace", test_emplace);
+  run_test("is_a", test_is_a);
   run_test("get", test_get);
   run_test("visit", test_visit);
   run_test("copy", test_copy);
