@@ -34,10 +34,27 @@ public:
     return self.get_unchecked<I>();
   }
 
+  template <typename T, typename... Args>
+  constexpr auto&& emplace(this Union& self, Args&&... args) noexcept
+    requires meta::no_duplicates<Ts...> && meta::OneOf<T, Ts...>
+  {
+    return self.emplace<meta::first_type_index<T, Ts...>>(
+        memory::forward<Args>(args)...);
+  }
+
   template <usize I, typename... Args>
   [[nodiscard]] static constexpr Union create(Args&&... args) noexcept {
-    Union ret;
+    Union ret = utils::NIL;
     ret.emplace<I>(memory::forward<Args>(args)...);
+    return ret;
+  }
+
+  template <typename T, typename... Args>
+  [[nodiscard]] static constexpr Union create(Args&&... args) noexcept
+    requires meta::no_duplicates<Ts...> && meta::OneOf<T, Ts...>
+  {
+    Union ret = utils::NIL;
+    ret.emplace<T>(memory::forward<Args>(args)...);
     return ret;
   }
 
@@ -151,19 +168,49 @@ public:
         memory::forward<Self>(self).template get<I>());
   }
 
-template <usize I, typename Self>
-constexpr auto get_option(this Self&& self) noexcept
-    -> containers::Option<meta::CopyCVRef<Self&&, Ts... [I]>> {
-      if (self.index_ != I) [[unlikely]] {
-        return utils::NIL;
+  template <usize I, typename Self>
+  constexpr auto get_option(this Self&& self) noexcept
+      -> containers::Option<meta::CopyCVRef<Self&&, Ts... [I]>> {
+        if (self.index_ != I) [[unlikely]] {
+          return utils::NIL;
+        }
+        auto ptr = reinterpret_cast<meta::CopyCV<Self, Ts...[I]>*>(
+            memory::forward<Self>(self).bytes_.data());
+        return memory::forward<meta::CopyCVRef<Self&&, Ts...[I]>>(*ptr);
       }
-      auto ptr = reinterpret_cast<meta::CopyCV<Self, Ts...[I]>*>(
-          memory::forward<Self>(self).bytes_.data());
-      return memory::forward<meta::CopyCVRef<Self&&, Ts...[I]>>(*ptr);
-    }
 
-private : alignas(math::max(alignof(Ts)...))
-              StackArray<u8, math::max(sizeof(Ts)...)> bytes_;
+  template <typename T, typename Self>
+  constexpr auto&& get(this Self&& self) noexcept
+    requires meta::no_duplicates<Ts...> && meta::OneOf<T, Ts...>
+  {
+    return memory::forward<Self>(self)
+        .template get<meta::first_type_index<T, Ts...>>();
+  }
+  template <typename T, typename Self>
+  constexpr auto&& get_unchecked(this Self&& self) noexcept
+    requires meta::no_duplicates<Ts...> && meta::OneOf<T, Ts...>
+  {
+    return memory::forward<Self>(self)
+        .template get_unchecked<meta::first_type_index<T, Ts...>>();
+  }
+  template <typename T, typename Self>
+  constexpr auto get_option(this Self&& self) noexcept
+    requires meta::no_duplicates<Ts...> && meta::OneOf<T, Ts...>
+  {
+    return memory::forward<Self>(self)
+        .template get_option<meta::first_type_index<T, Ts...>>();
+  }
+
+  template <typename T> constexpr bool is_a(this Union const& self) noexcept {
+    return self
+        .visit_option(
+            []<typename U>(U const& /*value*/) { return meta::SameAs<T, U>; })
+        .value_or(false);
+  }
+
+private:
+  alignas(math::max(alignof(Ts)...))
+      StackArray<u8, math::max(sizeof(Ts)...)> bytes_;
   using IndexMemberType =
       meta::Conditional<sizeof...(Ts) <= meta::Limits<u8>::MAX, u8, usize>;
   IndexMemberType index_ =
