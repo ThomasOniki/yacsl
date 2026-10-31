@@ -47,18 +47,6 @@ YACSL_GCC_OR_CLANG_PRAGMA(GCC diagnostic ignored "-Wformat-zero-length")
     }                                                                          \
   } while (false)
 
-template <typename F, typename... Args>
-void run_test(char const* name, F&& func, Args&&... args) noexcept {
-  printf("Running test '%s'...\n", name);
-  yacsl::testing::run_quitely(yacsl::memory::forward<F>(func),
-                              yacsl::memory::forward<Args>(args)...);
-  if (yacsl::testing::status()) {
-    printf("Test '%s' succeeded!\n", name);
-  } else {
-    fprintf(stderr, "Test '%s' failed!\n", name);
-  }
-}
-
 template <typename T> struct DynamicArray {
   constexpr DynamicArray() noexcept = default;
   constexpr ~DynamicArray() noexcept { delete[] ptr; }
@@ -141,36 +129,36 @@ struct DynamicCString {
 class SMFTracker {
 public:
   explicit SMFTracker(char const* name) : name_(name) {
-    HISTORY.printf_to("constructed '%s'\n", name);
+    LOGS.printf_to("constructed '%s'\n", name);
   }
   SMFTracker(SMFTracker const& other) {
     name_.printf_to("%s (copy)", other.name_.ptr);
-    HISTORY.printf_to("copy constructed '%s'\n", other.name_.ptr);
+    LOGS.printf_to("copy constructed '%s'\n", other.name_.ptr);
   }
   SMFTracker(SMFTracker&& other) noexcept {
     name_.printf_to("%s (moved)", other.name_.ptr);
-    HISTORY.printf_to("move constructed '%s'\n", other.name_.ptr);
+    LOGS.printf_to("move constructed '%s'\n", other.name_.ptr);
   }
-  ~SMFTracker() noexcept { HISTORY.printf_to("destroyed '%s'\n", name_.ptr); }
+  ~SMFTracker() noexcept { LOGS.printf_to("destroyed '%s'\n", name_.ptr); }
   SMFTracker& operator=(this SMFTracker& self, SMFTracker const& other) {
     if (&other == &self) {
       return self;
     }
     self.name_.clear();
     self.name_.printf_to("%s (copy assigned)", other.name_.ptr);
-    HISTORY.printf_to("copy assigned '%s'\n", other.name_.ptr);
+    LOGS.printf_to("copy assigned '%s'\n", other.name_.ptr);
     return self;
   }
   [[maybe_unused]] SMFTracker& operator=(this SMFTracker& self,
                                          SMFTracker&&     other) noexcept {
     self.name_.clear();
     self.name_.printf_to("%s (move assigned)", other.name_.ptr);
-    HISTORY.printf_to("move assigned '%s'\n", other.name_.ptr);
+    LOGS.printf_to("move assigned '%s'\n", other.name_.ptr);
     return self;
   }
 
 public:
-  inline static DynamicCString HISTORY;
+  inline static DynamicCString LOGS;
   DynamicCString               name_;
 };
 
@@ -192,8 +180,8 @@ struct TestAllocator {
 #endif
     dynarray_remove(freed, ret);
     dynarray_insert(allocated, ret);
-    HISTORY.printf_to("allocated %zu bytes\n", size);
-    POINTER_HIST.push(ret);
+    LOGS.printf_to("allocated %zu bytes\n", size);
+    PTR_LOGS.push(ret);
     return {
         static_cast<yacsl::u8*>(ret),
         size,
@@ -214,8 +202,8 @@ struct TestAllocator {
       free(mem.data());
 #endif
     }
-    HISTORY.printf_to("deallocated %zu bytes\n", mem.len());
-    POINTER_HIST.push(mem.data());
+    LOGS.printf_to("deallocated %zu bytes\n", mem.len());
+    PTR_LOGS.push(mem.data());
   }
 
   yacsl::ranges::Slice<yacsl::u8, SizeT>
@@ -259,15 +247,27 @@ struct TestAllocator {
   inline static DynamicArray<void*> allocated;
 
   static constexpr void clear_history() {
-    HISTORY.clear();
-    POINTER_HIST.clear();
+    LOGS.clear();
+    PTR_LOGS.clear();
   }
 
-  inline static DynamicArray<void*> POINTER_HIST;
-  inline static DynamicCString      HISTORY;
+  inline static DynamicArray<void*> PTR_LOGS;
+  inline static DynamicCString      LOGS;
 
   SMFTracker smf_tracker_ = SMFTracker("allocator");
 };
 
 using TestAllocatorSingleton =
     yacsl::memory::SingletonAllocator<TestAllocator, "main", true>;
+
+template <typename F, typename... Args>
+void run_test(char const* name, F&& func, Args&&... args) noexcept {
+  printf("Running test '%s'...\n", name);
+  yacsl::testing::run_quitely(yacsl::memory::forward<F>(func),
+                              yacsl::memory::forward<Args>(args)...);
+  if (yacsl::testing::status()) {
+    printf("Test '%s' succeeded!\n", name);
+  } else {
+    fprintf(stderr, "Test '%s' failed!\n", name);
+  }
+}
