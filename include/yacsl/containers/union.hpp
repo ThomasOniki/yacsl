@@ -23,12 +23,13 @@ public:
   constexpr Union(utils::Nil /*nil*/) noexcept {}
 
   template <usize I, typename... Args>
-  constexpr void emplace(this Union& self, Args&&... args) noexcept {
+  constexpr auto& emplace(this Union& self, Args&&... args) noexcept {
     self.visit([&]<typename T>(T const& value) { value.~T(); });
     self.index_ = I;
     self.visit([&](auto& value) {
       memory::construct_at(&value, memory::forward<Args>(args)...);
     });
+    return self.get_unchecked<I>();
   }
 
   template <usize I, typename... Args>
