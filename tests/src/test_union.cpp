@@ -1,5 +1,6 @@
 #include "test_utils.hpp"
 #include "yacsl/containers/union.hpp"
+#include "yacsl/utils/nil.hpp"
 
 namespace {
 struct A {
@@ -77,6 +78,20 @@ static void test_visit() {
   });
   EXPECT(set_by_visit == 42);
   EXPECT(test.get<0>().value == 43);
+
+  EXPECT(test.visit([](auto&& value) { return value.value++; }) == 43);
+  EXPECT(test.get<0>().value == 44);
+
+  EXPECT(test.visit_option([](auto&& value) { return value.value++; }) == 44);
+  EXPECT(test.get<0>().value == 45);
+
+  EXPECT(test.visit_unchecked([](auto&& value) { return value.value++; }) ==
+         45);
+  EXPECT(test.get<0>().value == 46);
+
+  test = yacsl::utils::NIL;
+  EXPECT(test.visit_option([](auto&& /*value*/) { return 0; }).is_nil(),
+         "test.index(): %zu\n", test.index());
 }
 
 static void test_copy() {
