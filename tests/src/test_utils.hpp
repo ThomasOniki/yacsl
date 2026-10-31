@@ -27,10 +27,12 @@
 
 #define EXPECT_STREQ(lhs, rhs, ...)                                            \
   do {                                                                         \
-    if (((lhs) == nullptr && (rhs) != nullptr && (rhs)[0] != '\0') ||          \
-        ((rhs) == nullptr && (lhs) != nullptr && (lhs)[0] != '\0') ||          \
-        ((lhs) != nullptr && (rhs) != nullptr) && strcmp(lhs, rhs) != 0)       \
-        [[unlikely]] {                                                         \
+    bool _eq = (lhs) != nullptr && (rhs) != nullptr;                           \
+    _eq      = _eq && strcmp(lhs, rhs) == 0;                                   \
+    _eq      = _eq || ((lhs) == nullptr && (rhs) == nullptr);                  \
+    _eq      = _eq || ((lhs) == nullptr && (rhs)[0] == '\0');                  \
+    _eq      = _eq || ((rhs) == nullptr && (lhs)[0] == '\0');                  \
+    if (!_eq) [[unlikely]] {                                                   \
       yacsl::testing::fail_quietly();                                          \
       fprintf(stderr,                                                          \
               "EXPECT_STREQ(%s, %s) failed at %s:%d\nlhs: '%s'\nrhs: '%s'\n",  \
