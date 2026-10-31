@@ -7,78 +7,69 @@
 using yacsl::containers::Vector;
 
 static void test_constructor_with_nothing() noexcept {
-  SMFTracker::HISTORY.clear();
-  TestAllocator::HISTORY.clear();
-
   {
     auto test1 = Vector<SMFTracker, 0, TestAllocator>();
-    EXPECT_STREQ(SMFTracker::HISTORY.ptr, "constructed 'allocator'\n");
-    SMFTracker::HISTORY.clear();
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'allocator'\n");
+    clear_logs();
 
     TestAllocator alloc;
-    EXPECT_STREQ(SMFTracker::HISTORY.ptr, "constructed 'allocator'\n");
-    SMFTracker::HISTORY.clear();
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'allocator'\n");
+    clear_logs();
 
     auto test2 = Vector<SMFTracker, 0, TestAllocator>(alloc);
-    EXPECT_STREQ(SMFTracker::HISTORY.ptr, "copy constructed 'allocator'\n");
-    SMFTracker::HISTORY.clear();
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "copy constructed 'allocator'\n");
+    clear_logs();
   }
-  EXPECT_STREQ(SMFTracker::HISTORY.ptr, "destroyed 'allocator (copy)'\n"
-                                        "destroyed 'allocator'\n"
-                                        "destroyed 'allocator'\n");
-  EXPECT_STREQ(TestAllocator::HISTORY.ptr, "deallocated 0 bytes\n"
-                                           "deallocated 0 bytes\n");
+  EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed 'allocator (copy)'\n"
+                                     "destroyed 'allocator'\n"
+                                     "destroyed 'allocator'\n");
+  EXPECT_STREQ(TestAllocator::LOGS.ptr, "deallocated 0 bytes\n"
+                                        "deallocated 0 bytes\n");
 }
 
 static void test_constructor_with_len() noexcept {
-  TestAllocator::HISTORY.clear();
-  SMFTracker::HISTORY.clear();
-
   yacsl::containers::StackArray<char, 64> msg = {};
 
   {
     auto test3 = Vector<SMFTracker, 0, TestAllocator>(2);
-    EXPECT_STREQ(SMFTracker::HISTORY.ptr, "constructed 'allocator'\n"
-                                          "copy constructed 'allocator'\n"
-                                          "default constructed 'default'\n"
-                                          "default constructed 'default'\n"
-                                          "destroyed 'allocator'\n");
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'allocator'\n"
+                                       "copy constructed 'allocator'\n"
+                                       "default constructed 'default'\n"
+                                       "default constructed 'default'\n"
+                                       "destroyed 'allocator'\n");
     snprintf(msg.data(), msg.len(), "allocated %zu bytes\n",
              sizeof(SMFTracker) * 2);
-    EXPECT_STREQ(TestAllocator::HISTORY.ptr, msg.data());
+    EXPECT_STREQ(TestAllocator::LOGS.ptr, msg.data());
 
-    SMFTracker::HISTORY.clear();
-    TestAllocator::HISTORY.clear();
+    clear_logs();
 
     TestAllocator alloc;
-    EXPECT_STREQ(SMFTracker::HISTORY.ptr, "constructed 'allocator'\n");
-    SMFTracker::HISTORY.clear();
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'allocator'\n");
+    clear_logs();
 
     auto test4 = Vector<SMFTracker, 0, TestAllocator>(3, alloc);
-    EXPECT_STREQ(SMFTracker::HISTORY.ptr, "copy constructed 'allocator'\n"
-                                          "default constructed 'default'\n"
-                                          "default constructed 'default'\n"
-                                          "default constructed 'default'\n");
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "copy constructed 'allocator'\n"
+                                       "default constructed 'default'\n"
+                                       "default constructed 'default'\n"
+                                       "default constructed 'default'\n");
     snprintf(msg.data(), msg.len(), "allocated %zu bytes\n",
              sizeof(SMFTracker) * 3);
-    EXPECT_STREQ(TestAllocator::HISTORY.ptr, msg.data());
-
-    SMFTracker::HISTORY.clear();
-    TestAllocator::HISTORY.clear();
+    EXPECT_STREQ(TestAllocator::LOGS.ptr, msg.data());
+    clear_logs();
   }
-  EXPECT_STREQ(SMFTracker::HISTORY.ptr, "destroyed 'default'\n"
-                                        "destroyed 'default'\n"
-                                        "destroyed 'default'\n"
-                                        "destroyed 'allocator (copy)'\n"
-                                        "destroyed 'allocator'\n"
-                                        "destroyed 'default'\n"
-                                        "destroyed 'default'\n"
-                                        "destroyed 'allocator (copy)'\n");
+  EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed 'default'\n"
+                                     "destroyed 'default'\n"
+                                     "destroyed 'default'\n"
+                                     "destroyed 'allocator (copy)'\n"
+                                     "destroyed 'allocator'\n"
+                                     "destroyed 'default'\n"
+                                     "destroyed 'default'\n"
+                                     "destroyed 'allocator (copy)'\n");
   snprintf(msg.data(), msg.len(),
            "deallocated %zu bytes\n"
            "deallocated %zu bytes\n",
            sizeof(SMFTracker) * 3, sizeof(SMFTracker) * 2);
-  EXPECT_STREQ(TestAllocator::HISTORY.ptr, msg.data());
+  EXPECT_STREQ(TestAllocator::LOGS.ptr, msg.data());
 }
 
 int main() {
