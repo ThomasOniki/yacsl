@@ -39,6 +39,7 @@ using FirstOfSize = detail::FirstOfSizeImpl<Size, Ts...>;
 template <typename T, typename... Ts>
 constexpr usize first_type_index = detail::FirstTypeIndex<0, T, Ts...>::value;
 
-static_assert(first_type_index<int, char, int, float, bool, int, float> == 1);
+template <typename... Ts>
+constexpr bool all_same = (... && SameAs<Ts...[0], Ts>);
 
 } // namespace yacsl::meta
