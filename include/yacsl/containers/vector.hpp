@@ -401,7 +401,9 @@ void Vector<T, N, A, SizeT>::definitely_reserve(this Vector& self,
 template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
 template <typename Copied>
 void Vector<T, N, A, SizeT>::copy(this Vector& self, Copied const* data) {
-  memory::copy({data, static_cast<usize>(self.len_)}, self.data_);
+  for (SizeT i = 0; i < self.len_; ++i) {
+    memory::construct_at(self.data_ + i, data[i]);
+  }
 }
 
 template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>

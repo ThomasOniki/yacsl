@@ -179,6 +179,50 @@ static void test_constructor_with_value_alloc() noexcept {
   EXPECT_STREQ(TestAllocator::LOGS.ptr, msg.data());
 }
 
+template <yacsl::usize N> static void test_constructor_with_init() noexcept {
+  yacsl::containers::StackArray<char, 64> msg = {};
+
+  using yacsl::math::max;
+
+  {
+    auto init = {
+        SMFTracker("value1"),
+        SMFTracker("value2"),
+    };
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'value1'\n"
+                                       "constructed 'value2'\n");
+    clear_logs();
+
+    auto test1 = Vector<SMFTracker, N, TestAllocator>(init);
+    EXPECT(test1.len() == 2, "len = %zu.\n", test1.len());
+    EXPECT(test1.capacity() == max(2UZ, N), "capacity = %zu\n",
+           test1.capacity());
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'allocator'\n"
+                                       "copy constructed 'allocator'\n"
+                                       "copy constructed 'value1'\n"
+                                       "copy constructed 'value2'\n"
+                                       "destroyed 'allocator'\n");
+    if (N < 2) {
+      snprintf(msg.data(), msg.len(), "allocated %zu bytes\n",
+               sizeof(SMFTracker) * 2);
+    }
+    EXPECT_STREQ(TestAllocator::LOGS.ptr, msg.data());
+
+    clear_logs();
+  }
+
+  EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed 'value2 (copy)'\n"
+                                     "destroyed 'value1 (copy)'\n"
+                                     "destroyed 'allocator (copy)'\n"
+                                     "destroyed 'value2'\n"
+                                     "destroyed 'value1'\n");
+  if (N < 2) {
+    snprintf(msg.data(), msg.len(), "deallocated %zu bytes\n",
+             sizeof(SMFTracker) * 2);
+  }
+  EXPECT_STREQ(TestAllocator::LOGS.ptr, msg.data());
+}
+
 int main() {
   run_test("Vector<T, 0>::Vector()", test_constructor_with_nothing<0>);
   run_test("Vector<T, 5>::Vector()", test_constructor_with_nothing<5>);
@@ -203,5 +247,9 @@ int main() {
            test_constructor_with_value_alloc<1>);
   run_test("Vector<T, 2>::Vector(len, value, allocator)",
            test_constructor_with_value_alloc<2>);
+  run_test("Vector<T, 0>::Vector(init)", test_constructor_with_init<0>);
+  run_test("Vector<T, 1>::Vector(init)", test_constructor_with_init<1>);
+  run_test("Vector<T, 2>::Vector(init)", test_constructor_with_init<2>);
+  run_test("Vector<T, 3>::Vector(init)", test_constructor_with_init<3>);
   return yacsl::testing::status() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
