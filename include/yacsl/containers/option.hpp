@@ -95,6 +95,7 @@ public:
     if (self.is_value_) {
       self.value_.destruct();
     }
+    self.is_value_ = true;
     return memory::forward<Self>(self).value_.construct(
         memory::forward<Args>(args)...);
   }
