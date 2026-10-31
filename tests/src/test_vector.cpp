@@ -105,6 +105,45 @@ static void test_constructor_with_len_alloc() noexcept {
   EXPECT_STREQ(TestAllocator::LOGS.ptr, msg.data());
 }
 
+template <yacsl::usize N> static void test_constructor_with_value() noexcept {
+  yacsl::containers::StackArray<char, 64> msg = {};
+
+  using yacsl::math::max;
+
+  {
+    auto value = SMFTracker("value");
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'value'\n");
+    clear_logs();
+
+    auto test1 = Vector<SMFTracker, N, TestAllocator>(2, value);
+    EXPECT(test1.len() == 2, "len = %zu.\n", test1.len());
+    EXPECT(test1.capacity() == max(2UZ, N), "capacity = %zu\n",
+           test1.capacity());
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'allocator'\n"
+                                       "copy constructed 'allocator'\n"
+                                       "copy constructed 'value'\n"
+                                       "copy constructed 'value'\n"
+                                       "destroyed 'allocator'\n");
+    if (N < 2) {
+      snprintf(msg.data(), msg.len(), "allocated %zu bytes\n",
+               sizeof(SMFTracker) * 2);
+    }
+    EXPECT_STREQ(TestAllocator::LOGS.ptr, msg.data());
+
+    clear_logs();
+  }
+
+  EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed 'value (copy)'\n"
+                                     "destroyed 'value (copy)'\n"
+                                     "destroyed 'allocator (copy)'\n"
+                                     "destroyed 'value'\n");
+  if (N < 2) {
+    snprintf(msg.data(), msg.len(), "deallocated %zu bytes\n",
+             sizeof(SMFTracker) * 2);
+  }
+  EXPECT_STREQ(TestAllocator::LOGS.ptr, msg.data());
+}
+
 int main() {
   run_test("Vector<T, 0>::Vector()", test_constructor_with_nothing<0>);
   run_test("Vector<T, 5>::Vector()", test_constructor_with_nothing<5>);
@@ -116,9 +155,12 @@ int main() {
   run_test("Vector<T, 3>::Vector(len)", test_constructor_with_len<3>);
   run_test("Vector<T, 0>::Vector(len, allocator)",
            test_constructor_with_len_alloc<0>);
+  run_test("Vector<T, 2>::Vector(len, allocator)",
+           test_constructor_with_len_alloc<2>);
   run_test("Vector<T, 3>::Vector(len, allocator)",
            test_constructor_with_len_alloc<3>);
-  run_test("Vector<T, 4>::Vector(len, allocator)",
-           test_constructor_with_len_alloc<4>);
+  run_test("Vector<T, 0>::Vector(len, value)", test_constructor_with_value<0>);
+  run_test("Vector<T, 1>::Vector(len, value)", test_constructor_with_value<1>);
+  run_test("Vector<T, 2>::Vector(len, value)", test_constructor_with_value<2>);
   return yacsl::testing::status() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
