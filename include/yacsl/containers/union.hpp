@@ -150,19 +150,28 @@ public:
         memory::forward<Self>(self).template get<I>());
   }
 
-template <usize I, typename Self>
-constexpr auto get_option(this Self&& self) noexcept
-    -> containers::Option<meta::CopyCVRef<Self&&, Ts... [I]>> {
-      if (self.index_ != I) [[unlikely]] {
-        return utils::NIL;
+  template <usize I, typename Self>
+  constexpr auto get_option(this Self&& self) noexcept
+      -> containers::Option<meta::CopyCVRef<Self&&, Ts... [I]>> {
+        if (self.index_ != I) [[unlikely]] {
+          return utils::NIL;
+        }
+        auto ptr = reinterpret_cast<meta::CopyCV<Self, Ts...[I]>*>(
+            memory::forward<Self>(self).bytes_.data());
+        return memory::forward<meta::CopyCVRef<Self&&, Ts...[I]>>(*ptr);
       }
-      auto ptr = reinterpret_cast<meta::CopyCV<Self, Ts...[I]>*>(
-          memory::forward<Self>(self).bytes_.data());
-      return memory::forward<meta::CopyCVRef<Self&&, Ts...[I]>>(*ptr);
-    }
 
-private : alignas(math::max(alignof(Ts)...))
-              StackArray<u8, math::max(sizeof(Ts)...)> bytes_;
+  template <typename T>
+  constexpr bool is_a(this Union const& self) noexcept {
+    return self
+        .visit_option(
+            []<typename U>(U const& /*value*/) { return meta::SameAs<T, U>; })
+        .value_or(false);
+  }
+
+private:
+  alignas(math::max(alignof(Ts)...))
+      StackArray<u8, math::max(sizeof(Ts)...)> bytes_;
   using IndexMemberType =
       meta::Conditional<sizeof...(Ts) <= meta::Limits<u8>::MAX, u8, usize>;
   IndexMemberType index_ =
