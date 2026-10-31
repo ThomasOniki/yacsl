@@ -18,94 +18,94 @@ static void test_function_runs() {
 }
 
 static void test_moved_lambda() {
-  SMFTracker::HISTORY.clear();
-  TestAllocator::HISTORY.clear();
+  SMFTracker::LOGS.clear();
+  TestAllocator::LOGS.clear();
   {
     // test must be non-to const be moved.
     // NOLINTNEXTLINE(misc-const-correctness)
     auto test1 = SMFTracker("test1");
 
-    EXPECT_STREQ(SMFTracker::HISTORY.ptr, "constructed 'test1'\n");
-    SMFTracker::HISTORY.clear();
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'test1'\n");
+    SMFTracker::LOGS.clear();
 
     auto lambda = [test1](int value) { return value * 2; };
 
-    EXPECT_STREQ(SMFTracker::HISTORY.ptr, "copy constructed 'test1'\n");
-    SMFTracker::HISTORY.clear();
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "copy constructed 'test1'\n");
+    SMFTracker::LOGS.clear();
 
-    EXPECT_STREQ(TestAllocator::HISTORY.ptr, "");
+    EXPECT_STREQ(TestAllocator::LOGS.ptr, "");
 
     yacsl::containers::Function<int(int), 0, TestAllocator> const func =
         yacsl::memory::move(lambda);
 
     char buf[64];
     snprintf(buf, 64, "allocated %zu bytes\n", sizeof(SMFTracker));
-    EXPECT_STREQ(TestAllocator::HISTORY.ptr, buf);
-    TestAllocator::HISTORY.clear();
+    EXPECT_STREQ(TestAllocator::LOGS.ptr, buf);
+    TestAllocator::LOGS.clear();
 
-    EXPECT_STREQ(SMFTracker::HISTORY.ptr, "constructed 'allocator'\n"
-                                          "move constructed 'test1 (copy)'\n");
-    SMFTracker::HISTORY.clear();
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'allocator'\n"
+                                       "move constructed 'test1 (copy)'\n");
+    SMFTracker::LOGS.clear();
 
     EXPECT(func(10) == 20);
   }
-  EXPECT_STREQ(SMFTracker::HISTORY.ptr, "destroyed 'test1 (copy) (moved)'\n"
-                                        "destroyed 'allocator'\n"
-                                        "destroyed 'test1 (copy)'\n"
-                                        "destroyed 'test1'\n");
+  EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed 'test1 (copy) (moved)'\n"
+                                     "destroyed 'allocator'\n"
+                                     "destroyed 'test1 (copy)'\n"
+                                     "destroyed 'test1'\n");
 
   char buf[64];
   snprintf(buf, 64, "deallocated %zu bytes\n", sizeof(SMFTracker));
-  EXPECT_STREQ(TestAllocator::HISTORY.ptr, buf);
-  TestAllocator::HISTORY.clear();
+  EXPECT_STREQ(TestAllocator::LOGS.ptr, buf);
+  TestAllocator::LOGS.clear();
 }
 
 static void test_copied_lambda() {
-  SMFTracker::HISTORY.clear();
-  TestAllocator::HISTORY.clear();
+  SMFTracker::LOGS.clear();
+  TestAllocator::LOGS.clear();
   {
     auto const test2 = SMFTracker("test2");
-    EXPECT_STREQ(SMFTracker::HISTORY.ptr, "constructed 'test2'\n");
-    SMFTracker::HISTORY.clear();
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'test2'\n");
+    SMFTracker::LOGS.clear();
 
     auto lambda = [test2] { (void)test2; };
-    EXPECT_STREQ(SMFTracker::HISTORY.ptr, "copy constructed 'test2'\n");
-    SMFTracker::HISTORY.clear();
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "copy constructed 'test2'\n");
+    SMFTracker::LOGS.clear();
 
-    EXPECT_STREQ(TestAllocator::HISTORY.ptr, "");
+    EXPECT_STREQ(TestAllocator::LOGS.ptr, "");
 
     yacsl::containers::Function<void(), sizeof(SMFTracker), TestAllocator> const
         func = lambda;
 
-    EXPECT_STREQ(TestAllocator::HISTORY.ptr, "");
+    EXPECT_STREQ(TestAllocator::LOGS.ptr, "");
 
-    EXPECT_STREQ(SMFTracker::HISTORY.ptr, "constructed 'allocator'\n"
-                                          "copy constructed 'test2 (copy)'\n");
-    SMFTracker::HISTORY.clear();
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'allocator'\n"
+                                       "copy constructed 'test2 (copy)'\n");
+    SMFTracker::LOGS.clear();
   }
-  EXPECT_STREQ(TestAllocator::HISTORY.ptr, "");
+  EXPECT_STREQ(TestAllocator::LOGS.ptr, "");
 
-  EXPECT_STREQ(SMFTracker::HISTORY.ptr, "destroyed 'test2 (copy) (copy)'\n"
-                                        "destroyed 'allocator'\n"
-                                        "destroyed 'test2 (copy)'\n"
-                                        "destroyed 'test2'\n");
+  EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed 'test2 (copy) (copy)'\n"
+                                     "destroyed 'allocator'\n"
+                                     "destroyed 'test2 (copy)'\n"
+                                     "destroyed 'test2'\n");
 }
 
 static void test_ref_capture_lamdba() {
   {
-    SMFTracker::HISTORY.clear();
+    SMFTracker::LOGS.clear();
 
     auto test3 = SMFTracker("test3");
-    EXPECT_STREQ(SMFTracker::HISTORY.ptr, "constructed 'test3'\n");
-    SMFTracker::HISTORY.clear();
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'test3'\n");
+    SMFTracker::LOGS.clear();
 
     auto lambda = [&test3] { (void)test3; };
-    EXPECT_STREQ(SMFTracker::HISTORY.ptr, "");
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "");
 
     yacsl::containers::Function<void()> const func(lambda);
-    EXPECT_STREQ(SMFTracker::HISTORY.ptr, "");
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "");
   }
-  EXPECT_STREQ(SMFTracker::HISTORY.ptr, "destroyed 'test3'\n");
+  EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed 'test3'\n");
 }
 
 int main() {
