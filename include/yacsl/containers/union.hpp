@@ -110,6 +110,7 @@ public:
   {
     using R                = decltype(func(meta::declval<Ts...[0]>()));
     Option<R> return_value = utils::NIL;
+    // NOLINTNEXTLINE(cppcoreguidelines-missing-std-forward)
     memory::forward<Self>(self).visit([&]<typename T>(T&& value) {
       return_value.emplace(memory::forward<F>(func)(memory::forward<T>(value)));
     });

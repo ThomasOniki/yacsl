@@ -2,9 +2,12 @@
 #include "yacsl/containers/option.hpp"
 #include "yacsl/containers/union.hpp"
 #include "yacsl/meta/same_as.hpp"
+#include "yacsl/testing/run.hpp"
 #include "yacsl/utils/nil.hpp"
+#include <stdlib.h>
 
 [[maybe_unused]]
+// NOLINTNEXTLINE(misc-const-correctness)
 static void test_return_types(yacsl::containers::Union<char>&       union1,
                               yacsl::containers::Union<char> const& union2) {
   using yacsl::meta::SameAs, yacsl::containers::Option, yacsl::memory::move;
@@ -28,12 +31,14 @@ static void test_return_types(yacsl::containers::Union<char>&       union1,
 
   static_assert(SameAs<decltype(union1.emplace<0>('a')), char&>);
 
-  int  num     = 10;
-  auto lambda1 = [&num](auto const& /*value*/) -> int { return num; };
-  auto lambda2 = [&num](auto const& /*value*/) -> int& { return num; };
-  auto lambda3 = [&num](auto const& /*value*/) -> int&& {
+  int num = 10;
+  // NOLINTBEGIN(clang-analyzer-deadcode.DeadStores)
+  auto const lambda1 = [&num](auto const& /*value*/) -> int { return num; };
+  auto const lambda2 = [&num](auto const& /*value*/) -> int& { return num; };
+  auto const lambda3 = [&num](auto const& /*value*/) -> int&& {
     return yacsl::memory::move(num);
   };
+  // NOLINTEND(clang-analyzer-deadcode.DeadStores)
 
   static_assert(SameAs<decltype(union2.visit(lambda1)), int>);
   static_assert(SameAs<decltype(union2.visit(lambda2)), int&>);
@@ -67,7 +72,7 @@ static void test_emplace() {
     yacsl::containers::Union<A, B> test = yacsl::utils::NIL;
     EXPECT_STREQ(SMFTracker::HISTORY.ptr, "");
 
-    B& emplaced = test.emplace<1>(70);
+    B const& emplaced = test.emplace<1>(70);
     EXPECT_STREQ(SMFTracker::HISTORY.ptr, "constructed 'B'\n");
     EXPECT(emplaced.value == 70);
     SMFTracker::HISTORY.clear();
@@ -180,6 +185,7 @@ static void test_move() {
                                           "move constructed 'A'\n"
                                           "destroyed 'A'\n");
     SMFTracker::HISTORY.clear();
+    // NOLINTNEXTLINE(clang-analyzer-cplusplus.Move)
     yacsl::containers::Union<A, B> test3 = yacsl::memory::move(test1);
     EXPECT_STREQ(SMFTracker::HISTORY.ptr, "move constructed 'A (moved)'\n"
                                           "destroyed 'A (moved)'\n");
