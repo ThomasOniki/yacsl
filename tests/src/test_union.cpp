@@ -114,20 +114,25 @@ static void test_get() {
     EXPECT(test.get<0>().value == 42);
     test.emplace<0>(5);
     A& ref = test.get<0>();
+    EXPECT(&ref == &test.get<A>());
     EXPECT(ref.value == 5);
     ref.value = 43;
     EXPECT(ref.value == 43);
-    EXPECT(test.get<0>().value == 43);
+    EXPECT(test.get<A>().value == 43);
     test.emplace<1>(44);
     EXPECT(test.get<1>().value == 44);
     ref = test.emplace<0>(45);
     EXPECT(test.get_unchecked<0>().value == 45);
+    EXPECT(test.get_unchecked<A>().value == 45);
     EXPECT(test.get_option<0>().is_value());
     EXPECT(test.get_option<0>().value().value == 45);
+    EXPECT(test.get_option<A>().value().value == 45);
     EXPECT(test.get_option<1>().is_nil());
+    EXPECT(test.get_option<B>().is_nil());
     ref.value = 46;
     EXPECT(test.get<0>().value == 46);
   }
+
   EXPECT_STREQ(SMFTracker::HISTORY.ptr, "constructed 'A'\n"
                                         "destroyed 'A'\n"
                                         "constructed 'A'\n"
