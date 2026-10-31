@@ -1,5 +1,50 @@
 #include "test_utils.hpp"
+#include "yacsl/containers/option.hpp"
 #include "yacsl/containers/union.hpp"
+#include "yacsl/meta/same_as.hpp"
+#include "yacsl/utils/nil.hpp"
+
+[[maybe_unused]]
+static void test_return_types(yacsl::containers::Union<char>&       union1,
+                              yacsl::containers::Union<char> const& union2) {
+  using yacsl::meta::SameAs, yacsl::containers::Option, yacsl::memory::move;
+
+  static_assert(SameAs<decltype(union1.get<0>()), char&>);
+  static_assert(SameAs<decltype(move(union1).get<0>()), char&&>);
+  static_assert(SameAs<decltype(union2.get<0>()), char const&>);
+  static_assert(SameAs<decltype(move(union2).get<0>()), char const&&>);
+
+  static_assert(SameAs<decltype(union1.get_unchecked<0>()), char&>);
+  static_assert(SameAs<decltype(move(union1).get_unchecked<0>()), char&&>);
+  static_assert(SameAs<decltype(union2.get_unchecked<0>()), char const&>);
+  static_assert(
+      SameAs<decltype(move(union2).get_unchecked<0>()), char const&&>);
+
+  static_assert(SameAs<decltype(union1.get_option<0>()), Option<char&>>);
+  static_assert(SameAs<decltype(move(union1).get_option<0>()), Option<char&&>>);
+  static_assert(SameAs<decltype(union2.get_option<0>()), Option<char const&>>);
+  static_assert(
+      SameAs<decltype(move(union2).get_option<0>()), Option<char const&&>>);
+
+  int  num     = 10;
+  auto lambda1 = [&num](auto const& /*value*/) -> int { return num; };
+  auto lambda2 = [&num](auto const& /*value*/) -> int& { return num; };
+  auto lambda3 = [&num](auto const& /*value*/) -> int&& {
+    return yacsl::memory::move(num);
+  };
+
+  static_assert(SameAs<decltype(union2.visit(lambda1)), int>);
+  static_assert(SameAs<decltype(union2.visit(lambda2)), int&>);
+  static_assert(SameAs<decltype(union2.visit(lambda3)), int&&>);
+
+  static_assert(SameAs<decltype(union2.visit_unchecked(lambda1)), int>);
+  static_assert(SameAs<decltype(union2.visit_unchecked(lambda2)), int&>);
+  static_assert(SameAs<decltype(union2.visit_unchecked(lambda3)), int&&>);
+
+  static_assert(SameAs<decltype(union2.visit_option(lambda1)), Option<int>>);
+  static_assert(SameAs<decltype(union2.visit_option(lambda2)), Option<int&>>);
+  static_assert(SameAs<decltype(union2.visit_option(lambda3)), Option<int&&>>);
+}
 
 namespace {
 struct A {
@@ -17,7 +62,7 @@ struct B {
 static void test_emplace() {
   SMFTracker::HISTORY.clear();
   {
-    yacsl::containers::Union<A, B> test;
+    yacsl::containers::Union<A, B> test = yacsl::utils::NIL;
     EXPECT_STREQ(SMFTracker::HISTORY.ptr, "");
 
     test.emplace<1>();
@@ -40,7 +85,7 @@ static void test_emplace() {
 static void test_get() {
   SMFTracker::HISTORY.clear();
   {
-    yacsl::containers::Union<A, B> test;
+    yacsl::containers::Union<A, B> test = yacsl::utils::NIL;
     test.emplace<0>(42);
     EXPECT(test.get<0>().value == 42);
     test.emplace<0>(5);
@@ -68,7 +113,7 @@ static void test_get() {
 }
 
 static void test_visit() {
-  yacsl::containers::Union<A, B> test;
+  yacsl::containers::Union<A, B> test = yacsl::utils::NIL;
   test.emplace<0>(42);
   int set_by_visit = 0;
   test.visit([&set_by_visit](auto&& value) {
@@ -77,12 +122,26 @@ static void test_visit() {
   });
   EXPECT(set_by_visit == 42);
   EXPECT(test.get<0>().value == 43);
+
+  EXPECT(test.visit([](auto&& value) { return value.value++; }) == 43);
+  EXPECT(test.get<0>().value == 44);
+
+  EXPECT(test.visit_option([](auto&& value) { return value.value++; }) == 44);
+  EXPECT(test.get<0>().value == 45);
+
+  EXPECT(test.visit_unchecked([](auto&& value) { return value.value++; }) ==
+         45);
+  EXPECT(test.get<0>().value == 46);
+
+  test = yacsl::utils::NIL;
+  EXPECT(test.visit_option([](auto&& /*value*/) { return 0; }).is_nil(),
+         "test.index(): %zu\n", test.index());
 }
 
 static void test_copy() {
   SMFTracker::HISTORY.clear();
   {
-    yacsl::containers::Union<A, B> test1;
+    yacsl::containers::Union<A, B> test1 = yacsl::utils::NIL;
     yacsl::containers::Union<A, B> test2 = test1;
     EXPECT_STREQ(SMFTracker::HISTORY.ptr, "");
     test1 = test2;
@@ -105,7 +164,7 @@ static void test_copy() {
 static void test_move() {
   SMFTracker::HISTORY.clear();
   {
-    yacsl::containers::Union<A, B> test1;
+    yacsl::containers::Union<A, B> test1 = yacsl::utils::NIL;
     yacsl::containers::Union<A, B> test2 = yacsl::memory::move(test1);
     EXPECT_STREQ(SMFTracker::HISTORY.ptr, "");
     test1 = yacsl::memory::move(test2);
