@@ -29,7 +29,11 @@ public:
 
   template <meta::RangeOf<T> Range>
   constexpr Vector(Range const& range, A const& allocator = A());
-  constexpr explicit Vector(SizeT count, A const& allocator = A());
+
+  constexpr explicit Vector(SizeT count, A const& allocator = A())
+      : Vector(count, T(), allocator) {}
+  constexpr explicit Vector(SizeT count, T const& value = T(),
+                            A const& allocator = A());
 
   constexpr Vector(Vector const& other);
   constexpr Vector(Vector&& other) noexcept;
@@ -195,11 +199,12 @@ constexpr Vector<T, N, A, SizeT>::Vector(Range const& range, A const& allocator)
 }
 
 template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
-constexpr Vector<T, N, A, SizeT>::Vector(SizeT count, A const& allocator)
+constexpr Vector<T, N, A, SizeT>::Vector(SizeT count, T const& value,
+                                         A const& allocator)
     : allocator_(allocator), len_(count) {
   maybe_alloc(len_);
   for (SizeT i = 0; i < count; ++i) {
-    memory::construct_at(data_ + i);
+    memory::construct_at(data_ + i, value);
   }
 }
 
