@@ -77,7 +77,7 @@ static void test_emplace() {
                                           "constructed 'A'\n");
     SMFTracker::HISTORY.clear();
 
-    test.emplace<0>();
+    test.emplace<A>();
     EXPECT_STREQ(SMFTracker::HISTORY.ptr, "destroyed 'A'\n"
                                           "constructed 'A'\n");
     SMFTracker::HISTORY.clear();
@@ -109,8 +109,7 @@ static void test_is_a() {
 static void test_get() {
   SMFTracker::HISTORY.clear();
   {
-    yacsl::containers::Union<A, B> test = yacsl::utils::NIL;
-    test.emplace<0>(42);
+    auto test = yacsl::containers::Union<A, B>::create<A>(42);
     EXPECT(test.get<0>().value == 42);
     test.emplace<0>(5);
     A& ref = test.get<0>();
@@ -121,7 +120,7 @@ static void test_get() {
     EXPECT(test.get<A>().value == 43);
     test.emplace<1>(44);
     EXPECT(test.get<1>().value == 44);
-    ref = test.emplace<0>(45);
+    ref = test.emplace<A>(45);
     EXPECT(test.get_unchecked<0>().value == 45);
     EXPECT(test.get_unchecked<A>().value == 45);
     EXPECT(test.get_option<0>().is_value());
