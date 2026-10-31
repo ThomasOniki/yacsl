@@ -50,12 +50,14 @@ static void test_return_types(yacsl::containers::Union<char>&       union1,
 
 namespace {
 struct A {
-  explicit constexpr A(int value = 0) : smf_tracker("A"), value(value) {}
+  explicit constexpr A(int init_value = 0)
+      : smf_tracker("A"), value(init_value) {}
   SMFTracker smf_tracker;
   int        value;
 };
 struct B {
-  explicit constexpr B(int value = 0) : smf_tracker("B"), value(value) {}
+  explicit constexpr B(int init_value = 0)
+      : smf_tracker("B"), value(init_value) {}
   SMFTracker smf_tracker;
   int        value;
 };
