@@ -34,10 +34,27 @@ public:
     return self.get_unchecked<I>();
   }
 
+  template <typename T, typename... Args>
+  constexpr auto&& emplace(this Union& self, Args&&... args) noexcept
+    requires meta::no_duplicates<Ts...> && meta::OneOf<T, Ts...>
+  {
+    return self.emplace<meta::first_type_index<T, Ts...>>(
+        memory::forward<Args>(args)...);
+  }
+
   template <usize I, typename... Args>
   [[nodiscard]] static constexpr Union create(Args&&... args) noexcept {
     Union ret = utils::NIL;
     ret.emplace<I>(memory::forward<Args>(args)...);
+    return ret;
+  }
+
+  template <typename T, typename... Args>
+  [[nodiscard]] static constexpr Union create(Args&&... args) noexcept
+    requires meta::no_duplicates<Ts...> && meta::OneOf<T, Ts...>
+  {
+    Union ret = utils::NIL;
+    ret.emplace<T>(memory::forward<Args>(args)...);
     return ret;
   }
 
