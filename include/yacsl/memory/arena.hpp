@@ -76,7 +76,7 @@ public:
   }
 
   void deallocate(this Arena& self, ranges::Slice<u8, SizeT> data) noexcept {
-    if (data.end() == self.end_) {
+    if (data.end() == self.ptr_) {
       self.ptr_ = data.begin();
     }
   }
