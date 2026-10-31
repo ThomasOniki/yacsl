@@ -168,7 +168,7 @@ public:
 
   constexpr T emplace(this Option& self YACSL_LIFETIMEBOUND, T value) {
     self.ptr_ = &value;
-    return *self.ptr_;
+    return memory::forward<T>(*self.ptr_);
   }
 
   [[nodiscard]] constexpr bool is_nil(this Option const& self) noexcept {
