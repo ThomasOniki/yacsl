@@ -129,6 +129,15 @@ public:
     return *memory::forward<Self>(self).value_;
   }
 
+  template <typename Self, typename... Args>
+  [[nodiscard]] constexpr T value_or(this Self&& self,
+                                     Args&&... args) noexcept {
+    if (self.is_value_) {
+      return *memory::forward<Self>(self).value_;
+    }
+    return T(memory::forward<Args>(args)...);
+  }
+
   template <typename Self, typename F>
   auto transform(this Self&& self, F&& func)
       -> Option<decltype(func(*self.value_))> {
