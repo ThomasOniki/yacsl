@@ -85,6 +85,27 @@ static void test_emplace() {
   EXPECT_STREQ(SMFTracker::HISTORY.ptr, "destroyed 'A'\n");
 }
 
+static void test_is_a() {
+  auto test = yacsl::containers::Union<A, A, B, B>::create<0>();
+  EXPECT(test.is_a<A>());
+  EXPECT(!test.is_a<A&>() && !test.is_a<A&&>());
+  EXPECT(!test.is_a<const A>() && !test.is_a<const A&>() &&
+         !test.is_a<const A&&>());
+  EXPECT(!test.is_a<B>());
+  test.emplace<1>();
+  EXPECT(test.is_a<A>());
+  EXPECT(!test.is_a<B>());
+  test.emplace<2>();
+  EXPECT(!test.is_a<A>());
+  EXPECT(test.is_a<B>());
+  test.emplace<3>();
+  EXPECT(!test.is_a<A>());
+  EXPECT(test.is_a<B>());
+  test = yacsl::utils::NIL;
+  EXPECT(!test.is_a<A>());
+  EXPECT(!test.is_a<B>());
+}
+
 static void test_get() {
   SMFTracker::HISTORY.clear();
   {
@@ -191,6 +212,7 @@ static void test_move() {
 
 int main() {
   run_test("emplace", test_emplace);
+  run_test("is_a", test_is_a);
   run_test("get", test_get);
   run_test("visit", test_visit);
   run_test("copy", test_copy);
