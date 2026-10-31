@@ -161,8 +161,29 @@ public:
         return memory::forward<meta::CopyCVRef<Self&&, Ts...[I]>>(*ptr);
       }
 
-  template <typename T>
-  constexpr bool is_a(this Union const& self) noexcept {
+  template <typename T, typename Self>
+  constexpr auto&& get(this Self&& self) noexcept
+    requires meta::no_duplicates<Ts...> && meta::OneOf<T, Ts...>
+  {
+    return memory::forward<Self>(self)
+        .template get<meta::first_type_index<T, Ts...>>();
+  }
+  template <typename T, typename Self>
+  constexpr auto&& get_unchecked(this Self&& self) noexcept
+    requires meta::no_duplicates<Ts...> && meta::OneOf<T, Ts...>
+  {
+    return memory::forward<Self>(self)
+        .template get_unchecked<meta::first_type_index<T, Ts...>>();
+  }
+  template <typename T, typename Self>
+  constexpr auto get_option(this Self&& self) noexcept
+    requires meta::no_duplicates<Ts...> && meta::OneOf<T, Ts...>
+  {
+    return memory::forward<Self>(self)
+        .template get_option<meta::first_type_index<T, Ts...>>();
+  }
+
+  template <typename T> constexpr bool is_a(this Union const& self) noexcept {
     return self
         .visit_option(
             []<typename U>(U const& /*value*/) { return meta::SameAs<T, U>; })
