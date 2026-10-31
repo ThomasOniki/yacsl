@@ -253,7 +253,6 @@ template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
 constexpr Vector<T, N, A, SizeT>&
 Vector<T, N, A, SizeT>::operator=(this Vector& self YACSL_LIFETIMEBOUND,
                                   Vector&&          other) noexcept {
-
   if (self.allocator_ != other.allocator_) {
     self.free();
 
@@ -263,12 +262,16 @@ Vector<T, N, A, SizeT>::operator=(this Vector& self YACSL_LIFETIMEBOUND,
     self.move(other.data_);
   } else if (N > 0 && other.data_ == other.fixed_buffer_.data()) {
     self.clear();
+    self.len_       = other.len_;
+    self.allocator_ = memory::move(other.allocator_);
     self.move(other.data_);
   } else {
-    self.data_ = other.data_;
+    self.free();
+    self.allocator_ = memory::move(other.allocator_);
+    self.data_      = other.data_;
+    self.len_       = other.len_;
+    self.capacity_  = other.capacity_;
   }
-  self.allocator_ = memory::move(other.allocator_);
-  self.len_       = other.len_;
   other.len_ = other.capacity_ = 0;
   return self;
 }
