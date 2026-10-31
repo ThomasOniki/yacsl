@@ -217,7 +217,8 @@ constexpr Vector<T, N, A, SizeT>::Vector(Vector const& other)
 
 template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
 constexpr Vector<T, N, A, SizeT>::Vector(Vector&& other) noexcept
-    : allocator_(memory::move(other.allocator_)), len_(other.len_) {
+    : allocator_(memory::move(other.allocator_)), len_(other.len_),
+      capacity_(other.capacity_) {
   if constexpr (N > 0) {
     if (other.data_ == other.fixed_buffer_.data()) {
       move(other.data_);
