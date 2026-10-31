@@ -1,6 +1,50 @@
 #include "test_utils.hpp"
+#include "yacsl/containers/option.hpp"
 #include "yacsl/containers/union.hpp"
+#include "yacsl/meta/same_as.hpp"
 #include "yacsl/utils/nil.hpp"
+
+[[maybe_unused]]
+static void test_return_types(yacsl::containers::Union<char>&       union1,
+                              yacsl::containers::Union<char> const& union2) {
+  using yacsl::meta::SameAs, yacsl::containers::Option, yacsl::memory::move;
+
+  static_assert(SameAs<decltype(union1.get<0>()), char&>);
+  static_assert(SameAs<decltype(move(union1).get<0>()), char&&>);
+  static_assert(SameAs<decltype(union2.get<0>()), char const&>);
+  static_assert(SameAs<decltype(move(union2).get<0>()), char const&&>);
+
+  static_assert(SameAs<decltype(union1.get_unchecked<0>()), char&>);
+  static_assert(SameAs<decltype(move(union1).get_unchecked<0>()), char&&>);
+  static_assert(SameAs<decltype(union2.get_unchecked<0>()), char const&>);
+  static_assert(
+      SameAs<decltype(move(union2).get_unchecked<0>()), char const&&>);
+
+  static_assert(SameAs<decltype(union1.get_option<0>()), Option<char&>>);
+  static_assert(SameAs<decltype(move(union1).get_option<0>()), Option<char&&>>);
+  static_assert(SameAs<decltype(union2.get_option<0>()), Option<char const&>>);
+  static_assert(
+      SameAs<decltype(move(union2).get_option<0>()), Option<char const&&>>);
+
+  int  num     = 10;
+  auto lambda1 = [&num](auto const& /*value*/) -> int { return num; };
+  auto lambda2 = [&num](auto const& /*value*/) -> int& { return num; };
+  auto lambda3 = [&num](auto const& /*value*/) -> int&& {
+    return yacsl::memory::move(num);
+  };
+
+  static_assert(SameAs<decltype(union2.visit(lambda1)), int>);
+  static_assert(SameAs<decltype(union2.visit(lambda2)), int&>);
+  static_assert(SameAs<decltype(union2.visit(lambda3)), int&&>);
+
+  static_assert(SameAs<decltype(union2.visit_unchecked(lambda1)), int>);
+  static_assert(SameAs<decltype(union2.visit_unchecked(lambda2)), int&>);
+  static_assert(SameAs<decltype(union2.visit_unchecked(lambda3)), int&&>);
+
+  static_assert(SameAs<decltype(union2.visit_option(lambda1)), Option<int>>);
+  static_assert(SameAs<decltype(union2.visit_option(lambda2)), Option<int&>>);
+  static_assert(SameAs<decltype(union2.visit_option(lambda3)), Option<int&&>>);
+}
 
 namespace {
 struct A {

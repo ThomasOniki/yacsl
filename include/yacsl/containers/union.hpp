@@ -10,7 +10,6 @@
 #include "yacsl/meta/limits.hpp"
 #include "yacsl/meta/pack.hpp"
 #include "yacsl/meta/qualifiers.hpp"
-#include "yacsl/meta/same_as.hpp"
 #include "yacsl/meta/type_string.hpp"
 #include "yacsl/type_aliases.hpp"
 #include "yacsl/utils/nil.hpp"
@@ -117,14 +116,16 @@ public:
   }
 
   template <typename Self, typename F>
-  constexpr auto visit(this Self&& self, F&& func) noexcept {
+  constexpr auto visit(this Self&& self, F&& func) noexcept
+      -> decltype(func(meta::declval<Ts...[0]>())) {
     return memory::forward<Self>(self)
         .visit_option(memory::forward<F>(func))
         .value();
   }
 
   template <typename Self, typename F>
-  constexpr auto visit_unchecked(this Self&& self, F&& func) noexcept {
+  constexpr auto visit_unchecked(this Self&& self, F&& func) noexcept
+      -> decltype(func(meta::declval<Ts...[0]>())) {
     return memory::forward<Self>(self)
         .visit_option(memory::forward<F>(func))
         .value_unchecked();
