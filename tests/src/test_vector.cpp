@@ -9,6 +9,9 @@ using yacsl::containers::Vector;
 static void test_constructor_with_nothing() noexcept {
   {
     auto test1 = Vector<SMFTracker, 0, TestAllocator>();
+    EXPECT(test1.data() == nullptr);
+    EXPECT(test1.len() == 0);
+    EXPECT(test1.capacity() == 0);
     EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'allocator'\n");
     clear_logs();
 
@@ -17,6 +20,9 @@ static void test_constructor_with_nothing() noexcept {
     clear_logs();
 
     auto test2 = Vector<SMFTracker, 0, TestAllocator>(alloc);
+    EXPECT(test2.data() == nullptr);
+    EXPECT(test2.len() == 0);
+    EXPECT(test2.capacity() == 0);
     EXPECT_STREQ(SMFTracker::LOGS.ptr, "copy constructed 'allocator'\n");
     clear_logs();
   }
@@ -31,7 +37,9 @@ static void test_constructor_with_len() noexcept {
   yacsl::containers::StackArray<char, 64> msg = {};
 
   {
-    auto test3 = Vector<SMFTracker, 0, TestAllocator>(2);
+    auto test1 = Vector<SMFTracker, 0, TestAllocator>(2);
+    EXPECT(test1.len() == 2, "len = %zu.\n", test1.len());
+    EXPECT(test1.capacity() == 2, "capacity = %zu\n", test1.capacity());
     EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'allocator'\n"
                                        "copy constructed 'allocator'\n"
                                        "default constructed 'default'\n"
@@ -47,7 +55,9 @@ static void test_constructor_with_len() noexcept {
     EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'allocator'\n");
     clear_logs();
 
-    auto test4 = Vector<SMFTracker, 0, TestAllocator>(3, alloc);
+    auto test2 = Vector<SMFTracker, 0, TestAllocator>(3, alloc);
+    EXPECT(test2.len() == 3, "len = %zu.\n", test2.len());
+    EXPECT(test2.capacity() == 3, "capacity = %zu\n", test2.capacity());
     EXPECT_STREQ(SMFTracker::LOGS.ptr, "copy constructed 'allocator'\n"
                                        "default constructed 'default'\n"
                                        "default constructed 'default'\n"
@@ -57,6 +67,7 @@ static void test_constructor_with_len() noexcept {
     EXPECT_STREQ(TestAllocator::LOGS.ptr, msg.data());
     clear_logs();
   }
+
   EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed 'default'\n"
                                      "destroyed 'default'\n"
                                      "destroyed 'default'\n"
