@@ -36,7 +36,7 @@ public:
 
   template <usize I, typename... Args>
   [[nodiscard]] static constexpr Union create(Args&&... args) noexcept {
-    Union ret;
+    Union ret = utils::NIL;
     ret.emplace<I>(memory::forward<Args>(args)...);
     return ret;
   }
