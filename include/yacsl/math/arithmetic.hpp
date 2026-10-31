@@ -2,7 +2,7 @@
 
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/meta/concepts.hpp"
-#include "yacsl/meta/same_as.hpp"
+#include "yacsl/meta/pack.hpp"
 #include "yacsl/type_aliases.hpp"
 
 #ifdef YACSL_COMPILER_MSVC
@@ -33,6 +33,9 @@ template <meta::Integral T> constexpr T pow16(u32 exp) noexcept {
   return 1U << 4 * exp;
 }
 
+template <typename T> constexpr T&& max(T&& only_one) noexcept {
+  return memory::forward<T>(only_one);
+}
 template <typename T> constexpr T&& max(T&& lhs, T&& rhs) noexcept {
   return memory::forward<T>(lhs) > memory::forward<T>(rhs)
              ? memory::forward<T>(lhs)
@@ -40,12 +43,15 @@ template <typename T> constexpr T&& max(T&& lhs, T&& rhs) noexcept {
 }
 template <typename T, typename... Others>
 constexpr T&& max(T&& first, Others&&... others)
-  requires(... && meta::SameAs<T, Others>)
+  requires meta::all_same<T&&, Others&&...>
 {
   return max(memory::forward<T>(first),
              max(memory::forward<Others>(others)...));
 }
 
+template <typename T> constexpr T&& min(T&& only_one) noexcept {
+  return memory::forward<T>(only_one);
+}
 template <typename T> constexpr T&& min(T&& lhs, T&& rhs) noexcept {
   return memory::forward<T>(lhs) < memory::forward<T>(rhs)
              ? memory::forward<T>(lhs)
@@ -53,7 +59,7 @@ template <typename T> constexpr T&& min(T&& lhs, T&& rhs) noexcept {
 }
 template <typename T, typename... Others>
 constexpr T&& min(T&& first, Others&&... others)
-  requires(... && meta::SameAs<T, Others>)
+  requires meta::all_same<T&&, Others&&...>
 {
   return min(memory::forward<T>(first),
              min(memory::forward<Others>(others)...));
