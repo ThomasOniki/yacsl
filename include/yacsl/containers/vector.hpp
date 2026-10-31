@@ -30,9 +30,9 @@ public:
   template <meta::RangeOf<T> Range>
   constexpr Vector(Range const& range, A const& allocator = A());
 
-  constexpr explicit Vector(SizeT count, A const& allocator = A())
-      : Vector(count, T(), allocator) {}
-  constexpr explicit Vector(SizeT count, T const& value = T(),
+  constexpr explicit Vector(SizeT len, A const& allocator = A());
+
+  constexpr explicit Vector(SizeT len, T const& value,
                             A const& allocator = A());
 
   constexpr Vector(Vector const& other);
@@ -199,11 +199,20 @@ constexpr Vector<T, N, A, SizeT>::Vector(Range const& range, A const& allocator)
 }
 
 template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
-constexpr Vector<T, N, A, SizeT>::Vector(SizeT count, T const& value,
-                                         A const& allocator)
-    : allocator_(allocator), len_(count) {
+constexpr Vector<T, N, A, SizeT>::Vector(SizeT len, A const& allocator)
+    : allocator_(allocator), len_(len) {
   maybe_alloc(len_);
-  for (SizeT i = 0; i < count; ++i) {
+  for (SizeT i = 0; i < len; ++i) {
+    memory::construct_at(data_ + i);
+  }
+}
+
+template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
+constexpr Vector<T, N, A, SizeT>::Vector(SizeT len, T const& value,
+                                         A const& allocator)
+    : allocator_(allocator), len_(len) {
+  maybe_alloc(len_);
+  for (SizeT i = 0; i < len; ++i) {
     memory::construct_at(data_ + i, value);
   }
 }

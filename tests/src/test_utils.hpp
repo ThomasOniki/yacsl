@@ -140,6 +140,10 @@ struct DynamicCString {
 
 class SMFTracker {
 public:
+  SMFTracker() : name_("default") {
+    HISTORY.printf_to("default constructed 'default'\n");
+  }
+
   explicit SMFTracker(char const* name) : name_(name) {
     HISTORY.printf_to("constructed '%s'\n", name);
   }
