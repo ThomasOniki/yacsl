@@ -64,27 +64,27 @@ struct B {
 } // namespace
 
 static void test_emplace() {
-  SMFTracker::HISTORY.clear();
+  SMFTracker::LOGS.clear();
   {
     yacsl::containers::Union<A, B> test = yacsl::utils::NIL;
-    EXPECT_STREQ(SMFTracker::HISTORY.ptr, "");
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "");
 
     B& emplaced = test.emplace<1>(70);
-    EXPECT_STREQ(SMFTracker::HISTORY.ptr, "constructed 'B'\n");
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'B'\n");
     EXPECT(emplaced.value == 70);
-    SMFTracker::HISTORY.clear();
+    SMFTracker::LOGS.clear();
 
     test.emplace<0>();
-    EXPECT_STREQ(SMFTracker::HISTORY.ptr, "destroyed 'B'\n"
-                                          "constructed 'A'\n");
-    SMFTracker::HISTORY.clear();
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed 'B'\n"
+                                       "constructed 'A'\n");
+    SMFTracker::LOGS.clear();
 
     test.emplace<A>();
-    EXPECT_STREQ(SMFTracker::HISTORY.ptr, "destroyed 'A'\n"
-                                          "constructed 'A'\n");
-    SMFTracker::HISTORY.clear();
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed 'A'\n"
+                                       "constructed 'A'\n");
+    SMFTracker::LOGS.clear();
   }
-  EXPECT_STREQ(SMFTracker::HISTORY.ptr, "destroyed 'A'\n");
+  EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed 'A'\n");
 }
 
 static void test_is_a() {
@@ -109,7 +109,7 @@ static void test_is_a() {
 }
 
 static void test_get() {
-  SMFTracker::HISTORY.clear();
+  SMFTracker::LOGS.clear();
   {
     auto test = yacsl::containers::Union<A, B>::create<A>(42);
     EXPECT(test.get<0>().value == 42);
@@ -134,14 +134,14 @@ static void test_get() {
     EXPECT(test.get<0>().value == 46);
   }
 
-  EXPECT_STREQ(SMFTracker::HISTORY.ptr, "constructed 'A'\n"
-                                        "destroyed 'A'\n"
-                                        "constructed 'A'\n"
-                                        "destroyed 'A'\n"
-                                        "constructed 'B'\n"
-                                        "destroyed 'B'\n"
-                                        "constructed 'A'\n"
-                                        "destroyed 'A'\n");
+  EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'A'\n"
+                                     "destroyed 'A'\n"
+                                     "constructed 'A'\n"
+                                     "destroyed 'A'\n"
+                                     "constructed 'B'\n"
+                                     "destroyed 'B'\n"
+                                     "constructed 'A'\n"
+                                     "destroyed 'A'\n");
 }
 
 static void test_visit() {
@@ -171,49 +171,49 @@ static void test_visit() {
 }
 
 static void test_copy() {
-  SMFTracker::HISTORY.clear();
+  SMFTracker::LOGS.clear();
   {
     yacsl::containers::Union<A, B> test1 = yacsl::utils::NIL;
     yacsl::containers::Union<A, B> test2 = test1;
-    EXPECT_STREQ(SMFTracker::HISTORY.ptr, "");
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "");
     test1 = test2;
-    EXPECT_STREQ(SMFTracker::HISTORY.ptr, "");
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "");
     test2.emplace<0>(42);
     test1 = test2;
-    EXPECT_STREQ(SMFTracker::HISTORY.ptr, "constructed 'A'\n"
-                                          "copy constructed 'A'\n");
-    SMFTracker::HISTORY.clear();
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'A'\n"
+                                       "copy constructed 'A'\n");
+    SMFTracker::LOGS.clear();
     yacsl::containers::Union<A, B> test3 = test1;
-    EXPECT_STREQ(SMFTracker::HISTORY.ptr, "copy constructed 'A (copy)'\n");
-    SMFTracker::HISTORY.clear();
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "copy constructed 'A (copy)'\n");
+    SMFTracker::LOGS.clear();
     EXPECT(test3.get<0>().value == 42);
   }
-  EXPECT_STREQ(SMFTracker::HISTORY.ptr, "destroyed 'A (copy) (copy)'\n"
-                                        "destroyed 'A'\n"
-                                        "destroyed 'A (copy)'\n");
+  EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed 'A (copy) (copy)'\n"
+                                     "destroyed 'A'\n"
+                                     "destroyed 'A (copy)'\n");
 }
 
 static void test_move() {
-  SMFTracker::HISTORY.clear();
+  SMFTracker::LOGS.clear();
   {
     yacsl::containers::Union<A, B> test1 = yacsl::utils::NIL;
     yacsl::containers::Union<A, B> test2 = yacsl::memory::move(test1);
-    EXPECT_STREQ(SMFTracker::HISTORY.ptr, "");
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "");
     test1 = yacsl::memory::move(test2);
-    EXPECT_STREQ(SMFTracker::HISTORY.ptr, "");
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "");
     test2.emplace<0>(42);
     test1 = yacsl::memory::move(test2);
-    EXPECT_STREQ(SMFTracker::HISTORY.ptr, "constructed 'A'\n"
-                                          "move constructed 'A'\n"
-                                          "destroyed 'A'\n");
-    SMFTracker::HISTORY.clear();
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'A'\n"
+                                       "move constructed 'A'\n"
+                                       "destroyed 'A'\n");
+    SMFTracker::LOGS.clear();
     yacsl::containers::Union<A, B> test3 = yacsl::memory::move(test1);
-    EXPECT_STREQ(SMFTracker::HISTORY.ptr, "move constructed 'A (moved)'\n"
-                                          "destroyed 'A (moved)'\n");
-    SMFTracker::HISTORY.clear();
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "move constructed 'A (moved)'\n"
+                                       "destroyed 'A (moved)'\n");
+    SMFTracker::LOGS.clear();
     EXPECT(test3.get<0>().value == 42);
   }
-  EXPECT_STREQ(SMFTracker::HISTORY.ptr, "destroyed 'A (moved) (moved)'\n");
+  EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed 'A (moved) (moved)'\n");
 }
 
 int main() {
