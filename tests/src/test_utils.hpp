@@ -267,7 +267,7 @@ constexpr void clear_logs() noexcept {
 
 template <typename F, typename... Args>
 void run_test(char const* name, F&& func, Args&&... args) noexcept {
-  printf("Running test '%s'...\n", name);
+  printf("Test '%s' started...\n", name);
   clear_logs();
   yacsl::testing::run_quitely(yacsl::memory::forward<F>(func),
                               yacsl::memory::forward<Args>(args)...);

@@ -31,7 +31,7 @@ constexpr bool run_quitely(F&& func, Args&&... args) noexcept {
 
 template <typename F, typename... Args>
 constexpr bool run(ranges::StringView name, F&& func, Args&&... args) noexcept {
-  debug::log_info("Running test {?}...", name);
+  debug::log_info("Test {?} started...", name);
 
   if (run_quitely(memory::forward<F>(func), memory::forward<Args>(args)...)) {
     debug::log_info("Test {?} suceeded!", name);
