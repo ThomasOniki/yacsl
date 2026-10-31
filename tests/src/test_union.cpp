@@ -26,6 +26,8 @@ static void test_return_types(yacsl::containers::Union<char>&       union1,
   static_assert(
       SameAs<decltype(move(union2).get_option<0>()), Option<char const&&>>);
 
+  static_assert(SameAs<decltype(union1.emplace<0>('a')), char&>);
+
   int  num     = 10;
   auto lambda1 = [&num](auto const& /*value*/) -> int { return num; };
   auto lambda2 = [&num](auto const& /*value*/) -> int& { return num; };
@@ -65,8 +67,9 @@ static void test_emplace() {
     yacsl::containers::Union<A, B> test = yacsl::utils::NIL;
     EXPECT_STREQ(SMFTracker::HISTORY.ptr, "");
 
-    test.emplace<1>();
+    B& emplaced = test.emplace<1>(70);
     EXPECT_STREQ(SMFTracker::HISTORY.ptr, "constructed 'B'\n");
+    EXPECT(emplaced.value == 70);
     SMFTracker::HISTORY.clear();
 
     test.emplace<0>();
@@ -96,11 +99,13 @@ static void test_get() {
     EXPECT(test.get<0>().value == 43);
     test.emplace<1>(44);
     EXPECT(test.get<1>().value == 44);
-    test.emplace<0>(45);
+    ref = test.emplace<0>(45);
     EXPECT(test.get_unchecked<0>().value == 45);
     EXPECT(test.get_option<0>().is_value());
     EXPECT(test.get_option<0>().value().value == 45);
     EXPECT(test.get_option<1>().is_nil());
+    ref.value = 46;
+    EXPECT(test.get<0>().value == 46);
   }
   EXPECT_STREQ(SMFTracker::HISTORY.ptr, "constructed 'A'\n"
                                         "destroyed 'A'\n"
