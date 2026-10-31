@@ -1,11 +1,15 @@
 #pragma once
 
 #include "yacsl/compiler/attributes.hpp"
+#include "yacsl/compiler/pragmas.hpp"
+#include "yacsl/containers/stack_array.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/testing/run.hpp"
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+
+YACSL_GCC_OR_CLANG_PRAGMA(GCC diagnostic ignored "-Wformat-zero-length")
 
 #define FAIL(...)                                                              \
   do {                                                                         \
@@ -107,17 +111,17 @@ struct DynamicCString {
   YACSL_GCC_OR_CLANG_ATTR([[gnu::format(printf, 2, 3)]])
   // NOLINTNEXTLINE(modernize-avoid-variadic-functions)
   void printf_to(this DynamicCString& self, char const* fmt, ...) {
-    char*   formatted = nullptr;
-    va_list vargs     = {};
+    yacsl::containers::StackArray<char, 256> buf = {};
+    va_list                                  vargs{};
     va_start(vargs, fmt);
-    auto const len = static_cast<size_t>(vasprintf(&formatted, fmt, vargs));
+    auto const len =
+        static_cast<size_t>(vsnprintf(buf.data(), buf.len(), fmt, vargs));
     va_end(vargs);
 
     char* mem = new char[self.len + len + 1];
     memcpy(mem, self.ptr, self.len);
-    memcpy(mem + self.len, formatted, len);
+    memcpy(mem + self.len, buf.data(), len);
 
-    free(formatted);
     delete[] self.ptr;
 
     self.ptr = mem;
