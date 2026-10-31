@@ -10,6 +10,7 @@
 #include "yacsl/meta/limits.hpp"
 #include "yacsl/meta/pack.hpp"
 #include "yacsl/meta/qualifiers.hpp"
+#include "yacsl/meta/same_as.hpp"
 #include "yacsl/meta/type_string.hpp"
 #include "yacsl/type_aliases.hpp"
 #include "yacsl/utils/nil.hpp"
@@ -17,7 +18,8 @@
 namespace yacsl::containers {
 
 template <typename... Ts>
-  requires(... && (!meta::ReferenceType<Ts> && meta::MutableType<Ts>))
+  requires(... && (!meta::ReferenceType<Ts> && meta::MutableType<Ts>)) &&
+          (... && !meta::OneOf<Ts, utils::Nil, void>)
 class Union {
 public:
   constexpr Union(utils::Nil /*nil*/) noexcept {}
