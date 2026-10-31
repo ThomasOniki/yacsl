@@ -1,7 +1,7 @@
 #include "test_utils.hpp"
 
 static void test_allocator() {
-  TestAllocator::clear_history();
+  clear_logs();
   TestAllocator allocator;
   // NOLINTNEXTLINE(misc-const-correctness)
   auto mem = allocator.allocate(32, yacsl::memory::Alignment{16});
@@ -9,7 +9,7 @@ static void test_allocator() {
   EXPECT_STREQ(TestAllocator::LOGS.ptr, "allocated 32 bytes\n");
   EXPECT(TestAllocator::PTR_LOGS.len == 1 &&
          TestAllocator::PTR_LOGS.ptr[0] == mem.data());
-  TestAllocator::clear_history();
+  clear_logs();
 
   allocator.deallocate(mem);
 

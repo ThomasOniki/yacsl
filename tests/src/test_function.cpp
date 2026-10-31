@@ -2,7 +2,6 @@
 #include "yacsl/containers/function.hpp"
 #include "yacsl/debug/log.hpp"
 #include "yacsl/memory/lifetimes.hpp"
-#include "yacsl/testing/expect.hpp"
 #include "yacsl/testing/run.hpp"
 #include <stdint.h>
 #include <stdio.h>
@@ -12,26 +11,24 @@ static void test_function_runs() {
   bool                                ran = false;
   yacsl::containers::Function<void()> func([&ran] { ran = true; });
 
-  yacsl::testing::expect(!ran);
+  EXPECT(!ran);
   func();
-  yacsl::testing::expect(ran);
+  EXPECT(ran);
 }
 
 static void test_moved_lambda() {
-  SMFTracker::LOGS.clear();
-  TestAllocator::LOGS.clear();
   {
     // test must be non-to const be moved.
     // NOLINTNEXTLINE(misc-const-correctness)
     auto test1 = SMFTracker("test1");
 
     EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'test1'\n");
-    SMFTracker::LOGS.clear();
+    clear_logs();
 
     auto lambda = [test1](int value) { return value * 2; };
 
     EXPECT_STREQ(SMFTracker::LOGS.ptr, "copy constructed 'test1'\n");
-    SMFTracker::LOGS.clear();
+    clear_logs();
 
     EXPECT_STREQ(TestAllocator::LOGS.ptr, "");
 
@@ -41,11 +38,9 @@ static void test_moved_lambda() {
     char buf[64];
     snprintf(buf, 64, "allocated %zu bytes\n", sizeof(SMFTracker));
     EXPECT_STREQ(TestAllocator::LOGS.ptr, buf);
-    TestAllocator::LOGS.clear();
-
     EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'allocator'\n"
                                        "move constructed 'test1 (copy)'\n");
-    SMFTracker::LOGS.clear();
+    clear_logs();
 
     EXPECT(func(10) == 20);
   }
@@ -57,20 +52,18 @@ static void test_moved_lambda() {
   char buf[64];
   snprintf(buf, 64, "deallocated %zu bytes\n", sizeof(SMFTracker));
   EXPECT_STREQ(TestAllocator::LOGS.ptr, buf);
-  TestAllocator::LOGS.clear();
+  clear_logs();
 }
 
 static void test_copied_lambda() {
-  SMFTracker::LOGS.clear();
-  TestAllocator::LOGS.clear();
   {
     auto const test2 = SMFTracker("test2");
     EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'test2'\n");
-    SMFTracker::LOGS.clear();
+    clear_logs();
 
     auto lambda = [test2] { (void)test2; };
     EXPECT_STREQ(SMFTracker::LOGS.ptr, "copy constructed 'test2'\n");
-    SMFTracker::LOGS.clear();
+    clear_logs();
 
     EXPECT_STREQ(TestAllocator::LOGS.ptr, "");
 
@@ -81,7 +74,7 @@ static void test_copied_lambda() {
 
     EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'allocator'\n"
                                        "copy constructed 'test2 (copy)'\n");
-    SMFTracker::LOGS.clear();
+    clear_logs();
   }
   EXPECT_STREQ(TestAllocator::LOGS.ptr, "");
 
@@ -93,11 +86,9 @@ static void test_copied_lambda() {
 
 static void test_ref_capture_lamdba() {
   {
-    SMFTracker::LOGS.clear();
-
     auto test3 = SMFTracker("test3");
     EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'test3'\n");
-    SMFTracker::LOGS.clear();
+    clear_logs();
 
     auto lambda = [&test3] { (void)test3; };
     EXPECT_STREQ(SMFTracker::LOGS.ptr, "");
@@ -109,10 +100,9 @@ static void test_ref_capture_lamdba() {
 }
 
 int main() {
-  yacsl::testing::run("function runs", test_function_runs);
-  yacsl::testing::run("moved lambda", test_moved_lambda);
-  yacsl::testing::run("copied lambda", test_copied_lambda);
-  yacsl::testing::run("ref capture lambda", test_ref_capture_lamdba);
-  yacsl::debug::flush_logger();
+  run_test("function runs", test_function_runs);
+  run_test("moved lambda", test_moved_lambda);
+  run_test("copied lambda", test_copied_lambda);
+  run_test("ref capture lambda", test_ref_capture_lamdba);
   return yacsl::testing::status() ? EXIT_SUCCESS : EXIT_FAILURE;
 }

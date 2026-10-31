@@ -246,11 +246,6 @@ struct TestAllocator {
   inline static DynamicArray<void*> freed;
   inline static DynamicArray<void*> allocated;
 
-  static constexpr void clear_history() {
-    LOGS.clear();
-    PTR_LOGS.clear();
-  }
-
   inline static DynamicArray<void*> PTR_LOGS;
   inline static DynamicCString      LOGS;
 
@@ -260,9 +255,16 @@ struct TestAllocator {
 using TestAllocatorSingleton =
     yacsl::memory::SingletonAllocator<TestAllocator, "main", true>;
 
+constexpr void clear_logs() noexcept {
+  SMFTracker::LOGS.clear();
+  TestAllocator::LOGS.clear();
+  TestAllocator::PTR_LOGS.clear();
+}
+
 template <typename F, typename... Args>
 void run_test(char const* name, F&& func, Args&&... args) noexcept {
   printf("Running test '%s'...\n", name);
+  clear_logs();
   yacsl::testing::run_quitely(yacsl::memory::forward<F>(func),
                               yacsl::memory::forward<Args>(args)...);
   if (yacsl::testing::status()) {
