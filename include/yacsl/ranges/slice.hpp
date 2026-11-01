@@ -17,19 +17,18 @@ public:
 
   constexpr Slice(T* begin YACSL_LIFETIMEBOUND,
                   T* end   YACSL_LIFETIMEBOUND) noexcept
-      : data_(Reversed ? end - 1 : begin),
-        len_(static_cast<SizeT>(end - begin)) {}
+      : data_(Reversed ? end : begin), len_(static_cast<SizeT>(end - begin)) {}
 
   constexpr Slice(T* data YACSL_LIFETIMEBOUND, SizeT size) noexcept
-      : data_(Reversed ? data + size - 1 : data), len_(size) {}
+      : data_(Reversed ? data + size : data), len_(size) {}
 
-  constexpr Slice(InitializerList<T> data YACSL_LIFETIMEBOUND) noexcept
+  constexpr Slice(
+      InitializerList<meta::RemoveConst<T>> data YACSL_LIFETIMEBOUND) noexcept
     requires meta::ConstType<T>
-      : data_(data.begin()), len_(data.len()) {}
+      : data_(Reversed ? data.end() : data.begin()), len_(data.size()) {}
 
   constexpr Slice(Slice<T, SizeT, !Reversed> other) noexcept
-      : data_(Reversed ? other.end() - 1 : other.end() + 1),
-        len_(other.len() + 1) {}
+      : data_(other.end()), len_(other.len()) {}
 
   // If you just use RemoveConst<T> without the Conditional and the requires
   // ConstType<T> clause is not satisfied then it deletes the copy constructor
@@ -57,8 +56,9 @@ public:
   // NOLINTBEGIN(cppcoreguidelines-missing-std-forward)
   // NOLINTBEGIN(cppcoreguidelines-rvalue-reference-param-not-moved)
   template <typename Self>
-  [[nodiscard]] constexpr meta::CopyCV<Self, T>*
-  data(this Self&& self) noexcept {
+  [[nodiscard]] constexpr meta::CopyCV<Self, T>* data(this Self&& self) noexcept
+    requires(!Reversed)
+  {
     return self.data_;
   }
   [[nodiscard]] constexpr SizeT len(this Slice self) noexcept {
@@ -68,8 +68,11 @@ public:
   template <typename Self>
   [[nodiscard]] constexpr auto&& operator[](this Self&& self,
                                             SizeT       index) noexcept {
-    return static_cast<meta::CopyCVRef<Self&&, T>>(
-        self.data_[Reversed ? -index : index]);
+    if (Reversed) {
+      return static_cast<meta::CopyCVRef<Self&&, T>>(
+          self.data_[static_cast<ptrdiff>(-index - 1)]);
+    }
+    return static_cast<meta::CopyCVRef<Self&&, T>>(self.data_[index]);
   }
 
   template <typename Self>
@@ -120,21 +123,76 @@ public:
 
   template <typename Self>
   [[nodiscard]] constexpr meta::CopyCV<Self, T>*
-  begin(this Self&& self) noexcept {
+  begin(this Self&& self) noexcept
+    requires(!Reversed)
+  {
     return self.data_;
   }
   template <typename Self>
-  [[nodiscard]] constexpr meta::CopyCV<Self, T>*
-  end(this Self&& self) noexcept {
+  [[nodiscard]] constexpr meta::CopyCV<Self, T>* end(this Self&& self) noexcept
+    requires(!Reversed)
+  {
     return self.data_ + self.len_;
   }
-  // NOLINTEND(cppcoreguidelines-rvalue-reference-param-not-moved)
-  // NOLINTEND(cppcoreguidelines-missing-std-forward)
+
+  template <typename Self>
+  [[nodiscard]] constexpr auto begin(this Self&& self) noexcept
+    requires Reversed
+  {
+    return ReverseIterator<meta::CopyCVRef<Self&&, T>>(self.data_ + self.len_);
+  }
+  template <typename Self>
+  [[nodiscard]] constexpr auto end(this Self&& self) noexcept
+    requires Reversed
+  {
+    return ReverseIterator<meta::CopyCVRef<Self&&, T>>(self.data_);
+  }
+
+private:
+  template <typename Ref> class ReverseIterator {
+  public:
+    explicit constexpr ReverseIterator(T* ptr) noexcept : ptr_(ptr) {}
+
+    constexpr bool operator==(this ReverseIterator self,
+                              ReverseIterator      other) noexcept = default;
+
+    constexpr auto&& operator*(this ReverseIterator self) noexcept {
+      return static_cast<Ref>(self.ptr_[-1]);
+    }
+
+    template <typename Self>
+    constexpr auto&& operator++(this Self&& self) noexcept {
+      --self.ptr_;
+      return static_cast<Self&&>(self);
+    }
+    template <meta::MutableType Self>
+    constexpr auto operator++(this Self&& self,
+                              int /*postfix placeholder*/) noexcept {
+      return ReverseIterator(self.ptr_--);
+    }
+
+    template <meta::MutableType Self>
+    constexpr auto&& operator--(this Self&& self) noexcept {
+      ++self.ptr_;
+      return static_cast<Self&&>(self);
+    }
+    template <meta::MutableType Self>
+    constexpr auto operator--(this Self&& self,
+                              int /*postfix placeholder*/) noexcept {
+      return ReverseIterator(self.ptr_++);
+    }
+
+  private:
+    T* ptr_;
+  };
 
 private:
   T*    data_;
   SizeT len_;
 };
+
+// NOLINTEND(cppcoreguidelines-rvalue-reference-param-not-moved)
+// NOLINTEND(cppcoreguidelines-missing-std-forward)
 
 template <typename T, meta::Integral SizeT = usize>
 using ReversedSlice = Slice<T, SizeT, true>;
