@@ -245,6 +245,26 @@ constexpr Vector<T, N, A, SizeT>::Vector(Vector&& other) noexcept
 }
 
 template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
+constexpr Vector<T, N, A, SizeT>::Vector(
+    // NOLINTNEXTLINE(cppcoreguidelines-rvalue-reference-param-not-moved)
+    Vector&& other, meta::TypeIdentity<A> const& allocator) noexcept
+    : allocator_(allocator), len_(other.len_), capacity_(other.capacity_) {
+  if constexpr (N > 0) {
+    if (other.data_ == other.fixed_buffer_.data()) {
+      move(other.data_);
+      while (other.len_ > 0) {
+        other.pop();
+      }
+      return;
+    }
+  }
+  data_           = other.data_;
+  other.len_      = 0;
+  other.capacity_ = other.fixed_buffer_.len();
+  other.data_     = other.fixed_buffer_.data();
+}
+
+template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
 constexpr Vector<T, N, A, SizeT>&
 Vector<T, N, A, SizeT>::operator=(this Vector& self YACSL_LIFETIMEBOUND,
                                   Vector const&     other) {
