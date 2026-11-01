@@ -169,9 +169,11 @@ public:
 struct TestAllocator {
   using SizeT = size_t;
 
+  inline static constinit thread_local bool ALWAYS_RETURN_EQUAL = false;
+
   [[nodiscard]] constexpr bool operator==(this TestAllocator const& self,
                                           TestAllocator const&      other) {
-    return &self == &other;
+    return ALWAYS_RETURN_EQUAL || &self == &other;
   }
 
   yacsl::ranges::Slice<yacsl::u8, SizeT>
