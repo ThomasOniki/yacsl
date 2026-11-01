@@ -345,6 +345,90 @@ template <yacsl::usize N> static void test_constructor_with_copy() noexcept {
   EXPECT_STREQ(TestAllocator::LOGS.ptr, msg.data());
 }
 
+template <yacsl::usize N> static void test_constructor_with_move() noexcept {
+  yacsl::containers::StackArray<char, 64> msg = {};
+
+  using yacsl::math::max;
+
+  {
+    Vector<SMFTracker, N, TestAllocator> other = {
+        SMFTracker("value1"),
+        SMFTracker("value2"),
+        SMFTracker("value3"),
+    };
+    EXPECT(other.len() == 3, "len = %zu.\n", other.len());
+    EXPECT(other.capacity() == max(3UZ, N), "capacity = %zu\n",
+           other.capacity());
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'value1'\n"
+                                       "constructed 'value2'\n"
+                                       "constructed 'value3'\n"
+                                       "constructed 'allocator'\n"
+                                       "copy constructed 'allocator'\n"
+                                       "copy constructed 'value1'\n"
+                                       "copy constructed 'value2'\n"
+                                       "copy constructed 'value3'\n"
+                                       "destroyed 'allocator'\n"
+                                       "destroyed 'value3'\n"
+                                       "destroyed 'value2'\n"
+                                       "destroyed 'value1'\n");
+    if (N < 3) {
+      snprintf(msg.data(), msg.len(), "allocated %zu bytes\n",
+               sizeof(SMFTracker) * 3);
+    }
+    EXPECT_STREQ(TestAllocator::LOGS.ptr, msg.data());
+    clear_logs();
+
+    auto test1 = Vector(yacsl::memory::move(other));
+    EXPECT(test1.len() == 3, "len = %zu.\n", test1.len());
+    EXPECT(test1.capacity() == max(3UZ, N), "capacity = %zu\n",
+           test1.capacity());
+    EXPECT(other.len() == 0, "len = %zu.\n", other.len());
+    EXPECT(other.capacity() == N, "capacity = %zu\n", other.capacity());
+    if (N < 3) {
+      EXPECT_STREQ(SMFTracker::LOGS.ptr,
+                   "move constructed 'allocator (copy)'\n");
+    } else {
+      EXPECT_STREQ(SMFTracker::LOGS.ptr, "move constructed 'allocator (copy)'\n"
+                                         "move constructed 'value1 (copy)'\n"
+                                         "move constructed 'value2 (copy)'\n"
+                                         "move constructed 'value3 (copy)'\n"
+                                         "destroyed 'value3 (copy)'\n"
+                                         "destroyed 'value2 (copy)'\n"
+                                         "destroyed 'value1 (copy)'\n");
+    }
+    msg[0] = '\0';
+    EXPECT_STREQ(TestAllocator::LOGS.ptr, msg.data());
+
+    clear_logs();
+  }
+
+  if (N < 3) {
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed 'value3 (copy)'\n"
+                                       "destroyed 'value2 (copy)'\n"
+                                       "destroyed 'value1 (copy)'\n"
+                                       "destroyed 'allocator (copy) (moved)'\n"
+                                       "destroyed 'allocator (copy)'\n");
+    if (N > 0) {
+      // If N>0, after being moved, other.data_ will point to its stack buffer
+      // and there is a check to make sure the stack buffer isn't freed.
+      snprintf(msg.data(), msg.len(), "deallocated %zu bytes\n",
+               sizeof(SMFTracker) * 3);
+    } else {
+      snprintf(msg.data(), msg.len(),
+               "deallocated %zu bytes\n"
+               "deallocated 0 bytes\n",
+               sizeof(SMFTracker) * 3);
+    }
+  } else {
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed 'value3 (copy) (moved)'\n"
+                                       "destroyed 'value2 (copy) (moved)'\n"
+                                       "destroyed 'value1 (copy) (moved)'\n"
+                                       "destroyed 'allocator (copy) (moved)'\n"
+                                       "destroyed 'allocator (copy)'\n");
+  }
+  EXPECT_STREQ(TestAllocator::LOGS.ptr, msg.data());
+}
+
 // NOLINTBEGIN(bugprone-macro-parentheses)
 #define RUN8(name, func)                                                       \
   run_test("Vector<T, 0>::" name, func<0>);                                    \
@@ -367,5 +451,6 @@ int main() {
   RUN8("Vector(init)", test_constructor_with_init);
   RUN8("Vector(init, allocator)", test_constructor_with_init_alloc);
   RUN8("Vector(other)", test_constructor_with_copy);
+  RUN8("Vector(move(other))", test_constructor_with_move);
   return yacsl::testing::status() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
