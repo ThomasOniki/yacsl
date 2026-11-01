@@ -1,6 +1,9 @@
 #include "test_utils.hpp"
+#include "yacsl/containers/stack_array.hpp"
 #include "yacsl/containers/vector.hpp"
 #include "yacsl/math/arithmetic.hpp"
+#include "yacsl/memory/lifetimes.hpp"
+#include "yacsl/ranges/integer_range.hpp"
 #include "yacsl/testing/run.hpp"
 #include "yacsl/type_aliases.hpp"
 #include <stdio.h>
@@ -223,33 +226,23 @@ template <yacsl::usize N> static void test_constructor_with_init() noexcept {
   EXPECT_STREQ(TestAllocator::LOGS.ptr, msg.data());
 }
 
+#define RUN8(name, func)                                                       \
+  run_test("Vector<T, 0>::" name, func<0>);                                    \
+  run_test("Vector<T, 1>::" name, func<1>);                                    \
+  run_test("Vector<T, 2>::" name, func<2>);                                    \
+  run_test("Vector<T, 3>::" name, func<3>);                                    \
+  run_test("Vector<T, 4>::" name, func<4>);                                    \
+  run_test("Vector<T, 5>::" name, func<5>);                                    \
+  run_test("Vector<T, 6>::" name, func<6>);                                    \
+  run_test("Vector<T, 7>::" name, func<7>);
+
 int main() {
-  run_test("Vector<T, 0>::Vector()", test_constructor_with_nothing<0>);
-  run_test("Vector<T, 5>::Vector()", test_constructor_with_nothing<5>);
-  run_test("Vector<T, 0>::Vector(allocator)", test_constructor_with_alloc<0>);
-  run_test("Vector<T, 5>::Vector(allocator)", test_constructor_with_alloc<5>);
-  run_test("Vector<T, 0>::Vector(len)", test_constructor_with_len<0>);
-  run_test("Vector<T, 1>::Vector(len)", test_constructor_with_len<1>);
-  run_test("Vector<T, 2>::Vector(len)", test_constructor_with_len<2>);
-  run_test("Vector<T, 3>::Vector(len)", test_constructor_with_len<3>);
-  run_test("Vector<T, 0>::Vector(len, allocator)",
-           test_constructor_with_len_alloc<0>);
-  run_test("Vector<T, 2>::Vector(len, allocator)",
-           test_constructor_with_len_alloc<2>);
-  run_test("Vector<T, 3>::Vector(len, allocator)",
-           test_constructor_with_len_alloc<3>);
-  run_test("Vector<T, 0>::Vector(len, value)", test_constructor_with_value<0>);
-  run_test("Vector<T, 1>::Vector(len, value)", test_constructor_with_value<1>);
-  run_test("Vector<T, 2>::Vector(len, value)", test_constructor_with_value<2>);
-  run_test("Vector<T, 0>::Vector(len, value, allocator)",
-           test_constructor_with_value_alloc<0>);
-  run_test("Vector<T, 1>::Vector(len, value, allocator)",
-           test_constructor_with_value_alloc<1>);
-  run_test("Vector<T, 2>::Vector(len, value, allocator)",
-           test_constructor_with_value_alloc<2>);
-  run_test("Vector<T, 0>::Vector(init)", test_constructor_with_init<0>);
-  run_test("Vector<T, 1>::Vector(init)", test_constructor_with_init<1>);
-  run_test("Vector<T, 2>::Vector(init)", test_constructor_with_init<2>);
-  run_test("Vector<T, 3>::Vector(init)", test_constructor_with_init<3>);
+  RUN8("Vector()", test_constructor_with_nothing);
+  RUN8("Vector(allocator)", test_constructor_with_alloc);
+  RUN8("Vector(len)", test_constructor_with_len);
+  RUN8("vector(len, allocator)", test_constructor_with_len_alloc);
+  RUN8("Vector(len, value)", test_constructor_with_value);
+  RUN8("Vector(len, value, allocator)", test_constructor_with_value_alloc);
+  RUN8("Vector(init)", test_constructor_with_init);
   return yacsl::testing::status() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
