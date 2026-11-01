@@ -405,7 +405,8 @@ template <yacsl::usize N> static void test_constructor_with_move() noexcept {
     EXPECT(test1.capacity() == max(3UZ, N), "capacity = %zu\n",
            test1.capacity());
     EXPECT(other.len() == 0, "len = %zu.\n", other.len());
-    EXPECT(other.capacity() == N, "capacity = %zu\n", other.capacity());
+    EXPECT(other.capacity() == 0, "capacity = %zu\n", other.capacity());
+    EXPECT(other.data() == nullptr);
     if (N < 3) {
       EXPECT_STREQ(SMFTracker::LOGS.ptr,
                    "move constructed 'allocator (copy)'\n");
@@ -430,23 +431,17 @@ template <yacsl::usize N> static void test_constructor_with_move() noexcept {
                                        "destroyed '1 (copy)'\n"
                                        "destroyed 'allocator (copy) (moved)'\n"
                                        "destroyed 'allocator (copy)'\n");
-    if (N > 0) {
-      // If N>0, after being moved, other.data_ will point to its stack buffer
-      // and there is a check to make sure the stack buffer isn't freed.
-      snprintf(msg.data(), msg.len(), "deallocated %zu bytes\n",
-               sizeof(SMFTracker) * 3);
-    } else {
-      snprintf(msg.data(), msg.len(),
-               "deallocated %zu bytes\n"
-               "deallocated 0 bytes\n",
-               sizeof(SMFTracker) * 3);
-    }
+    snprintf(msg.data(), msg.len(),
+             "deallocated %zu bytes\n"
+             "deallocated 0 bytes\n",
+             sizeof(SMFTracker) * 3);
   } else {
     EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed '3 (copy) (moved)'\n"
                                        "destroyed '2 (copy) (moved)'\n"
                                        "destroyed '1 (copy) (moved)'\n"
                                        "destroyed 'allocator (copy) (moved)'\n"
                                        "destroyed 'allocator (copy)'\n");
+    snprintf(msg.data(), msg.len(), "deallocated 0 bytes\n");
   }
   EXPECT_STREQ(TestAllocator::LOGS.ptr, msg.data());
 }
@@ -561,7 +556,8 @@ static void test_constructor_with_move_alloc() noexcept {
     EXPECT(test1.capacity() == max(3UZ, N), "capacity = %zu\n",
            test1.capacity());
     EXPECT(other.len() == 0, "len = %zu.\n", other.len());
-    EXPECT(other.capacity() == N, "capacity = %zu\n", other.capacity());
+    EXPECT(other.capacity() == 0, "capacity = %zu\n", other.capacity());
+    EXPECT(other.data() == nullptr);
     if (N < 3) {
       EXPECT_STREQ(SMFTracker::LOGS.ptr, "copy constructed 'allocator'\n");
     } else {
@@ -587,17 +583,10 @@ static void test_constructor_with_move_alloc() noexcept {
                                        "destroyed 'allocator'\n"
                                        "destroyed 'allocator (copy)'\n");
 
-    if (N > 0) {
-      // If N>0, after being moved, other.data_ will point to its stack buffer
-      // and there is a check to make sure the stack buffer isn't freed.
-      snprintf(msg.data(), msg.len(), "deallocated %zu bytes\n",
-               sizeof(SMFTracker) * 3);
-    } else {
-      snprintf(msg.data(), msg.len(),
-               "deallocated %zu bytes\n"
-               "deallocated 0 bytes\n",
-               sizeof(SMFTracker) * 3);
-    }
+    snprintf(msg.data(), msg.len(),
+             "deallocated %zu bytes\n"
+             "deallocated 0 bytes\n",
+             sizeof(SMFTracker) * 3);
   } else {
     EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed '3 (copy) (moved)'\n"
                                        "destroyed '2 (copy) (moved)'\n"
@@ -605,6 +594,7 @@ static void test_constructor_with_move_alloc() noexcept {
                                        "destroyed 'allocator (copy)'\n"
                                        "destroyed 'allocator'\n"
                                        "destroyed 'allocator (copy)'\n");
+    snprintf(msg.data(), msg.len(), "deallocated 0 bytes\n");
   }
   EXPECT_STREQ(TestAllocator::LOGS.ptr, msg.data());
 }
