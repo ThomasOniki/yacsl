@@ -1,6 +1,7 @@
 #pragma once
 
 #include "yacsl/compiler/attributes.hpp"
+#include "yacsl/compiler/pragmas.hpp"
 #include "yacsl/meta/concepts.hpp"
 #include "yacsl/meta/conditional.hpp"
 #include "yacsl/meta/qualifiers.hpp"
@@ -22,10 +23,13 @@ public:
   constexpr Slice(T* data YACSL_LIFETIMEBOUND, SizeT size) noexcept
       : data_(Reversed ? data + size : data), len_(size) {}
 
+  YACSL_GCC_PRAGMA(GCC diagnostic push)
+  YACSL_GCC_PRAGMA(GCC diagnostic ignored "-Winit-list-lifetime")
   constexpr Slice(
       InitializerList<meta::RemoveConst<T>> data YACSL_LIFETIMEBOUND) noexcept
     requires meta::ConstType<T>
       : data_(Reversed ? data.end() : data.begin()), len_(data.size()) {}
+  YACSL_GCC_PRAGMA(GCC diagnostic pop)
 
   constexpr Slice(Slice<T, SizeT, !Reversed> other) noexcept
       : data_(other.end()), len_(other.len()) {}
