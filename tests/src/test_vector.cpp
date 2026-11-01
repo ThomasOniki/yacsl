@@ -231,6 +231,59 @@ template <yacsl::usize N> static void test_constructor_with_init() noexcept {
   EXPECT_STREQ(TestAllocator::LOGS.ptr, msg.data());
 }
 
+template <yacsl::usize N>
+static void test_constructor_with_init_alloc() noexcept {
+  yacsl::containers::StackArray<char, 64> msg = {};
+
+  {
+    auto init = {
+        SMFTracker("value1"),
+        SMFTracker("value2"),
+        SMFTracker("value3"),
+        SMFTracker("value4"),
+    };
+    TestAllocator alloc;
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'value1'\n"
+                                       "constructed 'value2'\n"
+                                       "constructed 'value3'\n"
+                                       "constructed 'value4'\n"
+                                       "constructed 'allocator'\n");
+    clear_logs();
+
+    auto test1 = Vector<SMFTracker, N, TestAllocator>(init, alloc);
+    EXPECT(test1.len() == 4, "len = %zu.\n", test1.len());
+    EXPECT(test1.capacity() == yacsl::math::max(4UZ, N), "capacity = %zu\n",
+           test1.capacity());
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "copy constructed 'allocator'\n"
+                                       "copy constructed 'value1'\n"
+                                       "copy constructed 'value2'\n"
+                                       "copy constructed 'value3'\n"
+                                       "copy constructed 'value4'\n");
+    if (N < 4) {
+      snprintf(msg.data(), msg.len(), "allocated %zu bytes\n",
+               sizeof(SMFTracker) * 4);
+    }
+    EXPECT_STREQ(TestAllocator::LOGS.ptr, msg.data());
+    clear_logs();
+  }
+
+  EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed 'value4 (copy)'\n"
+                                     "destroyed 'value3 (copy)'\n"
+                                     "destroyed 'value2 (copy)'\n"
+                                     "destroyed 'value1 (copy)'\n"
+                                     "destroyed 'allocator (copy)'\n"
+                                     "destroyed 'allocator'\n"
+                                     "destroyed 'value4'\n"
+                                     "destroyed 'value3'\n"
+                                     "destroyed 'value2'\n"
+                                     "destroyed 'value1'\n");
+  if (N < 4) {
+    snprintf(msg.data(), msg.len(), "deallocated %zu bytes\n",
+             sizeof(SMFTracker) * 4);
+  }
+  EXPECT_STREQ(TestAllocator::LOGS.ptr, msg.data());
+}
+
 // NOLINTBEGIN(bugprone-macro-parentheses)
 #define RUN8(name, func)                                                       \
   run_test("Vector<T, 0>::" name, func<0>);                                    \
@@ -251,5 +304,6 @@ int main() {
   RUN8("Vector(len, value)", test_constructor_with_value);
   RUN8("Vector(len, value, allocator)", test_constructor_with_value_alloc);
   RUN8("Vector(init)", test_constructor_with_init);
+  RUN8("Vector(init, allocator)", test_constructor_with_init_alloc);
   return yacsl::testing::status() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
