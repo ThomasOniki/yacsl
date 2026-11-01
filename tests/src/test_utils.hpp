@@ -128,6 +128,10 @@ struct DynamicCString {
 
 class SMFTracker {
 public:
+  SMFTracker() : name_("default") {
+    LOGS.printf_to("default constructed 'default'\n");
+  }
+
   explicit SMFTracker(char const* name) : name_(name) {
     LOGS.printf_to("constructed '%s'\n", name);
   }
@@ -165,9 +169,11 @@ public:
 struct TestAllocator {
   using SizeT = size_t;
 
+  inline static constinit thread_local bool ALWAYS_RETURN_EQUAL = false;
+
   [[nodiscard]] constexpr bool operator==(this TestAllocator const& self,
                                           TestAllocator const&      other) {
-    return &self == &other;
+    return ALWAYS_RETURN_EQUAL || &self == &other;
   }
 
   yacsl::ranges::Slice<yacsl::u8, SizeT>
