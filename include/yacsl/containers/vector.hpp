@@ -276,14 +276,16 @@ Vector<T, N, A, SizeT>::operator=(this Vector& self YACSL_LIFETIMEBOUND,
   }
   if (self.allocator_ == other.allocator_) {
     self.clear();
+    self.allocator_ = other.allocator_;
     self.reserve(other.len_);
   } else {
     self.free();
+    self.allocator_ = other.allocator_;
     self.maybe_alloc(other.len_);
   }
-  self.allocator_ = other.allocator_;
-  self.len_       = other.len_;
+  self.len_ = other.len_;
   self.copy(other.data_);
+
   return self;
 }
 
@@ -311,6 +313,7 @@ Vector<T, N, A, SizeT>::operator=(this Vector& self YACSL_LIFETIMEBOUND,
     self.capacity_  = other.capacity_;
   }
   other.len_ = other.capacity_ = 0;
+  other.data_                  = nullptr;
   return self;
 }
 
@@ -319,8 +322,8 @@ constexpr Vector<T, N, A, SizeT>&
 Vector<T, N, A, SizeT>::operator=(this Vector& self YACSL_LIFETIMEBOUND,
                                   ranges::InitializerList<T> const& init) {
   self.clear();
+  self.reserve(static_cast<SizeT>(init.size()));
   self.len_ = static_cast<SizeT>(init.size());
-  self.reserve(self.len_);
   self.copy(init.begin());
   return self;
 }
@@ -394,6 +397,8 @@ void Vector<T, N, A, SizeT>::free(this Vector& self) {
         static_cast<A::SizeT>(self.capacity_) * sizeof(T),
     });
   }
+  self.data_     = self.fixed_buffer_.data();
+  self.capacity_ = self.fixed_buffer_.len();
 }
 
 template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>

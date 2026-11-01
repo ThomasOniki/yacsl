@@ -202,8 +202,8 @@ static void test_constructor_with_range_impl(R const& range) noexcept {
            test1.capacity());
     EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'allocator'\n"
                                        "copy constructed 'allocator'\n"
-                                       "copy constructed 'value1'\n"
-                                       "copy constructed 'value2'\n"
+                                       "copy constructed '1'\n"
+                                       "copy constructed '2'\n"
                                        "destroyed 'allocator'\n");
     if (N < 2) {
       snprintf(msg.data(), msg.len(), "allocated %zu bytes\n",
@@ -214,8 +214,8 @@ static void test_constructor_with_range_impl(R const& range) noexcept {
     clear_logs();
   }
 
-  EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed 'value2 (copy)'\n"
-                                     "destroyed 'value1 (copy)'\n"
+  EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed '2 (copy)'\n"
+                                     "destroyed '1 (copy)'\n"
                                      "destroyed 'allocator (copy)'\n");
   if (N < 2) {
     snprintf(msg.data(), msg.len(), "deallocated %zu bytes\n",
@@ -233,13 +233,13 @@ template <yacsl::usize N, typename R, bool Reverse = false>
 static void test_constructor_with_range() noexcept {
   if (Reverse) {
     test_constructor_with_range_impl<N, R>({
-        SMFTracker("value2"),
-        SMFTracker("value1"),
+        SMFTracker("2"),
+        SMFTracker("1"),
     });
   } else {
     test_constructor_with_range_impl<N, R>({
-        SMFTracker("value1"),
-        SMFTracker("value2"),
+        SMFTracker("1"),
+        SMFTracker("2"),
     });
   }
 }
@@ -262,8 +262,8 @@ static void test_constructor_with_range_alloc_impl(R const& range) noexcept {
     EXPECT(test1.capacity() == max(2UZ, N), "capacity = %zu\n",
            test1.capacity());
     EXPECT_STREQ(SMFTracker::LOGS.ptr, "copy constructed 'allocator'\n"
-                                       "copy constructed 'value1'\n"
-                                       "copy constructed 'value2'\n");
+                                       "copy constructed '1'\n"
+                                       "copy constructed '2'\n");
     if (N < 2) {
       snprintf(msg.data(), msg.len(), "allocated %zu bytes\n",
                sizeof(SMFTracker) * 2);
@@ -273,8 +273,8 @@ static void test_constructor_with_range_alloc_impl(R const& range) noexcept {
     clear_logs();
   }
 
-  EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed 'value2 (copy)'\n"
-                                     "destroyed 'value1 (copy)'\n"
+  EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed '2 (copy)'\n"
+                                     "destroyed '1 (copy)'\n"
                                      "destroyed 'allocator (copy)'\n"
                                      "destroyed 'allocator'\n");
   if (N < 2) {
@@ -293,13 +293,13 @@ template <yacsl::usize N, typename R, bool Reverse = false>
 static void test_constructor_with_range_alloc() noexcept {
   if (Reverse) {
     test_constructor_with_range_alloc_impl<N, R>({
-        SMFTracker("value2"),
-        SMFTracker("value1"),
+        SMFTracker("2"),
+        SMFTracker("1"),
     });
   } else {
     test_constructor_with_range_alloc_impl<N, R>({
-        SMFTracker("value1"),
-        SMFTracker("value2"),
+        SMFTracker("1"),
+        SMFTracker("2"),
     });
   }
 }
@@ -311,21 +311,21 @@ template <yacsl::usize N> static void test_constructor_with_copy() noexcept {
 
   {
     auto other = Vector<SMFTracker, N, TestAllocator>{
-        SMFTracker("value1"),
-        SMFTracker("value2"),
+        SMFTracker("1"),
+        SMFTracker("2"),
     };
     EXPECT(other.len() == 2, "len = %zu.\n", other.len());
     EXPECT(other.capacity() == max(2UZ, N), "capacity = %zu\n",
            other.capacity());
-    EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'value1'\n"
-                                       "constructed 'value2'\n"
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed '1'\n"
+                                       "constructed '2'\n"
                                        "constructed 'allocator'\n"
                                        "copy constructed 'allocator'\n"
-                                       "copy constructed 'value1'\n"
-                                       "copy constructed 'value2'\n"
+                                       "copy constructed '1'\n"
+                                       "copy constructed '2'\n"
                                        "destroyed 'allocator'\n"
-                                       "destroyed 'value2'\n"
-                                       "destroyed 'value1'\n");
+                                       "destroyed '2'\n"
+                                       "destroyed '1'\n");
     if (N < 2) {
       snprintf(msg.data(), msg.len(), "allocated %zu bytes\n",
                sizeof(SMFTracker) * 2);
@@ -341,8 +341,8 @@ template <yacsl::usize N> static void test_constructor_with_copy() noexcept {
     EXPECT(other.capacity() == max(2UZ, N), "capacity = %zu\n",
            other.capacity());
     EXPECT_STREQ(SMFTracker::LOGS.ptr, "copy constructed 'allocator (copy)'\n"
-                                       "copy constructed 'value1 (copy)'\n"
-                                       "copy constructed 'value2 (copy)'\n");
+                                       "copy constructed '1 (copy)'\n"
+                                       "copy constructed '2 (copy)'\n");
     if (N < 2) {
       snprintf(msg.data(), msg.len(), "allocated %zu bytes\n",
                sizeof(SMFTracker) * 2);
@@ -352,11 +352,11 @@ template <yacsl::usize N> static void test_constructor_with_copy() noexcept {
     clear_logs();
   }
 
-  EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed 'value2 (copy) (copy)'\n"
-                                     "destroyed 'value1 (copy) (copy)'\n"
+  EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed '2 (copy) (copy)'\n"
+                                     "destroyed '1 (copy) (copy)'\n"
                                      "destroyed 'allocator (copy) (copy)'\n"
-                                     "destroyed 'value2 (copy)'\n"
-                                     "destroyed 'value1 (copy)'\n"
+                                     "destroyed '2 (copy)'\n"
+                                     "destroyed '1 (copy)'\n"
                                      "destroyed 'allocator (copy)'\n");
   if (N < 2) {
     snprintf(msg.data(), msg.len(),
@@ -374,25 +374,25 @@ template <yacsl::usize N> static void test_constructor_with_move() noexcept {
 
   {
     Vector<SMFTracker, N, TestAllocator> other = {
-        SMFTracker("value1"),
-        SMFTracker("value2"),
-        SMFTracker("value3"),
+        SMFTracker("1"),
+        SMFTracker("2"),
+        SMFTracker("3"),
     };
     EXPECT(other.len() == 3, "len = %zu.\n", other.len());
     EXPECT(other.capacity() == max(3UZ, N), "capacity = %zu\n",
            other.capacity());
-    EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'value1'\n"
-                                       "constructed 'value2'\n"
-                                       "constructed 'value3'\n"
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed '1'\n"
+                                       "constructed '2'\n"
+                                       "constructed '3'\n"
                                        "constructed 'allocator'\n"
                                        "copy constructed 'allocator'\n"
-                                       "copy constructed 'value1'\n"
-                                       "copy constructed 'value2'\n"
-                                       "copy constructed 'value3'\n"
+                                       "copy constructed '1'\n"
+                                       "copy constructed '2'\n"
+                                       "copy constructed '3'\n"
                                        "destroyed 'allocator'\n"
-                                       "destroyed 'value3'\n"
-                                       "destroyed 'value2'\n"
-                                       "destroyed 'value1'\n");
+                                       "destroyed '3'\n"
+                                       "destroyed '2'\n"
+                                       "destroyed '1'\n");
     if (N < 3) {
       snprintf(msg.data(), msg.len(), "allocated %zu bytes\n",
                sizeof(SMFTracker) * 3);
@@ -411,12 +411,12 @@ template <yacsl::usize N> static void test_constructor_with_move() noexcept {
                    "move constructed 'allocator (copy)'\n");
     } else {
       EXPECT_STREQ(SMFTracker::LOGS.ptr, "move constructed 'allocator (copy)'\n"
-                                         "move constructed 'value1 (copy)'\n"
-                                         "move constructed 'value2 (copy)'\n"
-                                         "move constructed 'value3 (copy)'\n"
-                                         "destroyed 'value3 (copy)'\n"
-                                         "destroyed 'value2 (copy)'\n"
-                                         "destroyed 'value1 (copy)'\n");
+                                         "move constructed '1 (copy)'\n"
+                                         "move constructed '2 (copy)'\n"
+                                         "move constructed '3 (copy)'\n"
+                                         "destroyed '3 (copy)'\n"
+                                         "destroyed '2 (copy)'\n"
+                                         "destroyed '1 (copy)'\n");
     }
     msg[0] = '\0';
     EXPECT_STREQ(TestAllocator::LOGS.ptr, msg.data());
@@ -425,9 +425,9 @@ template <yacsl::usize N> static void test_constructor_with_move() noexcept {
   }
 
   if (N < 3) {
-    EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed 'value3 (copy)'\n"
-                                       "destroyed 'value2 (copy)'\n"
-                                       "destroyed 'value1 (copy)'\n"
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed '3 (copy)'\n"
+                                       "destroyed '2 (copy)'\n"
+                                       "destroyed '1 (copy)'\n"
                                        "destroyed 'allocator (copy) (moved)'\n"
                                        "destroyed 'allocator (copy)'\n");
     if (N > 0) {
@@ -442,9 +442,9 @@ template <yacsl::usize N> static void test_constructor_with_move() noexcept {
                sizeof(SMFTracker) * 3);
     }
   } else {
-    EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed 'value3 (copy) (moved)'\n"
-                                       "destroyed 'value2 (copy) (moved)'\n"
-                                       "destroyed 'value1 (copy) (moved)'\n"
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed '3 (copy) (moved)'\n"
+                                       "destroyed '2 (copy) (moved)'\n"
+                                       "destroyed '1 (copy) (moved)'\n"
                                        "destroyed 'allocator (copy) (moved)'\n"
                                        "destroyed 'allocator (copy)'\n");
   }
@@ -459,23 +459,23 @@ static void test_constructor_with_copy_alloc() noexcept {
 
   {
     auto other = Vector<SMFTracker, N, TestAllocator>{
-        SMFTracker("value1"),
-        SMFTracker("value2"),
+        SMFTracker("1"),
+        SMFTracker("2"),
     };
     TestAllocator alloc;
 
     EXPECT(other.len() == 2, "len = %zu.\n", other.len());
     EXPECT(other.capacity() == max(2UZ, N), "capacity = %zu\n",
            other.capacity());
-    EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'value1'\n"
-                                       "constructed 'value2'\n"
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed '1'\n"
+                                       "constructed '2'\n"
                                        "constructed 'allocator'\n"
                                        "copy constructed 'allocator'\n"
-                                       "copy constructed 'value1'\n"
-                                       "copy constructed 'value2'\n"
+                                       "copy constructed '1'\n"
+                                       "copy constructed '2'\n"
                                        "destroyed 'allocator'\n"
-                                       "destroyed 'value2'\n"
-                                       "destroyed 'value1'\n"
+                                       "destroyed '2'\n"
+                                       "destroyed '1'\n"
                                        "constructed 'allocator'\n");
     if (N < 2) {
       snprintf(msg.data(), msg.len(), "allocated %zu bytes\n",
@@ -492,8 +492,8 @@ static void test_constructor_with_copy_alloc() noexcept {
     EXPECT(other.capacity() == max(2UZ, N), "capacity = %zu\n",
            other.capacity());
     EXPECT_STREQ(SMFTracker::LOGS.ptr, "copy constructed 'allocator'\n"
-                                       "copy constructed 'value1 (copy)'\n"
-                                       "copy constructed 'value2 (copy)'\n");
+                                       "copy constructed '1 (copy)'\n"
+                                       "copy constructed '2 (copy)'\n");
     if (N < 2) {
       snprintf(msg.data(), msg.len(), "allocated %zu bytes\n",
                sizeof(SMFTracker) * 2);
@@ -503,12 +503,12 @@ static void test_constructor_with_copy_alloc() noexcept {
     clear_logs();
   }
 
-  EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed 'value2 (copy) (copy)'\n"
-                                     "destroyed 'value1 (copy) (copy)'\n"
+  EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed '2 (copy) (copy)'\n"
+                                     "destroyed '1 (copy) (copy)'\n"
                                      "destroyed 'allocator (copy)'\n"
                                      "destroyed 'allocator'\n"
-                                     "destroyed 'value2 (copy)'\n"
-                                     "destroyed 'value1 (copy)'\n"
+                                     "destroyed '2 (copy)'\n"
+                                     "destroyed '1 (copy)'\n"
                                      "destroyed 'allocator (copy)'\n");
   if (N < 2) {
     snprintf(msg.data(), msg.len(),
@@ -527,27 +527,27 @@ static void test_constructor_with_move_alloc() noexcept {
 
   {
     Vector<SMFTracker, N, TestAllocator> other = {
-        SMFTracker("value1"),
-        SMFTracker("value2"),
-        SMFTracker("value3"),
+        SMFTracker("1"),
+        SMFTracker("2"),
+        SMFTracker("3"),
     };
     TestAllocator alloc;
 
     EXPECT(other.len() == 3, "len = %zu.\n", other.len());
     EXPECT(other.capacity() == max(3UZ, N), "capacity = %zu\n",
            other.capacity());
-    EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'value1'\n"
-                                       "constructed 'value2'\n"
-                                       "constructed 'value3'\n"
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed '1'\n"
+                                       "constructed '2'\n"
+                                       "constructed '3'\n"
                                        "constructed 'allocator'\n"
                                        "copy constructed 'allocator'\n"
-                                       "copy constructed 'value1'\n"
-                                       "copy constructed 'value2'\n"
-                                       "copy constructed 'value3'\n"
+                                       "copy constructed '1'\n"
+                                       "copy constructed '2'\n"
+                                       "copy constructed '3'\n"
                                        "destroyed 'allocator'\n"
-                                       "destroyed 'value3'\n"
-                                       "destroyed 'value2'\n"
-                                       "destroyed 'value1'\n"
+                                       "destroyed '3'\n"
+                                       "destroyed '2'\n"
+                                       "destroyed '1'\n"
                                        "constructed 'allocator'\n");
     if (N < 3) {
       snprintf(msg.data(), msg.len(), "allocated %zu bytes\n",
@@ -566,12 +566,12 @@ static void test_constructor_with_move_alloc() noexcept {
       EXPECT_STREQ(SMFTracker::LOGS.ptr, "copy constructed 'allocator'\n");
     } else {
       EXPECT_STREQ(SMFTracker::LOGS.ptr, "copy constructed 'allocator'\n"
-                                         "move constructed 'value1 (copy)'\n"
-                                         "move constructed 'value2 (copy)'\n"
-                                         "move constructed 'value3 (copy)'\n"
-                                         "destroyed 'value3 (copy)'\n"
-                                         "destroyed 'value2 (copy)'\n"
-                                         "destroyed 'value1 (copy)'\n");
+                                         "move constructed '1 (copy)'\n"
+                                         "move constructed '2 (copy)'\n"
+                                         "move constructed '3 (copy)'\n"
+                                         "destroyed '3 (copy)'\n"
+                                         "destroyed '2 (copy)'\n"
+                                         "destroyed '1 (copy)'\n");
     }
     msg[0] = '\0';
     EXPECT_STREQ(TestAllocator::LOGS.ptr, msg.data());
@@ -580,12 +580,13 @@ static void test_constructor_with_move_alloc() noexcept {
   }
 
   if (N < 3) {
-    EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed 'value3 (copy)'\n"
-                                       "destroyed 'value2 (copy)'\n"
-                                       "destroyed 'value1 (copy)'\n"
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed '3 (copy)'\n"
+                                       "destroyed '2 (copy)'\n"
+                                       "destroyed '1 (copy)'\n"
                                        "destroyed 'allocator (copy)'\n"
                                        "destroyed 'allocator'\n"
                                        "destroyed 'allocator (copy)'\n");
+
     if (N > 0) {
       // If N>0, after being moved, other.data_ will point to its stack buffer
       // and there is a check to make sure the stack buffer isn't freed.
@@ -598,14 +599,97 @@ static void test_constructor_with_move_alloc() noexcept {
                sizeof(SMFTracker) * 3);
     }
   } else {
-    EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed 'value3 (copy) (moved)'\n"
-                                       "destroyed 'value2 (copy) (moved)'\n"
-                                       "destroyed 'value1 (copy) (moved)'\n"
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed '3 (copy) (moved)'\n"
+                                       "destroyed '2 (copy) (moved)'\n"
+                                       "destroyed '1 (copy) (moved)'\n"
                                        "destroyed 'allocator (copy)'\n"
                                        "destroyed 'allocator'\n"
                                        "destroyed 'allocator (copy)'\n");
   }
   EXPECT_STREQ(TestAllocator::LOGS.ptr, msg.data());
+}
+
+template <yacsl::usize N, yacsl::u32 LenA, yacsl::u32 LenB,
+          bool AllocatorsEqual>
+static void test_copy_assignment() {
+  TestAllocator::ALWAYS_RETURN_EQUAL = AllocatorsEqual;
+  {
+    using yacsl::containers::StackArray;
+
+    auto vec_a = Vector<SMFTracker, N, TestAllocator>(LenA);
+    auto vec_b = Vector<SMFTracker, N, TestAllocator>(LenB);
+
+    for (yacsl::u32 i = 0; i < LenA; ++i) {
+      vec_a[i].name_.clear();
+      vec_a[i].name_.printf_to("A%u", i);
+    }
+
+    for (yacsl::u32 i = 0; i < LenB; ++i) {
+      vec_b[i].name_.clear();
+      vec_b[i].name_.printf_to("B%u", i);
+    }
+
+    clear_logs();
+
+    vec_a = vec_b;
+
+    EXPECT(vec_a.len() == vec_b.len());
+    EXPECT(vec_a.data() != vec_b.data());
+
+    StackArray<char, 256> logs    = {};
+    size_t                printed = 0;
+    for (size_t i = LenA; i > 0; --i) {
+      printed += static_cast<size_t>(snprintf(logs.data() + printed,
+                                              logs.len() - printed,
+                                              "destroyed 'A%zu'\n", i - 1));
+      if (printed > logs.len()) {
+        fputs("logs is too small\n", stderr);
+        return;
+      }
+    }
+    printed += static_cast<size_t>(
+        snprintf(logs.data() + printed, logs.len() - printed,
+                 "copy assigned 'allocator (copy)'\n"));
+    if (printed > logs.len()) {
+      FAIL("logs is too small\n");
+      return;
+    }
+    for (size_t i = 0; i < LenB; ++i) {
+      printed += static_cast<size_t>(snprintf(logs.data() + printed,
+                                              logs.len() - printed,
+                                              "copy constructed 'B%zu'\n", i));
+      if (printed > logs.len()) {
+        FAIL("logs is too small\n");
+        return;
+      }
+    }
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, logs.data());
+
+    logs[0] = '\0';
+    printed = 0;
+    if (AllocatorsEqual && LenB > LenA) {
+      if (N == 0 || LenB > N) {
+        printed += static_cast<size_t>(snprintf(logs.data(), logs.len(),
+                                                "allocated %zu bytes\n",
+                                                sizeof(SMFTracker) * LenB));
+      }
+      if (N == 0 || LenA > N) {
+        snprintf(logs.data() + printed, logs.len() - printed,
+                 "deallocated %zu bytes\n", sizeof(SMFTracker) * LenA);
+      }
+    } else if (!AllocatorsEqual) {
+      if (N == 0 || LenA > N) {
+        printed += static_cast<size_t>(snprintf(logs.data(), logs.len(),
+                                                "deallocated %zu bytes\n",
+                                                sizeof(SMFTracker) * LenA));
+      }
+      if (N == 0 || LenB > N) {
+        snprintf(logs.data() + printed, logs.len() - printed,
+                 "allocated %zu bytes\n", sizeof(SMFTracker) * LenB);
+      }
+    }
+    EXPECT_STREQ(TestAllocator::LOGS.ptr, logs.data());
+  }
 }
 
 // NOLINTBEGIN(bugprone-macro-parentheses)
@@ -650,5 +734,25 @@ int main() {
   RUN8("Vector(move(other))", test_constructor_with_move);
   RUN8("Vector(other, allocator)", test_constructor_with_copy_alloc);
   RUN8("Vector(move(other), allocator)", test_constructor_with_move_alloc);
+
+#define TEST_COPY_ASSIGNMENT16(LenA, LenB)                                     \
+  RUN8("operator=(other) with a.len == " #LenA ", b.len == " #LenB             \
+       ", a.alloc = b.alloc",                                                  \
+       test_copy_assignment, LenA, LenB, true);                                \
+  RUN8("operator=(other) with a.len == " #LenA ", b.len == " #LenB             \
+       ", a.alloc != b.alloc",                                                 \
+       test_copy_assignment, LenA, LenB, false)
+
+#define TEST_COPY_ASSIGNMENT64(LenA)                                           \
+  TEST_COPY_ASSIGNMENT16(LenA, 0);                                             \
+  TEST_COPY_ASSIGNMENT16(LenA, 1);                                             \
+  TEST_COPY_ASSIGNMENT16(LenA, 2);                                             \
+  TEST_COPY_ASSIGNMENT16(LenA, 3);
+
+  TEST_COPY_ASSIGNMENT64(0);
+  TEST_COPY_ASSIGNMENT64(1);
+  TEST_COPY_ASSIGNMENT64(2);
+  TEST_COPY_ASSIGNMENT64(3);
+
   return yacsl::testing::status() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
