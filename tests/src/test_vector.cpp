@@ -231,6 +231,7 @@ template <yacsl::usize N> static void test_constructor_with_init() noexcept {
   EXPECT_STREQ(TestAllocator::LOGS.ptr, msg.data());
 }
 
+// NOLINTBEGIN(bugprone-macro-parentheses)
 #define RUN8(name, func)                                                       \
   run_test("Vector<T, 0>::" name, func<0>);                                    \
   run_test("Vector<T, 1>::" name, func<1>);                                    \
@@ -240,6 +241,7 @@ template <yacsl::usize N> static void test_constructor_with_init() noexcept {
   run_test("Vector<T, 5>::" name, func<5>);                                    \
   run_test("Vector<T, 6>::" name, func<6>);                                    \
   run_test("Vector<T, 7>::" name, func<7>);
+// NOLINTEND(bugprone-macro-parentheses)
 
 int main() {
   RUN8("Vector()", test_constructor_with_nothing);
