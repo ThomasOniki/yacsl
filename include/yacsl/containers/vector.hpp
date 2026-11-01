@@ -35,7 +35,7 @@ public:
   constexpr explicit Vector(SizeT len, T const& value,
                             A const& allocator = A());
 
-  constexpr Vector(Vector const& other);
+  constexpr Vector(Vector const& other) : Vector(other, other.allocator_) {}
   constexpr Vector(Vector&& other) noexcept;
   constexpr Vector(Vector const& other, meta::TypeIdentity<A> const& allocator);
   constexpr Vector(Vector&&                     other,
@@ -218,8 +218,9 @@ constexpr Vector<T, N, A, SizeT>::Vector(SizeT len, T const& value,
 }
 
 template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
-constexpr Vector<T, N, A, SizeT>::Vector(Vector const& other)
-    : allocator_(other.allocator_), len_(other.len_) {
+constexpr Vector<T, N, A, SizeT>::Vector(Vector const&                other,
+                                         meta::TypeIdentity<A> const& allocator)
+    : allocator_(allocator), len_(other.len_) {
   maybe_alloc(len_);
   copy(other.data_);
 }
