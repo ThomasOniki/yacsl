@@ -300,7 +300,7 @@ int main() {
   RUN8("Vector()", test_constructor_with_nothing);
   RUN8("Vector(allocator)", test_constructor_with_alloc);
   RUN8("Vector(len)", test_constructor_with_len);
-  RUN8("vector(len, allocator)", test_constructor_with_len_alloc);
+  RUN8("Vector(len, allocator)", test_constructor_with_len_alloc);
   RUN8("Vector(len, value)", test_constructor_with_value);
   RUN8("Vector(len, value, allocator)", test_constructor_with_value_alloc);
   RUN8("Vector(init)", test_constructor_with_init);
