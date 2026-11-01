@@ -682,6 +682,118 @@ static void test_copy_assignment(yacsl::u32 len_a, yacsl::u32 len_b,
   }
 }
 
+template <yacsl::usize N>
+static void test_move_assignment(yacsl::u32 len_a, yacsl::u32 len_b,
+                                 bool allocs_eq) {
+  TestAllocator::ALWAYS_RETURN_EQUAL = allocs_eq;
+  {
+    using yacsl::containers::StackArray;
+
+    auto vec_a = Vector<SMFTracker, N, TestAllocator>(len_a);
+    auto vec_b = Vector<SMFTracker, N, TestAllocator>(len_b);
+
+    for (yacsl::u32 i = 0; i < len_a; ++i) {
+      vec_a[i].name_.clear();
+      vec_a[i].name_.printf_to("A%u", i);
+    }
+
+    for (yacsl::u32 i = 0; i < len_b; ++i) {
+      vec_b[i].name_.clear();
+      vec_b[i].name_.printf_to("B%u", i);
+    }
+
+    clear_logs();
+
+    vec_a = yacsl::memory::move(vec_b);
+
+    EXPECT(vec_a.len() == len_b);
+    if (allocs_eq) {
+      if (N > 0 && len_b <= N) {
+        EXPECT(vec_a.capacity() ==
+                   yacsl::math::max(N, static_cast<yacsl::usize>(len_a)),
+               "capacity = %zu\n", vec_a.capacity());
+      } else {
+        EXPECT(vec_a.capacity() == len_b, "capacity = %zu\n", vec_a.capacity());
+      }
+    } else {
+      EXPECT(vec_a.capacity() ==
+                 yacsl::math::max(N, static_cast<yacsl::usize>(len_b)),
+             "capacity = %zu\n", vec_a.capacity());
+    }
+    EXPECT(vec_b.len() == 0, "len = %zu\n", vec_a.len());
+    EXPECT(vec_b.capacity() == 0, "capacity = %zu\n", vec_b.capacity());
+    EXPECT(vec_b.data() == nullptr);
+
+    StackArray<char, 256> logs    = {};
+    size_t                printed = 0;
+    for (size_t i = len_a; i > 0; --i) {
+      printed += static_cast<size_t>(snprintf(logs.data() + printed,
+                                              logs.len() - printed,
+                                              "destroyed 'A%zu'\n", i - 1));
+      if (printed > logs.len()) {
+        fputs("logs is too small\n", stderr);
+        return;
+      }
+    }
+
+    printed += static_cast<size_t>(
+        snprintf(logs.data() + printed, logs.len() - printed,
+                 "move assigned 'allocator (copy)'\n"));
+    if (printed > logs.len()) {
+      FAIL("logs is too small\n");
+      return;
+    }
+
+    if (!allocs_eq || len_b <= N) {
+      for (size_t i = 0; i < len_b; ++i) {
+        printed += static_cast<size_t>(
+            snprintf(logs.data() + printed, logs.len() - printed,
+                     "move constructed 'B%zu'\n", i));
+        if (printed > logs.len()) {
+          FAIL("logs is too small\n");
+          return;
+        }
+      }
+      for (size_t i = len_b; i > 0; --i) {
+        printed += static_cast<size_t>(snprintf(logs.data() + printed,
+                                                logs.len() - printed,
+                                                "destroyed 'B%zu'\n", i - 1));
+        if (printed > logs.len()) {
+          FAIL("logs is too small\n");
+          return;
+        }
+      }
+    }
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, logs.data());
+
+    logs[0] = '\0';
+    printed = 0;
+    if (allocs_eq) {
+      // If len_b <= N you can't steal the pointer because vec_b uses the stack
+      // buffer.
+      // If len_a <= N then you do steal the pointer but you don't need to
+      // deallocate because dynamic memory wasn't used for vec_a in the first
+      // place.
+      if (N == 0 || (len_a > N && len_b > N)) {
+        snprintf(logs.data(), logs.len(), "deallocated %zu bytes\n",
+                 sizeof(SMFTracker) * len_a);
+      }
+    } else {
+      if (N == 0 || len_a > N) {
+        printed += static_cast<size_t>(snprintf(logs.data(), logs.len(),
+                                                "deallocated %zu bytes\n",
+                                                sizeof(SMFTracker) * len_a));
+      }
+      if (N == 0 || len_b > N) {
+        snprintf(logs.data() + printed, logs.len() - printed,
+                 "allocated %zu bytes\n"
+                 "deallocated %zu bytes\n",
+                 sizeof(SMFTracker) * len_b, sizeof(SMFTracker) * len_b);
+      }
+    }
+    EXPECT_STREQ(TestAllocator::LOGS.ptr, logs.data());
+  }
+}
 // NOLINTBEGIN(bugprone-macro-parentheses)
 #define RUN8(name, func, ...)                                                  \
   run_test("Vector<T, 0>::" name, func<0 __VA_OPT__(, ) __VA_ARGS__>);         \
@@ -725,35 +837,38 @@ int main() {
   RUN8("Vector(other, allocator)", test_constructor_with_copy_alloc);
   RUN8("Vector(move(other), allocator)", test_constructor_with_move_alloc);
 
-#define TEST_COPY_ASSIGNMENT(N, len_a, len_b, allocs_eq, postfix)              \
-  run_test("Vector<" #N ">::operator=(other) with a.len = " #len_a             \
+#define TEST_ASSIGNMENT(kind, arg, N, len_a, len_b, allocs_eq, postfix)        \
+  run_test("Vector<T, " #N ">::operator=(" arg ") with a.len = " #len_a        \
            ", b.len = " #len_b ", " postfix,                                   \
-           test_copy_assignment<N>, len_a, len_b, allocs_eq)
+           test_##kind##_assignment<N>, len_a, len_b, allocs_eq)
 
-#define TEST_COPY_ASSIGNMENT8(len_a, len_b, allocs_eq, postfix)                \
-  TEST_COPY_ASSIGNMENT(1, len_a, len_b, allocs_eq, postfix);                   \
-  TEST_COPY_ASSIGNMENT(2, len_a, len_b, allocs_eq, postfix);                   \
-  TEST_COPY_ASSIGNMENT(3, len_a, len_b, allocs_eq, postfix);                   \
-  TEST_COPY_ASSIGNMENT(4, len_a, len_b, allocs_eq, postfix);                   \
-  TEST_COPY_ASSIGNMENT(5, len_a, len_b, allocs_eq, postfix);                   \
-  TEST_COPY_ASSIGNMENT(6, len_a, len_b, allocs_eq, postfix);                   \
-  TEST_COPY_ASSIGNMENT(7, len_a, len_b, allocs_eq, postfix);                   \
-  TEST_COPY_ASSIGNMENT(8, len_a, len_b, allocs_eq, postfix)
+#define TEST_ASSIGNMENT8(kind, arg, len_a, len_b, allocs_eq, postfix)          \
+  TEST_ASSIGNMENT(kind, arg, 0, len_a, len_b, allocs_eq, postfix);             \
+  TEST_ASSIGNMENT(kind, arg, 1, len_a, len_b, allocs_eq, postfix);             \
+  TEST_ASSIGNMENT(kind, arg, 2, len_a, len_b, allocs_eq, postfix);             \
+  TEST_ASSIGNMENT(kind, arg, 3, len_a, len_b, allocs_eq, postfix);             \
+  TEST_ASSIGNMENT(kind, arg, 4, len_a, len_b, allocs_eq, postfix);             \
+  TEST_ASSIGNMENT(kind, arg, 5, len_a, len_b, allocs_eq, postfix);             \
+  TEST_ASSIGNMENT(kind, arg, 6, len_a, len_b, allocs_eq, postfix);             \
+  TEST_ASSIGNMENT(kind, arg, 7, len_a, len_b, allocs_eq, postfix)
 
-#define TEST_COPY_ASSIGNMENT32(len_b, allocs_eq, postfix)                      \
-  TEST_COPY_ASSIGNMENT8(0U, len_b, allocs_eq, postfix);                        \
-  TEST_COPY_ASSIGNMENT8(1U, len_b, allocs_eq, postfix);                        \
-  TEST_COPY_ASSIGNMENT8(2U, len_b, allocs_eq, postfix);                        \
-  TEST_COPY_ASSIGNMENT8(3U, len_b, allocs_eq, postfix)
+#define TEST_ASSIGNMENT32(kind, arg, len_b, allocs_eq, postfix)                \
+  TEST_ASSIGNMENT8(kind, arg, 0U, len_b, allocs_eq, postfix);                  \
+  TEST_ASSIGNMENT8(kind, arg, 1U, len_b, allocs_eq, postfix);                  \
+  TEST_ASSIGNMENT8(kind, arg, 2U, len_b, allocs_eq, postfix);                  \
+  TEST_ASSIGNMENT8(kind, arg, 3U, len_b, allocs_eq, postfix)
 
-#define TEST_COPY_ASSIGNMENT128(allocs_eq, postfix)                            \
-  TEST_COPY_ASSIGNMENT32(0U, allocs_eq, postfix);                              \
-  TEST_COPY_ASSIGNMENT32(1U, allocs_eq, postfix);                              \
-  TEST_COPY_ASSIGNMENT32(2U, allocs_eq, postfix);                              \
-  TEST_COPY_ASSIGNMENT32(3U, allocs_eq, postfix)
+#define TEST_ASSIGNMENT128(kind, arg, allocs_eq, postfix)                      \
+  TEST_ASSIGNMENT32(kind, arg, 0U, allocs_eq, postfix);                        \
+  TEST_ASSIGNMENT32(kind, arg, 1U, allocs_eq, postfix);                        \
+  TEST_ASSIGNMENT32(kind, arg, 2U, allocs_eq, postfix);                        \
+  TEST_ASSIGNMENT32(kind, arg, 3U, allocs_eq, postfix)
 
-  TEST_COPY_ASSIGNMENT128(false, "a.alloc != b.alloc");
-  TEST_COPY_ASSIGNMENT128(true, "a.alloc == b.alloc");
+  TEST_ASSIGNMENT128(copy, "other", false, "a.alloc != b.alloc");
+  TEST_ASSIGNMENT128(copy, "other", true, "a.alloc == b.alloc");
+
+  TEST_ASSIGNMENT128(move, "move(other)", false, "a.alloc != b.alloc");
+  TEST_ASSIGNMENT128(move, "move(other)", true, "a.alloc == b.alloc");
 
   return yacsl::testing::status() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
