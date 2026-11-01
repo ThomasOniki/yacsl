@@ -25,9 +25,10 @@ public:
   constexpr explicit Vector(A const& allocator) noexcept
       : allocator_(allocator) {}
 
-  constexpr Vector(ranges::InitializerList<T> init, A const& allocator = A());
+  constexpr Vector(ranges::InitializerList<T> init, A const& allocator = A())
+      : Vector(ranges::Slice<T const, SizeT>(init), allocator) {}
 
-  template <meta::RangeOf<T> Range>
+  template <meta::RangeOf<T const> Range>
   constexpr Vector(Range const& range, A const& allocator = A());
 
   constexpr explicit Vector(SizeT len, A const& allocator = A());
@@ -38,6 +39,8 @@ public:
   constexpr Vector(Vector const& other) : Vector(other, other.allocator_) {}
   constexpr Vector(Vector&& other) noexcept;
   constexpr Vector(Vector const& other, meta::TypeIdentity<A> const& allocator);
+
+  // NOLINTNEXTLINE(cppcoreguidelines-rvalue-reference-param-not-moved)
   constexpr Vector(Vector&&                     other,
                    meta::TypeIdentity<A> const& allocator) noexcept;
 
@@ -155,21 +158,21 @@ private:
 };
 
 template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
-constexpr Vector<T, N, A, SizeT>::Vector(ranges::InitializerList<T> init,
-                                         A const&                   allocator)
-    : allocator_(allocator), len_(static_cast<SizeT>(init.size())) {
-  maybe_alloc(len_);
-  copy(init.begin());
-}
-
-template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
-template <meta::RangeOf<T> Range>
+template <meta::RangeOf<T const> Range>
 constexpr Vector<T, N, A, SizeT>::Vector(Range const& range, A const& allocator)
     : allocator_(allocator) {
-  if constexpr (requires(Range with_size) {
-                  { with_size.len() } -> meta::Integral;
-                }) {
-    len_ = static_cast<SizeT>(range.len());
+  constexpr bool has_len = requires(Range with_size) {
+    { static_cast<SizeT>(with_size.len()) };
+  };
+  constexpr bool has_size = requires(Range with_size) {
+    { static_cast<SizeT>(with_size.size()) };
+  };
+  if constexpr (has_size || has_len) {
+    if constexpr (has_len) {
+      len_ = static_cast<SizeT>(range.len());
+    } else {
+      len_ = static_cast<SizeT>(range.size());
+    }
     maybe_alloc(len_);
     if constexpr (requires(Range with_ptr) {
                     { with_ptr.data() } -> meta::OneOf<T*, T const*>;
