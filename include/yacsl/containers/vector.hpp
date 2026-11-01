@@ -238,13 +238,14 @@ constexpr Vector<T, N, A, SizeT>::Vector(Vector&& other) noexcept
       while (other.len_ > 0) {
         other.pop();
       }
+      other.data_     = nullptr;
+      other.capacity_ = 0;
       return;
     }
   }
-  data_           = other.data_;
-  other.len_      = 0;
-  other.capacity_ = other.fixed_buffer_.len();
-  other.data_     = other.fixed_buffer_.data();
+  data_       = other.data_;
+  other.data_ = nullptr;
+  other.len_ = other.capacity_ = 0;
 }
 
 template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
@@ -258,13 +259,14 @@ constexpr Vector<T, N, A, SizeT>::Vector(
       while (other.len_ > 0) {
         other.pop();
       }
+      other.data_     = nullptr;
+      other.capacity_ = 0;
       return;
     }
   }
-  data_           = other.data_;
-  other.len_      = 0;
-  other.capacity_ = other.fixed_buffer_.len();
-  other.data_     = other.fixed_buffer_.data();
+  data_       = other.data_;
+  other.data_ = nullptr;
+  other.len_ = other.capacity_ = 0;
 }
 
 template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
