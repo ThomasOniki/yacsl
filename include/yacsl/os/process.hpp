@@ -14,6 +14,7 @@
 #include "yacsl/ranges/string_view.hpp"
 #include "yacsl/type_aliases.hpp"
 #include "yacsl/utils/nil.hpp"
+#include <stdint.h>
 
 namespace yacsl::os {
 
