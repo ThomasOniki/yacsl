@@ -106,7 +106,7 @@ public:
     return utils::implicit_cast<meta::CopyCV<Self, T>*>(nullptr);
   }
   template <typename Self>
-  [[nodiscard]] constexpr auto&&
+  [[nodiscard]] constexpr meta::CopyCVRef<Self&&, T>
   operator[](this Self&& /*self*/, SizeT /*index*/
              ,
              debug::SourceLocation location =
@@ -155,14 +155,14 @@ public:
   }
 
   template <typename Self>
-  [[nodiscard]] constexpr auto
+  [[nodiscard]] constexpr meta::CopyCV<Self, T>*
   begin(this Self&& /*self*/, debug::SourceLocation location =
                                   debug::SourceLocation::current()) noexcept {
     debug::detail::extern_panic("Cannot index zero-length StackArray!\n",
                                 location);
   }
   template <typename Self>
-  [[nodiscard]] constexpr auto
+  [[nodiscard]] constexpr meta::CopyCV<Self, T>*
   end(this Self&& /*self */, debug::SourceLocation location =
                                  debug::SourceLocation::current()) noexcept {
     debug::detail::extern_panic("Cannot index zero-length StackArray!\n",
