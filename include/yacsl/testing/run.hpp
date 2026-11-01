@@ -10,8 +10,8 @@
 namespace yacsl::testing {
 
 constexpr bool*& status_ptr() noexcept {
-  static thread_local bool  default_result_variable = true;
-  static thread_local bool* result_ptr              = &default_result_variable;
+  static constinit thread_local bool default_result_variable = true;
+  static thread_local bool*          result_ptr = &default_result_variable;
   return result_ptr;
 }
 constexpr bool& status() noexcept { return *status_ptr(); }
