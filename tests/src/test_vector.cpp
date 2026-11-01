@@ -244,57 +244,64 @@ static void test_constructor_with_range() noexcept {
   }
 }
 
-template <yacsl::usize N>
-static void test_constructor_with_init_alloc() noexcept {
+template <yacsl::usize N, typename R>
+static void test_constructor_with_range_alloc_impl(R const& range) noexcept {
   yacsl::containers::StackArray<char, 64> msg = {};
 
+  using yacsl::math::max;
+
+  clear_logs();
+
   {
-    auto init = {
-        SMFTracker("value1"),
-        SMFTracker("value2"),
-        SMFTracker("value3"),
-        SMFTracker("value4"),
-    };
     TestAllocator alloc;
-    EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'value1'\n"
-                                       "constructed 'value2'\n"
-                                       "constructed 'value3'\n"
-                                       "constructed 'value4'\n"
-                                       "constructed 'allocator'\n");
+    EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'allocator'\n");
     clear_logs();
 
-    auto test1 = Vector<SMFTracker, N, TestAllocator>(init, alloc);
-    EXPECT(test1.len() == 4, "len = %zu.\n", test1.len());
-    EXPECT(test1.capacity() == yacsl::math::max(4UZ, N), "capacity = %zu\n",
+    Vector<SMFTracker, N, TestAllocator> test1 = {range, alloc};
+    EXPECT(test1.len() == 2, "len = %zu.\n", test1.len());
+    EXPECT(test1.capacity() == max(2UZ, N), "capacity = %zu\n",
            test1.capacity());
     EXPECT_STREQ(SMFTracker::LOGS.ptr, "copy constructed 'allocator'\n"
                                        "copy constructed 'value1'\n"
-                                       "copy constructed 'value2'\n"
-                                       "copy constructed 'value3'\n"
-                                       "copy constructed 'value4'\n");
-    if (N < 4) {
+                                       "copy constructed 'value2'\n");
+    if (N < 2) {
       snprintf(msg.data(), msg.len(), "allocated %zu bytes\n",
-               sizeof(SMFTracker) * 4);
+               sizeof(SMFTracker) * 2);
     }
     EXPECT_STREQ(TestAllocator::LOGS.ptr, msg.data());
+
     clear_logs();
   }
 
-  EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed 'value4 (copy)'\n"
-                                     "destroyed 'value3 (copy)'\n"
-                                     "destroyed 'value2 (copy)'\n"
+  EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed 'value2 (copy)'\n"
                                      "destroyed 'value1 (copy)'\n"
                                      "destroyed 'allocator (copy)'\n"
-                                     "destroyed 'allocator'\n"
-                                     "destroyed 'value4'\n"
-                                     "destroyed 'value3'\n"
-                                     "destroyed 'value2'\n"
-                                     "destroyed 'value1'\n");
-  if (N < 4) {
+                                     "destroyed 'allocator'\n");
+  if (N < 2) {
     snprintf(msg.data(), msg.len(), "deallocated %zu bytes\n",
-             sizeof(SMFTracker) * 4);
+             sizeof(SMFTracker) * 2);
   }
   EXPECT_STREQ(TestAllocator::LOGS.ptr, msg.data());
+
+  [[maybe_unused]] Vector<SMFTracker, N, TestAllocator> test2 = {
+      SMFTracker("This wouldn't compile if there was no overload for "),
+      SMFTracker("initializer_list, only the generic Vector(RangeOf<T>)."),
+  };
+}
+
+template <yacsl::usize N, typename R, bool Reverse = false>
+static void test_constructor_with_range_alloc() noexcept {
+  if (Reverse) {
+    test_constructor_with_range_alloc_impl<N, R>({
+        SMFTracker("value2"),
+        SMFTracker("value1"),
+    });
+  } else {
+    test_constructor_with_range_alloc_impl<N, R>({
+        SMFTracker("value1"),
+        SMFTracker("value2"),
+    });
+  }
 }
 
 template <yacsl::usize N> static void test_constructor_with_copy() noexcept {
@@ -620,6 +627,7 @@ int main() {
   RUN8("Vector(len, allocator)", test_constructor_with_len_alloc);
   RUN8("Vector(len, value)", test_constructor_with_value);
   RUN8("Vector(len, value, allocator)", test_constructor_with_value_alloc);
+
   RUN8("Vector(init)", test_constructor_with_range,
        yacsl::ranges::InitializerList<SMFTracker>);
   RUN8("Vector(stack_array)", test_constructor_with_range,
@@ -628,7 +636,16 @@ int main() {
        yacsl::ranges::Slice<SMFTracker const>);
   RUN8("Vector(reversed_slice)", test_constructor_with_range,
        yacsl::ranges::ReversedSlice<SMFTracker const>, true);
-  RUN8("Vector(init, allocator)", test_constructor_with_init_alloc);
+
+  RUN8("Vector(init, allocator)", test_constructor_with_range_alloc,
+       yacsl::ranges::InitializerList<SMFTracker>);
+  RUN8("Vector(stack_array, allocator)", test_constructor_with_range_alloc,
+       yacsl::containers::StackArray<SMFTracker, 2>);
+  RUN8("Vector(slice, allocator)", test_constructor_with_range_alloc,
+       yacsl::ranges::Slice<SMFTracker const>);
+  RUN8("Vector(reversed_slice, allocator)", test_constructor_with_range_alloc,
+       yacsl::ranges::ReversedSlice<SMFTracker const>, true);
+
   RUN8("Vector(other)", test_constructor_with_copy);
   RUN8("Vector(move(other))", test_constructor_with_move);
   RUN8("Vector(other, allocator)", test_constructor_with_copy_alloc);
