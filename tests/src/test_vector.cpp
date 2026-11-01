@@ -2,8 +2,10 @@
 #include "yacsl/containers/stack_array.hpp"
 #include "yacsl/containers/vector.hpp"
 #include "yacsl/math/arithmetic.hpp"
+#include "yacsl/ranges/initializer_list.hpp"
 #include "yacsl/testing/run.hpp"
 #include "yacsl/type_aliases.hpp"
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -185,21 +187,16 @@ static void test_constructor_with_value_alloc() noexcept {
   EXPECT_STREQ(TestAllocator::LOGS.ptr, msg.data());
 }
 
-template <yacsl::usize N> static void test_constructor_with_init() noexcept {
+template <yacsl::usize N, typename R>
+static void test_constructor_with_range_impl(R const& range) noexcept {
   yacsl::containers::StackArray<char, 64> msg = {};
 
   using yacsl::math::max;
 
-  {
-    auto init = {
-        SMFTracker("value1"),
-        SMFTracker("value2"),
-    };
-    EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'value1'\n"
-                                       "constructed 'value2'\n");
-    clear_logs();
+  clear_logs();
 
-    auto test1 = Vector<SMFTracker, N, TestAllocator>(init);
+  {
+    Vector<SMFTracker, N, TestAllocator> test1 = range;
     EXPECT(test1.len() == 2, "len = %zu.\n", test1.len());
     EXPECT(test1.capacity() == max(2UZ, N), "capacity = %zu\n",
            test1.capacity());
@@ -219,14 +216,32 @@ template <yacsl::usize N> static void test_constructor_with_init() noexcept {
 
   EXPECT_STREQ(SMFTracker::LOGS.ptr, "destroyed 'value2 (copy)'\n"
                                      "destroyed 'value1 (copy)'\n"
-                                     "destroyed 'allocator (copy)'\n"
-                                     "destroyed 'value2'\n"
-                                     "destroyed 'value1'\n");
+                                     "destroyed 'allocator (copy)'\n");
   if (N < 2) {
     snprintf(msg.data(), msg.len(), "deallocated %zu bytes\n",
              sizeof(SMFTracker) * 2);
   }
   EXPECT_STREQ(TestAllocator::LOGS.ptr, msg.data());
+
+  [[maybe_unused]] Vector<SMFTracker, N, TestAllocator> test2 = {
+      SMFTracker("This wouldn't compile if there was no overload for "),
+      SMFTracker("initializer_list, only the generic Vector(RangeOf<T>)."),
+  };
+}
+
+template <yacsl::usize N, typename R, bool Reverse = false>
+static void test_constructor_with_range() noexcept {
+  if (Reverse) {
+    test_constructor_with_range_impl<N, R>({
+        SMFTracker("value2"),
+        SMFTracker("value1"),
+    });
+  } else {
+    test_constructor_with_range_impl<N, R>({
+        SMFTracker("value1"),
+        SMFTracker("value2"),
+    });
+  }
 }
 
 template <yacsl::usize N>
@@ -587,15 +602,15 @@ static void test_constructor_with_move_alloc() noexcept {
 }
 
 // NOLINTBEGIN(bugprone-macro-parentheses)
-#define RUN8(name, func)                                                       \
-  run_test("Vector<T, 0>::" name, func<0>);                                    \
-  run_test("Vector<T, 1>::" name, func<1>);                                    \
-  run_test("Vector<T, 2>::" name, func<2>);                                    \
-  run_test("Vector<T, 3>::" name, func<3>);                                    \
-  run_test("Vector<T, 4>::" name, func<4>);                                    \
-  run_test("Vector<T, 5>::" name, func<5>);                                    \
-  run_test("Vector<T, 6>::" name, func<6>);                                    \
-  run_test("Vector<T, 7>::" name, func<7>);
+#define RUN8(name, func, ...)                                                  \
+  run_test("Vector<T, 0>::" name, func<0 __VA_OPT__(, ) __VA_ARGS__>);         \
+  run_test("Vector<T, 1>::" name, func<1 __VA_OPT__(, ) __VA_ARGS__>);         \
+  run_test("Vector<T, 2>::" name, func<2 __VA_OPT__(, ) __VA_ARGS__>);         \
+  run_test("Vector<T, 3>::" name, func<3 __VA_OPT__(, ) __VA_ARGS__>);         \
+  run_test("Vector<T, 4>::" name, func<4 __VA_OPT__(, ) __VA_ARGS__>);         \
+  run_test("Vector<T, 5>::" name, func<5 __VA_OPT__(, ) __VA_ARGS__>);         \
+  run_test("Vector<T, 6>::" name, func<6 __VA_OPT__(, ) __VA_ARGS__>);         \
+  run_test("Vector<T, 7>::" name, func<7 __VA_OPT__(, ) __VA_ARGS__>);
 // NOLINTEND(bugprone-macro-parentheses)
 
 int main() {
@@ -605,7 +620,14 @@ int main() {
   RUN8("Vector(len, allocator)", test_constructor_with_len_alloc);
   RUN8("Vector(len, value)", test_constructor_with_value);
   RUN8("Vector(len, value, allocator)", test_constructor_with_value_alloc);
-  RUN8("Vector(init)", test_constructor_with_init);
+  RUN8("Vector(init)", test_constructor_with_range,
+       yacsl::ranges::InitializerList<SMFTracker>);
+  RUN8("Vector(stack_array)", test_constructor_with_range,
+       yacsl::containers::StackArray<SMFTracker, 2>);
+  RUN8("Vector(slice)", test_constructor_with_range,
+       yacsl::ranges::Slice<SMFTracker const>);
+  RUN8("Vector(reversed_slice)", test_constructor_with_range,
+       yacsl::ranges::ReversedSlice<SMFTracker const>, true);
   RUN8("Vector(init, allocator)", test_constructor_with_init_alloc);
   RUN8("Vector(other)", test_constructor_with_copy);
   RUN8("Vector(move(other))", test_constructor_with_move);
