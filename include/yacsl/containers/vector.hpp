@@ -297,16 +297,25 @@ Vector<T, N, A, SizeT>::operator=(this Vector& self YACSL_LIFETIMEBOUND,
                                   Vector&&          other) noexcept {
   if (self.allocator_ != other.allocator_) {
     self.free();
-
     self.allocator_ = memory::move(other.allocator_);
-
-    self.maybe_alloc(other.len_);
-    self.move(other.data_);
-  } else if (N > 0 && other.data_ == other.fixed_buffer_.data()) {
-    self.clear();
     self.len_       = other.len_;
-    self.allocator_ = memory::move(other.allocator_);
+    self.maybe_alloc(self.len_);
     self.move(other.data_);
+    other.clear();
+    if (N == 0 || other.data_ != other.fixed_buffer_.data()) {
+      self.allocator_.deallocate({
+          reinterpret_cast<u8*>(other.data_),
+          other.capacity_ * sizeof(T),
+      });
+    }
+  } else if (N > 0 && other.data_ == other.fixed_buffer_.data()) {
+    // If other can use fixed_buffer_, than so can self so there is no need for
+    // reserve(other.len_)
+    self.clear();
+    self.allocator_ = memory::move(other.allocator_);
+    self.len_       = other.len_;
+    self.move(other.data_);
+    other.clear();
   } else {
     self.free();
     self.allocator_ = memory::move(other.allocator_);
