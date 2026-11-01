@@ -51,9 +51,6 @@ public:
   constexpr Vector& operator=(this Vector& self YACSL_LIFETIMEBOUND,
                               Vector&&          other) noexcept;
 
-  constexpr Vector& operator=(this Vector& self YACSL_LIFETIMEBOUND,
-                              ranges::InitializerList<T> const& init);
-
   template <typename... Args>
   constexpr T& push(this Vector& self, Args&&... args);
 
@@ -325,17 +322,6 @@ Vector<T, N, A, SizeT>::operator=(this Vector& self YACSL_LIFETIMEBOUND,
   }
   other.len_ = other.capacity_ = 0;
   other.data_                  = nullptr;
-  return self;
-}
-
-template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
-constexpr Vector<T, N, A, SizeT>&
-Vector<T, N, A, SizeT>::operator=(this Vector& self YACSL_LIFETIMEBOUND,
-                                  ranges::InitializerList<T> const& init) {
-  self.clear();
-  self.reserve(static_cast<SizeT>(init.size()));
-  self.len_ = static_cast<SizeT>(init.size());
-  self.copy(init.begin());
   return self;
 }
 
