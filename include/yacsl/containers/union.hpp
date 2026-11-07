@@ -27,11 +27,10 @@ public:
   template <usize I, typename... Args>
   constexpr auto& emplace(this Union& self, Args&&... args) noexcept {
     self.visit([&]<typename T>(T const& value) { value.~T(); });
-    self.index_ = I;
-    self.visit([&](auto& value) {
-      memory::construct_at(&value, memory::forward<Args>(args)...);
-    });
-    return self.get_unchecked<I>();
+    self.index_    = I;
+    auto const ptr = reinterpret_cast<Ts...[I]*>(self.bytes_.data());
+    memory::construct_at(ptr, memory::forward<Args>(args)...);
+    return *ptr;
   }
 
   template <typename T, typename... Args>
