@@ -14,17 +14,23 @@ public:
       return self.value_;
     }
 
-    constexpr T operator++(this Iterator& self) noexcept {
-      return Reversed ? --self.value_ : ++self.value_;
+    constexpr Iterator& operator++(this Iterator& self) noexcept {
+      self.value_ += Reversed ? static_cast<T>(-1) : static_cast<T>(1);
+      return self;
     }
-    constexpr T operator--(this Iterator& self) noexcept {
-      return Reversed ? ++self.value_ : --self.value_;
+    constexpr Iterator& operator--(this Iterator& self) noexcept {
+      self.value_ += Reversed ? static_cast<T>(1) : static_cast<T>(-1);
+      return self;
     }
-    constexpr T operator++(this Iterator& self, int) noexcept {
-      return Reversed ? self.value_-- : self.value_++;
+    constexpr Iterator operator++(this Iterator& self, int) noexcept {
+      auto ret = self;
+      ++self;
+      return ret;
     }
-    constexpr T operator--(this Iterator& self, int) noexcept {
-      return Reversed ? self.value_++ : self.value_--;
+    constexpr Iterator operator--(this Iterator& self, int) noexcept {
+      auto ret = self;
+      --self;
+      return ret;
     }
 
     [[nodiscard]] constexpr bool operator<=>(this Iterator self,
