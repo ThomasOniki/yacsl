@@ -9,7 +9,8 @@ using yacsl::containers::HashMap;
 namespace {
 struct Key {
   explicit Key(char const* name = "key") noexcept : tracker(name) {}
-  SMFTracker tracker;
+  SMFTracker     tracker;
+  constexpr bool operator==(this Key const&, Key const&) noexcept = default;
 };
 } // namespace
 
@@ -35,7 +36,27 @@ static void test_insert() {
   EXPECT_STREQ(TestAllocator::LOGS.ptr, "");
 }
 
+static void test_get() {
+  auto map = HashMap<Key, SMFTracker, 0, TestAllocator>(16);
+  map.insert(Key("key1"), "value1");
+  map.insert(Key("key2"), "value2");
+  map.insert(Key("longer key"), "value3");
+  clear_logs();
+
+  auto opt = map.get_option(Key("key1 (moved)"));
+  EXPECT(opt.is_value() && opt.value_unchecked() == SMFTracker("value1"));
+  if (opt.is_value()) {
+    EXPECT(map.get(Key("key1 (moved)")) == SMFTracker("value1"));
+    EXPECT(map.get_unchecked(Key("key1 (moved)")) == SMFTracker("value1"), );
+  }
+  opt = map.get_option(Key("key2 (moved)"));
+  EXPECT(opt.is_value() && opt.value_unchecked() == SMFTracker("value2"));
+  opt = map.get_option(Key("longer key (moved)"));
+  EXPECT(opt.is_value() && opt.value_unchecked() == SMFTracker("value3"));
+}
+
 int main() {
   run_test("insert", test_insert);
+  run_test("get", test_get);
   return yacsl::testing::status() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
