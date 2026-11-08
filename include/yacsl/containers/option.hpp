@@ -197,23 +197,20 @@ public:
     return self.ptr_ != nullptr && self.ptr_ == &value;
   }
 
-private:
-  template <typename Self>
-  using Forwarded = meta::Conditional<meta::LValueReferenceType<Self&&>, T,
-                                      meta::RemoveReference<T>&&>;
-
 public:
   template <typename Self>
   [[nodiscard]] constexpr auto&& value(this Self&& self) noexcept {
     yacsl::debug::assert_(self.ptr_ != nullptr, "Option<{}> is nil.",
                           meta::TYPE_STRING<T>);
-    return memory::forward<Forwarded<Self>>(*memory::forward<Self>(self).ptr_);
+    return memory::forward<meta::CopyCV<Self, T>>(
+        *memory::forward<Self>(self).ptr_);
   }
   template <typename Self>
   [[nodiscard]] constexpr auto&& value_unchecked(this Self&& self) noexcept {
     yacsl::debug::assert_unchecked(self.ptr_ != nullptr, "Option<{}> is nil.",
                                    meta::TYPE_STRING<T>);
-    return memory::forward<Forwarded<Self>>(*memory::forward<Self>(self).ptr_);
+    return memory::forward<meta::CopyCV<Self, T>>(
+        *memory::forward<Self>(self).ptr_);
   }
 
 private:
