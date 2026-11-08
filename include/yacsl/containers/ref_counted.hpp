@@ -1,8 +1,8 @@
 #pragma once
 
 #include "yacsl/compiler/attributes.hpp"
+#include "yacsl/memory/allocator_type.hpp"
 #include "yacsl/memory/lifetimes.hpp"
-#include "yacsl/meta/allocator.hpp"
 #include "yacsl/threads/atomic.hpp"
 
 namespace yacsl::containers {
