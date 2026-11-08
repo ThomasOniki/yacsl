@@ -83,6 +83,30 @@ concept MaybeCVRef = SameAs<RemoveCVRef<T>, BaseType>;
 
 namespace detail {
 
+template <typename Src, typename Dst> struct CopyRValueRefImpl {
+  using Type = Dst;
+};
+template <typename Src, typename Dst> struct CopyRValueRefImpl<Src&&, Dst> {
+  using Type = Dst&&;
+};
+
+template <typename Src, typename Dst> struct CopyLValueRefImpl {
+  using Type = Dst;
+};
+template <typename Src, typename Dst> struct CopyLValueRefImpl<Src&, Dst> {
+  using Type = Dst&;
+};
+
+template <typename Src, typename Dst> struct CopyReferenceImpl {
+  using Type = Dst;
+};
+template <typename Src, typename Dst> struct CopyReferenceImpl<Src&, Dst> {
+  using Type = Dst&;
+};
+template <typename Src, typename Dst> struct CopyReferenceImpl<Src&&, Dst> {
+  using Type = Dst&&;
+};
+
 template <typename Src, typename Dst> struct CopyConstImpl {
   using Type = Dst;
 };
@@ -112,38 +136,7 @@ struct CopyCVImpl<Src const volatile, Dst> {
   using Type = Dst const volatile;
 };
 
-template <typename Src, typename Dst> struct CopyRValueRefImpl {
-  using Type = Dst;
-};
-template <typename Src, typename Dst> struct CopyRValueRefImpl<Src&&, Dst> {
-  using Type = Dst&&;
-};
-
-template <typename Src, typename Dst> struct CopyLValueRefImpl {
-  using Type = Dst;
-};
-template <typename Src, typename Dst> struct CopyLValueRefImpl<Src&, Dst> {
-  using Type = Dst&;
-};
-
-template <typename Src, typename Dst> struct CopyReferenceImpl {
-  using Type = Dst;
-};
-template <typename Src, typename Dst> struct CopyReferenceImpl<Src&, Dst> {
-  using Type = Dst&;
-};
-template <typename Src, typename Dst> struct CopyReferenceImpl<Src&&, Dst> {
-  using Type = Dst&&;
-};
-
 } // namespace detail
-
-template <typename Src, typename Dst>
-using CopyConst = detail::CopyConstImpl<RemoveReference<Src>, Dst>::Type;
-template <typename Src, typename Dst>
-using CopyVolatile = detail::CopyVolatileImpl<RemoveReference<Src>, Dst>::Type;
-template <typename Src, typename Dst>
-using CopyCV = detail::CopyCVImpl<RemoveReference<Src>, Dst>::Type;
 
 template <typename Src, typename Dst>
 using CopyRValueRef = detail::CopyRValueRefImpl<Src, Dst>::Type;
@@ -153,6 +146,21 @@ template <typename Src, typename Dst>
 using CopyReference = detail::CopyReferenceImpl<Src, Dst>::Type;
 
 template <typename Src, typename Dst>
-using CopyCVRef = CopyReference<Src, CopyCV<Src, Dst>>;
+using CopyConst =
+    CopyReference<Dst, typename detail::CopyConstImpl<
+                           RemoveReference<Src>, RemoveReference<Dst>>::Type>;
+template <typename Src, typename Dst>
+using CopyVolatile =
+    CopyReference<Dst, typename detail::CopyVolatileImpl<
+                           RemoveReference<Src>, RemoveReference<Dst>>::Type>;
+template <typename Src, typename Dst>
+using CopyCV =
+    CopyReference<Dst, typename detail::CopyCVImpl<RemoveReference<Src>,
+                                                   RemoveReference<Dst>>::Type>;
+
+template <typename Src, typename Dst>
+using CopyCVRef =
+    CopyReference<Src, typename detail::CopyCVImpl<RemoveReference<Src>,
+                                                   RemoveReference<Dst>>::Type>;
 
 } // namespace yacsl::meta
