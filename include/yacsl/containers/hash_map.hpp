@@ -2,6 +2,7 @@
 
 #include "yacsl/compiler/attributes.hpp"
 #include "yacsl/containers/hash.hpp"
+#include "yacsl/containers/option.hpp"
 #include "yacsl/containers/union.hpp"
 #include "yacsl/containers/vector.hpp"
 #include "yacsl/debug/panic.hpp"
@@ -54,6 +55,37 @@ public:
         self.insert(memory::move(pair.key), memory::move(pair.value));
       }
     }
+  }
+
+  template <typename Self>
+  // NOLINTNEXTLINE(cppcoreguidelines-missing-std-forward)
+  constexpr Option<meta::CopyCVRef<Self, V>> get_option(this Self&& self,
+                                                        K const& key) noexcept {
+    auto const start_index =
+        static_cast<SizeT>(self.hash_(key)) % self.nodes_.len();
+    for (auto i = start_index; i < start_index + self.nodes_.len(); ++i) {
+      auto const index = i % self.nodes_.len();
+      auto&&     node  = self.nodes_[index];
+      if (node.template is_a<Pair>()) {
+        auto&& pair = node.template get_unchecked<Pair>();
+        if (pair.key == key) {
+          return memory::forward<meta::CopyCVRef<Self, V>>(pair.value);
+        }
+      }
+    }
+    return utils::NIL;
+  }
+
+  template <typename Self>
+  constexpr meta::CopyCVRef<Self, V> get(this Self&& self,
+                                         K const&    key) noexcept {
+    return memory::forward<Self>(self).get_option(key).value();
+  }
+
+  template <typename Self>
+  constexpr meta::CopyCVRef<Self, V> get_unchecked(this Self&& self,
+                                                   K const&    key) noexcept {
+    return memory::forward<Self>(self).get_option(key).value_unchecked();
   }
 
 public:
