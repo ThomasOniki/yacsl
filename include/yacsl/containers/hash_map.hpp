@@ -88,6 +88,19 @@ public:
     return memory::forward<Self>(self).get_option(key).value_unchecked();
   }
 
+  template <typename Self> constexpr auto begin(this Self&& self) noexcept {
+    for (auto& node : self.nodes_) {
+      if (node.template is_a<Pair>()) {
+        return Iterator<Self&&>(memory::forward<Self>(self), &node);
+      }
+    }
+    return Iterator<Self&&>(memory::forward<Self>(self), self.nodes_.end());
+  }
+
+  template <typename Self> constexpr auto end(this Self&& self) noexcept {
+    return Iterator<Self&&>(memory::forward<Self>(self), self.nodes_.end());
+  }
+
 public:
   struct Pair {
     template <meta::MaybeCVRef<K> KF, typename... Args>
@@ -97,9 +110,37 @@ public:
     K key;
     V value;
   };
+
+private:
   using Tombstone = meta::TaggedType<"Tombstone">;
   using Node      = Union<Pair, Tombstone>;
   using Nodes     = Vector<Node, N, A, SizeT>;
+
+public:
+  template <typename Map> class Iterator {
+  public:
+    constexpr explicit Iterator(Map map, Node* ptr) noexcept
+        : ptr_(ptr), end_(map.nodes_.end()) {}
+
+    constexpr bool operator==(this Iterator, Iterator) noexcept = default;
+
+    constexpr meta::CopyCVRef<Map, Pair>
+    operator*(this Iterator self) noexcept {
+      return self.ptr_->template get_unchecked<Pair>();
+    }
+
+    template <typename Self> Self&& operator++(this Self&& self) noexcept {
+      ++self.ptr_;
+      while (self.ptr_ != self.end_ && !self.ptr_->template is_a<Pair>()) {
+        ++self.ptr_;
+      }
+      return memory::forward<Self>(self);
+    }
+
+  private:
+    meta::CopyCV<Map, Node>* ptr_;
+    meta::CopyCV<Map, Node>* end_;
+  };
 
 private:
   Nodes                     nodes_;
