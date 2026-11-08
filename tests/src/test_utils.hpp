@@ -161,6 +161,9 @@ public:
     return self;
   }
 
+  constexpr bool operator==(this SMFTracker const&,
+                            SMFTracker const&) noexcept = default;
+
 public:
   inline static DynamicCString LOGS;
   DynamicCString               name_;
