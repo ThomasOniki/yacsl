@@ -6,21 +6,20 @@
 #include "yacsl/ranges/string_view.hpp"
 #include "yacsl/type_aliases.hpp"
 #include <dlfcn.h>
-#include <execinfo.h>
+#include <unwind.h>
 
 namespace yacsl::debug {
 
 StackTrace StackTrace::current() noexcept {
+  auto callback = [](_Unwind_Context* ctx, void* pvoid) -> _Unwind_Reason_Code {
+    StackTrace& self = *static_cast<StackTrace*>(pvoid);
+    // NOLINTNEXTLINE(performance-no-int-to-ptr)
+    self.addresses_.push(reinterpret_cast<void*>(_Unwind_GetRegionStart(ctx)));
+    return _URC_NO_REASON;
+  };
+
   StackTrace ret;
-  ret.addresses_.resize(ret.addresses_.capacity());
-  auto size = static_cast<usize>(
-      backtrace(ret.addresses_.data(), static_cast<int>(ret.addresses_.len())));
-  while (size == ret.addresses_.len()) {
-    ret.addresses_.resize(ret.addresses_.capacity() * 2);
-    size = static_cast<usize>(backtrace(
-        ret.addresses_.data(), static_cast<int>(ret.addresses_.len())));
-  }
-  ret.addresses_.resize(size);
+  _Unwind_Backtrace(callback, &ret);
   return ret;
 }
 
