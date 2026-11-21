@@ -15,7 +15,9 @@ struct Key {
 } // namespace
 
 template <typename SizeT> struct yacsl::containers::Hash<Key, SizeT> {
-  SizeT operator()(Key const& key) noexcept { return key.tracker.name_.len; }
+  SizeT operator()(this Hash /*self*/, Key const& key) noexcept {
+    return key.tracker.name_.len;
+  }
 };
 
 static void test_insert() {
