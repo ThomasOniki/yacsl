@@ -42,6 +42,21 @@ public:
     debug::unreachable("");
   }
 
+  constexpr bool try_remove(this HashMap& self, K const& key) noexcept {
+    Option<Node&> node = self.get_node(key);
+    if (node.is_nil()) {
+      return false;
+    }
+    node.value_unchecked().template emplace<Tombstone>();
+    return true;
+  }
+  constexpr void remove(this HashMap& self, K const& key) noexcept {
+    self.get_node(key).value().template emplace<Tombstone>();
+  }
+  constexpr void remove_unchecked(this HashMap& self, K const& key) noexcept {
+    self.get_node(key).value_unchecked().template emplace<Tombstone>();
+  }
+
   constexpr SizeT capacity(this HashMap const& self) noexcept {
     return self.nodes_.len();
   }
@@ -61,19 +76,11 @@ public:
   // NOLINTNEXTLINE(cppcoreguidelines-missing-std-forward)
   constexpr Option<meta::CopyCVRef<Self, V>> get_option(this Self&& self,
                                                         K const& key) noexcept {
-    auto const start_index =
-        static_cast<SizeT>(self.hash_(key)) % self.nodes_.len();
-    for (auto i = start_index; i < start_index + self.nodes_.len(); ++i) {
-      auto const index = i % self.nodes_.len();
-      auto&&     node  = self.nodes_[index];
-      if (node.template is_a<Pair>()) {
-        auto&& pair = node.template get_unchecked<Pair>();
-        if (pair.key == key) {
-          return memory::forward<meta::CopyCVRef<Self, V>>(pair.value);
-        }
-      }
-    }
-    return utils::NIL;
+    return memory::forward<Self>(self).get_node(key).transform(
+        [](meta::CopyCVRef<Self, Node> node) -> meta::CopyCVRef<Self, V> {
+          return memory::forward<meta::CopyCVRef<Self, V>>(
+              node.template get_unchecked<Pair>().value);
+        });
   }
 
   template <typename Self>
@@ -115,6 +122,25 @@ private:
   using Tombstone = meta::TaggedType<"Tombstone">;
   using Node      = Union<Pair, Tombstone>;
   using Nodes     = Vector<Node, N, A, SizeT>;
+
+  template <typename Self>
+  constexpr Option<meta::CopyCVRef<Self, Node>>
+  // NOLINTNEXTLINE(cppcoreguidelines-missing-std-forward)
+  get_node(this Self&& self, K const& key) noexcept {
+    auto const start_index =
+        static_cast<SizeT>(self.hash_(key)) % self.nodes_.len();
+    for (auto i = start_index; i < start_index + self.nodes_.len(); ++i) {
+      auto const index = i % self.nodes_.len();
+      auto&&     node  = self.nodes_[index];
+      if (node.template is_a<Pair>()) {
+        auto&& pair = node.template get_unchecked<Pair>();
+        if (pair.key == key) {
+          return memory::forward<meta::CopyCVRef<Self, Node>>(node);
+        }
+      }
+    }
+    return utils::NIL;
+  }
 
 public:
   template <typename Map> class Iterator {

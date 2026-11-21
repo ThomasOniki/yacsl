@@ -2,7 +2,6 @@
 #include "yacsl/containers/hash_map.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/testing/run.hpp"
-#include <stdio.h>
 
 using yacsl::containers::HashMap;
 
@@ -57,6 +56,35 @@ static void test_get() {
   EXPECT(opt.is_value() && opt.value_unchecked() == SMFTracker("value3"));
 }
 
+static void test_remove() {
+  auto map = HashMap<Key, SMFTracker, 0, TestAllocator>(16);
+  map.insert(Key("key1"), "value1");
+  map.insert(Key("key2"), "value2");
+  map.insert(Key("removed key1"), "removed value1");
+  map.insert(Key("removed key2"), "removed value2");
+  map.insert(Key("longer key"), "value3");
+  map.remove(Key("removed key1 (moved)"));
+  map.remove_unchecked(Key("removed key2 (moved)"));
+  clear_logs();
+
+  EXPECT(!map.try_remove(Key("key that never existed")));
+
+  auto opt = map.get_option(Key("key1 (moved)"));
+  EXPECT(opt.is_value() && opt.value_unchecked() == SMFTracker("value1"));
+  EXPECT(map.try_remove(Key("key1 (moved)")));
+  EXPECT(map.get_option(Key("key1 (moved)")).is_nil());
+  EXPECT(!map.try_remove(Key("key1 (moved)")));
+  EXPECT(map.get_option(Key("key1 (moved)")).is_nil());
+
+  EXPECT(map.get_option(Key("removed key1 (moved)")).is_nil());
+  EXPECT(map.get_option(Key("removed key2 (moved)")).is_nil());
+
+  opt = map.get_option(Key("key2 (moved)"));
+  EXPECT(opt.is_value() && opt.value_unchecked() == SMFTracker("value2"));
+  opt = map.get_option(Key("longer key (moved)"));
+  EXPECT(opt.is_value() && opt.value_unchecked() == SMFTracker("value3"));
+}
+
 static void test_iter() {
   auto map    = HashMap<Key, SMFTracker, 0, TestAllocator>(16);
   auto value2 = SMFTracker("value2");
@@ -97,6 +125,7 @@ static void test_iter() {
 int main() {
   run_test("insert", test_insert);
   run_test("get", test_get);
+  run_test("remove", test_remove);
   run_test("begin/end", test_iter);
   return yacsl::testing::status() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
