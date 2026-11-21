@@ -23,6 +23,14 @@ template <meta::Arithmetic T, typename SizeT> struct Hash<T, SizeT> {
   }
 };
 
+template <typename T, typename SizeT> struct Hash<T*, SizeT> {
+  constexpr SizeT operator()(this Hash const& self, T* ptr) noexcept {
+    return self.impl_(reinterpret_cast<uptr>(ptr));
+  }
+
+  YACSL_NO_UNIQUE_ADDRESS Hash<uptr> impl_;
+};
+
 template <meta::RangeLike R, typename SizeT> struct Hash<R, SizeT> {
 
   template <typename... Args>
