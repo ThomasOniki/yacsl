@@ -14,8 +14,8 @@ As YACSL is still very early in development, there is no stable API yet and ther
 == Building
 [source,sh]
 ----
-git clone https://codeberg.org/ThomasOniki/base.git
-cd base
+git clone https://codeberg.org/ThomasOniki/yacsl.git --recursive
+cd yacsl
 cmake -B build -DCMAKE_INSTALL_PREFIX=<your_prefix> -DCMAKE_BUILD_TYPE=Release
 cmake --build build
 ----
