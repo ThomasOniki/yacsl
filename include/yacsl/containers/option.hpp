@@ -197,7 +197,6 @@ public:
     return self.ptr_ != nullptr && self.ptr_ == &value;
   }
 
-public:
   template <typename Self>
   [[nodiscard]] constexpr auto&& value(this Self&& self) noexcept {
     yacsl::debug::assert_(self.ptr_ != nullptr, "Option<{}> is nil.",
@@ -211,6 +210,15 @@ public:
                                    meta::TYPE_STRING<T>);
     return memory::forward<meta::CopyCV<Self, T>>(
         *memory::forward<Self>(self).ptr_);
+  }
+
+  template <typename Self, typename F>
+  auto transform(this Self&& self, F&& func)
+      -> Option<decltype(func(*self.ptr_))> {
+    if (self.ptr_ != nullptr) {
+      return memory::forward<F>(func)(*memory::forward<Self>(self).ptr_);
+    }
+    return utils::NIL;
   }
 
 private:
