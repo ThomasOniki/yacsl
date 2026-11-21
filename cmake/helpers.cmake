@@ -119,10 +119,14 @@ function(source_directory target path)
   target_sources("${target}" PRIVATE "${files}")
 endfunction()
 
-# This function accepts target names after project
 function(install_project_targets project)
   include(CMakePackageConfigHelpers)
   include(GNUInstallDirs)
+
+	set(multi_value_args TARGETS DEPENDENCIES)
+	cmake_parse_arguments(PARSE_ARGV 0 args
+		"" "" "${multi_value_args}"
+	)
 
   configure_package_config_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/${project}-config.cmake.in"
@@ -135,7 +139,7 @@ function(install_project_targets project)
     COMPATIBILITY SameMajorVersion)
 
   install(
-    TARGETS "${ARGN}"
+		TARGETS "${args_TARGETS}"
     EXPORT "${project}-targets"
     INCLUDES
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
