@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.28)
 project(yacsl LANGUAGES CXX C)
 
-include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/helpers.cmake")
+include("${CMAKE_CURRENT_SOURCE_DIR}/third_party/cmake-helpers/cmake-helpers.cmake")
 
 add_library(yacsl)
 add_library(yacsl::yacsl ALIAS yacsl)
