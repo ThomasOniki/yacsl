@@ -3,6 +3,7 @@
 #include "yacsl/compiler/attributes.hpp"
 #include "yacsl/compiler/pragmas.hpp"
 #include "yacsl/containers/stack_array.hpp"
+#include "yacsl/memory/alignment.hpp"
 #include "yacsl/memory/lifetimes.hpp"
 #include "yacsl/testing/run.hpp"
 #include <stdarg.h>
@@ -216,10 +217,10 @@ struct TestAllocator {
   }
 
   yacsl::ranges::Slice<yacsl::u8, SizeT>
-  resize_in_place(this TestAllocator& /*self*/,
-                  yacsl::ranges::Slice<yacsl::u8, SizeT> /*mem*/,
-                  SizeT /*new_size*/) {
-    return {nullptr, 0UZ};
+  reallocate_nocopy(this TestAllocator& self,
+                    yacsl::ranges::Slice<yacsl::u8, SizeT> /*mem*/,
+                    SizeT new_size, yacsl::memory::Alignment align) {
+    return self.allocate(new_size, align);
   }
 
   static constexpr bool dynarray_has(DynamicArray<void*> const& arr,

@@ -32,9 +32,10 @@ public:
                   ranges::Slice<u8, SizeT> mem) noexcept {
     get().deallocate(mem);
   }
-  auto resize_in_place(this SingletonAllocator /*self*/,
-                       ranges::Slice<u8, SizeT> mem, SizeT new_size) {
-    return get().resize_in_place(mem, new_size);
+  auto reallocate_nocopy(this SingletonAllocator /*self*/,
+                         ranges::Slice<u8, SizeT> mem, SizeT new_size,
+                         Alignment align) {
+    return get().reallocate_nocopy(mem, new_size, align);
   }
 
   [[nodiscard]] constexpr bool operator==(this SingletonAllocator /*self*/,

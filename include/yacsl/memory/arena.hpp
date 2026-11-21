@@ -82,13 +82,14 @@ public:
   }
 
   [[nodiscard]] ranges::Slice<u8, SizeT>
-  resize_in_place(ranges::Slice<u8, SizeT> data, SizeT new_size) noexcept {
-    u8* new_ptr = ptr_ + new_size - data.len();
-    if (data.end() == ptr_ && new_ptr <= end_) {
-      ptr_ = new_ptr;
+  reallocate_nocopy(this Arena& self, ranges::Slice<u8, SizeT> data,
+                    SizeT new_size, Alignment align) noexcept {
+    u8* new_ptr = self.ptr_ + new_size - data.len();
+    if (data.end() == self.ptr_ && new_ptr <= self.end_) {
+      self.ptr_ = new_ptr;
       return {data.data(), new_size};
     }
-    return {nullptr, 0UZ};
+    return self.allocate(new_size, align);
   }
 
   [[nodiscard]] constexpr bool operator==(this Arena const& self,
