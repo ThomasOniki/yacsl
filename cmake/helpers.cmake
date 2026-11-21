@@ -129,7 +129,7 @@ function(install_project_targets project)
 	)
 
   configure_package_config_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/${project}-config.cmake.in"
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/project-config.cmake.in"
     "${CMAKE_CURRENT_BINARY_DIR}/${project}-config.cmake"
     INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${project}")
 
