@@ -159,6 +159,8 @@ private:
         if (pair.key == key) {
           return memory::forward<meta::CopyCVRef<Self, Node>>(node);
         }
+      } else if (!node.template is_a<Tombstone>()) {
+        return utils::NIL;
       }
     }
     return utils::NIL;
