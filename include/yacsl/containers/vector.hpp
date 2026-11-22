@@ -54,6 +54,25 @@ public:
   template <typename... Args>
   constexpr T& push(this Vector& self, Args&&... args);
 
+  template <meta::RangeLike R>
+    requires(requires(R range) {
+      { T(*range.begin()) };
+    })
+  constexpr ranges::Slice<T> push_range(this Vector& self, R const& range) {
+    if (requires(R with_size) {
+          { static_cast<SizeT>(with_size.len()) };
+        }) {
+      self.reserve(self.len_ + range.len());
+    } else if (requires(R with_size) {
+                 { static_cast<SizeT>(with_size.size()) };
+               }) {
+      self.reserve(self.len_ + range.size());
+    }
+    for (auto&& value : range) {
+      self.push(value);
+    }
+  }
+
   constexpr void pop(this Vector& self, SizeT count = 1) noexcept;
   constexpr void clear(this Vector& self) noexcept { self.pop(self.len_); }
 
