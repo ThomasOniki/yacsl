@@ -11,11 +11,29 @@
 namespace yacsl::containers {
 
 template <typename T, typename E> class Result {
+private:
+  struct ValueTag {};
+  struct ErrorTag {};
+
+  template <typename... Args>
+  Result(ValueTag /*tag*/, Args&&... args)
+      : value_(memory::forward<Args>(args)...) {}
+  template <typename... Args>
+  Result(ErrorTag /*tag*/, Args&&... args)
+      : error_(memory::forward<Args>(args)...), is_error_(true) {}
+
 public:
   template <meta::MaybeCVRef<E> Err>
   Result(Err&& error) : error_(memory::forward<Err>(error)), is_error_(true) {}
   template <typename... Args>
   Result(Args&&... args) : value_(memory::forward<Args>(args)...) {}
+
+  template <typename... Args> static Result new_error(Args&&... args) {
+    return Result(ErrorTag{}, memory::forward<Args>(args)...);
+  }
+  template <typename... Args> static Result new_value(Args&&... args) {
+    return Result(ValueTag{}, memory::forward<Args>(args)...);
+  }
 
   ~Result() noexcept { destroy(); }
 
