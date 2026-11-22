@@ -54,8 +54,8 @@ public:
   template <typename... Args>
   constexpr T& push(this Vector& self, Args&&... args);
 
-  constexpr void pop(this Vector& self) noexcept;
-  constexpr void clear(this Vector& self) noexcept;
+  constexpr void pop(this Vector& self, SizeT count = 1) noexcept;
+  constexpr void clear(this Vector& self) noexcept { self.pop(self.len_); }
 
   constexpr void reserve(this Vector& self, SizeT capacity);
   constexpr void resize(this Vector& self, SizeT count);
@@ -246,9 +246,7 @@ constexpr Vector<T, N, A, SizeT>::Vector(Vector&& other) noexcept
   if constexpr (N > 0) {
     if (other.data_ == other.fixed_buffer_.data()) {
       move(other.data_);
-      while (other.len_ > 0) {
-        other.pop();
-      }
+      other.clear();
       other.data_     = nullptr;
       other.capacity_ = 0;
       return;
@@ -267,9 +265,7 @@ constexpr Vector<T, N, A, SizeT>::Vector(
   if constexpr (N > 0) {
     if (other.data_ == other.fixed_buffer_.data()) {
       move(other.data_);
-      while (other.len_ > 0) {
-        other.pop();
-      }
+      other.clear();
       other.data_     = nullptr;
       other.capacity_ = 0;
       return;
@@ -350,14 +346,11 @@ constexpr T& Vector<T, N, A, SizeT>::push(this Vector& self, Args&&... args) {
 }
 
 template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
-constexpr void Vector<T, N, A, SizeT>::pop(this Vector& self) noexcept {
-  self.data_[--self.len_].~T();
-}
-
-template <typename T, usize N, memory::AllocatorType A, meta::Integral SizeT>
-constexpr void Vector<T, N, A, SizeT>::clear(this Vector& self) noexcept {
-  while (self.len_ > 0) {
-    self.pop();
+constexpr void Vector<T, N, A, SizeT>::pop(this Vector& self,
+                                           SizeT        count) noexcept {
+  SizeT end = self.len_ - count;
+  while (self.len_ > end) {
+    self.data_[--self.len_].~T();
   }
 }
 
@@ -375,9 +368,7 @@ constexpr void Vector<T, N, A, SizeT>::resize(this Vector& self, SizeT count) {
     if constexpr (meta::TriviallyDestructible<T>) {
       self.len_ = count;
     } else {
-      while (self.len_ > count) {
-        self.pop();
-      }
+      self.pop(count - self.len_);
     }
   } else {
     self.reserve(count);
