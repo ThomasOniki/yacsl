@@ -59,6 +59,7 @@ public:
       { T(*range.begin()) };
     })
   constexpr ranges::Slice<T> push_range(this Vector& self, R const& range) {
+    SizeT const old_len = self.len_;
     if constexpr (requires(R with_size) {
                     { static_cast<SizeT>(with_size.len()) };
                   }) {
@@ -71,6 +72,7 @@ public:
     for (auto&& value : range) {
       self.push(value);
     }
+    return {self.data_ + old_len, self.end()};
   }
 
   constexpr void pop(this Vector& self, SizeT count = 1) noexcept;
