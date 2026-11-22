@@ -3,7 +3,6 @@
 #include "yacsl/containers/stack_storage.hpp"
 #include "yacsl/debug/assert.hpp"
 #include "yacsl/memory/lifetimes.hpp"
-#include "yacsl/meta/conditional.hpp"
 #include "yacsl/meta/qualifiers.hpp"
 #include "yacsl/meta/type_string.hpp"
 #include "yacsl/utils/nil.hpp"

@@ -27,26 +27,54 @@ static void test_insert() {
   clear_logs();
 
   map.insert(key1, "value1");
-  map.insert(yacsl::memory::move(key2), SMFTracker("value2"));
+
   EXPECT_STREQ(SMFTracker::LOGS.ptr, "copy constructed 'key1'\n"
-                                     "constructed 'value1'\n"
-                                     "constructed 'value2'\n"
+                                     "constructed 'value1'\n");
+  EXPECT_STREQ(TestAllocator::LOGS.ptr, "");
+  clear_logs();
+
+  auto result1 =
+      map.try_insert(yacsl::memory::move(key2), SMFTracker("value2"));
+  EXPECT(result1.is_value());
+  if (result1.is_value()) {
+    EXPECT_STREQ(result1.value_unchecked().name_.ptr, "value2 (moved)");
+  }
+
+  EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'value2'\n"
                                      "move constructed 'key2'\n"
                                      "move constructed 'value2'\n"
                                      "destroyed 'value2'\n");
   EXPECT_STREQ(TestAllocator::LOGS.ptr, "");
+  clear_logs();
+
+  auto result2 = map.try_insert(Key("key2 (moved)"), SMFTracker("value2"));
+  EXPECT(result2.is_error());
+  if (result2.is_error()) {
+    EXPECT_STREQ(result2.error().name_.ptr, "value2 (moved)");
+    if (result1.is_value()) {
+      EXPECT(&result1.value_unchecked() == &result2.error_unchecked());
+    }
+  }
+
+  EXPECT_STREQ(SMFTracker::LOGS.ptr, "constructed 'key2 (moved)'\n"
+                                     "constructed 'value2'\n"
+                                     "destroyed 'value2'\n"
+                                     "destroyed 'key2 (moved)'\n");
+  EXPECT_STREQ(TestAllocator::LOGS.ptr, "");
 }
 
 static void test_get() {
-  auto map = HashMap<Key, SMFTracker, 0, TestAllocator>(16);
-  map.insert(Key("key1"), "value1");
+  auto        map    = HashMap<Key, SMFTracker, 0, TestAllocator>(16);
+  SMFTracker& value1 = map.insert(Key("key1"), "value1");
   map.insert(Key("key2"), "value2");
   map.insert(Key("longer key"), "value3");
   clear_logs();
 
   auto opt = map.get_option(Key("key1 (moved)"));
-  EXPECT(opt.is_value() && opt.value_unchecked() == SMFTracker("value1"));
+  EXPECT(opt.is_value());
   if (opt.is_value()) {
+    EXPECT(opt.value_unchecked() == SMFTracker("value1"));
+    EXPECT(&opt.value_unchecked() == &value1);
     EXPECT(map.get(Key("key1 (moved)")) == SMFTracker("value1"));
     EXPECT(map.get_unchecked(Key("key1 (moved)")) == SMFTracker("value1"), );
   }

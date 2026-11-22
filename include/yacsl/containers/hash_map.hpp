@@ -3,6 +3,7 @@
 #include "yacsl/compiler/attributes.hpp"
 #include "yacsl/containers/hash.hpp"
 #include "yacsl/containers/option.hpp"
+#include "yacsl/containers/result.hpp"
 #include "yacsl/containers/union.hpp"
 #include "yacsl/containers/vector.hpp"
 #include "yacsl/debug/panic.hpp"
@@ -24,22 +25,43 @@ public:
       : nodes_(capacity, utils::NIL, allocator) {}
 
   template <meta::MaybeCVRef<K> KF, typename... Args>
-  constexpr V& insert(this HashMap& self, KF&& key, Args&&... args) {
+  constexpr Result<V&, V&> try_insert(this HashMap& self, KF&& key,
+                                      Args&&... args) {
+    auto existing = self.get_node(key);
+    if (existing.is_value()) {
+      return Result<V&, V&>::new_error(
+          existing.value_unchecked().template get_unchecked<Pair>().value);
+    }
+
     ++self.pair_count_;
     if (self.pair_count_ >= self.nodes_.len() * 2 / 3) {
       self.rehash(self.pair_count_ * 2);
     }
     auto const start_index =
         static_cast<SizeT>(self.hash_(key)) % self.nodes_.len();
+
     for (auto i = start_index; i < start_index + self.nodes_.len(); ++i) {
       Node& node = self.nodes_[i % self.nodes_.len()];
       if (!node.template is_a<Pair>()) {
         Pair& pair = node.template emplace<Pair>(
             memory::forward<KF>(key), memory::forward<Args>(args)...);
-        return pair.value;
+        return Result<V&, V&>::new_value(pair.value);
       }
     }
     debug::unreachable("");
+  }
+
+  template <meta::MaybeCVRef<K> KF, typename... Args>
+  constexpr V& insert(this HashMap& self, KF&& key, Args&&... args) {
+    return self
+        .try_insert(memory::forward<KF>(key), memory::forward<Args>(args)...)
+        .value();
+  }
+  template <meta::MaybeCVRef<K> KF, typename... Args>
+  constexpr V& insert_unchecked(this HashMap& self, KF&& key, Args&&... args) {
+    return self
+        .try_insert(memory::forward<KF>(key), memory::forward<Args>(args)...)
+        .value_unchecked();
   }
 
   constexpr bool try_remove(this HashMap& self, K const& key) noexcept {
