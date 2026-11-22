@@ -135,6 +135,20 @@ public:
     return memory::forward<Self>(self).data_ + memory::forward<Self>(self).len_;
   }
 
+  template <meta::RangeOf<T> R>
+  constexpr bool operator==(this Vector const& self, R const& range) {
+    SizeT index = 0;
+    for (auto const& value : range) {
+      if (value != self.data_[index]) {
+        return false;
+      }
+      if (++index > self.len_) {
+        return false;
+      }
+    }
+    return index == self.len_;
+  }
+
 private:
   void maybe_alloc(this Vector& self, SizeT count); // if size > N
 
