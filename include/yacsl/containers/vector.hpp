@@ -59,13 +59,13 @@ public:
       { T(*range.begin()) };
     })
   constexpr ranges::Slice<T> push_range(this Vector& self, R const& range) {
-    if (requires(R with_size) {
-          { static_cast<SizeT>(with_size.len()) };
-        }) {
+    if constexpr (requires(R with_size) {
+                    { static_cast<SizeT>(with_size.len()) };
+                  }) {
       self.reserve(self.len_ + range.len());
-    } else if (requires(R with_size) {
-                 { static_cast<SizeT>(with_size.size()) };
-               }) {
+    } else if constexpr (requires(R with_size) {
+                           { static_cast<SizeT>(with_size.size()) };
+                         }) {
       self.reserve(self.len_ + range.size());
     }
     for (auto&& value : range) {
