@@ -70,12 +70,15 @@ public:
       return false;
     }
     node.value_unchecked().template emplace<Tombstone>();
+    --self.pair_count_;
     return true;
   }
   constexpr void remove(this HashMap& self, K const& key) noexcept {
+    --self.pair_count_;
     self.get_node(key).value().template emplace<Tombstone>();
   }
   constexpr void remove_unchecked(this HashMap& self, K const& key) noexcept {
+    --self.pair_count_;
     self.get_node(key).value_unchecked().template emplace<Tombstone>();
   }
 
@@ -84,8 +87,9 @@ public:
   }
 
   constexpr void rehash(this HashMap& self, SizeT new_size) {
-    auto nodes  = memory::move(self.nodes_);
-    self.nodes_ = Nodes(new_size, utils::NIL);
+    auto nodes       = memory::move(self.nodes_);
+    self.nodes_      = Nodes(new_size, utils::NIL);
+    self.pair_count_ = 0;
     for (Node& node : nodes) {
       if (node.template is_a<Pair>()) {
         Pair& pair = node.template get_unchecked<Pair>();
