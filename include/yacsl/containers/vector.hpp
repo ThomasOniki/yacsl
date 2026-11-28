@@ -75,6 +75,15 @@ public:
     return {self.data_ + old_len, self.end()};
   }
 
+  constexpr ranges::Slice<T> push_range(this Vector&               self,
+                                        ranges::InitializerList<T> init) {
+    return self.push_range<>(init);
+  }
+  constexpr ranges::Slice<T> push_range(this Vector&           self,
+                                        ranges::Slice<T const> slice) {
+    return self.push_range<>(slice);
+  }
+
   constexpr void pop(this Vector& self, SizeT count = 1) noexcept;
   constexpr void clear(this Vector& self) noexcept { self.pop(self.len_); }
 
